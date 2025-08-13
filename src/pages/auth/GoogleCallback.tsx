@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -33,8 +34,7 @@ export default function GoogleCallback() {
       setTimeout(() => {
         axios
           .post(
-            `${
-              import.meta.env.VITE_API_URL || "http://localhost:3000/"
+            `${import.meta.env.VITE_API_URL || "http://localhost:3000/"
             }auth/google/callback`,
             { code }
           )

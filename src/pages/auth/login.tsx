@@ -32,8 +32,9 @@ export default function Login() {
     setIsLoading(true);
     setShowAlert(false);
     try {
+      console.log(email, password);
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3000/"}auth/login`,
+        `http://localhost:3000/auth/login`,
         { email, password }
       );
       localStorage.setItem("access_token", res.data.access_token);

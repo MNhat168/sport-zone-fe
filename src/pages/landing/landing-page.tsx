@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Row, Col, Card, Button, Badge } from "react-bootstrap";
+import { Card, Button, Badge } from "react-bootstrap";
 import {
   Trophy,
   Users,
@@ -19,11 +19,23 @@ import {
   Activity,
 } from "lucide-react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import axiosPublic from "../../utils/axios/axiosPublic";
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [tab, setTab] = useState<'fields'|'coaches'>('fields');
+  type FieldItem = { id:string; name:string; sportType:string; description:string; location:string; images:string[]; pricePerHour:number; rating:number; totalReviews:number };
+  type CoachItem = { id:string; fullName:string; avatarUrl?:string; sports:string[]; bio:string; hourlyRate:number; isVerified:boolean; rating:number; totalReviews:number };
+  const [fields, setFields] = useState<FieldItem[]>([]);
+  const [coaches, setCoaches] = useState<CoachItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [q, setQ] = useState("");
+  const [sport, setSport] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [minRate, setMinRate] = useState("");
+  const [maxRate, setMaxRate] = useState("");
   const [animatedStats, setAnimatedStats] = useState({
     players: 0,
     games: 0,
@@ -222,12 +234,48 @@ export default function HomePage() {
   };
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Check for JWT in localStorage (or cookie if you use cookies)
     const token = localStorage.getItem("access_token");
     setIsLoggedIn(!!token);
   }, []);
+
+  // Sync tab with query param
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const t = url.searchParams.get('tab');
+    setTab(t === 'coaches' ? 'coaches' : 'fields');
+  }, [location.search]);
+
+  // Fetch browse data based on tab and filters
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        if (tab === 'fields') {
+          const params = new URLSearchParams();
+          if (q) params.set('name', q);
+          if (sport) params.set('sportType', sport);
+          if (locationFilter) params.set('location', locationFilter);
+          const res = await axiosPublic.get(`/fields?${params.toString()}`);
+          setFields(res.data || []);
+        } else {
+          const params = new URLSearchParams();
+          if (q) params.set('name', q);
+          if (sport) params.set('sportType', sport);
+          if (minRate) params.set('minRate', minRate);
+          if (maxRate) params.set('maxRate', maxRate);
+          const res = await axiosPublic.get(`/coaches?${params.toString()}`);
+          setCoaches(res.data || []);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [tab, q, sport, locationFilter, minRate, maxRate]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -277,6 +325,17 @@ export default function HomePage() {
               <a href="#" className="nav-link">
                 Community
               </a>
+
+              {isLoggedIn && (
+                <a
+                  className="nav-link"
+                  onClick={() => navigate("/profile")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Profile
+                </a>
+              )}
+
               {isLoggedIn ? (
                 <Button className="nav-cta-btn" onClick={handleLogout}>
                   Logout
@@ -369,6 +428,74 @@ export default function HomePage() {
               <div className="stat-number">{animatedStats.countries}+</div>
               <div className="stat-label">Countries</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Browse Section (Fields/Coaches tabs) */}
+      <section id="browse" className="browse-section">
+        <div className="browse-container">
+          <div className="browse-header">
+            <div className="tabs">
+              <button className={`tab ${tab==='fields'?'active':''}`} onClick={()=>{navigate('/?tab=fields#browse'); setTab('fields')}}>Fields</button>
+              <button className={`tab ${tab==='coaches'?'active':''}`} onClick={()=>{navigate('/?tab=coaches#browse'); setTab('coaches')}}>Coaches</button>
+            </div>
+            <div className="filters">
+              <input className="filter-input" placeholder={tab==='fields'? 'Search field name' : 'Search coach name'} value={q} onChange={(e)=>setQ(e.target.value)} />
+              <select className="filter-select" value={sport} onChange={(e)=>setSport(e.target.value)}>
+                <option value="">All sports</option>
+                <option value="football">football</option>
+                <option value="tennis">tennis</option>
+                <option value="badminton">badminton</option>
+                <option value="pickleball">pickleball</option>
+                <option value="basketball">basketball</option>
+                <option value="volleyball">volleyball</option>
+                <option value="swimming">swimming</option>
+                <option value="gym">gym</option>
+              </select>
+              {tab==='fields' ? (
+                <input className="filter-input" placeholder="Location" value={locationFilter} onChange={(e)=>setLocationFilter(e.target.value)} />
+              ) : (
+                <>
+                  <input type="number" className="filter-input small" placeholder="Min $/h" value={minRate} onChange={(e)=>setMinRate(e.target.value)} />
+                  <input type="number" className="filter-input small" placeholder="Max $/h" value={maxRate} onChange={(e)=>setMaxRate(e.target.value)} />
+                </>
+              )}
+            </div>
+          </div>
+          <div className="browse-grid">
+            {loading ? (
+              <div className="text-center py-5">Loading...</div>
+            ) : tab==='fields' ? (
+              fields.length? fields.map((f:FieldItem)=>(
+                <div key={f.id} className="browse-card">
+                  <div className="thumb"><img src={f.images?.[0] || '/placeholder.svg'} alt={f.name}/></div>
+                  <div className="content">
+                    <div className="title-row"><h5>{f.name}</h5><span className="badge text-capitalize">{f.sportType}</span></div>
+                    <div className="muted">{f.location}</div>
+                    <div className="muted truncate" title={f.description}>{f.description}</div>
+                    <div className="meta"><span className="price">${f.pricePerHour}/h</span><span className="muted">⭐ {f.rating} ({f.totalReviews})</span></div>
+                  </div>
+                </div>
+              )) : <div className="text-center py-5">No fields found</div>
+            ) : (
+              coaches.length? coaches.map((c:CoachItem)=>(
+                <div key={c.id} className="browse-card">
+                  <div className="coach-head">
+                    <img className="avatar" src={c.avatarUrl || '/default-avatar.png'} alt={c.fullName}/>
+                    <div>
+                      <h5 className="mb-1">{c.fullName}</h5>
+                      <div className="muted">⭐ {c.rating} ({c.totalReviews})</div>
+                    </div>
+                  </div>
+                  <div className="content">
+                    <div className="chips">{c.sports?.map((s:string)=>(<span key={s} className="chip text-capitalize">{s}</span>))}</div>
+                    <div className="truncate" title={c.bio}>{c.bio}</div>
+                    <div className="meta"><span className="price">${c.hourlyRate}/h</span>{c.isVerified && <span className="ok">Verified</span>}</div>
+                  </div>
+                </div>
+              )) : <div className="text-center py-5">No coaches found</div>
+            )}
           </div>
         </div>
       </section>
@@ -1043,6 +1170,34 @@ export default function HomePage() {
         }
 
         /* News Section */
+        .browse-section { background: rgba(255,255,255,0.98); position: relative; z-index:2; width:100vw; padding: 3rem 0 2rem; border-top: 1px solid #eef0ff; }
+        .browse-container { width:100%; padding: 0 2rem; max-width: 1400px; margin: 0 auto; }
+        .browse-header { display:flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .tabs { display:flex; gap:.5rem; background:#f1f3ff; padding:.35rem; border-radius: 999px; }
+        .tab { border:none; background:transparent; padding:.5rem 1rem; border-radius:999px; font-weight:600; color:#667eea; cursor:pointer; }
+        .tab.active { background:white; box-shadow: 0 4px 14px rgba(102,126,234,.25); }
+        .filters { display:flex; gap:.5rem; align-items:center; }
+        .filter-input { background:#fff; color:#000; border:1px solid #eaeaff; border-radius:10px; padding:.5rem .75rem; min-width: 200px; }
+        .filter-input.small{ min-width:120px }
+        .filter-select { background:#fff; color:#000; border:1px solid #eaeaff; border-radius:10px; padding:.5rem .75rem; }
+        .browse-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap:1rem; }
+        .browse-card { background:#fff; border-radius:16px; box-shadow: 0 10px 30px rgba(0,0,0,.08); overflow:hidden; transition:.2s; }
+        .browse-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(0,0,0,.12); }
+        .thumb { aspect-ratio: 16/9; width:100%; overflow:hidden; background:#f4f6ff }
+        .thumb img{ width:100%; height:100%; object-fit:cover }
+        .content{ padding: .75rem .9rem 1rem }
+        .title-row{ display:flex; justify-content:space-between; align-items:center }
+        .badge{ background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:.2rem .6rem; border-radius: 999px; font-size:.75rem }
+        .muted{ color:#333; font-size:.9rem }
+        .truncate{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+        .meta{ display:flex; justify-content:space-between; align-items:center; margin-top:.5rem }
+        .price{ font-weight:700; color:#111 }
+        .coach-head{ display:flex; align-items:center; gap:.75rem; padding:.75rem .9rem 0 }
+        .avatar{ width:56px; height:56px; border-radius:50%; object-fit:cover; border:2px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,.1) }
+        .chips{ display:flex; flex-wrap:wrap; gap:.35rem; margin:.25rem 0 }
+        .chip{ background:#f1f3ff; border-radius:999px; padding:.2rem .5rem; font-size:.75rem }
+        .ok{ background:#22c55e; color:#fff; padding:.15rem .5rem; border-radius:999px; font-size:.75rem }
+
         .news-section {
           padding: 4rem 0;
           background: rgba(255, 255, 255, 0.98);
