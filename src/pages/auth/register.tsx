@@ -48,7 +48,7 @@ export default function SportsRegister() {
     setShowAlert(false);
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3000/"}auth/register`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:3000"}auth/register`,
         {
           fullName: formData.fullName,
           email: formData.email,
