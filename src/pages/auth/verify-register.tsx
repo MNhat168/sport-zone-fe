@@ -100,7 +100,7 @@ export default function VerifyRegister(props: VerifyRegisterProps) {
     setShowAlert(false);
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3000/"}auth/verify`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:3000"}auth/verify`,
         {
           email,
           verificationToken: code,

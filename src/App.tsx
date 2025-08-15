@@ -9,6 +9,9 @@ import LandingPage from "./pages/landing/landing-page";
 import GoogleCallback from "./pages/auth/GoogleCallback";
 import ProfilePage from "./pages/profile/profile-page";
 import FieldOwnerDashboard from "./pages/landing/field_owner_main";
+import BookingsPage from "./pages/coach/booking-page";
+import CoachSchedulePage from "./pages/coach/schedule-page";
+import SetHolidayPage from "./pages/coach/set-holiday-page";
 
 const RequireAuth = ({ children }: { children: ReactElement }) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -40,7 +43,10 @@ function App() {
           }
         />
         <Route path="/field-owner" element={<FieldOwnerDashboard />} />
-      </Routes>
+        <Route path="/coach/booking" element={<BookingsPage />} />
+        <Route path="/coach/schedule" element={<CoachSchedulePage />} />
+        <Route path="/coach/holiday" element={<SetHolidayPage />} />
+      </Routes>   
     </Router>
   );
 }
