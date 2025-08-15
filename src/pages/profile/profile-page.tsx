@@ -43,11 +43,19 @@ interface CoachProfile {
     totalReviews?: number;  
 }
 
-const ProfilePage: React.FC = () => {
+const ProfilePage: React.FC = () => {    
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [editRate, setEditRate] = useState(false);
+    const [rateForm, setRateForm] = useState<number>(profile?.coach?.hourlyRate || 0);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [editCert, setEditCert] = useState(false);
+    const [certForm, setCertForm] = useState(profile?.coach?.certification || "");
+    const [editBio, setEditBio] = useState(false);
+    const [bioForm, setBioForm] = useState(profile?.coach?.bio || "");
+    const [editSports, setEditSports] = useState(false);
+    const [sportsForm, setSportsForm] = useState<string[]>(profile?.coach?.sports || []);
     const [form, setForm] = useState<{ fullName: string; phone?: string; avatarUrl?: string }>({ fullName: "" });
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
     const userId = useMemo(() => {
@@ -202,21 +210,226 @@ const ProfilePage: React.FC = () => {
                     <hr className="my-4" />
                     <h5 className="mb-3">Thông tin Huấn luyện viên</h5>
 
-                    {profile.coach.certification && (
-                        <div><strong>Chứng chỉ:</strong> {profile.coach.certification}</div>
-                    )}
+                    <div className="d-flex align-items-center gap-2 mt-2">
+                        <strong>Chứng chỉ:</strong>
 
-                    {profile.coach.sports?.length ? (
-                        <div><strong>Môn thể thao:</strong> {profile.coach.sports.join(", ")}</div>
-                    ) : null}
+                        {!editCert ? (
+                            <>
+                            <span>{profile.coach?.certification || "Chưa có"}</span>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                setCertForm(profile.coach?.certification || "");
+                                setEditCert(true);
+                                }}
+                            >
+                                Chỉnh sửa
+                            </Button>
+                            </>
+                        ) : (
+                            <>
+                            <Form.Control
+                                type="text"
+                                value={certForm}
+                                onChange={(e) => setCertForm(e.target.value)}
+                                style={{ width: "200px" }}
+                            />
+                            <Button
+                                size="sm"
+                                variant="success"
+                                onClick={async () => {
+                                if (!userId) return;
 
-                    {profile.coach.hourlyRate && (
-                        <div><strong>Giá mỗi giờ:</strong> {profile.coach.hourlyRate}₫</div>
-                    )}
+                                try {
+                                    const { data } = await axiosPublic.patch(
+                                    `/profiles/${userId}/certification`,
+                                    { certification: certForm }, // now matches backend
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                    );
 
-                    {profile.coach.bio && (
-                        <div><strong>Giới thiệu:</strong> {profile.coach.bio}</div>
-                    )}
+                                    // If your API returns the updated coach profile object:
+                                    setProfile((prev) =>
+                                    prev ? { ...prev, coach: data } : null
+                                    );
+
+                                    setEditCert(false);
+                                } catch (err: unknown) {
+                                    if (axios.isAxiosError(err)) {
+                                    console.error("Update failed:", err.response?.data || err);
+                                    alert(err.response?.data?.message || "Cập nhật thất bại");
+                                    } else {
+                                    console.error(err);
+                                    alert("Cập nhật thất bại");
+                                    }
+                                }
+                                }}
+                            >
+                                Lưu
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline-secondary"
+                                onClick={() => setEditCert(false)}
+                            >
+                                Hủy
+                            </Button>
+                            </>
+                        )}
+                    </div>
+
+
+                    <div className="d-flex align-items-center gap-2 mt-2">
+                        <strong>Môn thể thao:</strong>
+                        {!editSports ? (
+                            <>
+                                <span>{profile.coach?.sports?.join(", ") || "Chưa có"}</span>
+                                <Button
+                                    size="sm"
+                                    onClick={() => {
+                                        setSportsForm(profile.coach?.sports || []);
+                                        setEditSports(true);
+                                    }}
+                                >
+                                    Chỉnh sửa
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Nhập các môn, phân cách bằng dấu phẩy"
+                                    value={sportsForm.join(", ")}
+                                    onChange={(e) => setSportsForm(e.target.value.split(",").map(s => s.trim()))}
+                                    style={{ width: "300px" }}
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={async () => {
+                                        if (!userId) return;
+                                        try {
+                                            const { data } = await axiosPublic.patch(
+                                                `/profiles/${userId}/sports`,
+                                                { sports: sportsForm },
+                                                { headers: { Authorization: `Bearer ${token}` } }
+                                            );
+                                            setProfile((prev) => prev ? { ...prev, coach: data } : null);
+                                            setEditSports(false);
+                                        } catch (err) {
+                                            console.error("Update failed:", err);
+                                            alert("Cập nhật thất bại");
+                                        }
+                                    }}
+                                >
+                                    Lưu
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    onClick={() => setEditSports(false)}
+                                >
+                                    Hủy
+                                </Button>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2 mt-2">
+                        <strong>Giá mỗi giờ:</strong>
+                        {!editRate ? (
+                        <>
+                            <span>{profile.coach.hourlyRate}₫</span>
+                            <Button size="sm" onClick={() => { setRateForm(profile.coach?.hourlyRate || 0); setEditRate(true); }}>Chỉnh sửa</Button>
+                        </>
+                        ) : (
+                        <>
+                            <Form.Control
+                            type="number"
+                            value={rateForm}
+                            onChange={(e) => setRateForm(Number(e.target.value))}
+                            style={{ width: "120px" }}
+                            />
+                            <Button
+                            size="sm"
+                            variant="success"
+                            onClick={async () => {
+                                if (!userId) return;
+                                try {
+                                const res = await axiosPublic.patch(
+                                    `/profiles/${userId}/hourly-rate`,
+                                    { hourlyRate: rateForm },
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                );
+                                setProfile(prev => prev ? { ...prev, coach: res.data } : null);
+                                setEditRate(false);
+                                } catch (err) {
+                                console.error("Update failed:", err.response?.data || err);
+                                alert("Cập nhật thất bại");
+                                }
+                            }}
+                            >
+                            Lưu
+                            </Button>
+                            <Button size="sm" variant="outline-secondary" onClick={() => setEditRate(false)}>Hủy</Button>
+                        </>
+                        )}
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2 mt-2">
+                        <strong>Giới thiệu:</strong>
+                        {!editBio ? (
+                            <>
+                                <span>{profile.coach?.bio || "Chưa có"}</span>
+                                <Button
+                                    size="sm"
+                                    onClick={() => {
+                                        setBioForm(profile.coach?.bio || "");
+                                        setEditBio(true);
+                                    }}
+                                >
+                                    Chỉnh sửa
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={2}
+                                    value={bioForm}
+                                    onChange={(e) => setBioForm(e.target.value)}
+                                    style={{ width: "300px" }}
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={async () => {
+                                        if (!userId) return;
+                                        try {
+                                            const { data } = await axiosPublic.patch(
+                                                `/profiles/${userId}/bio`,
+                                                { bio: bioForm },
+                                                { headers: { Authorization: `Bearer ${token}` } }
+                                            );
+                                            setProfile((prev) => prev ? { ...prev, coach: data } : null);
+                                            setEditBio(false);
+                                        } catch (err) {
+                                            console.error("Update failed:", err);
+                                            alert("Cập nhật thất bại");
+                                        }
+                                    }}
+                                >
+                                    Lưu
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    onClick={() => setEditBio(false)}
+                                >
+                                    Hủy
+                                </Button>
+                            </>
+                        )}
+                    </div>
 
                     {typeof profile.coach.rating === "number" && (
                         <div><strong>Xếp hạng:</strong> {profile.coach.rating} / 5</div>
