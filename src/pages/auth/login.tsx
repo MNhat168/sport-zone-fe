@@ -18,6 +18,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +40,16 @@ export default function Login() {
       );
       localStorage.setItem("access_token", res.data.access_token);
       setIsLoading(false);
-      navigate("/"); // Redirect to landing page
+      type MyJwtPayload = {
+        role: string;
+        [key: string]: any;
+      };
+      const decoded = jwtDecode<MyJwtPayload>(res.data.access_token);
+      if (decoded.role === 'field_owner') {
+        navigate('/field-owner');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setIsLoading(false);
       setShowAlert(false);

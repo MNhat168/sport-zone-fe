@@ -8,6 +8,7 @@ import VerifyRegister from "./pages/auth/verify-register";
 import LandingPage from "./pages/landing/landing-page";
 import GoogleCallback from "./pages/auth/GoogleCallback";
 import ProfilePage from "./pages/profile/profile-page";
+import FieldOwnerDashboard from "./pages/landing/field_owner_main";
 
 const RequireAuth = ({ children }: { children: ReactElement }) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -38,6 +39,7 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route path="/field-owner" element={<FieldOwnerDashboard />} />
       </Routes>
     </Router>
   );
