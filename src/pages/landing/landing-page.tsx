@@ -23,7 +23,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axiosPublic from "../../utils/axios/axiosPublic";
 
 
-export default function HomePage() {
+export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [tab, setTab] = useState<'fields'|'coaches'>('fields');
