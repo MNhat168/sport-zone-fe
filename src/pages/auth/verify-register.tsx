@@ -16,7 +16,7 @@ import {
   Edit,
 } from "lucide-react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import axios from "axios";
+import axiosPublic from "../../utils/axios/axiosPublic";
 import { useNavigate, useLocation } from "react-router-dom";
 interface VerifyRegisterProps {
   email?: string;
@@ -99,8 +99,8 @@ export default function VerifyRegister(props: VerifyRegisterProps) {
     setIsLoading(true);
     setShowAlert(false);
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3000"}auth/verify`,
+      await axiosPublic.post(
+        "/auth/verify",
         {
           email,
           verificationToken: code,

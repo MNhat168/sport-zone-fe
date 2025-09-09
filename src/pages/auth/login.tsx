@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosPublic from "../../utils/axios/axiosPublic";
 import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
@@ -33,11 +33,7 @@ export default function Login() {
     setIsLoading(true);
     setShowAlert(false);
     try {
-      console.log(email, password);
-      const res = await axios.post(
-        `http://localhost:3000/auth/login`,
-        { email, password }
-      );
+      const res = await axiosPublic.post("/auth/login", { email, password });
       localStorage.setItem("access_token", res.data.access_token);
       setIsLoading(false);
       type MyJwtPayload = {
@@ -258,7 +254,8 @@ export default function Login() {
                       variant="outline-danger"
                       className="social-btn w-100"
                       onClick={() => {
-                        const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+                        const googleClientId = import.meta.env
+                          .VITE_GOOGLE_CLIENT_ID;
                         const redirectUri = `${window.location.origin}/auth/google/callback`;
                         const scope = "email profile";
                         const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;

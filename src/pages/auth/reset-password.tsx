@@ -18,8 +18,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+import axiosPublic from "../../utils/axios/axiosPublic";
 import { useNavigate } from "react-router-dom";
 export default function ResetPassword() {
   const [formData, setFormData] = useState({
@@ -133,8 +133,8 @@ export default function ResetPassword() {
     }
     setIsLoading(true);
     try {
-      const res = await axios.post(
-        `${API_URL}auth/reset-password`,
+      const res = await axiosPublic.post(
+        "/auth/reset-password",
         {
           email,
           resetPasswordToken,
