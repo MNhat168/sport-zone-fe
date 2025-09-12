@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Row, Col, Form, Button, Alert } from "react-bootstrap";
+//import { Row, Col, Form, Button, Alert } from "react-bootstrap";
 import {
   Mail,
   ArrowLeft,
@@ -15,7 +15,7 @@ import {
   Shield,
   Clock,
 } from "lucide-react";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
 
 import axiosPublic from "../../utils/axios/axiosPublic";

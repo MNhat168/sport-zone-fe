@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Row, Col, Form, Button, Alert } from "react-bootstrap";
+//import { Row, Col, Form, Button, Alert } from "react-bootstrap";
 import {
   Mail,
   ArrowLeft,
@@ -15,7 +15,7 @@ import {
   CheckCircle,
   Edit,
 } from "lucide-react";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import axiosPublic from "../../utils/axios/axiosPublic";
 import { useNavigate, useLocation } from "react-router-dom";
 interface VerifyRegisterProps {

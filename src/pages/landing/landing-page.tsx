@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card, Button, Badge } from "react-bootstrap";
+//import { Card, Button, Badge } from "react-bootstrap";
 import {
   Trophy,
   Users,
@@ -18,7 +18,7 @@ import {
   Flame,
   Activity,
 } from "lucide-react";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import axiosPublic from "../../utils/axios/axiosPublic";
 

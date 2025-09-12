@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState } from "react";
-import { Row, Col, Form, Button, Alert } from "react-bootstrap";
+//import { Row, Col, Form, Button, Alert } from "react-bootstrap";
 import {
   Eye,
   SlashIcon as EyeSlash,
@@ -17,7 +17,7 @@ import {
   User,
   Phone,
 } from "lucide-react";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
 import axiosPublic from "../../utils/axios/axiosPublic";
 

@@ -2,7 +2,7 @@
 
  import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Row, Col, Form, Button, Alert } from "react-bootstrap";
+//import { Row, Col, Form, Button, Alert } from "react-bootstrap";
 import {
   Lock,
   Eye,
@@ -17,7 +17,7 @@ import {
   Shield,
   CheckCircle,
 } from "lucide-react";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 
 import axiosPublic from "../../utils/axios/axiosPublic";
 import { useNavigate } from "react-router-dom";
