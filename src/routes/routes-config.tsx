@@ -3,6 +3,7 @@ import { type RouteObject } from "react-router-dom";
 import ProtectedRoute, { UnauthorizedPage, UserRole, AuthenticatedRedirect } from "./protected-routes-config";
 
 import AuthenticationPage from "../pages/auth/authentication-page";
+import LandingPage from "../pages/landing/landing-page";
 // Minimal placeholder component
 const Placeholder = ({ title }: { title: string }) => <div style={{ padding: 24 }}>{title}</div>;
 
@@ -17,6 +18,7 @@ export const guestRoutes: RouteObject[] = [
   },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
+  { path: "/landing-page", element: <LandingPage /> },
 ];
 
 export const chatRoutes: RouteObject[] = [];
