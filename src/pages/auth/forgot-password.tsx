@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Row, Col, Form, Button, Alert } from "react-bootstrap";
+//import { Row, Col, Form, Button, Alert } from "react-bootstrap";
 import {
   Mail,
   ArrowLeft,
@@ -15,10 +15,10 @@ import {
   Shield,
   Clock,
 } from "lucide-react";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/";
+
+import axiosPublic from "../../utils/axios/axiosPublic";
 
 export default function ForgotPassword() {
   const [step, setStep] = useState<"email" | "verification">("email");
@@ -54,7 +54,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await axios.post(`${API_URL}auth/forgot-password`, { email });
+  const res = await axiosPublic.post("/auth/forgot-password", { email });
       setIsLoading(false);
       setStep("verification");
       setAlertType("success");
@@ -102,7 +102,7 @@ export default function ForgotPassword() {
     }
     setIsLoading(true);
     try {
-      const res = await axios.post(`${API_URL}auth/verify`, { email, verificationToken: code });
+  const res = await axiosPublic.post("/auth/verify", { email, verificationToken: code });
       setIsLoading(false);
       setAlertType("success");
       setAlertMessage("Code verified! Redirecting to reset password...");

@@ -1,944 +1,415 @@
-"use client";
-
-import type React from "react";
-import { useState } from "react";
-import { Row, Col, Form, Button, Alert } from "react-bootstrap";
-import {
-  Eye,
-  SlashIcon as EyeSlash,
-  Mail,
-  Lock,
-  Trophy,
-  Zap,
-  Play,
-  Users,
-  Award,
-  Target,
-} from "lucide-react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import type React from "react"
+import { useState } from "react"
+import { Eye, Slash as EyeSlash, Mail, Lock, Trophy, Zap, Play, Users, Award, Target } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setShowAlert(false);
+    e.preventDefault()
+    setIsLoading(true)
+    setShowAlert(false)
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3000/"}auth/login`,
-        { email, password }
-      );
-      localStorage.setItem("access_token", res.data.access_token);
-      setIsLoading(false);
-      navigate("/"); // Redirect to landing page
+      // Replace with your API call
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        localStorage.setItem("access_token", data.access_token)
+        setIsLoading(false)
+        navigate("/")
+      } else {
+        throw new Error("Login failed")
+      }
     } catch (err: any) {
-      setIsLoading(false);
-      setShowAlert(false);
-      alert(err.response?.data?.message || "Login failed");
+      setIsLoading(false)
+      setShowAlert(false)
+      alert(err.message || "Login failed")
     }
-  };
+  }
 
   return (
-    <div className="sports-login-fullwidth">
+    <div className="min-h-screen w-screen m-0 p-0 overflow-x-hidden bg-gradient-to-br from-indigo-500 to-purple-600">
       {/* Full Width Purple Background */}
-      <div className="full-width-purple-background">
+      <div className="relative min-h-screen w-screen m-0 p-0 bg-gradient-to-br from-indigo-500 to-purple-600 overflow-hidden">
         {/* Animated Background Elements */}
-        <div className="floating-elements">
-          <div className="floating-ball ball-1"></div>
-          <div className="floating-ball ball-2"></div>
-          <div className="floating-ball ball-3"></div>
-          <div className="floating-ball ball-4"></div>
-          <div className="floating-ball ball-5"></div>
-          <div className="floating-ball ball-6"></div>
-          <div className="floating-racket racket-1">🏸</div>
-          <div className="floating-racket racket-2">🏓</div>
-          <div className="floating-racket racket-3">🎾</div>
-          <div className="floating-racket racket-4">🏸</div>
-          <div className="floating-racket racket-5">🏓</div>
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
+          {/* Floating Balls */}
+          <div className="absolute w-32 h-32 rounded-full bg-red-400 opacity-10 top-[5%] left-[5%] animate-float"></div>
+          <div className="absolute w-32 h-32 rounded-full bg-teal-400 opacity-10 top-[15%] right-[8%] animate-float-delayed-3">🏸</div>
+          <div className="absolute w-32 h-32 rounded-full bg-blue-400 opacity-10 bottom-[10%] left-[10%] animate-float-delayed-6">🏓</div>
+          <div className="absolute w-32 h-32 rounded-full bg-green-400 opacity-10 top-[60%] left-[3%] animate-float-delayed-9">🎾</div>
+          <div className="absolute w-32 h-32 rounded-full bg-yellow-400 opacity-10 bottom-[20%] right-[5%] animate-float-delayed-12">🎾</div>
+          <div className="absolute w-32 h-32 rounded-full bg-pink-400 opacity-10 top-[40%] right-[15%] animate-float-delayed-15">🎾</div>
         </div>
 
-        <Row className="min-vh-100 g-0">
+        <div className="flex min-h-screen">
           {/* Left Side - Sports Content */}
-          <Col lg={8} className="sports-content-side">
-            <div className="sports-content-wrapper">
-              <div className="content-overlay">
-                <div className="brand-section">
-                  {/* Logo and Title */}
-                  <div className="logo-container mb-4">
-                    <div className="sports-logo-large">
-                      <Trophy className="trophy-icon-large" size={50} />
-                      <Zap className="zap-icon-large" size={25} />
-                    </div>
+          <div className="hidden lg:flex lg:w-2/3 relative z-20 items-center justify-center p-8">
+            <div className="absolute inset-0 bg-black/40 rounded-lg"></div>
+            <div className="relative z-20 text-center text-white max-w-2xl w-full">
+              <div className="mb-16">
+                {/* Logo and Title */}
+                <div className="mb-6">
+                  <div className="relative inline-block animate-bounce">
+                    <Trophy className="text-yellow-400 drop-shadow-lg" size={50} />
+                    <Zap className="absolute -top-1 -right-6 text-red-400 animate-pulse" size={25} />
                   </div>
-                  <h1 className="brand-title-large mb-4">SportZone</h1>
-                  <p className="brand-subtitle mb-5">
-                    Join thousands of athletes mastering badminton, pickleball,
-                    and racquet sports
-                  </p>
+                </div>
+                <h1
+                  className="text-5xl font-extrabold mb-6 text-white drop-shadow-2xl animate-glow"
+                  style={{ textShadow: "0 4px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,1)" }}
+                >
+                  SportZone
+                </h1>
+                <p
+                  className="text-lg text-white leading-relaxed mb-8 drop-shadow-lg"
+                  style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,1)" }}
+                >
+                  Join thousands of athletes mastering badminton, pickleball, and racquet sports
+                </p>
 
-                  {/* Feature Cards */}
-                  <div className="feature-cards">
-                    <div className="feature-card">
-                      <Play className="feature-icon" size={32} />
-                      <h5>Live Coaching</h5>
-                      <p>Get real-time feedback from professional coaches</p>
-                    </div>
-                    <div className="feature-card">
-                      <Users className="feature-icon" size={32} />
-                      <h5>Community</h5>
-                      <p>Connect with players at your skill level</p>
-                    </div>
-                    <div className="feature-card">
-                      <Award className="feature-icon" size={32} />
-                      <h5>Tournaments</h5>
-                      <p>Compete in local and online competitions</p>
-                    </div>
-                    <div className="feature-card">
-                      <Target className="feature-icon" size={32} />
-                      <h5>Skill Tracking</h5>
-                      <p>Monitor your progress with detailed analytics</p>
-                    </div>
+                {/* Feature Cards */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="bg-black/50 backdrop-blur-md rounded-3xl p-5 text-center transition-all duration-300 hover:-translate-y-2 hover:bg-black/60 hover:shadow-2xl border border-white/30 animate-slide-up">
+                    <Play className="text-yellow-400 drop-shadow-sm mx-auto mb-4" size={32} />
+                    <h5
+                      className="mb-3 font-semibold text-lg text-white drop-shadow-md"
+                      style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,1)" }}
+                    >
+                      Live Coaching
+                    </h5>
+                    <p
+                      className="m-0 text-white leading-relaxed drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Get real-time feedback from professional coaches
+                    </p>
                   </div>
+                  <div className="bg-black/50 backdrop-blur-md rounded-3xl p-5 text-center transition-all duration-300 hover:-translate-y-2 hover:bg-black/60 hover:shadow-2xl border border-white/30 animate-slide-up-delayed-1">
+                    <Users className="text-yellow-400 drop-shadow-sm mx-auto mb-4" size={32} />
+                    <h5
+                      className="mb-3 font-semibold text-lg text-white drop-shadow-md"
+                      style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,1)" }}
+                    >
+                      Community
+                    </h5>
+                    <p
+                      className="m-0 text-white leading-relaxed drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Connect with players at your skill level
+                    </p>
+                  </div>
+                  <div className="bg-black/50 backdrop-blur-md rounded-3xl p-5 text-center transition-all duration-300 hover:-translate-y-2 hover:bg-black/60 hover:shadow-2xl border border-white/30 animate-slide-up-delayed-2">
+                    <Award className="text-yellow-400 drop-shadow-sm mx-auto mb-4" size={32} />
+                    <h5
+                      className="mb-3 font-semibold text-lg text-white drop-shadow-md"
+                      style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,1)" }}
+                    >
+                      Tournaments
+                    </h5>
+                    <p
+                      className="m-0 text-white leading-relaxed drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Compete in local and online competitions
+                    </p>
+                  </div>
+                  <div className="bg-black/50 backdrop-blur-md rounded-3xl p-5 text-center transition-all duration-300 hover:-translate-y-2 hover:bg-black/60 hover:shadow-2xl border border-white/30 animate-slide-up-delayed-3">
+                    <Target className="text-yellow-400 drop-shadow-sm mx-auto mb-4" size={32} />
+                    <h5
+                      className="mb-3 font-semibold text-lg text-white drop-shadow-md"
+                      style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,1)" }}
+                    >
+                      Skill Tracking
+                    </h5>
+                    <p
+                      className="m-0 text-white leading-relaxed drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Monitor your progress with detailed analytics
+                    </p>
+                  </div>
+                </div>
 
-                  {/* Stats */}
-                  <div className="stats-section">
-                    <div className="stat-item">
-                      <h3>50K+</h3>
-                      <p>Active Players</p>
-                    </div>
-                    <div className="stat-item">
-                      <h3>1M+</h3>
-                      <p>Games Played</p>
-                    </div>
-                    <div className="stat-item">
-                      <h3>500+</h3>
-                      <p>Tournaments</p>
-                    </div>
-                    <div className="stat-item">
-                      <h3>24/7</h3>
-                      <p>Support</p>
-                    </div>
+                {/* Stats */}
+                <div className="flex justify-around mt-8">
+                  <div className="text-center">
+                    <h3 className="text-4xl font-extrabold mb-2 text-yellow-400 drop-shadow-md">50K+</h3>
+                    <p
+                      className="m-0 text-white text-lg drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Active Players
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-4xl font-extrabold mb-2 text-yellow-400 drop-shadow-md">1M+</h3>
+                    <p
+                      className="m-0 text-white text-lg drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Games Played
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-4xl font-extrabold mb-2 text-yellow-400 drop-shadow-md">500+</h3>
+                    <p
+                      className="m-0 text-white text-lg drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Tournaments
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-4xl font-extrabold mb-2 text-yellow-400 drop-shadow-md">24/7</h3>
+                    <p
+                      className="m-0 text-white text-lg drop-shadow-sm"
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(0,0,0,1)" }}
+                    >
+                      Support
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          </Col>
+          </div>
 
           {/* Right Side - Login Form */}
-          <Col lg={4} className="login-form-side">
-            <div className="login-form-wrapper">
-              <div className="login-form-container">
-                <div className="text-center mb-5">
-                  <h2 className="login-title mb-2">Welcome Back</h2>
-                  <p className="text-muted">
-                    Sign in to continue your sports journey
-                  </p>
+          <div className="w-full lg:w-1/3 relative z-20 flex items-center justify-center">
+            <div className="w-full max-w-lg p-6 mr-0 lg:mr-20">
+              <div className="bg-white/95 backdrop-blur-xl p-10 rounded-3xl shadow-2xl animate-slide-in-right border border-white/20">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
+                  <p className="text-gray-600">Sign in to continue your sports journey</p>
                 </div>
 
                 {/* Alert */}
                 {showAlert && (
-                  <Alert variant="success" className="animated-alert mb-4">
-                    <div className="d-flex align-items-center">
-                      <Trophy size={20} className="me-2" />
-                      Welcome back, Champion! 🏆
+                  <div className="mb-6 p-4 bg-gradient-to-r from-green-100 to-green-50 border-l-4 border-green-500 rounded-2xl animate-slide-down">
+                    <div className="flex items-center">
+                      <Trophy size={20} className="mr-2 text-green-600" />
+                      <span className="text-green-800">Welcome back, Champion! 🏆</span>
                     </div>
-                  </Alert>
+                  </div>
                 )}
 
                 {/* Login Form */}
-                <Form onSubmit={handleSubmit}>
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-semibold">
-                      Email Address
-                    </Form.Label>
-                    <div className="input-group-custom">
-                      <Mail className="input-icon" size={20} />
-                      <Form.Control
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-semibold mb-2">Email Address</label>
+                    <div className="relative">
+                      <Mail
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 z-10"
+                        size={20}
+                      />
+                      <input
                         type="email"
                         placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="form-control-custom"
+                        className="w-full pl-12 pr-12 h-12 border-2 border-gray-200 rounded-2xl transition-all duration-300 bg-white/90 text-sm focus:border-indigo-500 focus:shadow-lg focus:shadow-indigo-500/25 focus:bg-white focus:-translate-y-0.5 focus:outline-none"
                         required
                       />
                     </div>
-                  </Form.Group>
+                  </div>
 
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-semibold">Password</Form.Label>
-                    <div className="input-group-custom">
-                      <Lock className="input-icon" size={20} />
-                      <Form.Control
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-semibold mb-2">Password</label>
+                    <div className="relative">
+                      <Lock
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 z-10"
+                        size={20}
+                      />
+                      <input
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="form-control-custom"
+                        className="w-full pl-12 pr-12 h-12 border-2 border-gray-200 rounded-2xl transition-all duration-300 bg-white/90 text-sm focus:border-indigo-500 focus:shadow-lg focus:shadow-indigo-500/25 focus:bg-white focus:-translate-y-0.5 focus:outline-none"
                         required
                       />
                       <button
                         type="button"
-                        className="password-toggle"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-indigo-500 transition-colors duration-300 z-10"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? (
-                          <EyeSlash size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
+                        {showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
-                  </Form.Group>
+                  </div>
 
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <Form.Check
-                      type="checkbox"
-                      id="remember-me"
-                      label="Remember me"
-                      className="custom-checkbox"
-                    />
-                    <a
-                      className="forgot-password-link"
+                  <div className="flex justify-between items-center mb-6">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Remember me</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="text-indigo-500 hover:text-purple-600 font-medium transition-all duration-300 hover:underline"
                       onClick={() => navigate("/forgot-password")}
                     >
                       Forgot Password?
-                    </a>
+                    </button>
                   </div>
 
-                  <Button
+                  <button
                     type="submit"
-                    className="login-btn w-100 mb-4"
+                    className="w-full h-12 bg-indigo-600 text-white font-semibold rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/40 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group mb-6 hover:bg-indigo-700"
                     disabled={isLoading}
                   >
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
                     {isLoading ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm me-2"
-                          role="status"
-                          aria-hidden="true"
-                        ></span>
+                      <div className="flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                         Signing In...
-                      </>
+                      </div>
                     ) : (
                       "Sign In to Play"
                     )}
-                  </Button>
-                </Form>
+                  </button>
+                </form>
 
                 {/* Divider */}
-                <div className="divider-container mb-4">
-                  <hr className="divider-line" />
-                  <span className="divider-text">or continue with</span>
-                  <hr className="divider-line" />
+                <div className="flex items-center text-center mb-6">
+                  <hr className="flex-1 h-px bg-gray-300 border-0" />
+                  <span className="px-4 text-gray-500 text-sm bg-white/95">or continue with</span>
+                  <hr className="flex-1 h-px bg-gray-300 border-0" />
                 </div>
 
                 {/* Social Login Buttons */}
-                <Row className="mb-4">
-                  <Col xs={6}>
-                    <Button
-                      variant="outline-danger"
-                      className="social-btn w-100"
-                      onClick={() => {
-                        const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-                        const redirectUri = `${window.location.origin}/auth/google/callback`;
-                        const scope = "email profile";
-                        const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
-                        window.location.href = oauthUrl;
-                      }}
-                    >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        className="me-2"
-                      >
-                        <path
-                          fill="currentColor"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                      Google
-                    </Button>
-                  </Col>
-                  <Col xs={6}>
-                    <Button
-                      variant="outline-primary"
-                      className="social-btn w-100"
-                      style={{ borderColor: "#1877f2", color: "#1877f2" }}
-                    >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        className="me-2"
-                      >
-                        <path
-                          fill="#1877f2"
-                          d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                        />
-                      </svg>
-                      Facebook
-                    </Button>
-                  </Col>
-                </Row>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <button
+                    type="button"
+                    className="h-12 border-2 border-red-300 text-red-600 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/15 flex items-center justify-center"
+                    onClick={() => {
+                      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+                      const redirectUri = `${window.location.origin}/auth/google/callback`
+                      const scope = "email profile"
+                      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`
+                      window.location.href = oauthUrl
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" className="mr-2">
+                      <path
+                        fill="currentColor"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="currentColor"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="currentColor"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                      />
+                      <path
+                        fill="currentColor"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      />
+                    </svg>
+                    Google
+                  </button>
+                  <button
+                    type="button"
+                    className="h-12 border-2 border-blue-300 text-blue-600 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/15 flex items-center justify-center"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" className="mr-2">
+                      <path
+                        fill="#1877f2"
+                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                      />
+                    </svg>
+                    Facebook
+                  </button>
+                </div>
 
                 {/* Sign Up Link */}
                 <div className="text-center">
-                  <p className="mb-0">
+                  <p className="mb-0 text-gray-600">
                     New to SportZone?{" "}
-                    <a
-                      className="signup-link"
+                    <button
+                      type="button"
+                      className="text-indigo-500 hover:text-purple-600 font-semibold transition-colors duration-300 hover:underline"
                       onClick={() => navigate("/register")}
                     >
                       Create Account
-                    </a>
+                    </button>
                   </p>
                 </div>
               </div>
             </div>
-          </Col>
-        </Row>
+          </div>
+        </div>
       </div>
 
       <style>{`
-        .sports-login-fullwidth {
-          min-height: 100vh;
-          width: 100vw;
-          margin: 0;
-          padding: 0;
-          overflow-x: hidden;
-        }
-
-        .full-width-purple-background {
-          position: relative;
-          min-height: 100vh;
-          width: 100vw;
-          margin: 0;
-          padding: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          overflow: hidden;
-        }
-
-        .full-width-purple-background .row {
-          margin: 0;
-          width: 100%;
-        }
-
-        .full-width-purple-background .col-lg-8,
-        .full-width-purple-background .col-lg-4 {
-          padding: 0;
-        }
-
-        .floating-elements {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          pointer-events: none;
-          z-index: 1;
-        }
-
-        .floating-ball {
-          position: absolute;
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
-          opacity: 0.08;
-          animation: float 15s ease-in-out infinite;
-        }
-
-        .ball-1 {
-          background: #ff6b6b;
-          top: 5%;
-          left: 5%;
-          animation-delay: 0s;
-        }
-
-        .ball-2 {
-          background: #4ecdc4;
-          top: 15%;
-          right: 8%;
-          animation-delay: 3s;
-        }
-
-        .ball-3 {
-          background: #45b7d1;
-          bottom: 10%;
-          left: 10%;
-          animation-delay: 6s;
-        }
-
-        .ball-4 {
-          background: #96ceb4;
-          top: 60%;
-          left: 3%;
-          animation-delay: 9s;
-        }
-
-        .ball-5 {
-          background: #feca57;
-          bottom: 20%;
-          right: 5%;
-          animation-delay: 12s;
-        }
-
-        .ball-6 {
-          background: #ff9ff3;
-          top: 40%;
-          right: 15%;
-          animation-delay: 15s;
-        }
-
-        .floating-racket {
-          position: absolute;
-          font-size: 6rem;
-          opacity: 0.06;
-          animation: rotate 35s linear infinite;
-        }
-
-        .racket-1 {
-          top: 8%;
-          left: 15%;
-          animation-delay: 0s;
-        }
-
-        .racket-2 {
-          bottom: 15%;
-          right: 20%;
-          animation-delay: 7s;
-        }
-
-        .racket-3 {
-          top: 50%;
-          left: 8%;
-          animation-delay: 14s;
-        }
-
-        .racket-4 {
-          top: 25%;
-          right: 25%;
-          animation-delay: 21s;
-        }
-
-        .racket-5 {
-          bottom: 40%;
-          left: 25%;
-          animation-delay: 28s;
-        }
-
         @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg) scale(1);
-          }
-          25% {
-            transform: translateY(-50px) rotate(90deg) scale(1.1);
-          }
-          50% {
-            transform: translateY(30px) rotate(180deg) scale(0.9);
-          }
-          75% {
-            transform: translateY(-25px) rotate(270deg) scale(1.05);
-          }
-        }
-
-        @keyframes rotate {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .sports-content-side {
-          position: relative;
-          z-index: 2;
-        }
-
-        .sports-content-wrapper {
-          position: relative;
-          height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 2rem;
-        }
-
-        .content-overlay {
-          position: relative;
-          z-index: 2;
-          text-align: center;
-          color: white;
-          max-width: 700px;
-          width: 100%;
-        }
-
-        .sports-logo-large {
-          position: relative;
-          display: inline-block;
-          animation: bounce 3s ease-in-out infinite;
-        }
-
-        .trophy-icon-large {
-          color: #ffd700;
-          filter: drop-shadow(0 6px 12px rgba(255, 215, 0, 0.4));
-        }
-
-        .zap-icon-large {
-          position: absolute;
-          top: -5px;
-          right: -25px;
-          color: #ff6b6b;
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-          0%,
-          20%,
-          50%,
-          80%,
-          100% {
-            transform: translateY(0);
-          }
-          40% {
-            transform: translateY(-20px);
-          }
-          60% {
-            transform: translateY(-10px);
-          }
-        }
-
-        @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.3);
-          }
-        }
-
-        .brand-title-large {
-          font-size: 2.8rem;
-          font-weight: 800;
-          margin-bottom: 0.8rem;
-          text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-          animation: glow 3s ease-in-out infinite alternate;
+          0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+          25% { transform: translateY(-50px) rotate(90deg) scale(1.1); }
+          50% { transform: translateY(30px) rotate(180deg) scale(0.9); }
+          75% { transform: translateY(-25px) rotate(270deg) scale(1.05); }
         }
 
         @keyframes glow {
-          from {
-            text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3),
-              0 0 25px rgba(255, 255, 255, 0.1);
-          }
-          to {
-            text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3),
-              0 0 35px rgba(255, 255, 255, 0.2);
-          }
-        }
-
-        .brand-subtitle {
-          font-size: 1rem;
-          opacity: 0.9;
-          line-height: 1.6;
-          margin-bottom: 1.5rem;
-        }
-
-        .feature-cards {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-          margin-bottom: 2rem;
-        }
-
-        .feature-card {
-          background: rgba(255, 255, 255, 0.12);
-          backdrop-filter: blur(15px);
-          border-radius: 20px;
-          padding: 1.3rem;
-          text-align: center;
-          transition: all 0.3s ease;
-          animation: slideInUp 0.8s ease-out;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .feature-card:nth-child(1) {
-          animation-delay: 0.1s;
-        }
-        .feature-card:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-        .feature-card:nth-child(3) {
-          animation-delay: 0.3s;
-        }
-        .feature-card:nth-child(4) {
-          animation-delay: 0.4s;
+          from { text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), 0 0 25px rgba(255, 255, 255, 0.1); }
+          to { text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), 0 0 35px rgba(255, 255, 255, 0.2); }
         }
 
         @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .feature-card:hover {
-          transform: translateY(-8px);
-          background: rgba(255, 255, 255, 0.18);
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-        }
-
-        .feature-icon {
-          color: #ffd700;
-          margin-bottom: 1.5rem;
-          filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
-        }
-
-        .feature-card h5 {
-          margin-bottom: 0.8rem;
-          font-weight: 600;
-          font-size: 1.2rem;
-        }
-
-        .feature-card p {
-          margin: 0;
-          opacity: 0.9;
-          font-size: 1rem;
-          line-height: 1.5;
-        }
-
-        .stats-section {
-          display: flex;
-          justify-content: space-around;
-          margin-top: 2rem;
-        }
-
-        .stat-item {
-          text-align: center;
-        }
-
-        .stat-item h3 {
-          font-size: 2.2rem;
-          font-weight: 800;
-          margin-bottom: 0.5rem;
-          color: #ffd700;
-          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .stat-item p {
-          margin: 0;
-          opacity: 0.9;
-          font-size: 1.2rem;
-        }
-
-        .login-form-side {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .login-form-wrapper {
-          width: 100%;
-          max-width: 600px;
-          padding: 1.5rem;
-          margin-right: 5rem;
-        }
-
-        .login-form-container {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          padding: 2.5rem;
-          border-radius: 25px;
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-          animation: slideInRight 0.8s ease-out;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(50px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .login-title {
-          font-size: 1.8rem;
-          font-weight: 700;
-          color: #333;
-        }
-
-        .input-group-custom {
-          position: relative;
-          margin-bottom: 0;
-        }
-
-        .input-icon {
-          position: absolute;
-          left: 18px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #6c757d;
-          z-index: 3;
-        }
-
-        .form-control-custom {
-          padding-left: 55px;
-          padding-right: 55px;
-          height: 45px;
-          border: 2px solid #e9ecef;
-          border-radius: 15px;
-          transition: all 0.3s ease;
-          background: rgba(255, 255, 255, 0.9);
-          font-size: 0.95rem;
-        }
-
-        .form-control-custom:focus {
-          border-color: #667eea;
-          box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-          background: white;
-          transform: translateY(-2px);
-        }
-
-        .password-toggle {
-          position: absolute;
-          right: 18px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          color: #6c757d;
-          cursor: pointer;
-          z-index: 3;
-          transition: color 0.3s ease;
-        }
-
-        .password-toggle:hover {
-          color: #667eea;
-        }
-
-        .custom-checkbox .form-check-input:checked {
-          background-color: #667eea;
-          border-color: #667eea;
-        }
-
-        .forgot-password-link {
-          color: #667eea;
-          text-decoration: none;
-          font-weight: 500;
-          transition: all 0.3s ease;
-        }
-
-        .forgot-password-link:hover {
-          color: #764ba2;
-          text-decoration: underline;
-        }
-
-        .login-btn {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border: none;
-          height: 45px;
-          border-radius: 15px;
-          font-weight: 600;
-          font-size: 1rem;
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .login-btn:hover:not(:disabled) {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-        }
-
-        .login-btn:active {
-          transform: translateY(0);
-        }
-
-        .login-btn::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.2),
-            transparent
-          );
-          transition: left 0.5s;
-        }
-
-        .login-btn:hover::before {
-          left: 100%;
-        }
-
-        .divider-container {
-          display: flex;
-          align-items: center;
-          text-align: center;
-        }
-
-        .divider-line {
-          flex: 1;
-          height: 1px;
-          background: #dee2e6;
-          border: none;
-          margin: 0;
-        }
-
-        .divider-text {
-          padding: 0 1rem;
-          color: #6c757d;
-          font-size: 0.9rem;
-          background: rgba(255, 255, 255, 0.95);
-        }
-
-        .social-btn {
-          height: 45px;
-          border-radius: 12px;
-          font-weight: 500;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .social-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .signup-link {
-          color: #667eea;
-          text-decoration: none;
-          font-weight: 600;
-          transition: color 0.3s ease;
-        }
-
-        .signup-link:hover {
-          color: #764ba2;
-          text-decoration: underline;
-        }
-
-        .animated-alert {
-          animation: slideDown 0.5s ease-out;
-          border: none;
-          border-radius: 15px;
-          background: linear-gradient(135deg, #d4edda, #c3e6cb);
-          border-left: 4px solid #28a745;
+          from { opacity: 0; transform: translateX(50px); }
+          to { opacity: 1; transform: translateX(0); }
         }
 
         @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Mobile Responsiveness */
-        @media (max-width: 991px) {
-          .sports-content-side {
-            display: none;
-          }
-
-          .login-form-container {
-            margin: 1rem;
-            padding: 2.5rem;
-          }
-        }
+        .animate-float { animation: float 15s ease-in-out infinite; }
+        .animate-float-delayed-3 { animation: float 15s ease-in-out infinite 3s; }
+        .animate-float-delayed-6 { animation: float 15s ease-in-out infinite 6s; }
+        .animate-float-delayed-9 { animation: float 15s ease-in-out infinite 9s; }
+        .animate-float-delayed-12 { animation: float 15s ease-in-out infinite 12s; }
+        .animate-float-delayed-15 { animation: float 15s ease-in-out infinite 15s; }
+        
+        .animate-spin-slow { animation: spin 35s linear infinite; }
+        .animate-spin-slow-delayed-7 { animation: spin 35s linear infinite 7s; }
+        .animate-spin-slow-delayed-14 { animation: spin 35s linear infinite 14s; }
+        .animate-spin-slow-delayed-21 { animation: spin 35s linear infinite 21s; }
+        .animate-spin-slow-delayed-28 { animation: spin 35s linear infinite 28s; }
+        
+        .animate-glow { animation: glow 3s ease-in-out infinite alternate; }
+        .animate-slide-up { animation: slideInUp 0.8s ease-out; }
+        .animate-slide-up-delayed-1 { animation: slideInUp 0.8s ease-out 0.1s both; }
+        .animate-slide-up-delayed-2 { animation: slideInUp 0.8s ease-out 0.2s both; }
+        .animate-slide-up-delayed-3 { animation: slideInUp 0.8s ease-out 0.3s both; }
+        .animate-slide-in-right { animation: slideInRight 0.8s ease-out; }
+        .animate-slide-down { animation: slideDown 0.5s ease-out; }
 
         @media (max-width: 768px) {
-          .brand-title-large {
-            font-size: 3.5rem;
-          }
-
-          .feature-cards {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-          }
-
-          .stats-section {
-            flex-wrap: wrap;
-            gap: 1.5rem;
-          }
-
-          .login-title {
-            font-size: 2.2rem;
-          }
-
-          .stat-item h3 {
-            font-size: 2.5rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .stats-section {
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .floating-ball {
-            width: 80px;
-            height: 80px;
-          }
-
-          .floating-racket {
-            font-size: 4rem;
-          }
-        }
-
-        /* Global body reset to ensure no margins */
-        :global(body) {
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow-x: hidden;
-        }
-
-        :global(html) {
-          margin: 0 !important;
-          padding: 0 !important;
+          .text-8xl { font-size: 4rem; }
         }
       `}</style>
     </div>
-  );
+  )
 }

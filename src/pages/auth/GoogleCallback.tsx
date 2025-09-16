@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosPublic from "../../utils/axios/axiosPublic";
 import {
   Container,
   Row,
@@ -31,13 +32,8 @@ export default function GoogleCallback() {
     if (code) {
       // Add a small delay for better UX
       setTimeout(() => {
-        axios
-          .post(
-            `${
-              import.meta.env.VITE_API_URL || "http://localhost:3000/"
-            }auth/google/callback`,
-            { code }
-          )
+        axiosPublic
+          .post("/auth/google/callback", { code })
           .then((res) => {
             localStorage.setItem("access_token", res.data.access_token);
             setAuthState({
