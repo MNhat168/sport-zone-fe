@@ -1,506 +1,490 @@
-"use client";
-
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
-  Calendar,
-  CreditCard,
-  MessageSquare,
-  Settings,
-  MoreHorizontal,
-} from "lucide-react";
-
+    Calendar,
+    Wallet,
+    Clock,
+    Users,
+    ChevronRight,
+    MoreHorizontal,
+    X,
+} from "lucide-react"
+import { UserDashboardTabs } from "@/components/ui/user-dashboard-tabs"
+import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
+import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
+import { mockBookings, mockCoachingSessions, mockFavorites, mockInvoices } from "@/components/mock-data/mock-data"
+import { useState, useEffect, useRef } from "react"
 export default function UserDashboardPage() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+    const [selectedTab, setSelectedTab] = useState<'court' | 'coaching'>('court')
+    const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+    const dropdownRef = useRef<HTMLDivElement>(null)
+    
+    const handleMoreClick = (itemId: string) => {
+        setOpenDropdown(openDropdown === itemId ? null : itemId)
+    }
+    
+    const handleCancel = (itemId: string) => {
+        console.log('Cancel booking:', itemId)
+        setOpenDropdown(null)
+    }
+    
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setOpenDropdown(null)
+            }
+        }
+        
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [])
+    
+    return (
+        <>
+            <NavbarDarkComponent />
+            {/* body */}
+            <div className="min-h-screen">
+                {/* Header Section */}
+                <UserDashboardHeader />
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>Home</span>
-              <span>{">"}</span>
-              <span>User Dashboard</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">User Dashboard</h1>
-          </div>
-        </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-6 bg-transparent border-b-0 h-auto p-0">
-              <TabsTrigger
-                value="dashboard"
-                className="flex items-center gap-2 py-4 px-6 border-b-2 border-transparent data-[state=active]:border-[#00775C] data-[state=active]:text-[#00775C] bg-transparent"
-              >
-                <Calendar className="w-4 h-4" />
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger
-                value="bookings"
-                className="flex items-center gap-2 py-4 px-6 border-b-2 border-transparent data-[state=active]:border-[#00775C] data-[state=active]:text-[#00775C] bg-transparent"
-              >
-                <Calendar className="w-4 h-4" />
-                My Bookings
-              </TabsTrigger>
-              <TabsTrigger
-                value="chat"
-                className="flex items-center gap-2 py-4 px-6 border-b-2 border-transparent data-[state=active]:border-[#00775C] data-[state=active]:text-[#00775C] bg-transparent"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Chat
-              </TabsTrigger>
-              <TabsTrigger
-                value="invoices"
-                className="flex items-center gap-2 py-4 px-6 border-b-2 border-transparent data-[state=active]:border-[#00775C] data-[state=active]:text-[#00775C] bg-transparent"
-              >
-                <CreditCard className="w-4 h-4" />
-                Invoices
-              </TabsTrigger>
-              <TabsTrigger
-                value="wallet"
-                className="flex items-center gap-2 py-4 px-6 border-b-2 border-transparent data-[state=active]:border-[#00775C] data-[state=active]:text-[#00775C] bg-transparent"
-              >
-                <CreditCard className="w-4 h-4" />
-                Wallet
-              </TabsTrigger>
-              <TabsTrigger
-                value="profile"
-                className="flex items-center gap-2 py-4 px-6 border-b-2 border-transparent data-[state=active]:border-[#00775C] data-[state=active]:text-[#00775C] bg-transparent"
-              >
-                <Settings className="w-4 h-4" />
-                Profile Setting
-              </TabsTrigger>
-            </TabsList>
+                {/* Navigation Tabs */}
+                <UserDashboardTabs />
+                <div className="container mx-auto px-12 py-8">
+                    <div className="space-y-8">
+                        {/* Statistics Section */}
+                            <div className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
+                                <div>
+                                    <h2 className="text-2xl font-semibold mb-2 text-start">Thống kê</h2>
+                                    <p className="text-muted-foreground mb-6 text-start">Nâng cao trình độ với thống kê và mục tiêu được cá nhân hóa</p>
+                                </div>
+                                {/* Divider */}
+                                <div className="border-t border-gray-200 my-6" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                    <Card className="bg-gray-100 border-0 shadow-none">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-3xl font-bold text-green-600 text-start">78</p>
+                                                    <p className="text-sm text-muted-foreground text-start">Tổng số sân đã đặt</p>
+                                                </div>
+                                                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                                    <Calendar className="w-6 h-6 text-green-600" />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
 
-            <TabsContent value="dashboard" className="mt-0">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                  {/* Main Content */}
-                  <div className="lg:col-span-3 space-y-8">
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <Card className="hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <CardContent className="p-6 text-center">
-                          <div className="text-3xl font-bold text-[#00775C] mb-2">
-                            24
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Total Courts Booked
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <CardContent className="p-6 text-center">
-                          <div className="text-3xl font-bold text-[#00775C] mb-2">
-                            12
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Total Coaches Booked
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <CardContent className="p-6 text-center">
-                          <div className="text-3xl font-bold text-[#00775C] mb-2">
-                            36
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Total Lessons
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <CardContent className="p-6 text-center">
-                          <div className="text-3xl font-bold text-[#00775C] mb-2">
-                            $2,450
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Total Payments
-                          </div>
-                        </CardContent>
-                      </Card>
+                                    <Card className="bg-gray-100 border-0 shadow-none">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-3xl font-bold text-blue-600 text-start">45</p>
+                                                    <p className="text-sm text-muted-foreground text-start">Tổng số huấn luyện viên đã đặt</p>
+                                                </div>
+                                                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                    <Users className="w-6 h-6 text-blue-600" />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="bg-gray-100 border-0 shadow-none">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-3xl font-bold text-purple-600 text-start">06</p>
+                                                    <p className="text-sm text-muted-foreground text-start">Tổng số buổi học</p>
+                                                </div>
+                                                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                    <Clock className="w-6 h-6 text-purple-600" />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="bg-gray-100 border-0 shadow-none">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-3xl font-bold text-emerald-600 text-start">$45,056</p>
+                                                    <p className="text-sm text-muted-foreground text-start">Thanh toán</p>
+                                                </div>
+                                                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                                    <Wallet className="w-6 h-6 text-emerald-600" />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+                            {/* Today's Appointment Section */}
+                            <div >
+                                <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
+                                    <CardHeader>
+                                        <CardTitle className="text-xl font-semibold mb-2 text-start">Lịch hẹn hôm nay</CardTitle>
+                                        <p className="text-muted-foreground text-start">Lịch trình cầu lông cá nhân của bạn</p>
+                                    </CardHeader>
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-200" />
+                                    <CardContent>
+                                        <div className="flex items-center gap-4 p-4 rounded-lg">
+                                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                                <span className="text-white font-semibold text-sm text-start">SC</span>
+                                            </div>
+                                            <div className="flex-1 grid grid-cols-6 gap-4 text-sm">
+                                                <div className="text-start">
+                                                    <p className="font-medium text-start">Tên sân</p>
+                                                    <p className="text-muted-foreground text-start">Sân tổng hợp tiêu chuẩn 1</p>
+                                                </div>
+                                                <div className="text-start">
+                                                    <p className="font-medium text-start">Ngày hẹn</p>
+                                                    <p className="text-muted-foreground text-start">Thứ 2, 11/7</p>
+                                                </div>
+                                                <div className="text-start">
+                                                    <p className="font-medium text-start">Giờ bắt đầu</p>
+                                                    <p className="text-muted-foreground text-start">05:25 sáng</p>
+                                                </div>
+                                                <div className="text-start">
+                                                    <p className="font-medium text-start">Giờ kết thúc</p>
+                                                    <p className="text-muted-foreground text-start">06:25 sáng</p>
+                                                </div>
+                                                <div className="text-start">
+                                                    <p className="font-medium text-start">Khách mời thêm</p>
+                                                    <p className="text-muted-foreground text-start">4</p>
+                                                </div>
+                                                <div className="text-start">
+                                                    <p className="font-medium text-start">Địa điểm</p>
+                                                    <p className="text-muted-foreground text-start">Sant Marco</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            {/* My Bookings, wallet, upcoming, favourites */}
+                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                                {/* Left Column */}
+                                <div className="lg:col-span-3 space-y-8">
+                                    {/* My Bookings */}
+                                    <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
+                                        <CardHeader className="flex flex-row items-center justify-between py-2">
+                                            <div className="flex flex-col space-y-1">
+                                                <CardTitle className="text-xl font-semibold mb-2 text-start">Đặt sân của tôi</CardTitle>
+                                                <p className="text-muted-foreground text-start">Đặt sân dễ dàng</p>
+                                            </div>
+                                            <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
+                                                <Badge 
+                                                    variant={selectedTab === 'court' ? 'default' : 'outline'} 
+                                                    className={`px-4 py-2 text-sm font-medium ${selectedTab === 'court' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer'}`}
+                                                    onClick={() => setSelectedTab('court')}
+                                                >
+                                                    Court
+                                                </Badge>
+                                                <Badge 
+                                                    variant={selectedTab === 'coaching' ? 'default' : 'outline'} 
+                                                    className={`px-4 py-2 text-sm font-medium ${selectedTab === 'coaching' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer'}`}
+                                                    onClick={() => setSelectedTab('coaching')}
+                                                >
+                                                    Coaching
+                                                </Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4 text-start">
+                                            <div className="border-t border-gray-200" />
+                                            {selectedTab === 'court' ? (
+                                                mockBookings.map((booking, index) => (
+                                                    <div key={booking.id}>
+                                                        <div className="flex items-center gap-4 p-4">
+                                                            <div
+                                                                className={`w-12 h-12 bg-gradient-to-br ${booking.color} rounded-lg flex items-center justify-center`}
+                                                            >
+                                                                <span className="text-white font-semibold text-xs">
+                                                                    {booking.name
+                                                                        .split(" ")
+                                                                        .map((w) => w[0])
+                                                                        .join("")}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
+                                                                <div>
+                                                                    <p className="font-medium">{booking.name}</p>
+                                                                    <p className="text-muted-foreground">{booking.court}</p>
+                                                                        <p className="text-muted-foreground">
+                                                                        Khách: {booking.guests} • {booking.hours}
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-medium">Date & Time</p>
+                                                                    <p className="text-muted-foreground">{booking.date}</p>
+                                                                    <p className="text-muted-foreground">{booking.time}</p>
+                                                                </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-lg font-bold text-green-600">{booking.price}</p>
+                                                        <div className="relative" ref={dropdownRef}>
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm"
+                                                                onClick={() => handleMoreClick(booking.id)}
+                                                            >
+                                                                <MoreHorizontal className="w-4 h-4" />
+                                                            </Button>
+                                                            {openDropdown === booking.id && (
+                                                                <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                                                                    <button
+                                                                        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-lg"
+                                                                        onClick={() => handleCancel(booking.id)}
+                                                                    >
+                                                                        <X className="w-4 h-4" />
+                                                                        Cancel
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                            </div>
+                                                        </div>
+                                                        {index < mockBookings.length - 1 && (
+                                                            <div className="border-t border-gray-200 mx-4" />
+                                                        )}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                mockCoachingSessions.map((coach, index) => (
+                                                    <div key={coach.id}>
+                                                        <div className="flex items-center gap-4 p-4">
+                                                            <div
+                                                                className={`w-12 h-12 bg-gradient-to-br ${coach.color} rounded-lg flex items-center justify-center`}
+                                                            >
+                                                                <span className="text-white font-semibold text-xs">
+                                                                    {coach.avatar}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
+                                                                <div>
+                                                                    <p className="font-medium">{coach.name}</p>
+                                                                    <p className="text-muted-foreground">Một lần</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-medium">Date & Time</p>
+                                                                    <p className="text-muted-foreground">{coach.date}</p>
+                                                                    <p className="text-muted-foreground">{coach.time}</p>
+                                                                </div>
+                                                                <div className="flex items-center justify-between">
+                                                                    <p className="text-lg font-bold text-green-600">{coach.price}</p>
+                                                                    <div className="relative" ref={dropdownRef}>
+                                                                        <Button 
+                                                                            variant="ghost" 
+                                                                            size="sm"
+                                                                            onClick={() => handleMoreClick(coach.id)}
+                                                                        >
+                                                                            <MoreHorizontal className="w-4 h-4" />
+                                                                        </Button>
+                                                                        {openDropdown === coach.id && (
+                                                                            <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                                                                                <button
+                                                                                    className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-lg"
+                                                                                    onClick={() => handleCancel(coach.id)}
+                                                                                >
+                                                                                    <X className="w-4 h-4" />
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {index < mockCoachingSessions.length - 1 && (
+                                                            <div className="border-t border-gray-200 mx-4" />
+                                                        )}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                {/* Right Column */}
+                                <div className="lg:col-span-2 space-y-6">
+                                    {/* Wallet Balance */}
+                                    <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white">
+                                        <CardContent>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div>
+                                                    <p className="text-sm opacity-90">Số dư ví của bạn</p>
+                                                    <p className="text-3xl font-bold">$4,544</p>
+                                                </div>
+                                                <Button
+                                                    variant="secondary"
+                                                    className="bg-white/20 hover:bg-white/30 text-white border-white/30 flex items-center justify-center gap-2"
+                                                >
+                                                    <Wallet className="w-4 h-4" />
+                                                    Thêm thanh toán
+                                                </Button>
+                                            </div>
+
+
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Upcoming Appointment */}
+                                    <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
+                                        <CardHeader className="flex flex-row items-center justify-between">
+                                            <div className="flex flex-col space-y-2">
+                                                <CardTitle className="text-start">Lịch hẹn sắp tới</CardTitle>
+                                                <p className="text-sm text-muted-foreground text-start">Quản lý tất cả các đặt sân sắp tới của bạn.</p>
+                                            </div>
+                                            <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
+                                                <Badge variant="default" className="px-4 py-2 text-sm font-medium bg-green-600">
+                                                    Court
+                                                </Badge>
+                                                <Badge variant="outline" className="px-4 py-2 text-sm font-medium border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200">
+                                                    Coaching
+                                                </Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="border-t border-gray-200 pt-4">
+                                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                    <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg flex items-center justify-center">
+                                                        <span className="text-white font-semibold text-xs">LS</span>
+                                                    </div>
+                                                    <div className="flex-1 text-start">
+                                                        <p className="font-medium text-sm">Học viện thể thao Leap</p>
+                                                        <p className="text-xs text-muted-foreground">Sân 1</p>
+                                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>18:00 đến 20:00</span>
+                                                        </div>
+                                                    </div>
+                                                    <Button variant="ghost" size="sm">
+                                                        <MoreHorizontal className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* My Favourites */}
+                                    <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
+                                        <CardHeader className="flex flex-row items-center justify-between">
+                                            <div className="flex flex-col space-y-2">
+                                                <CardTitle className="text-start">Yêu thích của tôi</CardTitle>
+                                                <p className="text-sm text-muted-foreground text-start">Danh sách sân yêu thích của tôi</p>
+                                            </div>
+                                            <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
+                                                <Badge variant="default" className="px-4 py-2 text-sm font-medium bg-green-600">
+                                                    Court
+                                                </Badge>
+                                                <Badge variant="outline" className="px-4 py-2 text-sm font-medium border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200">
+                                                    Coaching
+                                                </Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="border-t border-gray-200 pt-4">
+                                                {mockFavorites.map((favorite, index) => (
+                                                     <div key={`favorite-${index}`}>
+                                                         <div className="flex items-center gap-3 p-3 rounded-lg">
+                                                             <div
+                                                                 className={`w-8 h-8 bg-gradient-to-br ${favorite.color} rounded-lg flex items-center justify-center`}
+                                                             >
+                                                                 <span className="text-white font-semibold text-xs">
+                                                                     {favorite.name
+                                                                         .split(" ")
+                                                                         .map((w) => w[0])
+                                                                         .join("")}
+                                                                 </span>
+                                                             </div>
+                                                             <div className="flex-1 text-start">
+                                                                 <p className="font-medium text-sm">{favorite.name}</p>
+                                                                 <p className="text-xs text-muted-foreground">{favorite.bookings}</p>
+                                                             </div>
+                                                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                                         </div>
+                                                         {index < 2 && <div className="border-t border-gray-200 mx-3" />}
+                                                     </div>
+                                                 ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+                            {/* Recent Invoices Section */}
+                            <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-xl font-semibold mb-2 text-start">Hóa đơn gần đây</CardTitle>
+                                        <p className="text-muted-foreground text-start">Truy cập các hóa đơn gần đây liên quan đến đặt sân</p>
+                                    </div>
+                                    <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
+                                        <Badge variant="default" className="px-4 py-2 text-sm font-medium bg-green-600">
+                                            Court
+                                        </Badge>
+                                        <Badge variant="outline" className="px-4 py-2 text-sm font-medium border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200">
+                                            Coaching
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="border-t border-gray-200 pt-4">
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-5 gap-4 text-sm font-bold bg-gray-100 text-gray-700 pb-2 px-4 py-3">
+                                                <div className="text-start">Tên sân</div>
+                                                <div className="text-start">Ngày & Giờ</div>
+                                                <div className="text-start">Thanh toán</div>
+                                                <div className="text-start">Đã thanh toán</div>
+                                                <div className="text-start">Trạng thái</div>
+                                            </div>
+                                            {mockInvoices.map((invoice, index) => (
+                                                <div key={invoice.id}>
+                                                    <div className="grid grid-cols-5 gap-4 items-center py-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div
+                                                                className={`w-8 h-8 bg-gradient-to-br ${invoice.color} rounded-lg flex items-center justify-center`}
+                                                            >
+                                                                <span className="text-white font-semibold text-xs">
+                                                                    {invoice.name
+                                                                        .split(" ")
+                                                                        .map((w) => w[0])
+                                                                        .join("")}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-start">
+                                                                <p className="font-medium text-sm">{invoice.name}</p>
+                                                                <p className="text-xs text-muted-foreground">{invoice.court}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-start">
+                                                            <p className="text-sm">{invoice.date}</p>
+                                                            <p className="text-xs text-muted-foreground">{invoice.time}</p>
+                                                        </div>
+                                                        <div className="font-semibold text-start">{invoice.payment}</div>
+                                                        <div className="text-sm text-muted-foreground text-start">{invoice.paidOn}</div>
+                                                        <div className="text-start">
+                                                                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                                                Đã thanh toán
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                    {index < mockInvoices.length - 1 && (
+                                                        <div className="border-t border-gray-200" />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
                     </div>
-
-                    {/* Today's Appointment */}
-                    <Card className="animate-fade-in-up">
-                      <CardHeader>
-                        <CardTitle className="text-xl font-semibold">
-                          Today's Appointment
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b">
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Court Name
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Date
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Start Time
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  End Time
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Guests
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Location
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="border-b hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-4">Court A-1</td>
-                                <td className="py-4 px-4">Jan 15, 2025</td>
-                                <td className="py-4 px-4">10:00 AM</td>
-                                <td className="py-4 px-4">12:00 PM</td>
-                                <td className="py-4 px-4">4</td>
-                                <td className="py-4 px-4">Sports Center</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* My Bookings */}
-                    <Card className="animate-fade-in-up">
-                      <CardHeader>
-                        <CardTitle className="text-xl font-semibold">
-                          My Bookings
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all duration-300">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                              <span className="text-xs text-gray-600">
-                                Court Image
-                              </span>
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">
-                                Sports Arena - Court B-2
-                              </h3>
-                              <p className="text-sm text-gray-600">
-                                Jan 18, 2025 • 2:00 PM - 4:00 PM
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                2 hours • 4 guests
-                              </p>
-                              <p className="font-semibold text-[#00775C]">
-                                $120
-                              </p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-all duration-300">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                              <span className="text-xs text-gray-600">
-                                Court Image
-                              </span>
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">
-                                City Club - Court A-3
-                              </h3>
-                              <p className="text-sm text-gray-600">
-                                Jan 20, 2025 • 6:00 PM - 8:00 PM
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                2 hours • 2 guests
-                              </p>
-                              <p className="font-semibold text-[#00775C]">
-                                $80
-                              </p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Recent Invoices */}
-                    <Card className="animate-fade-in-up">
-                      <CardHeader>
-                        <CardTitle className="text-xl font-semibold">
-                          Recent Invoices
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b">
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Court Name
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Date & Time
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Payment
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Paid On
-                                </th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-600">
-                                  Status
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="border-b hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-4">Court A-1</td>
-                                <td className="py-4 px-4">
-                                  Jan 12, 2025 10:00 AM
-                                </td>
-                                <td className="py-4 px-4">$150</td>
-                                <td className="py-4 px-4">Jan 12, 2025</td>
-                                <td className="py-4 px-4">
-                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                                    Paid
-                                  </Badge>
-                                </td>
-                              </tr>
-                              <tr className="border-b hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-4">Court B-2</td>
-                                <td className="py-4 px-4">
-                                  Jan 10, 2025 2:00 PM
-                                </td>
-                                <td className="py-4 px-4">$120</td>
-                                <td className="py-4 px-4">Jan 10, 2025</td>
-                                <td className="py-4 px-4">
-                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                                    Paid
-                                  </Badge>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Sidebar */}
-                  <div className="space-y-6">
-                    {/* Wallet Balance */}
-                    <Card className="hover:shadow-lg transition-all duration-300">
-                      <CardContent className="p-6">
-                        <div className="text-center">
-                          <div className="text-sm text-gray-600 mb-2">
-                            Wallet Balance
-                          </div>
-                          <div className="text-3xl font-bold text-[#00775C] mb-4">
-                            $845.50
-                          </div>
-                          <Button className="w-full bg-black hover:bg-gray-800 text-white">
-                            Add Payment
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Upcoming Appointment */}
-                    <Card className="animate-fade-in-up">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold">
-                          Upcoming Appointment
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="text-sm font-medium">Next Court</div>
-                          <div className="text-sm text-gray-600">
-                            Sports Arena - Court A-1
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Jan 15, 2025 • 10:00 AM
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* My Favourites */}
-                    <Card className="animate-fade-in-up">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold">
-                          My Favourites
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="w-10 h-10 bg-gray-300 rounded flex items-center justify-center">
-                            <span className="text-xs">Court</span>
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">
-                              Sports Arena A-1
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              15 bookings
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="w-10 h-10 bg-gray-300 rounded flex items-center justify-center">
-                            <span className="text-xs">Court</span>
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">
-                              City Club B-2
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              8 bookings
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="w-10 h-10 bg-gray-300 rounded flex items-center justify-center">
-                            <span className="text-xs">Court</span>
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">
-                              Tennis Center C-1
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              5 bookings
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
                 </div>
-              </div>
-            </TabsContent>
+            </div>
 
-            {/* Other tab contents would go here */}
-            <TabsContent value="bookings" className="mt-0">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                    My Bookings
-                  </h2>
-                  <p className="text-gray-600">
-                    Manage all your court bookings here.
-                  </p>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="chat" className="mt-0">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                    Chat
-                  </h2>
-                  <p className="text-gray-600">
-                    Connect with coaches and other players.
-                  </p>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="invoices" className="mt-0">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                    Invoices
-                  </h2>
-                  <p className="text-gray-600">
-                    View and manage your payment history.
-                  </p>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="wallet" className="mt-0">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                    Wallet
-                  </h2>
-                  <p className="text-gray-600">
-                    Manage your wallet and payment methods.
-                  </p>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="profile" className="mt-0">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                    Profile Settings
-                  </h2>
-                  <p className="text-gray-600">
-                    Update your profile information and preferences.
-                  </p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-
-      {/* Bottom CTA Section */}
-      <div className="bg-gray-900 text-white py-16">
-        <div className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="text-3xl font-bold mb-4 text-balance">
-            We Welcome Your Passion And Expertise – Join our empowering sports
-            community today and grow with us
-          </h2>
-          <Button className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
-            Join With Us
-          </Button>
-        </div>
-      </div>
-
-      <style >{`
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in-up {
-          animation: fade-in-up 0.6s ease-out forwards;
-        }
-      `}</style>
-    </div>
-  );
+        </>
+    )
 }
