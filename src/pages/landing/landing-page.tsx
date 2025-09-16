@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -15,120 +15,93 @@ import { Badge } from "@/components/ui/badge";
 import {
   MapPin,
   Users,
-  Facebook,
-  Twitter,
-  Instagram,
-  Menu,
   Search,
   Award,
 } from "lucide-react";
+import { NavbarComponent } from "@/components/header/navbar-component";
+import { FooterComponent } from "@/components/footer/footer-component";
 
 export default function LandingPage() {
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slideImages = [
+    "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757854021/banner-tennis_koajhu.jpg",
+    "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757855604/badminton-banner-with-rackets-shuttlecock-blue-background-with-copy-space_l9libr.jpg",
+    "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757855542/93333608_10047006_jgl1tk.jpg"
+  ];
+
+  // Auto slide functionality
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slideImages.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [slideImages.length]);
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50 animate-fade-in-down">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="text-2xl font-bold" style={{ color: "#00775C" }}>
-                SPYN
-              </div>
-            </div>
-
-            <nav className="hidden md:flex space-x-8">
-              <a
-                href="#"
-                className="text-gray-900 hover:text-[#00775C] transition-colors font-medium"
-              >
-                Home
-              </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-[#00775C] transition-colors"
-              >
-                Shop
-              </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-[#00775C] transition-colors"
-              >
-                Blog
-              </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-[#00775C] transition-colors"
-              >
-                Events
-              </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-[#00775C] transition-colors"
-              >
-                Pages
-              </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-[#00775C] transition-colors"
-              >
-                News
-              </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-primary transition-colors"
-              >
-                Contact
-              </a>
-            </nav>
-
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm">
-                <Search className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" className="md:hidden">
-                <Menu className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      {/* Navbar */}
+      <NavbarComponent />
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('/images/tennis-hero.jpg')",
-          }}
-        >
-          <div className="absolute inset-0 bg-black/30"></div>
+      <section className="relative h-[60vh] flex items-center justify-center overflow-hidden pt-16">
+        {/* Slide Images */}
+        <div className="absolute inset-0">
+          {slideImages.map((image, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${
+                index === currentSlide ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                backgroundImage: `url(${image})`,
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30"></div>
+            </div>
+          ))}
         </div>
 
+        {/* Content */}
         <div className="relative z-10 text-center text-white animate-fade-in-up">
           <div className="inline-block mb-6 animate-bounce-in">
             <Badge
               className="text-white px-6 py-2 text-lg font-semibold"
               style={{ backgroundColor: "#00775C" }}
             >
-              TENNIS AID
+          HỖ TRỢ THỂ THAO
             </Badge>
           </div>
           <h1 className="text-6xl md:text-8xl font-bold mb-4 animate-slide-in-left">
-            SPORT ACADEMY
+            SportZone
           </h1>
           <div className="inline-block animate-slide-in-right">
             <Badge
               className="text-black px-6 py-2 text-lg font-semibold"
               style={{ backgroundColor: "#F2A922" }}
             >
-              100% QUALIFIED
+          100% CHUYÊN NGHIỆP
             </Badge>
           </div>
+        </div>
+
+        {/* Navigation Dots */}
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
+          {slideImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? 'bg-white scale-125' 
+                  : 'bg-white/50 hover:bg-white/75'
+              }`}
+            />
+          ))}
         </div>
       </section>
 
@@ -137,10 +110,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Find Your Field
+Tìm Sân Của Bạn
             </h2>
             <p className="text-gray-600 text-lg">
-              Book your perfect sports venue
+Đặt sân thể thao hoàn hảo của bạn
             </p>
           </div>
 
@@ -149,18 +122,18 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sport Type
+Loại Thể Thao
                   </label>
                   <Select
                     value={selectedSport}
                     onValueChange={setSelectedSport}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Sport" />
+                      <SelectValue placeholder="Chọn môn thể thao" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="tennis">Tennis</SelectItem>
-                      <SelectItem value="badminton">Badminton</SelectItem>
+                      <SelectItem value="tennis">Quần vợt</SelectItem>
+                      <SelectItem value="badminton">Cầu lông</SelectItem>
                       <SelectItem value="squash">Squash</SelectItem>
                       <SelectItem value="padel">Padel</SelectItem>
                     </SelectContent>
@@ -169,26 +142,26 @@ export default function LandingPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
+Địa Điểm
                   </label>
                   <Select
                     value={selectedLocation}
                     onValueChange={setSelectedLocation}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Your location" />
+                      <SelectValue placeholder="Vị trí của bạn" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="downtown">Downtown</SelectItem>
-                      <SelectItem value="north">North District</SelectItem>
-                      <SelectItem value="south">South District</SelectItem>
+                      <SelectItem value="downtown">Trung tâm thành phố</SelectItem>
+                      <SelectItem value="north">Quận Bắc</SelectItem>
+                      <SelectItem value="south">Quận Nam</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date
+Ngày
                   </label>
                   <Input
                     type="date"
@@ -200,16 +173,16 @@ export default function LandingPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Time
+Thời Gian
                   </label>
                   <Select value={selectedTime} onValueChange={setSelectedTime}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Time" />
+                      <SelectValue placeholder="Chọn thời gian" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="morning">Morning</SelectItem>
-                      <SelectItem value="afternoon">Afternoon</SelectItem>
-                      <SelectItem value="evening">Evening</SelectItem>
+                      <SelectItem value="morning">Sáng</SelectItem>
+                      <SelectItem value="afternoon">Chiều</SelectItem>
+                      <SelectItem value="evening">Tối</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -222,7 +195,7 @@ export default function LandingPage() {
                   style={{ backgroundColor: "#00775C" }}
                 >
                   <Search className="mr-2 h-5 w-5" />
-                  Search Fields
+Tìm Sân
                 </Button>
               </div>
             </CardContent>
@@ -235,34 +208,34 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Featured Fields
+Sân Nổi Bật
             </h2>
             <p className="text-gray-600 text-lg">
-              Popular venues with great deals
+Các địa điểm phổ biến với ưu đãi tuyệt vời
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: "Premium Soccer Field",
-                subtitle: "Downtown Sports Club",
-                price: "$45/hr",
-                rating: "NEW",
+                title: "Sân Bóng Đá Cao Cấp",
+                subtitle: "Câu Lạc Bộ Thể Thao Trung Tâm",
+                price: "1.200.000đ/giờ",
+                rating: "MỚI",
                 image: "/soccer-field.png",
               },
               {
-                title: "Professional Tennis Court",
-                subtitle: "Elite Tennis Club",
-                price: "$35/hr",
+                title: "Sân Quần Vợt Chuyên Nghiệp",
+                subtitle: "Câu Lạc Bộ Quần Vợt Elite",
+                price: "900.000đ/giờ",
                 rating: "HOT",
                 image: "/outdoor-tennis-court.png",
               },
               {
-                title: "Indoor Badminton Court",
-                subtitle: "City Sports Center",
-                price: "$25/hr",
-                rating: "POPULAR",
+                title: "Sân Cầu Lông Trong Nhà",
+                subtitle: "Trung Tâm Thể Thao Thành Phố",
+                price: "650.000đ/giờ",
+                rating: "PHỔ BIẾN",
                 image: "/badminton-court.png",
               },
             ].map((field, index) => (
@@ -300,7 +273,7 @@ export default function LandingPage() {
                       className="text-white hover:scale-105 transition-transform"
                       style={{ backgroundColor: "#00775C" }}
                     >
-                      Book Now
+Đặt Ngay
                     </Button>
                   </div>
                 </CardContent>
@@ -316,37 +289,37 @@ export default function LandingPage() {
           <div className="grid grid-cols-5 h-64">
             {/* Top row */}
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-              Premium Soccer Field
+Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-              Badminton Court Image
+Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-              Premium Soccer Field
+Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-              Badminton Court Image
+Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-              Premium Soccer Field
+Sân Bóng Đá Cao Cấp
             </div>
           </div>
           <div className="grid grid-cols-5 h-64">
             {/* Bottom row */}
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-              Badminton Court Image
+Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-              Premium Soccer Field
+Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-              Badminton Court Image
+Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-              Premium Soccer Field
+Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-              Badminton Court Image
+Hình Ảnh Sân Cầu Lông
             </div>
           </div>
         </div>
@@ -357,10 +330,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Why Choose Pickerball?
+Tại Sao Chọn SportZone?
             </h2>
             <p className="text-gray-600 text-lg">
-              Everything you need for the perfect game
+Mọi thứ bạn cần cho trận đấu hoàn hảo
             </p>
           </div>
 
@@ -368,21 +341,21 @@ export default function LandingPage() {
             {[
               {
                 icon: "⏰",
-                title: "Instant Booking",
+                title: "Đặt Sân Tức Thì",
                 description:
-                  "Book your field in seconds with real-time availability",
+                  "Đặt sân trong vài giây với tính khả dụng thời gian thực",
               },
               {
                 icon: "👥",
-                title: "Professional Coaches",
+                title: "Huấn Luyện Viên Chuyên Nghiệp",
                 description:
-                  "Access certified coaches for training and improvement",
+                  "Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện",
               },
               {
                 icon: "⚙️",
-                title: "Multi-Sport Support",
+                title: "Hỗ Trợ Đa Môn Thể Thao",
                 description:
-                  "Find fields for soccer, tennis, badminton, and more",
+                  "Tìm sân cho bóng đá, quần vợt, cầu lông và nhiều hơn nữa",
               },
             ].map((feature, index) => (
               <div
@@ -404,57 +377,56 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             <div className="animate-slide-in-left">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Course For Any Ages !
+Khóa Học Cho Mọi Lứa Tuổi!
               </h2>
               <p className="text-gray-600 mb-8 leading-relaxed">
-                Lorem Ipsum is simply dummy text of the printing and typesetting
-                industry. Lorem Ipsum has been the industry's standard dummy
-                text ever since the 1500s, when an unknown printer took a galley
-                of type and scrambled it to make a type specimen book
+                Chúng tôi cung cấp các khóa học thể thao chất lượng cao cho mọi lứa tuổi.
+                Từ trẻ em đến người lớn, từ người mới bắt đầu đến vận động viên chuyên nghiệp,
+                chúng tôi có chương trình phù hợp với nhu cầu và khả năng của bạn.
               </p>
             </div>
 
             <div className="animate-slide-in-right relative">
               <div className="relative bg-gray-400 rounded-lg h-80 flex items-center justify-center">
                 <span className="text-white text-lg font-semibold">
-                  Badminton Court Image
+    Hình Ảnh Sân Cầu Lông
                 </span>
 
                 {/* Skill level indicators */}
                 <div className="absolute right-4 top-8 space-y-4">
                   <div className="bg-white rounded-lg p-3 shadow-lg flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gray-300 rounded flex items-center justify-center">
-                      <span className="text-xs font-semibold">Image</span>
+                      <span className="text-xs font-semibold">Hình</span>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500">Mixed Groups</div>
-                      <div className="font-semibold">BEGINNER LEVEL</div>
+                      <div className="text-xs text-gray-500">Nhóm Hỗn Hợp</div>
+                      <div className="font-semibold">TRÌNH ĐỘ CƠ BẢN</div>
                     </div>
                     <div className="text-lg font-bold">$</div>
                   </div>
 
                   <div className="bg-white rounded-lg p-3 shadow-lg flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gray-300 rounded flex items-center justify-center">
-                      <span className="text-xs font-semibold">Image</span>
+                      <span className="text-xs font-semibold">Hình</span>
                     </div>
                     <div>
                       <div className="text-xs text-gray-500">
-                        Maximum 6 people
+                        Tối đa 6 người
                       </div>
-                      <div className="font-semibold">INTERMEDIATE</div>
+                      <div className="font-semibold">TRUNG BÌNH</div>
                     </div>
                     <div className="text-lg font-bold">$</div>
                   </div>
 
                   <div className="bg-white rounded-lg p-3 shadow-lg flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gray-300 rounded flex items-center justify-center">
-                      <span className="text-xs font-semibold">Image</span>
+                      <span className="text-xs font-semibold">Hình</span>
                     </div>
                     <div>
                       <div className="text-xs text-gray-500">
-                        Private Lesson
+                        Bài Học Riêng
                       </div>
-                      <div className="font-semibold">ADVANCED SKILLS</div>
+                      <div className="font-semibold">KỸ NĂNG NÂNG CAO</div>
                     </div>
                     <div className="text-lg font-bold">$</div>
                   </div>
@@ -473,10 +445,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Men's Tournaments
+Giải Đấu Nam
                   </h3>
                   <p className="text-gray-600">
-                    Access certified coaches for training and improvement
+Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
                   </p>
                 </div>
               </div>
@@ -491,10 +463,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Women's Tournaments
+Giải Đấu Nữ
                   </h3>
                   <p className="text-gray-600">
-                    Access certified coaches for training and improvement
+Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
                   </p>
                 </div>
               </div>
@@ -508,10 +480,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Want to Sign Up!
+Muốn Đăng Ký!
             </h2>
             <p className="text-gray-600 text-lg">
-              Everything you need for the perfect game
+Mọi thứ bạn cần cho trận đấu hoàn hảo
             </p>
           </div>
 
@@ -519,21 +491,21 @@ export default function LandingPage() {
             {[
               {
                 icon: Users,
-                title: "SignUp as User",
+                title: "Đăng Ký Làm Người Dùng",
                 description:
-                  "Book your favorite sports field and enjoy playing with friends or booking system.",
+                  "Đặt sân thể thao yêu thích của bạn và tận hưởng chơi cùng bạn bè hoặc hệ thống đặt sân.",
               },
               {
                 icon: Award,
-                title: "SignUp as Coach",
+                title: "Đăng Ký Làm Huấn Luyện Viên",
                 description:
-                  "Access to professional coaching for all skill levels and sports.",
+                  "Tiếp cận huấn luyện chuyên nghiệp cho mọi trình độ kỹ năng và môn thể thao.",
               },
               {
                 icon: MapPin,
-                title: "SignUp as FieldOwner",
+                title: "Đăng Ký Làm Chủ Sân",
                 description:
-                  "List your sports fields, manage bookings and grow your business with our platform.",
+                  "Liệt kê sân thể thao của bạn, quản lý đặt sân và phát triển kinh doanh với nền tảng của chúng tôi.",
               },
             ].map((signup, index) => (
               <Card
@@ -555,7 +527,7 @@ export default function LandingPage() {
                   className="text-white hover:scale-105 transition-transform"
                   style={{ backgroundColor: "#00775C" }}
                 >
-                  Sign Up Now
+Đăng Ký Ngay
                 </Button>
               </Card>
             ))}
@@ -564,99 +536,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div
-                className="text-2xl font-bold mb-4"
-                style={{ color: "#F2A922" }}
-              >
-                Pickerball
-              </div>
-              <p className="text-gray-400 mb-4">
-                Your premier destination for sports field booking and coaching
-                services.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Book Field
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Find Coaches
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Nearby Fields
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Contact Us
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
-              <div className="flex space-x-4">
-                <Facebook className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-                <Twitter className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-                <Instagram className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-400">
-              © 2025 Pickerball. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <FooterComponent />
     </div>
   );
 }
