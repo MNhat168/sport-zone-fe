@@ -10,6 +10,7 @@ import UserInvoicesPage from "../pages/user-dashboard-page/user-invoices-page";
 import UserChatPage from "../pages/user-dashboard-page/user-chat-page";
 import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
 import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
+import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
 // Minimal placeholder component
 const Placeholder = ({ title }: { title: string }) => <div style={{ padding: 24 }}>{title}</div>;
 
@@ -31,6 +32,7 @@ export const guestRoutes: RouteObject[] = [
   { path: "/user-chat", element: <UserChatPage /> },
   { path: "/user-wallet", element: <UserWalletPage /> },
   { path: "/user-profile", element: <UserProfilePage /> },
+  { path:"/coach-dashboard", element: <CoachDashboardPage />},
 ];
 
 export const chatRoutes: RouteObject[] = [];

@@ -6,45 +6,55 @@ interface HeaderInfo {
     breadcrumb: string[]
 }
 
-export function UserDashboardHeader() {
+export function CoachDashboardHeader() {
     const location = useLocation()
     
     const getHeaderInfo = (pathname: string): HeaderInfo => {
         switch (pathname) {
-            case "/user-dashboard":
+            case "/coach-dashboard":
                 return {
-                    title: "User Dashboard",
-                    breadcrumb: ["Home", "User Dashboard"]
+                    title: "Coach Dashboard",
+                    breadcrumb: ["Home", "Coach Dashboard"]
                 }
-            case "/user-booking-history":
+            case "/coach-courts":
                 return {
-                    title: "My Bookings",
-                    breadcrumb: ["Home", "User Dashboard", "My Bookings"]
+                    title: "Courts",
+                    breadcrumb: ["Home", "Coach Dashboard", "Courts"]
                 }
-            case "/user-invoices":
+            case "/coach-requests":
                 return {
-                    title: "Invoices",
-                    breadcrumb: ["Home", "User Dashboard", "Invoices"]
+                    title: "Requests",
+                    breadcrumb: ["Home", "Coach Dashboard", "Requests"]
                 }
-            case "/user-chat":
+            case "/coach-bookings":
+                return {
+                    title: "Bookings",
+                    breadcrumb: ["Home", "Coach Dashboard", "Bookings"]
+                }
+            case "/coach-chat":
                 return {
                     title: "Chat",
-                    breadcrumb: ["Home", "User Dashboard", "Chat"]
+                    breadcrumb: ["Home", "Coach Dashboard", "Chat"]
                 }
-            case "/user-wallet":
+            case "/coach-earnings":
+                return {
+                    title: "Earnings",
+                    breadcrumb: ["Home", "Coach Dashboard", "Earnings"]
+                }
+            case "/coach-wallet":
                 return {
                     title: "Wallet",
-                    breadcrumb: ["Home", "User Dashboard", "Wallet"]
+                    breadcrumb: ["Home", "Coach Dashboard", "Wallet"]
                 }
-            case "/user-profile":
+            case "/coach-profile":
                 return {
                     title: "Profile Settings",
-                    breadcrumb: ["Home", "User Dashboard", "Profile Settings"]
+                    breadcrumb: ["Home", "Coach Dashboard", "Profile Settings"]
                 }
             default:
                 return {
-                    title: "User Dashboard",
-                    breadcrumb: ["Home", "User Dashboard"]
+                    title: "Coach Dashboard",
+                    breadcrumb: ["Home", "Coach Dashboard"]
                 }
         }
     }

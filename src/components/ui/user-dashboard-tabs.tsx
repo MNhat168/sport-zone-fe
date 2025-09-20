@@ -27,8 +27,10 @@ export function UserDashboardTabs() {
     const isActive = (path: string) => location.pathname === path
 
     return (
-        <div className="flex justify-center gap-4 mb-8 overflow-x-auto bg-gray-100 py-8 rounded-lg">
-            <div className="flex space-x-4 items-center">
+        <div className="bg-gray-100 py-8">
+            <div className="max-w-[1320px] mx-auto px-12">
+                <div className="flex justify-center gap-4 mb-8 overflow-x-auto rounded-lg">
+                    <div className="flex space-x-4 items-center">
                 <Button 
                     variant="ghost" 
                     className={baseTabClasses(isActive("/user-dashboard"))}
@@ -77,6 +79,8 @@ export function UserDashboardTabs() {
                     <Settings className="w-6 h-6" />
                     <span className="text-sm font-medium">Profile Setting</span>
                 </Button>
+                    </div>
+                </div>
             </div>
         </div>
     )
