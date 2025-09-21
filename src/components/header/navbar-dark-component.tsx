@@ -1,11 +1,12 @@
+// import { useState, useEffect } from "react"; // No longer needed
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { LogOut, Search } from "lucide-react";
 import { AnimatedButton } from "../animation/motion.config";
 import { useAppSelector } from "@store/hook";
-
 import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/react/24/outline";
 import type { RootState } from "../../store/store";
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,17 +22,23 @@ import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
 
 export const NavbarDarkComponent = () => {
-
     const auth = useAppSelector((state: RootState) => state.auth);
-
-    console.log("Thong tin user tu navbar", JSON.stringify(auth.user, null, 2));
 
     return (
         <>
-            <header className="sticky top-0 z-50 w-full bg-white-900">
+            <header 
+                className="w-full bg-white text-black border-b border-gray-300 shadow-sm"
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 9999,
+                    willChange: 'transform, opacity'
+                }}
+            >
                 <div className="container max-w-screen-2xl mx-auto px-4 flex h-16 items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {" "}
                         <Link to="/" className="flex items-center gap-2">
                             <span className="text-2xl tracking-widest bg-primary-800 letter-sp text-green px-2 py-1 rounded-md">
                                 <h1 className="title-lingora">SportZone</h1>
@@ -39,7 +46,6 @@ export const NavbarDarkComponent = () => {
                         </Link>
                     </div>
                     <nav className="hidden md:flex items-center gap-6">
-                        {" "}
                         <Link
                             to="/"
                             className="text-sm font-medium text-black hover:text-green-500 transition-colors duration-200"
@@ -70,14 +76,12 @@ export const NavbarDarkComponent = () => {
                         >
                             Về chúng tôi
                         </Link>
-                        {/* /recruiment */}
                         <Link
                             to="/recruitment"
                             className="text-sm font-medium text-black hover:text-green-500 transition-colors duration-200"
                         >
                             Tuyển dụng
                         </Link>
-                        {/* Coach-specific navigation */}
                         {auth.user?.role === "coach" && (
                             <>
                                 <Link
@@ -154,13 +158,11 @@ export const NavbarDarkComponent = () => {
                                         {auth.user?.role === "coach" && (
                                             <Button
                                                 className="w-full justify-start hover:bg-green-50 hover:text-green-600"
-                                            //onclick +?  
                                             >
                                                 <LogOut className="mr-2 h-4 w-4" />
                                                 <span>Sân của bạn</span>
                                             </Button>
                                         )}
-
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
