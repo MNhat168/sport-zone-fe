@@ -24,10 +24,6 @@ interface ProtectedRouteProps {
 export const usePermissions = () => {
   const user = useSelector((state: any) => state.auth.user) as User | null;
 
-  console.log("🔍 Debug usePermissions:");
-  console.log("- User from Redux:", user);
-  console.log("- User role:", user?.role);
-  console.log("- Is authenticated:", !!user);
   
   const hasRole = (role: UserRole): boolean => {
     return (user?.role as UserRole | undefined) === role;
@@ -168,7 +164,6 @@ export const useAutoRedirect = () => {
       (user.role === "coach" || user.role === "manager")
     ) {
       const redirectPath = getRoleBasedRedirectPath(user.role);
-      console.log(`🚀 Auto redirecting ${user.role} to: ${redirectPath}`);
       navigate(redirectPath, { replace: true });
     }
     // Nếu user login thành công, redirect về trang root
@@ -177,7 +172,6 @@ export const useAutoRedirect = () => {
       location.pathname === "/login" &&
       user.role === "user"
     ) {
-      console.log(`🚀 user login successful, redirecting to home`);
       navigate("/", { replace: true });
     }
   }, [user, location.pathname, navigate]);

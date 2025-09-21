@@ -10,13 +10,18 @@ export const RootLayout = () => {
   useAutoRedirect();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Only scroll to top for specific routes, not booking page
+    if (!pathname.includes('/booking')) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [pathname]);
 
   return (
-    <AuthWrapper>
-      <Outlet />
-    </AuthWrapper>
+    <div className="min-h-screen sticky-container">
+      <AuthWrapper>
+        <Outlet />
+      </AuthWrapper>
+    </div>
   );
 };
 

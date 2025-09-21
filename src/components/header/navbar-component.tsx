@@ -1,10 +1,9 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { LogOut, Search } from "lucide-react";
 import { AnimatedButton } from "../animation/motion.config";
 import { useAppSelector } from "@store/hook";
-import { useState, useEffect } from "react";
-
 import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/react/24/outline";
 import type { RootState } from "../../store/store";
 import {
@@ -22,32 +21,37 @@ import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
 
 export const NavbarComponent = () => {
-    const [isScrolled, setIsScrolled] = useState(false);
     const auth = useAppSelector((state: RootState) => state.auth);
+    const [isScrolled, setIsScrolled] = useState(false);
 
-    console.log("Thong tin user tu navbar", JSON.stringify(auth.user, null, 2));
-
-    // Scroll detection
     useEffect(() => {
         const handleScroll = () => {
             const scrollTop = window.scrollY;
             setIsScrolled(scrollTop > 50);
         };
 
-        window.addEventListener('scroll', handleScroll);
+        handleScroll(); // Check initial state
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+
     return (
         <>
-            <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-                isScrolled 
-                    ? 'bg-[#00775C] shadow-lg' 
-                    : 'bg-transparent backdrop-blur-sm'
-            }`}>
+            <header 
+                className={`force-sticky w-full transition-all duration-300 ease-in-out ${isScrolled
+                    ? 'bg-yellow-500 text-black shadow-2xl border-b-4 border-green-400'
+                    : 'bg-[#00775C] text-white'
+                }`}
+                style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 50,
+                    backgroundColor: isScrolled ? '#eab308' : '#00775C'
+                }}
+            >
                 <div className="container max-w-screen-2xl mx-auto px-4 flex h-16 items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {" "}
                         <Link to="/" className="flex items-center gap-2">
                             <span className="text-2xl tracking-widest bg-primary-800 letter-sp text-white px-2 py-1 rounded-md">
                                 <h1 className="title-lingora">SportZone</h1>
@@ -55,7 +59,6 @@ export const NavbarComponent = () => {
                         </Link>
                     </div>
                     <nav className="hidden md:flex items-center gap-6">
-                        {" "}
                         <Link
                             to="/"
                             className="text-sm font-medium text-white hover:text-yellow-400 transition-colors"
@@ -86,14 +89,12 @@ export const NavbarComponent = () => {
                         >
                             Về chúng tôi
                         </Link>
-                        {/* /recruiment */}
                         <Link
                             to="/recruitment"
                             className="text-sm font-medium text-white hover:text-yellow-400 transition-colors"
                         >
                             Tuyển dụng
                         </Link>
-                        {/* Teacher-specific navigation */}
                         {auth.user?.role === "teacher" && (
                             <>
                                 <Link
@@ -169,13 +170,11 @@ export const NavbarComponent = () => {
                                     <DropdownMenuContent align="end" className="w-48 bg-white shadow-md border border-gray-200 rounded-md">
                                         {auth.user?.role === "coach" && (
                                             <Button
-                                            //onclick +?  
                                             >
                                                 <LogOut className="mr-2 h-4 w-4" />
                                                 <span>Sân của bạn</span>
                                             </Button>
                                         )}
-
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>

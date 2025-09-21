@@ -47,7 +47,7 @@ export default function UserDashboardPage() {
     return (
         <>
             <NavbarDarkComponent />
-            <div className="min-h-screen">
+            <div className="min-h-screen sticky-navbar-offset">
                 <UserDashboardHeader />
                 <UserDashboardTabs />
 

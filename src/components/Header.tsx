@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Trophy } from "lucide-react";
-import { Button } from "react-bootstrap";
+import { Button } from "./ui/button";
 import NotificationBell from "./NotificationBell";
 
 type HeaderProps = { hideBrowseLinks?: boolean };
@@ -9,10 +9,30 @@ type HeaderProps = { hideBrowseLinks?: boolean };
 export default function Header({ hideBrowseLinks }: HeaderProps) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     setIsLoggedIn(!!token);
+  }, []);
+
+  // Scroll detection for sticky navbar
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollTop = window.scrollY;
+          setIsScrolled(scrollTop > 80);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleLogout = () => {
@@ -23,7 +43,7 @@ export default function Header({ hideBrowseLinks }: HeaderProps) {
 
   return (
     <>
-      <nav className="sz-navbar">
+      <nav className={`sz-navbar ${isScrolled ? 'scrolled' : ''}`}>
         <div className="sz-navbar-container">
           <div className="sz-navbar-content">
             <div className="sz-navbar-brand" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>

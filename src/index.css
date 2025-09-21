@@ -2,6 +2,17 @@
 @import "tailwindcss/utilities";
 @import "tailwindcss";
 
+/* Fix double scroll bar */
+html, body {
+  overflow-x: hidden;
+  height: auto;
+}
+
+body {
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme{
@@ -20,6 +31,15 @@
 }
 
 @layer utilities {
+  /* Sticky navbar support */
+  .sticky-navbar-offset {
+    padding-top: 4rem; /* 64px - navbar height */
+  }
+  
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+
   /* Keyframes for animations */
   @keyframes accordion-down {
     from {
@@ -36,6 +56,72 @@
     to {
       height: 0;
     }
+  }
+
+  /* Sticky navbar animation */
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .navbar-slide-in {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  /* Debug utilities */
+  .debug-sticky {
+    position: sticky !important;
+    top: 0 !important;
+    background: red !important;
+    z-index: 9999 !important;
+  }
+
+  /* Force sticky behavior */
+  .force-sticky {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+  }
+
+  /* Ensure parent containers don't interfere */
+  .sticky-container {
+    position: relative;
+    overflow: visible;
+    height: auto;
+  }
+
+  /* Make sure body allows sticky */
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* Fix common issues that break sticky */
+  html, body {
+    height: 100%;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+   /* Ensure no parent container breaks sticky */
+   /* * {
+     position: relative;
+   } */
+
+  .sticky-fix {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
   }
 }
 
