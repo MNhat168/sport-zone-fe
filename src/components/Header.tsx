@@ -52,12 +52,6 @@ export default function Header({ hideBrowseLinks }: HeaderProps) {
             </div>
             <div className="sz-navbar-menu">
               <NavLink to="/" className={({ isActive }) => `sz-nav-link ${isActive ? "active" : ""}`}>Home</NavLink>
-              {!hideBrowseLinks && (
-                <>
-                  <NavLink to="/?tab=fields#browse" className={({ isActive }) => `sz-nav-link ${isActive ? "active" : ""}`}>Fields</NavLink>
-                  <NavLink to="/?tab=coaches#browse" className={({ isActive }) => `sz-nav-link ${isActive ? "active" : ""}`}>Coaches</NavLink>
-                </>
-              )}
               <a className="sz-nav-link">News</a>
               <a className="sz-nav-link">Tournaments</a>
               <a className="sz-nav-link">Training</a>

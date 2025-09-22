@@ -65,18 +65,7 @@ export const NavbarComponent = () => {
                         >
                             Trang chủ
                         </Link>
-                        <Link
-                            to="/courses"
-                            className="text-sm font-medium text-white hover:text-yellow-400 transition-colors"
-                        >
-                            Các sân
-                        </Link>
-                        <Link
-                            to="/teachers"
-                            className="text-sm font-medium text-white hover:text-yellow-400 transition-colors"
-                        >
-                            Huấn luyện viên
-                        </Link>
+                        {/* Removed legacy browse links for fields/coaches */}
                         <Link
                             to="/reviews"
                             className="text-sm font-medium text-white hover:text-yellow-400 transition-colors"

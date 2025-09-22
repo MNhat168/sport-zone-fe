@@ -17,16 +17,32 @@ import {
   Users,
   Search,
   Award,
+  Star,
 } from "lucide-react";
 import { NavbarComponent } from "@/components/header/navbar-component";
 import { FooterComponent } from "@/components/footer/footer-component";
+import { searchFields, searchCoaches, type FieldItem, type CoachItem } from "@/features/search/searchApi";
 
 export default function LandingPage() {
+  const [searchMode, setSearchMode] = useState<'field' | 'coach'>("field");
   const [selectedSport, setSelectedSport] = useState("");
+  const [keyword, setKeyword] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
+  const [minRate, setMinRate] = useState<string>("");
+  const [maxRate, setMaxRate] = useState<string>("");
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<FieldItem[]>([]);
+  const [coachResults, setCoachResults] = useState<CoachItem[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 9;
+
+  // Placeholder cho nút đặt sân
+  const handleBookNow = (field: FieldItem) => {
+    console.log("[BookNow] Clicked field:", field.id, field.name);
+  };
 
   const slideImages = [
     "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757854021/banner-tennis_koajhu.jpg",
@@ -54,9 +70,8 @@ export default function LandingPage() {
           {slideImages.map((image, index) => (
             <div
               key={index}
-              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${
-                index === currentSlide ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
+                }`}
               style={{
                 backgroundImage: `url(${image})`,
               }}
@@ -73,7 +88,7 @@ export default function LandingPage() {
               className="text-white px-6 py-2 text-lg font-semibold"
               style={{ backgroundColor: "#00775C" }}
             >
-          HỖ TRỢ THỂ THAO
+              HỖ TRỢ THỂ THAO
             </Badge>
           </div>
           <h1 className="text-6xl md:text-8xl font-bold mb-4 animate-slide-in-left">
@@ -84,7 +99,7 @@ export default function LandingPage() {
               className="text-black px-6 py-2 text-lg font-semibold"
               style={{ backgroundColor: "#F2A922" }}
             >
-          100% CHUYÊN NGHIỆP
+              100% CHUYÊN NGHIỆP
             </Badge>
           </div>
         </div>
@@ -95,11 +110,10 @@ export default function LandingPage() {
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide 
-                  ? 'bg-white scale-125' 
-                  : 'bg-white/50 hover:bg-white/75'
-              }`}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide
+                ? 'bg-white scale-125'
+                : 'bg-white/50 hover:bg-white/75'
+                }`}
             />
           ))}
         </div>
@@ -110,108 +124,320 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-Tìm Sân Của Bạn
+              {searchMode === 'field' ? 'Tìm Sân Của Bạn' : 'Tìm Huấn Luyện Viên Của Bạn'}
             </h2>
             <p className="text-gray-600 text-lg">
-Đặt sân thể thao hoàn hảo của bạn
+              {searchMode === 'field' ? 'Đặt sân thể thao hoàn hảo của bạn' : 'Đặt huấn luyện viên hoàn hảo của bạn'}
             </p>
           </div>
 
           <Card className="max-w-4xl mx-auto animate-scale-in">
             <CardContent className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <Button
+                  variant={searchMode === 'field' ? 'default' : 'outline'}
+                  className={searchMode === 'field' ? 'bg-[#00775C] text-white' : ''}
+                  onClick={() => setSearchMode('field')}
+                >
+                  Tìm Sân
+                </Button>
+                <Button
+                  variant={searchMode === 'coach' ? 'default' : 'outline'}
+                  className={searchMode === 'coach' ? 'bg-[#00775C] text-white' : ''}
+                  onClick={() => setSearchMode('coach')}
+                >
+                  Tìm Huấn Luyện Viên
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-end">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-Loại Thể Thao
+                    Loại Thể Thao
                   </label>
                   <Select
                     value={selectedSport}
                     onValueChange={setSelectedSport}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn môn thể thao" />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn môn thể thao" className="truncate" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                      <SelectItem value="football">Bóng đá</SelectItem>
                       <SelectItem value="tennis">Quần vợt</SelectItem>
                       <SelectItem value="badminton">Cầu lông</SelectItem>
-                      <SelectItem value="squash">Squash</SelectItem>
-                      <SelectItem value="padel">Padel</SelectItem>
+                      <SelectItem value="pickleball">Pickleball</SelectItem>
+                      <SelectItem value="basketball">Bóng rổ</SelectItem>
+                      <SelectItem value="volleyball">Bóng chuyền</SelectItem>
+                      <SelectItem value="swimming">Bơi lội</SelectItem>
+                      <SelectItem value="gym">Gym</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-Địa Điểm
-                  </label>
-                  <Select
-                    value={selectedLocation}
-                    onValueChange={setSelectedLocation}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Vị trí của bạn" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="downtown">Trung tâm thành phố</SelectItem>
-                      <SelectItem value="north">Quận Bắc</SelectItem>
-                      <SelectItem value="south">Quận Nam</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-Ngày
+                    Từ khóa
                   </label>
                   <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    placeholder="mm/dd/yyyy"
+                    type="text"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    placeholder="Ví dụ: Sân A, hoặc tên HLV..."
+                    className="w-full"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-Thời Gian
-                  </label>
-                  <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn thời gian" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="morning">Sáng</SelectItem>
-                      <SelectItem value="afternoon">Chiều</SelectItem>
-                      <SelectItem value="evening">Tối</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {searchMode === 'field' ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Địa Điểm
+                    </label>
+                    <Input
+                      type="text"
+                      value={selectedLocation}
+                      onChange={(e) => setSelectedLocation(e.target.value)}
+                      placeholder="Ví dụ: Quận 1, Quận 7..."
+                      className="w-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Giá tối thiểu (đ/giờ)</label>
+                      <Input type="number" min="0" value={minRate} onChange={(e) => setMinRate(e.target.value)} placeholder="VD: 200000" className="w-full" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Giá tối đa (đ/giờ)</label>
+                      <Input type="number" min="0" value={maxRate} onChange={(e) => setMaxRate(e.target.value)} placeholder="VD: 500000" className="w-full" />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="text-center">
+              <div className="flex items-center justify-center gap-3">
                 <Button
                   size="lg"
                   className="px-8 py-3 text-white font-semibold hover:scale-105 transition-transform"
                   style={{ backgroundColor: "#00775C" }}
+                  disabled={searching}
+                  onClick={async () => {
+                    try {
+                      setError(null);
+                      setSearching(true);
+                      setHasSearched(true);
+                      setPage(1);
+                      if (searchMode === 'field') {
+                        const params = {
+                          sportType: selectedSport || undefined,
+                          location: selectedLocation || undefined,
+                          name: keyword || undefined,
+                        };
+                        console.log("[Search:Fields] Params:", params);
+                        const data = await searchFields(params);
+                        console.log("[Search:Fields] Results count:", data?.length ?? 0);
+                        setResults(data);
+                        setCoachResults([]);
+                      } else {
+                        const params = {
+                          sportType: selectedSport || undefined,
+                          name: keyword || undefined,
+                          minRate: minRate ? Number(minRate) : undefined,
+                          maxRate: maxRate ? Number(maxRate) : undefined,
+                        };
+                        console.log("[Search:Coaches] Params:", params);
+                        const data = await searchCoaches(params);
+                        console.log("[Search:Coaches] Results count:", data?.length ?? 0);
+                        setCoachResults(data);
+                        setResults([]);
+                      }
+                    } catch {
+                      setError("Không thể tải danh sách sân. Vui lòng thử lại.");
+                    } finally {
+                      setSearching(false);
+                    }
+                  }}
                 >
                   <Search className="mr-2 h-5 w-5" />
-Tìm Sân
+                  {searching ? "Đang tìm..." : (searchMode === 'field' ? 'Tìm Sân' : 'Tìm HLV')}
                 </Button>
+                {(selectedSport || keyword || selectedLocation || minRate || maxRate) && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="px-6 py-3 hover:scale-105 transition-transform"
+                    onClick={() => {
+                      setSelectedSport("");
+                      setKeyword("");
+                      setSelectedLocation("");
+                      setMinRate("");
+                      setMaxRate("");
+                      setResults([]);
+                      setCoachResults([]);
+                      setError(null);
+                      setHasSearched(false);
+                      setPage(1);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                )}
+                {error && (
+                  <p className="mt-3 text-sm text-red-600">{error}</p>
+                )}
+                {hasSearched && !error && (
+                  <p className="mt-2 text-sm text-gray-600">Kết quả: {searchMode === 'field' ? results.length : coachResults.length}</p>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
       </section>
 
+      {/* Search Results - Fields */}
+      {searchMode === 'field' && results.length > 0 && (
+        <section className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-baseline justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Kết quả tìm kiếm</h2>
+              <span className="text-gray-600">{results.length} sân</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {results.slice((page - 1) * pageSize, page * pageSize).map((field, index) => (
+                <Card
+                  key={field.id}
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-slide-in-up group"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="relative">
+                    <img
+                      src={(field.images && field.images[0]) || "/outdoor-tennis-court.png"}
+                      alt={field.name}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                      <Badge className="text-white font-semibold" style={{ backgroundColor: "#F2A922" }}>
+                        {field.sportType?.toString().toUpperCase() || ""}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {field.name}
+                    </h3>
+                    <p className="text-gray-600 mb-3 line-clamp-2">{field.location}</p>
+                    <div className="flex items-center gap-1 mb-4 text-yellow-500">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${((field.rating ?? 0) > i) ? '' : 'opacity-30'}`} fill="currentColor" />
+                      ))}
+                      <span className="ml-2 text-sm text-gray-600">({field.totalReviews ?? 0})</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold" style={{ color: "#00775C" }}>
+                        {new Intl.NumberFormat("vi-VN").format(field.pricePerHour)}đ/giờ
+                      </span>
+                      <Button
+                        className="text-white"
+                        style={{ backgroundColor: "#00775C" }}
+                        onClick={() => handleBookNow(field)}
+                        aria-label={`Đặt ngay ${field.name}`}
+                      >
+                        Đặt Ngay
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {results.length > pageSize && (
+              <div className="mt-8 flex items-center justify-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Trang trước
+                </Button>
+                <span className="text-sm text-gray-600">
+                  Trang {page} / {Math.ceil(results.length / pageSize)}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((p) => Math.min(Math.ceil(results.length / pageSize), p + 1))}
+                  disabled={page >= Math.ceil(results.length / pageSize)}
+                >
+                  Trang sau
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {searchMode === 'field' && results.length === 0 && !searching && !!(keyword || selectedLocation || selectedSport) && (
+        <section className="py-8">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="text-center text-gray-600">Không tìm thấy sân phù hợp. Hãy thử từ khóa khác.</div>
+          </div>
+        </section>
+      )}
+
+      {/* Search Results - Coaches */}
+      {searchMode === 'coach' && coachResults.length > 0 && (
+        <section className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-baseline justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Huấn luyện viên</h2>
+              <span className="text-gray-600">{coachResults.length} HLV</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {coachResults.slice((page - 1) * pageSize, page * pageSize).map((coach, index) => (
+                <Card
+                  key={coach.id}
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-slide-in-up group"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="relative">
+                    <img
+                      src={coach.avatarUrl || "/outdoor-tennis-court.png"}
+                      alt={coach.fullName}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{coach.fullName}</h3>
+                    <p className="text-gray-600 mb-3 line-clamp-2">{coach.sports?.join(', ')}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold" style={{ color: "#00775C" }}>
+                        {coach.hourlyRate ? new Intl.NumberFormat("vi-VN").format(coach.hourlyRate) + 'đ/giờ' : '—'}
+                      </span>
+                      <Button className="text-white" style={{ backgroundColor: "#00775C" }} aria-label={`Đặt HLV ${coach.fullName}`}>
+                        Đặt Ngay
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {coachResults.length > pageSize && (
+              <div className="mt-8 flex items-center justify-center gap-3">
+                <Button variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>Trang trước</Button>
+                <span className="text-sm text-gray-600">Trang {page} / {Math.ceil(coachResults.length / pageSize)}</span>
+                <Button variant="outline" onClick={() => setPage((p) => Math.min(Math.ceil(coachResults.length / pageSize), p + 1))} disabled={page >= Math.ceil(coachResults.length / pageSize)}>Trang sau</Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Featured Fields */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-Sân Nổi Bật
+              Sân Nổi Bật
             </h2>
             <p className="text-gray-600 text-lg">
-Các địa điểm phổ biến với ưu đãi tuyệt vời
+              Các địa điểm phổ biến với ưu đãi tuyệt vời
             </p>
           </div>
 
@@ -273,7 +499,7 @@ Các địa điểm phổ biến với ưu đãi tuyệt vời
                       className="text-white hover:scale-105 transition-transform"
                       style={{ backgroundColor: "#00775C" }}
                     >
-Đặt Ngay
+                      Đặt Ngay
                     </Button>
                   </div>
                 </CardContent>
@@ -289,37 +515,37 @@ Các địa điểm phổ biến với ưu đãi tuyệt vời
           <div className="grid grid-cols-5 h-64">
             {/* Top row */}
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-Sân Bóng Đá Cao Cấp
+              Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-Hình Ảnh Sân Cầu Lông
+              Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-Sân Bóng Đá Cao Cấp
+              Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-Hình Ảnh Sân Cầu Lông
+              Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-Sân Bóng Đá Cao Cấp
+              Sân Bóng Đá Cao Cấp
             </div>
           </div>
           <div className="grid grid-cols-5 h-64">
             {/* Bottom row */}
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-Hình Ảnh Sân Cầu Lông
+              Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-Sân Bóng Đá Cao Cấp
+              Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-Hình Ảnh Sân Cầu Lông
+              Hình Ảnh Sân Cầu Lông
             </div>
             <div className="bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-Sân Bóng Đá Cao Cấp
+              Sân Bóng Đá Cao Cấp
             </div>
             <div className="bg-gray-400 flex items-center justify-center text-white font-semibold">
-Hình Ảnh Sân Cầu Lông
+              Hình Ảnh Sân Cầu Lông
             </div>
           </div>
         </div>
@@ -330,10 +556,10 @@ Hình Ảnh Sân Cầu Lông
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-Tại Sao Chọn SportZone?
+              Tại Sao Chọn SportZone?
             </h2>
             <p className="text-gray-600 text-lg">
-Mọi thứ bạn cần cho trận đấu hoàn hảo
+              Mọi thứ bạn cần cho trận đấu hoàn hảo
             </p>
           </div>
 
@@ -377,7 +603,7 @@ Mọi thứ bạn cần cho trận đấu hoàn hảo
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             <div className="animate-slide-in-left">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-Khóa Học Cho Mọi Lứa Tuổi!
+                Khóa Học Cho Mọi Lứa Tuổi!
               </h2>
               <p className="text-gray-600 mb-8 leading-relaxed">
                 Chúng tôi cung cấp các khóa học thể thao chất lượng cao cho mọi lứa tuổi.
@@ -389,7 +615,7 @@ Khóa Học Cho Mọi Lứa Tuổi!
             <div className="animate-slide-in-right relative">
               <div className="relative bg-gray-400 rounded-lg h-80 flex items-center justify-center">
                 <span className="text-white text-lg font-semibold">
-    Hình Ảnh Sân Cầu Lông
+                  Hình Ảnh Sân Cầu Lông
                 </span>
 
                 {/* Skill level indicators */}
@@ -445,10 +671,10 @@ Khóa Học Cho Mọi Lứa Tuổi!
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-Giải Đấu Nam
+                    Giải Đấu Nam
                   </h3>
                   <p className="text-gray-600">
-Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
+                    Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
                   </p>
                 </div>
               </div>
@@ -463,10 +689,10 @@ Tiếp cận các huấn luyện viên được chứng nhận để tập luy�
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-Giải Đấu Nữ
+                    Giải Đấu Nữ
                   </h3>
                   <p className="text-gray-600">
-Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
+                    Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
                   </p>
                 </div>
               </div>
@@ -480,10 +706,10 @@ Tiếp cận các huấn luyện viên được chứng nhận để tập luy�
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-Muốn Đăng Ký!
+              Muốn Đăng Ký!
             </h2>
             <p className="text-gray-600 text-lg">
-Mọi thứ bạn cần cho trận đấu hoàn hảo
+              Mọi thứ bạn cần cho trận đấu hoàn hảo
             </p>
           </div>
 
@@ -527,7 +753,7 @@ Mọi thứ bạn cần cho trận đấu hoàn hảo
                   className="text-white hover:scale-105 transition-transform"
                   style={{ backgroundColor: "#00775C" }}
                 >
-Đăng Ký Ngay
+                  Đăng Ký Ngay
                 </Button>
               </Card>
             ))}
