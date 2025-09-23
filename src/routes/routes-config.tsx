@@ -21,7 +21,7 @@ export const guestRoutes: RouteObject[] = [
     path: "/",
     element: (
       <AuthenticatedRedirect>
-        <Placeholder title="Guest Home" />
+        <LandingPage />
       </AuthenticatedRedirect>
     ),
   },
@@ -34,7 +34,7 @@ export const guestRoutes: RouteObject[] = [
   { path: "/user-chat", element: <UserChatPage /> },
   { path: "/user-wallet", element: <UserWalletPage /> },
   { path: "/user-profile", element: <UserProfilePage /> },
-  { path:"/coach-dashboard", element: <CoachDashboardPage />},
+  { path: "/coach-dashboard", element: <CoachDashboardPage /> },
   { path: "/booking", element: <BookingPage /> },
   { path: "/coach-detail", element: <CoachDetailPage /> },
 ];

@@ -10,7 +10,7 @@ interface PageWrapperProps {
 export const PageWrapper: React.FC<PageWrapperProps> = ({ 
   children, 
   className = '',
-  paddingTop = 'pt-16', // 80px để tránh navbar fixed
+  paddingTop = '', // 80px để tránh navbar fixed
   paddingX = ''
 }) => {
   return (
