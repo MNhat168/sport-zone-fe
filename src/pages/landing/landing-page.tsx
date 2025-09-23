@@ -303,49 +303,34 @@ export default function LandingPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {results.slice((page - 1) * pageSize, page * pageSize).map((field, index) => (
-                <Card
-                  key={field.id}
-                  className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-slide-in-up group"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  <div className="relative">
-                    <img
-                      src={(field.images && field.images[0]) || "/outdoor-tennis-court.png"}
-                      alt={field.name}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 left-4 flex items-center gap-2">
-                      <Badge className="text-white font-semibold" style={{ backgroundColor: "#F2A922" }}>
-                        {field.sportType?.toString().toUpperCase() || ""}
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {field.name}
-                    </h3>
-                    <p className="text-gray-600 mb-3 line-clamp-2">{field.location}</p>
-                    <div className="flex items-center gap-1 mb-4 text-yellow-500">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={`h-4 w-4 ${((field.rating ?? 0) > i) ? '' : 'opacity-30'}`} fill="currentColor" />
-                      ))}
-                      <span className="ml-2 text-sm text-gray-600">({field.totalReviews ?? 0})</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold" style={{ color: "#00775C" }}>
-                        {new Intl.NumberFormat("vi-VN").format(field.pricePerHour)}đ/giờ
-                      </span>
-                      <Button
-                        className="text-white"
-                        style={{ backgroundColor: "#00775C" }}
-                        onClick={() => handleBookNow(field)}
-                        aria-label={`Đặt ngay ${field.name}`}
-                      >
-                        Đặt Ngay
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div key={field.id} className="cursor-pointer">
+                  <a href={`/fields/${field.id}`} className="block">
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <div className="relative h-48 w-full">
+                        <img
+                          src={field.images?.[0] || '/default-field-image.jpg'}
+                          alt={field.name}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                      <CardContent>
+                        <h2 className="text-xl font-bold mb-2">{field.name}</h2>
+                        <p>Location: {field.location}</p>
+                        <p>Price per hour: ${field.pricePerHour}</p>
+                      </CardContent>
+                    </Card>
+                  </a>
+                  <Button
+                    className="mt-4 w-full"
+                    style={{ backgroundColor: "#00775C", color: "white" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleBookNow(field);
+                    }}
+                  >
+                    Đặt ngay
+                  </Button>
+                </div>
               ))}
             </div>
             {results.length > pageSize && (
