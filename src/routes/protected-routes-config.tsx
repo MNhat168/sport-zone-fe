@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { User } from "../types/user-type";
+import { getRoleBasedRedirectPath } from "../utils/routing/routing-utils"; // Import từ utils để nhất quán
 
 // Định nghĩa role mới
 export type UserRole = "guest" | "user" | "coach" | "manager" | "field_owner";
@@ -24,7 +25,7 @@ interface ProtectedRouteProps {
 export const usePermissions = () => {
   const user = useSelector((state: any) => state.auth.user) as User | null;
 
-  
+
   const hasRole = (role: UserRole): boolean => {
     return (user?.role as UserRole | undefined) === role;
   };
@@ -44,7 +45,7 @@ const ProtectedRoute = ({
   const { hasRole, isAuthenticated } = usePermissions();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
@@ -63,18 +64,7 @@ export const UnauthorizedPage = () => {
   const navigate = useNavigate();
   const { user } = usePermissions();
   const getRedirectPath = () => {
-    switch (user?.role) {
-      case UserRole.coach:
-        return "/coach";
-      case UserRole.user:
-        return "/user";
-      case UserRole.MANAGER:
-        return "/center";
-      case UserRole.FIELD_OWNER:
-        return "/field_owner";
-      default:
-        return "/";
-    }
+    return getRoleBasedRedirectPath(user?.role); // Sử dụng hàm chung
   };
 
   return (
@@ -115,11 +105,9 @@ export const AuthenticatedRedirect = ({
 }) => {
   const user = useSelector((state: any) => state.auth.user) as User | null;
   const location = useLocation();
-  if (user && location.pathname === "/") {
+  if (user && location.pathname === "/" && user.role !== "user") { // Không redirect cho "user"
     const redirectPath = getRoleBasedRedirectPath(user.role);
-    console.log(
-      `🏠 ${user.role} on root page, redirecting to: ${redirectPath}`
-    );
+    console.log(`🏠 ${user.role} on root page, redirecting to: ${redirectPath}`);
     return <Navigate to={redirectPath} replace />;
   }
 
@@ -127,21 +115,6 @@ export const AuthenticatedRedirect = ({
 };
 
 // Utility functions for role-based redirect
-export const getRoleBasedRedirectPath = (role: string | undefined): string => {
-  switch (role) {
-    case "coach":
-      return "/coach";
-    case "user":
-      return "/user";
-    case "manager":
-      return "/center";
-    case "field_owner":
-      return "/field_owner";
-    default:
-      return "/";
-  }
-};
-
 export const redirectUserByRole = (
   role: string | undefined,
   navigate: (path: string) => void
@@ -157,11 +130,11 @@ export const useAutoRedirect = () => {
   const location = useLocation();
   const user = useSelector((state: any) => state.auth.user) as User | null;
   useEffect(() => {
-    // Chỉ redirect center và manager sau khi login, user ở lại trang root
+    // Chỉ redirect coach và manager sau khi login, user ở lại trang root
     if (
       user &&
-      location.pathname === "/login" &&
-      (user.role === "coach" || user.role === "manager")
+      location.pathname === "/auth" &&
+      (user.role === "coach" || user.role === "manager" || user.role === "field_owner")
     ) {
       const redirectPath = getRoleBasedRedirectPath(user.role);
       navigate(redirectPath, { replace: true });
@@ -169,7 +142,7 @@ export const useAutoRedirect = () => {
     // Nếu user login thành công, redirect về trang root
     else if (
       user &&
-      location.pathname === "/login" &&
+      location.pathname === "/auth" &&
       user.role === "user"
     ) {
       navigate("/", { replace: true });
