@@ -4,7 +4,7 @@ export const getDefaultRouteByRole = (role: string | undefined): string => {
         case "user":
             return "/";
         case "coach":
-            return "/coach";
+            return "/";
         case "manager":
             return "/center";
         case "field_owner":

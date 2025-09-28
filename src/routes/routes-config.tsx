@@ -9,7 +9,7 @@ import UserBookingHistoryPage from "../pages/user-dashboard-page/user-booking-hi
 import UserInvoicesPage from "../pages/user-dashboard-page/user-invoices-page";
 import UserChatPage from "../pages/user-dashboard-page/user-chat-page";
 import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
-import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
+import UserProfileTab from "../pages/user-dashboard-page/user-profile/user-profile-tab";
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
@@ -33,7 +33,7 @@ export const guestRoutes: RouteObject[] = [
   { path: "/user-invoices", element: <UserInvoicesPage /> },
   { path: "/user-chat", element: <UserChatPage /> },
   { path: "/user-wallet", element: <UserWalletPage /> },
-  { path: "/user-profile", element: <UserProfilePage /> },
+  { path: "/user-profile", element: <UserProfileTab /> },
   { path: "/coach-dashboard", element: <CoachDashboardPage /> },
   { path: "/booking", element: <BookingPage /> },
   { path: "/coach-detail", element: <CoachDetailPage /> },
