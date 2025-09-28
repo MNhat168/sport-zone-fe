@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
@@ -15,42 +14,27 @@ import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
 
 export const NavbarDarkComponent = () => {
-    const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const auth = useAppSelector((state: RootState) => state.auth);
-
-    useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 50);
-        handleScroll();
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
 
     const handleLogout = () => {
         dispatch(logout());
         navigate("/auth");
     };
 
-    const linkClass = isScrolled
-        ? "text-sm font-medium text-gray-900 hover:text-green-600"
-        : "text-sm font-medium text-white hover:text-yellow-400";
-    const iconClass = isScrolled
-        ? "h-5 w-5 text-gray-900 hover:text-green-600"
-        : "h-5 w-5 text-white hover:text-yellow-400";
+    const linkClass = "text-sm font-medium text-gray-900 hover:text-green-600";
+    const iconClass = "h-5 w-5 text-gray-900 hover:text-green-600";
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                    ? "bg-white/95 shadow-md border-b border-gray-200"
-                    : "bg-primary-900"
-                }`}
+            className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b border-gray-200"
         >
             <div className="container mx-auto max-w-screen-2xl flex h-16 items-center justify-between px-4">
                 {/* Logo */}
                 <Link
                     to="/"
-                    className="text-2xl font-bold text-white bg-green-700 px-3 py-1 rounded-md"
+                    className="text-2xl font-bold text-gray-900 bg-green-700 px-3 py-1 rounded-md"
                 >
                     SportZone
                 </Link>
@@ -128,7 +112,7 @@ export const NavbarDarkComponent = () => {
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
-                                className="text-white border-white/30"
+                                className="text-gray-900 border-gray-300"
                                 onClick={() => navigate("/auth")}
                             >
                                 <User className="mr-2 h-4 w-4" /> Đăng nhập
