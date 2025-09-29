@@ -2,20 +2,15 @@
 @import "tailwindcss/utilities";
 @import "tailwindcss";
 
-/* Fix double scroll bar and prevent layout shift */
-html {
+/* Fix double scroll bar */
+html, body {
   overflow-x: hidden;
   height: auto;
-  /* Prevent scrollbar-related layout shifts */
-  scrollbar-gutter: stable;
 }
 
 body {
-  overflow-x: hidden;
   overflow-y: auto;
   min-height: 100vh;
-  /* Ensure consistent width even when scrollbar appears/disappears */
-  width: 100%;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -43,18 +38,6 @@ body {
   
   .smooth-scroll {
     scroll-behavior: smooth;
-  }
-
-  /* Prevent layout shift when dropdown opens */
-  .dropdown-no-shift {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
-  }
-  
-  /* Fix scrollbar layout shift */
-  .scrollbar-stable {
-    scrollbar-gutter: stable;
   }
 
   /* Keyframes for animations */

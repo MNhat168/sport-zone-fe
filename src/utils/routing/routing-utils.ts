@@ -1,10 +1,10 @@
-// Helper function để get default route theo role (an toàn với undefined)
-export const getDefaultRouteByRole = (role: string | undefined): string => {
+// Helper function để get default route theo role
+export const getDefaultRouteByRole = (role: string): string => {
     switch (role) {
         case "user":
-            return "/";
+            return "/user";
         case "coach":
-            return "/";
+            return "/coach";
         case "manager":
             return "/center";
         case "field_owner":
@@ -14,50 +14,37 @@ export const getDefaultRouteByRole = (role: string | undefined): string => {
     }
 };
 
-// Helper function để get redirect path theo role (nhất quán, an toàn undefined)
-export const getRoleBasedRedirectPath = (role: string | undefined): string => {
-    return getDefaultRouteByRole(role); // Sử dụng chung để tránh duplicate
-};
-
 // Helper function để check if route is allowed for role
-export const isRouteAllowedForRole = (path: string, role: string | undefined): boolean => {
-    // Public routes (guest) - tất cả role đều có thể truy cập
+export const isRouteAllowedForRole = (path: string, role: string): boolean => {
+    // Public routes (guest)
     const publicPaths = [
         "/",
-        "/landing",
-        "/about",
-        "/contact",
-        "/services",
-        "/coaches",
-        "/auth",
-        "/register",
         "/unauthorized",
-        "/booking",
     ];
-
-    // Kiểm tra nếu path thuộc public routes
-    if (publicPaths.some(publicPath =>
-        path === publicPath ||
-        (publicPath !== "/" && path.startsWith(publicPath))
-    )) {
+    if (
+        publicPaths.some(
+            (publicPath) => path === publicPath || path.startsWith(publicPath)
+        )
+    ) {
         return true;
     }
 
-    // Role-based paths - chỉ check cho private routes
+    // Role-based paths
     switch (role) {
         case "user":
-            return path.startsWith("/user");
+            return path.startsWith("/user") || publicPaths.includes(path);
         case "coach":
-            return path.startsWith("/coach");
+            return path.startsWith("/coach") || publicPaths.includes(path);
         case "manager":
             return (
                 path.startsWith("/center") ||
                 path.startsWith("/coach") ||
-                path.startsWith("/user")
+                path.startsWith("/user") ||
+                publicPaths.includes(path)
             );
         case "field_owner":
-            return path.startsWith("/field_owner");
+            return path.startsWith("/field_owner") || publicPaths.includes(path);
         default:
-            return false; // Nếu không có role thì chỉ được truy cập public routes
+            return publicPaths.includes(path);
     }
 };
