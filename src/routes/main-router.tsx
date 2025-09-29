@@ -9,7 +9,7 @@ import {
 } from "./routes-config";
 import { UnauthorizedPage } from "./protected-routes-config";
 import { RootLayout } from "../layouts/root-layout";
-import { getDefaultRouteByRole, isRouteAllowedForRole } from "../utils/routing/routing-utils";
+import { getDefaultRouteByRole, isRouteAllowedForRole } from "../utils/routing/routing-utils"; // Giữ nguyên
 
 // Tạo router configuration chính
 export const router = createBrowserRouter([

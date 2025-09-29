@@ -29,7 +29,7 @@ export function UserDashboardTabs() {
     return (
         <div className="bg-gray-100 py-8">
             <div className="max-w-[1320px] mx-auto px-12">
-                <div className="flex justify-center gap-4 mb-8 overflow-x-auto rounded-lg">
+                <div className="flex justify-center gap-4 overflow-x-auto rounded-lg">
                     <div className="flex space-x-4 items-center">
                 <Button 
                     variant="ghost" 

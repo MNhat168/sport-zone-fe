@@ -3,9 +3,9 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { RootState } from '../store/store';
-//import { getDefaultRouteByRole } from './main-router';
 import type { User } from '../types/user-type';
-import { getDefaultRouteByRole } from '../utils/routing/routing-utils';
+import {  isRouteAllowedForRole, getRoleBasedRedirectPath } from '../utils/routing/routing-utils';
+
 interface AuthWrapperProps {
   children: React.ReactNode;
 }
@@ -14,41 +14,67 @@ interface AuthWrapperProps {
 export const AuthWrapper = ({ children }: AuthWrapperProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const user = useSelector((state: RootState) => state.auth.user) as User | null;
   const isAuthenticated = !!user;
-  
+
   useEffect(() => {
-    // Auto-redirect logic sau khi login thành công
-    if (isAuthenticated && location.pathname === '/login') {
-      const defaultRoute = getDefaultRouteByRole(user.role);
+    console.log('AuthWrapper - Current path:', location.pathname);
+    console.log('AuthWrapper - User:', user);
+    console.log('AuthWrapper - isAuthenticated:', isAuthenticated);
+
+    // Auto-redirect logic sau khi login thành công (chỉ từ trang auth/login)
+    if (isAuthenticated && (location.pathname === '/auth')) {
+      const defaultRoute = getRoleBasedRedirectPath(user.role); // Sử dụng hàm chung
+      console.log('AuthWrapper - Redirecting from auth page to:', defaultRoute);
       navigate(defaultRoute, { replace: true });
+      return; // Ngừng thực hiện logic khác
     }
-    
-    // Redirect nếu truy cập wrong role path
+
+    // Danh sách các public routes mà không bao giờ được redirect
+    const publicRoutes = [
+      '/',
+      '/landing',
+      '/about',
+      '/contact',
+      '/services',
+      '/coaches',
+      '/unauthorized'
+    ];
+
+    // KHÔNG redirect nếu đang ở public routes
+    const isPublicRoute = publicRoutes.some(route =>
+      location.pathname === route ||
+      (route !== '/' && location.pathname.startsWith(route))
+    );
+
+    if (isPublicRoute) {
+      console.log('AuthWrapper - On public route, no redirect needed');
+      return; // Không redirect
+    }
+
+    // Chỉ check và redirect cho private routes
     if (isAuthenticated) {
       const currentPath = location.pathname;
-      
-      // Check if user is accessing wrong role path
-      if (user.role === 'user' && !currentPath.startsWith('/user')) {
-        navigate('/user', { replace: true });
-      } else if (user.role === 'coach' && !currentPath.startsWith('/coach')) {
-        navigate('/coach', { replace: true });
-      } else if (user.role === 'manager' && !currentPath.startsWith('/center')) {
-        navigate('/center', { replace: true });
-      } else if (user.role === 'field_owner' && !currentPath.startsWith('/field_owner')) {
-        navigate('/field_owner', { replace: true });
+      const allowed = isRouteAllowedForRole(currentPath, user.role);
+
+      console.log('AuthWrapper - Checking private route access:', { currentPath, allowed });
+
+      if (!allowed) {
+        const defaultRoute = getRoleBasedRedirectPath(user.role); // Sử dụng hàm chung
+        console.log('AuthWrapper - Redirecting to default route:', defaultRoute);
+        navigate(defaultRoute, { replace: true });
       }
     }
   }, [isAuthenticated, user, location.pathname, navigate]);
-  
+
   return <>{children}</>;
 };
 
 // Hook để get current user context
 export const useAuth = () => {
   const user = useSelector((state: RootState) => state.auth.user) as User | null;
-  
+
   return {
     user,
     isAuthenticated: !!user,
