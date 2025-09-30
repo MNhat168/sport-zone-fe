@@ -7,7 +7,7 @@ export interface LoginPayload {
 
 export interface RegisterPayload {
     fullName: string
-    phone_number: string
+    phone: string
     date_of_birth: string // ISO string
     email: string
     password: string

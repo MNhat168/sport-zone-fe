@@ -4,6 +4,7 @@ import { useAppDispatch } from "../../store/hook";
 import { useAppNavigation } from "../../hooks/app-navigation";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
+import { useAutoRedirect } from "../../routes/protected-routes-config";
 
 //UI
 import { toast } from "react-toastify";
@@ -36,13 +37,16 @@ export default function AuthenticationPage() {
     email: "",
     password: "",
     fullName: "",
-    phone_number: "",
+    phone: "",
     date_of_birth: "",
     confirmPassword: "",
   });
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { gotoForgotPassword } = useAppNavigation();
+  
+  // Auto redirect after login - Giải pháp 1: redirect to landing page for all roles
+  useAutoRedirect();
 
   console.log("Dữ liệu trong LOGIN PAGE -----------------------------------");
   console.log("Dữ liệu trong Form Data: ", JSON.stringify(formData, null, 2));
@@ -95,8 +99,8 @@ export default function AuthenticationPage() {
       }
 
       if (
-        !formData.phone_number ||
-        !validatePhoneNumber(formData.phone_number)
+        !formData.phone ||
+        !validatePhoneNumber(formData.phone)
       ) {
         toast.error("Số điện thoại không hợp lệ");
         return false;
@@ -134,9 +138,8 @@ export default function AuthenticationPage() {
         console.log("Dữ liệu user từ Google:", googleUserInfo.data);
 
         // CustomSuccessToast("Đăng nhập Google thành công!");
-
         setTimeout(() => {
-          navigate("/");
+          navigate("/"); // Giải pháp 1: Tất cả roles đều redirect về landing page
         });
       } catch (error) {
         // Kiểm tra error có phải AxiosError không
@@ -161,7 +164,7 @@ export default function AuthenticationPage() {
       email: "",
       password: "",
       fullName: "",
-      phone_number: "",
+      phone: "",
       date_of_birth: "",
       confirmPassword: "",
     });
@@ -206,7 +209,7 @@ export default function AuthenticationPage() {
           }
 
           CustomSuccessToast("Đăng nhập thành công!");
-          navigate("/");
+          navigate("/"); // Giải pháp 1: Tất cả roles đều redirect về landing page
         }
       } else {
         const result = await dispatch(
@@ -215,7 +218,7 @@ export default function AuthenticationPage() {
             password: formData.password,
             fullName: formData.fullName,
             date_of_birth: formData.date_of_birth,
-            phone_number: formData.phone_number,
+            phone: formData.phone,
           })
         ).unwrap();
 
@@ -321,17 +324,17 @@ export default function AuthenticationPage() {
                 )}
                 {!isLogin && (
                   <div className="space-y-2 text-left">
-                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <label className="block text-sm font-medium text-gray-700 text-left">
                       Số điện thoại
                     </label>
                     <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="tel"
-                        name="phone_number"
-                        value={formData.phone_number}
+                        name="phone"
+                        value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full pl-5 pr-4 py-2 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                        className="w-full pl-12 pr-4 py-2 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                         placeholder="Nhập số điện thoại của bạn"
                         required={!isLogin}
                       />

@@ -43,12 +43,16 @@ axiosInstance.interceptors.response.use(
       error.response &&
       (error.response.status === 401 || error.response.status === 403)
     ) {
+      console.log("🔑 Token expired/invalid, auto logout");
+      
       // Clear token and user data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
 
-      // Redirect to login page -> Login page
-      window.location.href = "/";
+      // Redirect to auth page for re-login
+      window.location.href = "/auth";
     }
     return Promise.reject(error);
   }

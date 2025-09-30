@@ -78,10 +78,7 @@ export const NavbarDarkComponent = () => {
                                 >
                                     <Avatar className="h-7 w-7">
                                         <AvatarImage
-                                            src={
-                                                auth.user?.avatarUrl ||
-                                                "https://ui-avatars.com/api/?name=CN&background=random&size=128"
-                                            }
+                                            src={auth.user?.avatarUrl}
                                             alt="User avatar"
                                         />
                                         <AvatarFallback>CN</AvatarFallback>
@@ -93,7 +90,7 @@ export const NavbarDarkComponent = () => {
                                 align="end"
                                 className="w-48 bg-white shadow-md border border-gray-200 rounded-md"
                             >
-                                {auth.user?.role === "student" && (
+                                {auth.user?.role === "user" && (
                                     <CoachDropdownMenuItems userId={auth.user._id} />
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (

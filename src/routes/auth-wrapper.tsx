@@ -25,8 +25,8 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
 
     // Auto-redirect logic sau khi login thành công (chỉ từ trang auth/login)
     if (isAuthenticated && (location.pathname === '/auth')) {
-      const defaultRoute = getRoleBasedRedirectPath(user.role); // Sử dụng hàm chung
-      console.log('AuthWrapper - Redirecting from auth page to:', defaultRoute);
+      const defaultRoute = getRoleBasedRedirectPath(user.role);
+      console.log('AuthWrapper - Redirecting from auth page to:', defaultRoute, 'for role:', user.role);
       navigate(defaultRoute, { replace: true });
       return; // Ngừng thực hiện logic khác
     }
@@ -39,7 +39,9 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
       '/contact',
       '/services',
       '/coaches',
-      '/unauthorized'
+      '/unauthorized',
+      '/fields',
+      '/field-booking'
     ];
 
     // KHÔNG redirect nếu đang ở public routes

@@ -14,6 +14,7 @@ export interface UpdateProfileData {
     phone?: string
     avatarUrl?: string
 }
+
 export interface User {
     _id: string
     fullName: string
@@ -24,4 +25,37 @@ export interface User {
     isVerified: boolean
     status: string
     isActive: boolean
+    googleId?: string
+    favouriteField?: string[]
+    createdAt: string
+    updatedAt: string
+}
+
+// Payload types for API calls
+export interface UpdateProfilePayload {
+    userId: string
+    fullName?: string
+    email?: string
+    phone?: string
+    avatar?: File
+}
+
+export interface ForgotPasswordPayload {
+    email: string
+}
+
+export interface ResetPasswordPayload {
+    token: string
+    newPassword: string
+}
+
+export interface ChangePasswordPayload {
+    old_password: string
+    new_password: string
+    confirm_password: string
+}
+
+export interface ErrorResponse {
+    message: string
+    status: string
 }
