@@ -13,12 +13,21 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import type { RootState } from "../../store/store";
 import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
-
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 export const NavbarComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const auth = useAppSelector((state: RootState) => state.auth);
+    
+    // Debug log to verify user data
+    console.log("🔍 Navbar - User:", auth.user?.fullName, "Role:", auth.user?.role);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -31,6 +40,7 @@ export const NavbarComponent = () => {
         dispatch(logout());
         navigate("/");
     };
+    const [openLogoutDialog, setOpenLogoutDialog] = useState(false)
 
     // Gom style theo trạng thái scroll
     const linkClass = isScrolled
@@ -40,14 +50,14 @@ export const NavbarComponent = () => {
         ? "h-5 w-5 text-gray-900 hover:text-green-600"
         : "h-5 w-5 text-white hover:text-yellow-400";
     const btnTriggerClass = isScrolled
-        ? "border-gray-300 text-gray-900 bg-white"
-        : "border-white/30 text-white bg-transparent";
+        ? "text-gray-900 bg-white"
+        : "text-white bg-transparent";
 
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                    ? "bg-white/95 shadow-md border-b border-gray-200"
-                    : "bg-transparent"
+                ? "bg-white/95 shadow-md border-b border-gray-200"
+                : "bg-transparent"
                 }`}
         >
             <div className="container mx-auto max-w-screen-2xl flex h-16 items-center justify-between px-4">
@@ -94,32 +104,50 @@ export const NavbarComponent = () => {
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className={`flex items-center gap-2 transition-all duration-200 ${btnTriggerClass}`}
+                                    className={`flex items-center gap-2 transition-all duration-200 hover:bg-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none active:scale-95 ${btnTriggerClass}`}
                                 >
                                     <Avatar className="h-7 w-7">
                                         <AvatarImage src={auth.user.avatarUrl} alt="User avatar" />
                                     </Avatar>
-                                    <span className="text-gray-900">{auth.user?.fullName || "Tài khoản"}</span>
+                                    <span className={linkClass}>{auth.user?.fullName || "Tài khoản"}</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 align="end"
                                 className="w-48 bg-white shadow-md border border-gray-200 rounded-md"
                             >
-                                {auth.user?.role === "student" && (
-                                    <CoachDropdownMenuItems userId={auth.user._id} />
-                                )}
-                                {auth.user?.role === "coach" && auth.user._id && (
+                                {auth.user?.role === "user" && (
                                     <UserDropdownMenuItems userId={auth.user._id} />
                                 )}
+                                {auth.user?.role === "coach" && auth.user._id && (
+                                    <CoachDropdownMenuItems userId={auth.user._id} />
+                                )}
                                 <Button
-                                    className="w-full justify-start hover:bg-green-50 hover:text-green-600"
+                                    variant="ghost"
+                                    className="w-full justify-start bg-white text-green-600 hover:bg-white-50 hover:text-green-700"
                                     onClick={handleLogout}
                                 >
                                     <LogOut className="mr-2 h-4 w-4" />
                                     <span>Đăng xuất</span>
                                 </Button>
                             </DropdownMenuContent>
+
+                            <Dialog open={openLogoutDialog} onOpenChange={setOpenLogoutDialog}>
+                                <DialogContent className="bg-white max-w-sm">
+                                    <DialogHeader>
+                                        <DialogTitle>Xác nhận đăng xuất</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="py-4 text-base">Bạn có chắc chắn muốn đăng xuất không?</div>
+                                    <DialogFooter>
+                                        <Button variant="destructive" onClick={handleLogout}>
+                                            Xác nhận
+                                        </Button>
+                                        <Button variant="outline" onClick={() => setOpenLogoutDialog(false)}>
+                                            Hủy
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </DropdownMenu>
                     ) : (
                         <div className="flex items-center gap-2">

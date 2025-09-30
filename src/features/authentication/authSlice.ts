@@ -19,16 +19,47 @@ interface AuthState {
 const getStoredUser = () => {
     try {
         const userStr = localStorage.getItem("user");
+        const token = localStorage.getItem("token");
+        
+        // Check if token exists and is not expired
+        if (token && userStr) {
+            try {
+                // Decode JWT to check expiry (basic check without verification)
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const currentTime = Date.now() / 1000;
+                
+                if (payload.exp && payload.exp < currentTime) {
+                    // Token expired, clear storage
+                    console.log("🔑 Token expired, clearing localStorage");
+                    localStorage.removeItem("user");
+                    localStorage.removeItem("token");
+                    return null;
+                }
+            } catch {
+                // Invalid token format, clear storage
+                console.log("🔑 Invalid token format, clearing localStorage");
+                localStorage.removeItem("user");
+                localStorage.removeItem("token");
+                return null;
+            }
+        }
+        
         return userStr ? JSON.parse(userStr) : null;
     } catch {
         return null;
     }
 };
 
+const storedUser = getStoredUser();
+const storedToken = localStorage.getItem("token");
+
+// Debug current auth state
+console.log("🔑 Auth initialState - User:", storedUser?.fullName, "Token exists:", !!storedToken);
+
 const initialState: AuthState = {
-    _id: getStoredUser()?._id || null,
-    user: getStoredUser(),
-    token: localStorage.getItem("token") || null,
+    _id: storedUser?._id || null,
+    user: storedUser,
+    token: storedToken,
     loading: false,
     error: null,
     verifyStatus: undefined,

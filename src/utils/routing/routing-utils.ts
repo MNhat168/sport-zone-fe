@@ -1,14 +1,15 @@
 // Helper function để get default route theo role (an toàn với undefined)
+// Giải pháp 1: Tất cả roles đều có thể xem landing page
 export const getDefaultRouteByRole = (role: string | undefined): string => {
     switch (role) {
         case "user":
             return "/";
         case "coach":
-            return "/";
+            return "/"; // Coach cũng có thể xem landing page
         case "manager":
-            return "/center";
+            return "/center"; // Manager vẫn redirect về dashboard
         case "field_owner":
-            return "/field_owner";
+            return "/field_owner"; // Field owner vẫn redirect về dashboard
         default:
             return "/";
     }
@@ -29,10 +30,13 @@ export const isRouteAllowedForRole = (path: string, role: string | undefined): b
         "/contact",
         "/services",
         "/coaches",
+        "/fields",
         "/auth",
         "/register",
         "/unauthorized",
         "/booking",
+        "/coach-detail",
+        "/field-booking",
     ];
 
     // Kiểm tra nếu path thuộc public routes

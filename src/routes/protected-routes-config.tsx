@@ -97,20 +97,26 @@ export const UnauthorizedPage = () => {
   );
 };
 
-// Component để redirect authenticated users từ trang root
+// Component để render children - Cho phép tất cả roles xem landing page
 export const AuthenticatedRedirect = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const user = useSelector((state: any) => state.auth.user) as User | null;
-  const location = useLocation();
-  if (user && location.pathname === "/" && user.role !== "user") { // Không redirect cho "user"
-    const redirectPath = getRoleBasedRedirectPath(user.role);
-    console.log(`🏠 ${user.role} on root page, redirecting to: ${redirectPath}`);
-    return <Navigate to={redirectPath} replace />;
+  const loading = useSelector((state: any) => state.auth.loading) as boolean;
+  
+  // Đợi auth loading complete trước khi render
+  if (loading) {
+    console.log("⏳ Auth loading, showing spinner...");
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
+  // Giải pháp 1: Tất cả roles đều có thể xem landing page - không redirect
+  console.log("✅ AuthenticatedRedirect - Rendering landing page for all roles");
   return <>{children}</>;
 };
 

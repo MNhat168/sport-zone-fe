@@ -1,0 +1,3 @@
+step 1: tạo redux tookit cho booking. sử dụng BookingFieldAPI.
+step 2: tạo và import tab Payment ở fieldTabs. Bước cuối cùng trong 4 step.
+step 3: add booking redux vào tab Payment, khi bấm nút thanh toán hiện tại thì lưu qua API.

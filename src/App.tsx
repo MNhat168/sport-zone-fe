@@ -18,6 +18,7 @@ import { centerRoutes, coachRoutes, fieldOwnerRoutes, guestRoutes, userRoutes } 
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { UserSyncProvider } from "./components/providers";
 import './App.css';
 // const RequireAuth = ({ children }: { children: ReactElement }) => {
 //   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -78,8 +79,10 @@ function App() {
 
   return (
     <Provider store={store}>
-      <RouterProvider router={router} />
-      {/* <ChatbotWidget /> */}
+      <UserSyncProvider>
+        <RouterProvider router={router} />
+        {/* <ChatbotWidget /> */}
+      </UserSyncProvider>
     </Provider>
   );
 }

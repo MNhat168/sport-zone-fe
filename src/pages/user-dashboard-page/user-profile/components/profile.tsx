@@ -1,11 +1,120 @@
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Upload } from "lucide-react"
+import { Upload, User as  Loader2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAppSelector, useAppDispatch } from "@/store/hook"
+import { getUserProfile, updateUserProfile } from "@/features/user/userThunk"
+import { toast } from "sonner"
+
 export default function Profile() {
+    const dispatch = useAppDispatch()
+    const { user, loading, updateLoading, updateError } = useAppSelector((state) => state.user)
+    const authUser = useAppSelector((state) => state.auth.user)
+    
+    const [formData, setFormData] = useState({
+        fullName: "",
+        email: "",
+        phone: "",
+    })
+    const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null)
+    const [avatarPreview, setAvatarPreview] = useState<string>("")
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // Fetch profile on component mount
+    useEffect(() => {
+        if (authUser?._id) {
+            dispatch(getUserProfile())
+        }
+    }, [authUser?._id, dispatch])
+
+    // Update form data when user data is loaded
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                fullName: user.fullName || "",
+                email: user.email || "",
+                phone: user.phone || "",
+            })
+            setAvatarPreview(user.avatarUrl || "")
+        }
+    }, [user])
+
+    // Handle input changes
+    const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }))
+    }
+
+    // Handle avatar selection
+    const handleAvatarSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                toast.error("Please select an image file")
+                return
+            }
+            
+            // Validate file size (e.g., max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("File size must be less than 5MB")
+                return
+            }
+
+            setSelectedAvatar(file)
+            const previewUrl = URL.createObjectURL(file)
+            setAvatarPreview(previewUrl)
+        }
+    }
+
+    // Handle form submit
+    const handleSubmit = async () => {
+        if (!authUser?._id) {
+            toast.error("User not authenticated")
+            return
+        }
+
+        try {
+            await dispatch(updateUserProfile({
+                userId: authUser._id,
+                fullName: formData.fullName,
+                email: formData.email,
+                phone: formData.phone,
+                avatar: selectedAvatar || undefined,
+            })).unwrap()
+            
+            toast.success("Profile updated successfully!")
+            setSelectedAvatar(null)
+        } catch {
+            toast.error(updateError?.message || "Failed to update profile")
+        }
+    }
+
+    // Handle reset form
+    const handleReset = () => {
+        if (user) {
+            setFormData({
+                fullName: user.fullName || "",
+                email: user.email || "",
+                phone: user.phone || "",
+            })
+            setAvatarPreview(user.avatarUrl || "")
+            setSelectedAvatar(null)
+        }
+    }
+
+    if (loading) {
+        return (
+            <Card className="w-full bg-white rounded-[10px] shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)] border-0">
+                <CardContent className="p-6 flex justify-center items-center min-h-[400px]">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </CardContent>
+            </Card>
+        )
+    }
     return (
 
         <Card className="w-full bg-white rounded-[10px] shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)] border-0">
@@ -13,56 +122,81 @@ export default function Profile() {
                 <div className="space-y-10">
                     {/* Photo Upload Section */}
                     <div className="flex flex-col gap-5">
-                        <div className="relative w-44 h-40 p-5 bg-white rounded-[10px] border border-gray-300 flex flex-col justify-center items-center gap-2">
-                            <div className="w-10 h-10 flex justify-center items-center">
-                                <Upload className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <Label className="text-sm font-normal  text-[#6B7385] cursor-pointer">
-                                Upload Photo
-                            </Label>
+                        <div className="relative w-44 h-40 p-5 bg-white rounded-[10px] border border-gray-300 flex flex-col justify-center items-center gap-2 overflow-hidden">
+                            {avatarPreview ? (
+                                <img 
+                                    src={avatarPreview} 
+                                    alt="Avatar preview" 
+                                    className="w-full h-full object-cover rounded-[5px]"
+                                />
+                            ) : (
+                                <>
+                                    <div className="w-10 h-10 flex justify-center items-center">
+                                        <Upload className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <Label className="text-sm font-normal text-[#6B7385] cursor-pointer">
+                                        Upload Photo
+                                    </Label>
+                                </>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarSelect}
+                                className="hidden"
+                            />
                             <Button
                                 size="sm"
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
                                 className="absolute top-3 right-3 w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full p-0 text-white"
                             >
                                 +
                             </Button>
                         </div>
-                        <p className="text-sm font-normal  text-[#6B7385]">
-                            Upload a logo with a minimum size of 150 * 150 pixels (JPG, PNG, SVG).
+                        <p className="text-sm font-normal text-[#6B7385]">
+                            Upload a photo with a minimum size of 150 * 150 pixels (JPG, PNG, SVG).
                         </p>
                     </div>
 
                     {/* Personal Information */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2.5">
-                            <Label className="text-base font-normal  text-start">
+                            <Label className="text-base font-normal text-start">
                                 Name
                             </Label>
                             <Input
+                                value={formData.fullName}
+                                onChange={(e) => handleInputChange('fullName', e.target.value)}
                                 placeholder="Enter Name"
-                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385]"
+                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
                             />
                         </div>
 
                         <div className="space-y-2.5">
-                            <Label className="text-base font-normal  text-start">
+                            <Label className="text-base font-normal text-start">
                                 Email
                             </Label>
                             <Input
                                 type="email"
+                                value={formData.email}
+                                onChange={(e) => handleInputChange('email', e.target.value)}
                                 placeholder="Enter Email Address"
-                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385]"
+                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
                             />
                         </div>
 
                         <div className="space-y-2.5">
-                            <Label className="text-base font-normal  text-start">
+                            <Label className="text-base font-normal text-start">
                                 Phone Number
                             </Label>
                             <Input
                                 type="tel"
+                                value={formData.phone}
+                                onChange={(e) => handleInputChange('phone', e.target.value)}
                                 placeholder="Enter Phone Number"
-                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385]"
+                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
                             />
                         </div>
                     </div>
@@ -146,15 +280,24 @@ export default function Profile() {
                     {/* Action Buttons */}
                     <div className="flex justify-end gap-5 pt-5">
                         <Button
+                            type="button"
                             variant="outline"
-                            className="min-w-24 px-8 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700 rounded-[10px] text-base font-medium "
+                            onClick={handleReset}
+                            disabled={updateLoading}
+                            className="min-w-24 px-8 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700 rounded-[10px] text-base font-medium"
                         >
                             Reset
                         </Button>
                         <Button
-                            className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium "
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={updateLoading}
+                            className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium"
                         >
-                            Save Change
+                            {updateLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : null}
+                            Save Changes
                         </Button>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { type RouteObject } from "react-router-dom";
-import ProtectedRoute, { UnauthorizedPage, UserRole, AuthenticatedRedirect } from "./protected-routes-config";
+import ProtectedRoute, { UnauthorizedPage, UserRole } from "./protected-routes-config";
 
 import AuthenticationPage from "../pages/auth/authentication-page";
 import LandingPage from "../pages/landing/landing-page";
@@ -13,21 +13,23 @@ import UserProfileTab from "../pages/user-dashboard-page/user-profile/user-profi
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
+import FieldBookingPage from "../pages/field-list-page/list-page";
+import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 // Minimal placeholder component
 const Placeholder = ({ title }: { title: string }) => <div style={{ padding: 24 }}>{title}</div>;
 
 export const guestRoutes: RouteObject[] = [
-  {
-    path: "/",
-    element: (
-      <AuthenticatedRedirect>
-        <LandingPage />
-      </AuthenticatedRedirect>
-    ),
-  },
+  // {
+  //   path: "/",
+  //   element: (
+  //     <AuthenticatedRedirect>
+  //       <LandingPage />
+  //     </AuthenticatedRedirect>
+  //   ),
+  // },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
-  { path: "/landing-page", element: <LandingPage /> },
+  { path: "/", element: <LandingPage /> },
   { path: "/user-dashboard", element: <UserDashboardPage /> },
   { path: "/user-booking-history", element: <UserBookingHistoryPage /> },
   { path: "/user-invoices", element: <UserInvoicesPage /> },
@@ -37,6 +39,8 @@ export const guestRoutes: RouteObject[] = [
   { path: "/coach-dashboard", element: <CoachDashboardPage /> },
   { path: "/booking", element: <BookingPage /> },
   { path: "/coach-detail", element: <CoachDetailPage /> },
+  { path: "/fields", element: <FieldBookingPage /> },
+  { path: "/field-booking", element: <FieldBookingFlowPage /> },
 ];
 
 export const chatRoutes: RouteObject[] = [];
