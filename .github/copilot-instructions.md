@@ -350,6 +350,46 @@ export type UpdateUserForm = Partial<Pick<User, 'fullName' | 'email' | 'role' | 
   - Types: `camelCase.ts` (e.g., `userTypes.ts`)
 - CSS Classes: `kebab-case` hoặc BEM (e.g., `user-card`, `user-card__title`)
 
+## 🗂️ **State Management (Redux Toolkit) – Follow authentication/**
+
+- **Structure per feature (no Redux-specific hooks):**
+  - `src/features/{entity}/{entity}API.ts` – API layer only
+  - `src/features/{entity}/{entity}Slice.ts` – slice, reducers, selectors
+  - `src/features/{entity}/{entity}Thunk.ts` – async thunks
+- **Usage in components:** use `useAppDispatch` and `useAppSelector` from `store/hook.ts`.
+- **Do NOT create feature-specific Redux hooks** like `useAuth`, `useUser` for store access. Prefer selectors + thunks.
+- **Mirror `authentication/`** naming and responsibilities for all Redux features.
+
+```tsx
+// Example: src/features/authentication/authThunk.ts
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import { authAPI } from './authAPI';
+
+export const loginThunk = createAsyncThunk(
+  'auth/login',
+  async (payload: { email: string; password: string }, { rejectWithValue }) => {
+    try { return await authAPI.login(payload); }
+    catch (err) { return rejectWithValue(err); }
+  }
+);
+```
+
+```tsx
+// Example usage in component (no custom Redux hook)
+import { useAppDispatch, useAppSelector } from '@/store/hook';
+import { loginThunk } from '@/features/authentication/authThunk';
+
+const LoginButton = () => {
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(s => s.auth.loading);
+  return (
+    <button disabled={isLoading} onClick={() => dispatch(loginThunk({ email: 'a@b.com', password: 'x' }))}>
+      {isLoading ? 'Loading...' : 'Login'}
+    </button>
+  );
+};
+```
+
 ## 📊 **API Calling Patterns**
 
 ```typescript

@@ -1,18 +1,22 @@
 // Booking types based on API documentation
 
 export interface CreateFieldBookingPayload {
-    scheduleId: string;
-    slot: string;
-    totalPrice: number;
+    fieldId: string;
+    date: string; // YYYY-MM-DD
+    startTime: string; // HH:mm
+    endTime: string; // HH:mm
+    selectedAmenities?: string[];
 }
 
 export interface CreateSessionBookingPayload {
-    fieldScheduleId: string;
-    coachScheduleId: string;
-    fieldSlot: string;
-    coachSlot: string;
-    fieldPrice: number;
-    coachPrice: number;
+    fieldId: string;
+    coachId: string;
+    date: string; // YYYY-MM-DD
+    fieldStartTime: string; // HH:mm
+    fieldEndTime: string; // HH:mm
+    coachStartTime: string; // HH:mm
+    coachEndTime: string; // HH:mm
+    selectedAmenities?: string[];
 }
 
 export interface CancelBookingPayload {
@@ -34,11 +38,22 @@ export interface SetCoachHolidayPayload {
 export interface Booking {
     _id: string;
     user: string;
-    schedule: string;
-    slot: string;
+    field?: string; // field id for FIELD bookings
+    requestedCoach?: string; // coach id for COACH bookings
+    date: string; // YYYY-MM-DD
+    startTime: string; // HH:mm
+    endTime: string; // HH:mm
+    numSlots?: number;
     type: 'FIELD' | 'COACH';
     status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
     totalPrice: number;
+    selectedAmenities?: string[];
+    amenitiesFee?: number;
+    pricingSnapshot?: {
+        basePrice: number;
+        appliedMultiplier?: number;
+        priceBreakdown?: string;
+    };
     cancellationReason?: string;
     createdAt?: string;
     updatedAt?: string;

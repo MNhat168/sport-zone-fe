@@ -136,6 +136,14 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         }
     };
 
+    const formatVND = (value: number): string => {
+        try {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+        } catch {
+            return `${value.toLocaleString('vi-VN')} ₫`;
+        }
+    };
+
     const handleSubmit = () => {
         // Validate form data before submitting
         if (!formData.date || !formData.startTime || !formData.endTime || !formData.court) {
@@ -161,10 +169,10 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                 <CardContent className="p-6">
                     <div className="pb-10">
                         <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
-                            Book A Court
+                            Đặt sân
                         </h1>
                         <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
-                            Hassle-free court bookings and state-of-the-art facilities.
+                            Đặt sân nhanh chóng, tiện lợi với cơ sở vật chất hiện đại.
                         </p>
                     </div>
 
@@ -201,11 +209,11 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     <div className="text-center">
                                         <div className="flex items-baseline gap-1 justify-center">
                                             <span className="text-2xl font-semibold text-emerald-600">
-                                                ${venue.pricePerHour}
+                                                {formatVND(venue.pricePerHour)}
                                             </span>
-                                            <span className="text-sm text-gray-500">/hr</span>
+                                            <span className="text-sm text-gray-500">/giờ</span>
                                         </div>
-                                        <p className="text-sm text-[#1a1a1a] mt-1">Price per hour</p>
+                                        <p className="text-sm text-[#1a1a1a] mt-1">Đơn giá theo giờ</p>
                                     </div>
                                 </div>
                             </div>
@@ -227,7 +235,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                         <CardContent className="p-6 space-y-4">
                             {/* Date Input */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">From</Label>
+                                <Label className="text-base font-normal font-['Outfit']">Ngày</Label>
                                 <Input
                                     type="date"
                                     value={formData.date}
@@ -239,7 +247,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
                             {/* Start Time */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Start Time</Label>
+                                <Label className="text-base font-normal font-['Outfit']">Giờ bắt đầu</Label>
                                 <Input
                                     type="time"
                                     value={formData.startTime}
@@ -251,7 +259,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
                             {/* End Time */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">End Time</Label>
+                                <Label className="text-base font-normal font-['Outfit']">Giờ kết thúc</Label>
                                 <Input
                                     type="time"
                                     value={formData.endTime}
@@ -263,13 +271,13 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
                             {/* Court Selection */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Court</Label>
+                                <Label className="text-base font-normal font-['Outfit']">Sân</Label>
                                 <Select
                                     value={formData.court}
                                     onValueChange={(value) => setFormData(prev => ({ ...prev, court: value }))}
                                 >
                                     <SelectTrigger className="h-14 bg-gray-50 border-0">
-                                        <SelectValue placeholder="Select Court" />
+                                    <SelectValue placeholder="Chọn sân" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {courts.map(court => (
@@ -367,13 +375,13 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     className="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700"
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
+                    Quay lại
                 </Button>
                 <Button
                     onClick={handleSubmit}
                     className="px-5 py-3 bg-gray-800 hover:bg-gray-900 text-white"
                 >
-                    Next
+                    Tiếp tục
                     <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
             </div>

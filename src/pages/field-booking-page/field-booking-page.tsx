@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/components/header-banner/page-header";
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
 import { BookingFieldTabs } from "./component/booking-field-tabs";
@@ -7,6 +7,9 @@ import { BookCourtTab } from "./fieldTabs/bookCourt";
 import { PersonalInfoTab } from "./fieldTabs/personalInfo";
 import { ConfirmCourtTab } from "./fieldTabs/confirmCourt";
 import { PaymentTab } from "./fieldTabs/payment";
+import { useLocation } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
+import { getFieldById } from "@/features/field/fieldThunk";
 
 /**
  * Interface for booking form data shared between steps
@@ -23,6 +26,9 @@ interface BookingFormData {
 
 const FieldBookingPage = () => {
     const breadcrumbs = [{ label: "Trang chủ", href: "/" }, { label: "Đặt sân" }];
+    const location = useLocation();
+    const dispatch = useAppDispatch();
+    const currentField = useAppSelector((state) => state.field.currentField);
     
     // State để quản lý step hiện tại và booking data
     const [currentStep, setCurrentStep] = useState<BookingStep>(BookingStep.BOOK_COURT);
@@ -35,6 +41,25 @@ const FieldBookingPage = () => {
         email: '',
         phone: '',
     });
+
+    // Restore selected field on refresh: from URL ?fieldId= or localStorage
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const urlFieldId = searchParams.get('fieldId');
+        const stateFieldId = (location.state as any)?.fieldId;
+        const storedFieldId = localStorage.getItem('selectedFieldId');
+        const fieldId = urlFieldId || stateFieldId || storedFieldId;
+        if (!currentField && fieldId) {
+            dispatch(getFieldById(fieldId));
+        }
+    }, [location.search, location.state, currentField, dispatch]);
+
+    // Persist currently selected field id for refresh
+    useEffect(() => {
+        if (currentField?.id) {
+            try { localStorage.setItem('selectedFieldId', currentField.id); } catch {}
+        }
+    }, [currentField?.id]);
 
     // Mock courts data - thay thế bằng data thật từ API
     const mockCourts = [

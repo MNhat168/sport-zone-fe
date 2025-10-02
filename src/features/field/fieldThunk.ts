@@ -21,6 +21,29 @@ import {
     DELETE_FIELD_API,
 } from "./fieldAPI";
 
+// Map API Field shape (BookingFieldAPI.md / fieldAPI.md) to app Field type used in UI
+const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").Field => {
+    return {
+        id: apiField?._id || apiField?.id || "",
+        name: apiField?.name || "",
+        description: apiField?.description || "",
+        location: apiField?.location || "",
+        type: apiField?.sportType || apiField?.type || "",
+        pricePerHour: Number(apiField?.basePrice ?? apiField?.pricePerHour ?? 0),
+        availability: true,
+        images: Array.isArray(apiField?.images) ? apiField.images : [],
+        facilities: Array.isArray(apiField?.facilities) ? apiField.facilities : undefined,
+        owner: {
+            id: apiField?.owner?._id || apiField?.owner?.id || apiField?.owner || "",
+            name: apiField?.owner?.businessName || apiField?.owner?.name || "",
+            contact: apiField?.owner?.contactInfo?.phone || apiField?.owner?.contact || undefined,
+        },
+        totalBookings: apiField?.totalBookings,
+        createdAt: apiField?.createdAt,
+        updatedAt: apiField?.updatedAt,
+    };
+};
+
 // Get all fields
 export const getAllFields = createAsyncThunk<
     FieldsResponse,
@@ -41,7 +64,11 @@ export const getAllFields = createAsyncThunk<
         console.log("Get all fields response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        const raw = response.data;
+        const apiList = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+        const mapped = apiList.map(mapApiFieldToAppField);
+        const pagination = raw?.pagination || null;
+        return { success: true, data: mapped, pagination } as unknown as FieldsResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch fields",
@@ -64,7 +91,10 @@ export const getFieldById = createAsyncThunk<
         console.log("Get field by ID response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        const raw = response.data;
+        const apiField = raw?.data ?? raw;
+        const mapped = mapApiFieldToAppField(apiField);
+        return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch field",
@@ -87,7 +117,11 @@ export const getFieldsByOwner = createAsyncThunk<
         console.log("Get fields by owner response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        const raw = response.data;
+        const apiList = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+        const mapped = apiList.map(mapApiFieldToAppField);
+        const pagination = raw?.pagination || null;
+        return { success: true, data: mapped, pagination } as unknown as FieldsResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch owner's fields",
@@ -139,7 +173,10 @@ export const createField = createAsyncThunk<
         console.log("Create field response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        const raw = response.data;
+        const apiField = raw?.data ?? raw;
+        const mapped = mapApiFieldToAppField(apiField);
+        return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to create field",
@@ -163,7 +200,10 @@ export const updateField = createAsyncThunk<
         console.log("Update field response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        const raw = response.data;
+        const apiField = raw?.data ?? raw;
+        const mapped = mapApiFieldToAppField(apiField);
+        return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to update field",
