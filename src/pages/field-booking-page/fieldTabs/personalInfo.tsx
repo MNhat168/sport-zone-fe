@@ -96,7 +96,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     const formatDate = (dateString: string): string => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
+        return date.toLocaleDateString('vi-VN', { 
             weekday: 'long', 
             year: 'numeric',
             month: 'long', 
@@ -110,10 +110,10 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         const [hours, minutes] = timeString.split(':');
         const date = new Date();
         date.setHours(parseInt(hours), parseInt(minutes));
-        return date.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
+        return date.toLocaleTimeString('vi-VN', { 
+            hour: '2-digit', 
             minute: '2-digit',
-            hour12: true 
+            hour12: false 
         });
     };
 
@@ -181,10 +181,10 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 <CardContent className="p-6">
                     <div className="pb-10">
                         <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
-                            Personal Information
+                            Thông tin cá nhân
                         </h1>
                         <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
-                            Please confirm your contact details for this booking.
+                            Vui lòng xác nhận thông tin liên hệ cho đặt sân này.
                         </p>
                     </div>
 
@@ -196,7 +196,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                     <User className="w-6 h-6 text-emerald-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Court</p>
+                                    <p className="text-sm font-medium text-gray-900">Sân</p>
                                     <p className="text-sm text-gray-600">
                                         {courts.find(c => c.id === formData.court)?.name || 'Selected Court'}
                                     </p>
@@ -208,7 +208,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                     <Mail className="w-6 h-6 text-blue-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Date</p>
+                                    <p className="text-sm font-medium text-gray-900">Ngày</p>
                                     <p className="text-sm text-gray-600">
                                         {formatDate(formData.date) || 'Selected Date'}
                                     </p>
@@ -220,7 +220,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                     <Phone className="w-6 h-6 text-purple-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Time</p>
+                                    <p className="text-sm font-medium text-gray-900">Thời gian</p>
                                     <p className="text-sm text-gray-600">
                                         {formData.startTime && formData.endTime 
                                             ? `${formatTime(formData.startTime)} - ${formatTime(formData.endTime)}`
@@ -241,14 +241,14 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
                             <CardTitle className="text-2xl font-semibold font-['Outfit']">
-                                Contact Details
+                                Thông tin liên hệ
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-6">
                             {/* Full Name */}
                             <div className="space-y-2">
                                 <Label htmlFor="name" className="text-base font-medium font-['Outfit']">
-                                    Full Name *
+                                    Họ và tên *
                                 </Label>
                                 <Input
                                     id="name"
@@ -256,7 +256,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                     value={formData.name}
                                     onChange={(e) => handleInputChange('name', e.target.value)}
                                     className={`h-14 bg-gray-50 border-0 ${errors.name ? 'border-red-500 border' : ''}`}
-                                    placeholder="Enter your full name"
+                                    placeholder="Nhập họ và tên của bạn"
                                 />
                                 {errors.name && (
                                     <p className="text-sm text-red-500 mt-1">{errors.name}</p>
@@ -266,7 +266,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                             {/* Email */}
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="text-base font-medium font-['Outfit']">
-                                    Email Address *
+                                    Email *
                                 </Label>
                                 <Input
                                     id="email"
@@ -274,7 +274,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                     value={formData.email}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
                                     className={`h-14 bg-gray-50 border-0 ${errors.email ? 'border-red-500 border' : ''}`}
-                                    placeholder="Enter your email address"
+                                    placeholder="Nhập email của bạn"
                                 />
                                 {errors.email && (
                                     <p className="text-sm text-red-500 mt-1">{errors.email}</p>
@@ -284,7 +284,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                             {/* Phone */}
                             <div className="space-y-2">
                                 <Label htmlFor="phone" className="text-base font-medium font-['Outfit']">
-                                    Phone Number *
+                                    Số điện thoại *
                                 </Label>
                                 <Input
                                     id="phone"
@@ -292,7 +292,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                     value={formData.phone}
                                     onChange={(e) => handleInputChange('phone', e.target.value)}
                                     className={`h-14 bg-gray-50 border-0 ${errors.phone ? 'border-red-500 border' : ''}`}
-                                    placeholder="Enter your phone number"
+                                    placeholder="Nhập số điện thoại của bạn"
                                 />
                                 {errors.phone && (
                                     <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
@@ -302,14 +302,14 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                             {/* Special Notes */}
                             <div className="space-y-2">
                                 <Label htmlFor="notes" className="text-base font-medium font-['Outfit']">
-                                    Special Notes (Optional)
+                                    Ghi chú (không bắt buộc)
                                 </Label>
                                 <Textarea
                                     id="notes"
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     className="min-h-[100px] bg-gray-50 border-0"
-                                    placeholder="Any special requests or notes for your booking..."
+                                    placeholder="Yêu cầu/ghi chú cho đặt sân..."
                                 />
                             </div>
                         </CardContent>
@@ -374,14 +374,14 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                     className="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700"
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
+                    Quay lại
                 </Button>
                 <Button
                     onClick={handleSubmit}
                     className="px-5 py-3 bg-gray-800 hover:bg-gray-900 text-white"
                     disabled={!formData.name || !formData.email || !formData.phone}
                 >
-                    Continue to Confirmation
+                    Tiếp tục đến xác nhận
                     <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
             </div>

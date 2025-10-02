@@ -37,6 +37,7 @@ export const NavbarComponent = () => {
     }, []);
 
     const handleLogout = () => {
+        try { localStorage.clear(); } catch {}
         dispatch(logout());
         navigate("/");
     };

@@ -19,6 +19,7 @@ export const NavbarDarkComponent = () => {
     const auth = useAppSelector((state: RootState) => state.auth);
 
     const handleLogout = () => {
+        try { localStorage.clear(); } catch {}
         dispatch(logout());
         navigate("/auth");
     };

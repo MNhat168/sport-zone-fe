@@ -24,7 +24,9 @@ const decodeJwt = (token: string): JwtPayload | null => {
 interface Booking {
     _id: string;
     type: string;
-    slot: string;
+    date: string;
+    startTime: string;
+    endTime: string;
     status: string;
     coachStatus: "pending" | "accepted" | "declined";
     totalPrice: number;
@@ -102,7 +104,7 @@ const BookingsPage: React.FC = () => {
                     <thead>
                         <tr>
                             <th>Type</th>
-                            <th>Slot</th>
+                            <th>Time</th>
                             <th>Status</th>
                             <th>Coach Status</th>
                             <th>Total Price</th>
@@ -114,7 +116,7 @@ const BookingsPage: React.FC = () => {
                         {bookings.map((b) => (
                             <tr key={b._id}>
                                 <td>{b.type}</td>
-                                <td>{b.slot}</td>
+                                <td>{`${b.date} ${b.startTime}-${b.endTime}`}</td>
                                 <td>{b.status}</td>
                                 <td>
                                     <Badge

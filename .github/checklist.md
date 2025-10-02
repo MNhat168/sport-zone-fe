@@ -1,7 +1,7 @@
 # 📋 Checklist Coding Principles cho Team SportZone Frontend
 
 ## 🔄 **1. DRY (Don't Repeat Yourself)**
-- [ ] ✅ Tạo custom hooks chung cho logic được sử dụng > 2 lần
+- [ ] ✅ Tạo custom hooks chung cho UI/business logic dùng > 2 lần (không cho Redux store access)
 - [ ] ✅ Tách constants vào file enum hoặc constants
 - [ ] ✅ Tạo utility functions cho các thao tác chung
 - [ ] ✅ Tạo base components/interfaces cho các component tương tự
@@ -625,6 +625,30 @@ const BadUserProfile = ({ userId }: { userId: string }) => {
     ) : (
         <div>Error: Failed to fetch user data</div> // Technical error message
     );
+};
+```
+
+## 🧭 **8. Redux Toolkit – Follow `authentication/` pattern**
+- [ ] ✅ Mỗi feature gồm: `{entity}API.ts`, `{entity}Slice.ts`, `{entity}Thunk.ts`
+- [ ] ✅ Dùng `useAppDispatch` và `useAppSelector` từ `store/hook.ts`
+- [ ] ✅ Viết selectors trong `{entity}Slice.ts` và export từ đó
+- [ ] ✅ Async logic dùng `createAsyncThunk` trong `{entity}Thunk.ts`
+- [ ] ✅ Tên action types, file names mirror `authentication/`
+- [ ] ❌ Không tạo hooks Redux riêng cho từng feature (ví dụ: `useAuthStore`, `useUserStore`)
+
+```tsx
+// Ví dụ dùng đúng trong component (không tạo hook Redux riêng)
+import { useAppDispatch, useAppSelector } from '@/store/hook';
+import { loginThunk } from '@/features/authentication/authThunk';
+
+const LoginButton = () => {
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector((s) => s.auth.loading);
+  return (
+    <button disabled={loading} onClick={() => dispatch(loginThunk({ email: 'a@b.com', password: 'x' }))}>
+      {loading ? 'Loading...' : 'Login'}
+    </button>
+  );
 };
 ```
 

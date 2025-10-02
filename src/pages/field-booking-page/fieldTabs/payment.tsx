@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, CreditCard, Shield, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAppSelector } from "@/store/hook";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { useLocation } from "react-router-dom";
 import type { Field } from "@/types/field-type";
-import { useBooking } from "@/features/booking/hooks/useBooking";
+import { createFieldBooking } from "@/features/booking/bookingThunk";
+import { clearError } from "@/features/booking/bookingSlice";
 import type { CreateFieldBookingPayload, Booking } from "@/types/booking-type";
 
 /**
@@ -59,10 +60,12 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
     courts = [],
 }) => {
     const location = useLocation();
+    const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
     const user = useAppSelector((state) => state.user.user);
+    const bookingLoading = useAppSelector((state) => state.booking.loading);
+    const bookingError = useAppSelector((state) => state.booking.error);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
-    const { createFieldBooking, loading: bookingLoading, error: bookingError, clearError } = useBooking();
     
     const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'bank_transfer' | 'cash'>('credit_card');
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
@@ -104,7 +107,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
     const formatDate = (dateString: string): string => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
+        return date.toLocaleDateString('vi-VN', { 
             weekday: 'short', 
             month: 'short', 
             day: 'numeric',
@@ -117,11 +120,19 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         const [hours, minutes] = timeString.split(':');
         const date = new Date();
         date.setHours(parseInt(hours), parseInt(minutes));
-        return date.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
+        return date.toLocaleTimeString('vi-VN', { 
+            hour: '2-digit', 
             minute: '2-digit',
-            hour12: true 
+            hour12: false 
         });
+    };
+
+    const formatVND = (value: number): string => {
+        try {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+        } catch {
+            return `${value.toLocaleString('vi-VN')} ₫`;
+        }
     };
 
     const calculateTotal = useCallback((): number => {
@@ -171,20 +182,22 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 
         setPaymentStatus('processing');
         setPaymentError(null);
-        clearError(); // Clear any previous booking errors
+        dispatch(clearError()); // Clear any previous booking errors
 
         try {
             // Prepare booking payload according to API spec
             const bookingPayload: CreateFieldBookingPayload = {
-                scheduleId: formData.court, // Use selected court (schedule) ID
-                slot: `${formData.date} ${formData.startTime}-${formData.endTime}`, // Include date for clarity
-                totalPrice: Number(calculateTotal().toFixed(2)),
+                fieldId: (venue as any)?.id || (venue as any)?._id || '',
+                date: formData.date,
+                startTime: formData.startTime,
+                endTime: formData.endTime,
+                selectedAmenities: [],
             };
 
             console.log('Creating booking with payload:', bookingPayload);
 
             // Create booking through Redux
-            const result = await createFieldBooking(bookingPayload);
+            const result = await dispatch(createFieldBooking(bookingPayload));
 
             // Check if the action was fulfilled
             if (result.meta.requestStatus === 'fulfilled') {
@@ -238,15 +251,15 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                 <CardContent className="p-6">
                     <div className="pb-10">
                         <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
-                            Payment & Confirmation
+                            Thanh toán & Xác nhận
                         </h1>
                         <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
-                            Complete your booking by processing the payment securely.
+                            Hoàn tất đặt sân bằng cách thanh toán an toàn.
                         </p>
                     </div>
                     {!isBookingDataValid && (
                         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
-                            Missing or invalid booking data. Please go back and complete your booking details.
+                            Thiếu hoặc dữ liệu đặt sân không hợp lệ. Vui lòng quay lại và hoàn thành thông tin.
                         </div>
                     )}
                 </CardContent>
@@ -278,7 +291,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                             <CardHeader className="border-b border-gray-200">
                                 <CardTitle className="text-2xl font-semibold font-['Outfit'] flex items-center gap-2">
                                     <CreditCard className="w-6 h-6" />
-                                    Payment Method
+                                    Phương thức thanh toán
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6 space-y-6">
@@ -295,7 +308,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                         <div className="flex items-center gap-3">
                                             <CreditCard className="w-5 h-5 text-emerald-600" />
                                             <div>
-                                                <p className="font-medium">Credit/Debit Card</p>
+                                                <p className="font-medium">Thẻ tín dụng/Ghi nợ</p>
                                                 <p className="text-sm text-gray-600">Visa, Mastercard, American Express</p>
                                             </div>
                                         </div>
@@ -312,8 +325,8 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                         <div className="flex items-center gap-3">
                                             <Shield className="w-5 h-5 text-blue-600" />
                                             <div>
-                                                <p className="font-medium">Bank Transfer</p>
-                                                <p className="text-sm text-gray-600">Direct bank transfer</p>
+                                                <p className="font-medium">Chuyển khoản ngân hàng</p>
+                                                <p className="text-sm text-gray-600">Chuyển khoản trực tiếp</p>
                                             </div>
                                         </div>
                                     </div>
@@ -329,8 +342,8 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                         <div className="flex items-center gap-3">
                                             <Clock className="w-5 h-5 text-orange-600" />
                                             <div>
-                                                <p className="font-medium">Pay at Venue</p>
-                                                <p className="text-sm text-gray-600">Cash payment on arrival</p>
+                                                <p className="font-medium">Thanh toán tại sân</p>
+                                                <p className="text-sm text-gray-600">Thanh toán tiền mặt khi đến nơi</p>
                                             </div>
                                         </div>
                                     </div>
@@ -352,9 +365,9 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                         <Shield className="w-4 h-4 text-emerald-600" />
                                         <span className="text-sm font-medium text-gray-900">Secure Payment</span>
                                     </div>
-                                    <p className="text-sm text-gray-600">
-                                        Your payment information is encrypted and secure. We never store your payment details.
-                                    </p>
+                                        <p className="text-sm text-gray-600">
+                                        Thông tin thanh toán của bạn được mã hóa và an toàn. Chúng tôi không lưu trữ chi tiết thanh toán của bạn.
+                                        </p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -366,7 +379,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                     <Card className="border border-gray-200 sticky top-4">
                         <CardHeader className="border-b border-gray-200">
                             <CardTitle className="text-xl font-semibold font-['Outfit']">
-                                Booking Summary
+                                Tóm tắt đặt sân
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-4">
@@ -414,13 +427,13 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <span className="text-sm text-gray-600">
-                                        ${venue.pricePerHour}/hr × {calculateDuration()} hours
+                                        {formatVND(venue.pricePerHour)}/giờ × {calculateDuration()} giờ
                                     </span>
-                                    <span className="text-sm font-medium">${calculateTotal().toFixed(2)}</span>
+                                    <span className="text-sm font-medium">{formatVND(calculateTotal())}</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-semibold text-emerald-600 pt-2 border-t">
-                                    <span>Total:</span>
-                                    <span>${calculateTotal().toFixed(2)}</span>
+                                    <span>Tổng:</span>
+                                    <span>{formatVND(calculateTotal())}</span>
                                 </div>
                             </div>
                         </CardContent>
@@ -431,14 +444,14 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
             {/* Action Buttons */}
             {paymentStatus !== 'success' && (
                 <div className="flex justify-center items-center gap-5 py-5 bg-white/20 shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)]">
-                    <Button
+                        <Button
                         variant="outline"
                         onClick={onBack}
                         disabled={paymentStatus === 'processing' || bookingLoading}
                         className="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700"
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
+                        Quay lại
                     </Button>
                     <Button
                         onClick={handlePayment}
@@ -448,11 +461,11 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                         {(paymentStatus === 'processing' || bookingLoading) ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                {bookingLoading ? 'Creating Booking...' : 'Processing Payment...'}
+                                    {bookingLoading ? 'Đang tạo đơn đặt...' : 'Đang xử lý thanh toán...'}
                             </>
                         ) : (
                             <>
-                                Complete Payment - ${calculateTotal().toFixed(2)}
+                                    Hoàn tất thanh toán - {formatVND(calculateTotal())}
                             </>
                         )}
                     </Button>

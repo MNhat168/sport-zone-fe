@@ -57,7 +57,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
     const location = useLocation();
     const currentField = useAppSelector((state) => state.field.currentField);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
-    
+    console.log(currentField);
     // Use booking data from props or initialize with empty values
     const formData: BookingFormData = {
         date: bookingData?.date || '',
@@ -79,7 +79,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
             day: 'numeric' 
         });
     };
-
+   
     const formatTime = (timeString: string): string => {
         if (!timeString) return '';
         const [hours, minutes] = timeString.split(':');
@@ -104,6 +104,14 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
 
     const calculateSubtotal = (): number => {
         return calculateCageTotal();
+    };
+
+    const formatVND = (value: number): string => {
+        try {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+        } catch {
+            return `${value.toLocaleString('vi-VN')} ₫`;
+        }
     };
 
     const handleSubmit = () => {
@@ -133,10 +141,10 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                 <CardContent className="p-6">
                     <div className="pb-10">
                         <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
-                            Order Confirmation
+                            Xác nhận đặt sân
                         </h1>
                         <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
-                            Thank you for your order! We're excited to fulfill it with care and efficiency.
+                            Cảm ơn bạn đã đặt sân! Vui lòng kiểm tra lại thông tin trước khi tiếp tục.
                         </p>
                     </div>
 
@@ -192,26 +200,24 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                     {/* Booking Details Section */}
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200 bg-gray-50">
-                            <CardTitle className="text-xl font-semibold text-gray-900">Booking Details</CardTitle>
+                            <CardTitle className="text-xl font-semibold text-gray-900">Chi tiết đặt sân</CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
                             <div className="grid grid-cols-4 gap-6">
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Court Name</h4>
-                                    <p className="text-sm text-gray-600">
-                                        {courts.find((c) => c.id === formData.court)?.name || "Standard Synthetic Court 1"}
-                                    </p>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Tên sân</h4>
+                                    <p className="text-sm text-gray-600">{venue.name || "Chưa cập nhật"}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Appointment Date</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Ngày</h4>
                                     <p className="text-sm text-gray-600">{formatDate(formData.date) || "Mon, Jul 11"}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Appointment Start time</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Giờ bắt đầu</h4>
                                     <p className="text-sm text-gray-600">{formatTime(formData.startTime) || "05:25 AM"}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Appointment End time</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Giờ kết thúc</h4>
                                     <p className="text-sm text-gray-600">{formatTime(formData.endTime) || "06:25 AM"}</p>
                                 </div>
                             </div>
@@ -219,51 +225,51 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                     </Card>
 
                     {/* Customer Information Section - Who is making the booking */}
-                    <Card className="border border-gray-200">
+                    {/*<Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200 bg-gray-50">
-                            <CardTitle className="text-xl font-semibold text-gray-900">Customer Information</CardTitle>
+                            <CardTitle className="text-xl font-semibold text-gray-900">Thông tin người đặt</CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
                             <div className="grid grid-cols-3 gap-6">
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Customer Name</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Họ và tên</h4>
                                     <p className="text-sm text-gray-600">{formData.name || 'Not provided'}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Customer Email</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Email</h4>
                                     <p className="text-sm text-gray-600">{formData.email || 'Not provided'}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Customer Phone</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Số điện thoại</h4>
                                     <p className="text-sm text-gray-600">{formData.phone || 'Not provided'}</p>
                                 </div>
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card>*/}
 
                     {/* Venue Contact Information Section - Field owner/venue contact details */}
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200 bg-gray-50">
-                            <CardTitle className="text-xl font-semibold text-gray-900">Venue Contact Information</CardTitle>
+                            <CardTitle className="text-xl font-semibold text-gray-900">Thông tin liên hệ sân</CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
                             <div className="grid grid-cols-3 gap-6">
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Owner Name</h4>
-                                    <p className="text-sm text-gray-600">{venue?.owner?.name || 'SportZone Management'}</p>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Chủ sân</h4>
+                                    <p className="text-sm text-gray-600">{venue?.owner?.name || venue?.owner?.id || 'Chưa cập nhật'}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Contact Info</h4>
-                                    <p className="text-sm text-gray-600">{venue?.owner?.contact || 'info@sportzone.com'}</p>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Liên hệ</h4>
+                                    <p className="text-sm text-gray-600">{venue?.owner?.contact || 'Chưa cập nhật'}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Venue Name</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Tên sân</h4>
                                     <p className="text-sm text-gray-600">{venue?.name || 'SportZone Field'}</p>
                                 </div>
                             </div>
                             <div className="mt-4 pt-4 border-t border-gray-200">
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Venue Address</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Địa chỉ</h4>
                                     <p className="text-sm text-gray-600">{venue?.location || 'Location not specified'}</p>
                                 </div>
                             </div>
@@ -273,25 +279,25 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                     {/* Payment Information Section */}
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200 bg-gray-50">
-                            <CardTitle className="text-xl font-semibold text-gray-900">Payment Information</CardTitle>
+                            <CardTitle className="text-xl font-semibold text-gray-900">Thông tin thanh toán</CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Court Total</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Tiền sân</h4>
                                     <p className="text-sm text-emerald-600 font-medium">
-                                        ${venue?.pricePerHour}/hr × {(() => {
+                                        {formatVND(venue?.pricePerHour || 0)}/giờ × {(() => {
                                             if (!formData.startTime || !formData.endTime) return '0';
                                             const start = new Date(`1970-01-01T${formData.startTime}:00`);
                                             const end = new Date(`1970-01-01T${formData.endTime}:00`);
                                             const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
                                             return hours > 0 ? hours : '0';
-                                        })()} hours
+                                        })()} giờ
                                     </p>
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Total Amount</h4>
-                                    <p className="text-lg font-semibold text-emerald-600">${calculateSubtotal().toFixed(2)}</p>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Tổng tiền</h4>
+                                    <p className="text-lg font-semibold text-emerald-600">{formatVND(calculateSubtotal())}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -307,13 +313,13 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                     className="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700"
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
+                    Quay lại
                 </Button>
                 <Button
                     onClick={handleSubmit}
                     className="px-5 py-3 bg-gray-800 hover:bg-gray-900 text-white"
                 >
-                    Next
+                    Tiếp tục
                     <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
             </div>
