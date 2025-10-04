@@ -12,6 +12,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { RootState } from "../../store/store";
 import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
+import FieldOwnerDropdownMenuItems from "./field-owner-dropdown-menu";
 
 export const NavbarDarkComponent = () => {
     const navigate = useNavigate();
@@ -96,6 +97,12 @@ export const NavbarDarkComponent = () => {
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (
                                     <UserDropdownMenuItems userId={auth.user._id} />
+                                )}
+                                {auth.user?.role === "field_owner" && auth.user._id && (
+                                    <FieldOwnerDropdownMenuItems 
+                                        userId={auth.user._id}
+                                        businessName={(auth.user as any).businessName}
+                                    />
                                 )}
                                 <Button
                                     className="w-full justify-start hover:bg-green-50 hover:text-green-600"

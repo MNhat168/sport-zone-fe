@@ -7,6 +7,9 @@ import type {
     UpdateFieldPayload,
     GetFieldsParams,
     CheckAvailabilityParams,
+    SchedulePriceUpdatePayload,
+    CancelScheduledPriceUpdatePayload,
+    ScheduledPriceUpdate,
     ErrorResponse,
 } from "../../types/field-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
@@ -14,29 +17,41 @@ import axiosPrivate from "../../utils/axios/axiosPrivate";
 import {
     FIELDS_API,
     FIELD_BY_ID_API,
-    FIELDS_BY_OWNER_API,
     FIELD_AVAILABILITY_API,
     CREATE_FIELD_API,
+    CREATE_FIELD_WITH_IMAGES_API,
     UPDATE_FIELD_API,
     DELETE_FIELD_API,
+    SCHEDULE_PRICE_UPDATE_API,
+    CANCEL_SCHEDULED_PRICE_UPDATE_API,
+    GET_SCHEDULED_PRICE_UPDATES_API,
 } from "./fieldAPI";
 
-// Map API Field shape (BookingFieldAPI.md / fieldAPI.md) to app Field type used in UI
+// Map API Field shape (fieldAPI.md) to app Field type used in UI
 const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").Field => {
     return {
         id: apiField?._id || apiField?.id || "",
         name: apiField?.name || "",
+        sportType: apiField?.sportType || "",
         description: apiField?.description || "",
         location: apiField?.location || "",
-        type: apiField?.sportType || apiField?.type || "",
-        pricePerHour: Number(apiField?.basePrice ?? apiField?.pricePerHour ?? 0),
-        availability: true,
         images: Array.isArray(apiField?.images) ? apiField.images : [],
-        facilities: Array.isArray(apiField?.facilities) ? apiField.facilities : undefined,
+        operatingHours: apiField?.operatingHours || { start: "06:00", end: "22:00" },
+        slotDuration: apiField?.slotDuration || 60,
+        minSlots: apiField?.minSlots || 1,
+        maxSlots: apiField?.maxSlots || 4,
+        priceRanges: Array.isArray(apiField?.priceRanges) ? apiField.priceRanges : [],
+        basePrice: Number(apiField?.basePrice ?? 0),
+        isActive: apiField?.isActive ?? true,
+        maintenanceNote: apiField?.maintenanceNote,
+        maintenanceUntil: apiField?.maintenanceUntil,
+        rating: apiField?.rating || 0,
+        totalReviews: apiField?.totalReviews || 0,
         owner: {
             id: apiField?.owner?._id || apiField?.owner?.id || apiField?.owner || "",
-            name: apiField?.owner?.businessName || apiField?.owner?.name || "",
-            contact: apiField?.owner?.contactInfo?.phone || apiField?.owner?.contact || undefined,
+            businessName: apiField?.owner?.businessName,
+            name: apiField?.owner?.name,
+            contactInfo: apiField?.owner?.contactInfo,
         },
         totalBookings: apiField?.totalBookings,
         createdAt: apiField?.createdAt,
@@ -52,10 +67,9 @@ export const getAllFields = createAsyncThunk<
 >("field/getAllFields", async (params = {}, thunkAPI) => {
     try {
         const queryParams = new URLSearchParams();
-        if (params.page) queryParams.append("page", params.page.toString());
-        if (params.limit) queryParams.append("limit", params.limit.toString());
+        if (params.name) queryParams.append("name", params.name);
         if (params.location) queryParams.append("location", params.location);
-        if (params.type) queryParams.append("type", params.type);
+        if (params.sportType) queryParams.append("sportType", params.sportType);
 
         const url = queryParams.toString() ? `${FIELDS_API}?${queryParams}` : FIELDS_API;
         const response = await axiosPublic.get(url);
@@ -67,8 +81,7 @@ export const getAllFields = createAsyncThunk<
         const raw = response.data;
         const apiList = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
         const mapped = apiList.map(mapApiFieldToAppField);
-        const pagination = raw?.pagination || null;
-        return { success: true, data: mapped, pagination } as unknown as FieldsResponse;
+        return { success: true, data: mapped } as unknown as FieldsResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch fields",
@@ -104,34 +117,7 @@ export const getFieldById = createAsyncThunk<
     }
 });
 
-// Get fields by owner
-export const getFieldsByOwner = createAsyncThunk<
-    FieldsResponse,
-    string,
-    { rejectValue: ErrorResponse }
->("field/getFieldsByOwner", async (ownerId, thunkAPI) => {
-    try {
-        const response = await axiosPrivate.get(FIELDS_BY_OWNER_API(ownerId));
-
-        console.log("-----------------------------------------------------");
-        console.log("Get fields by owner response:", response.data);
-        console.log("-----------------------------------------------------");
-
-        const raw = response.data;
-        const apiList = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
-        const mapped = apiList.map(mapApiFieldToAppField);
-        const pagination = raw?.pagination || null;
-        return { success: true, data: mapped, pagination } as unknown as FieldsResponse;
-    } catch (error: any) {
-        const errorResponse: ErrorResponse = {
-            message: error.response?.data?.message || error.message || "Failed to fetch owner's fields",
-            status: error.response?.status || "500",
-        };
-        return thunkAPI.rejectWithValue(errorResponse);
-    }
-});
-
-// Check field availability
+// Check field availability (Pure Lazy Creation)
 export const checkFieldAvailability = createAsyncThunk<
     FieldAvailabilityResponse,
     CheckAvailabilityParams,
@@ -139,9 +125,8 @@ export const checkFieldAvailability = createAsyncThunk<
 >("field/checkAvailability", async (params, thunkAPI) => {
     try {
         const queryParams = new URLSearchParams();
-        queryParams.append("date", params.date);
-        queryParams.append("startTime", params.startTime);
-        queryParams.append("endTime", params.endTime);
+        queryParams.append("startDate", params.startDate);
+        queryParams.append("endDate", params.endDate);
 
         const url = `${FIELD_AVAILABILITY_API(params.id)}?${queryParams}`;
         const response = await axiosPublic.get(url);
@@ -231,6 +216,127 @@ export const deleteField = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to delete field",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Create field with image upload (Owner only)
+export const createFieldWithImages = createAsyncThunk<
+    FieldResponse,
+    { payload: CreateFieldPayload; images: File[] },
+    { rejectValue: ErrorResponse }
+>("field/createFieldWithImages", async ({ payload, images }, thunkAPI) => {
+    try {
+        const formData = new FormData();
+        
+        // Add field data as JSON strings
+        formData.append("name", payload.name);
+        formData.append("sportType", payload.sportType);
+        formData.append("description", payload.description);
+        formData.append("location", payload.location);
+        formData.append("operatingHours", JSON.stringify(payload.operatingHours));
+        formData.append("slotDuration", payload.slotDuration.toString());
+        formData.append("minSlots", payload.minSlots.toString());
+        formData.append("maxSlots", payload.maxSlots.toString());
+        formData.append("priceRanges", JSON.stringify(payload.priceRanges));
+        formData.append("basePrice", payload.basePrice.toString());
+        
+        // Add image files
+        images.forEach((image) => {
+            formData.append("images", image);
+        });
+
+        const response = await axiosPrivate.post(CREATE_FIELD_WITH_IMAGES_API, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        console.log("-----------------------------------------------------");
+        console.log("Create field with images response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        const raw = response.data;
+        const apiField = raw?.data ?? raw;
+        const mapped = mapApiFieldToAppField(apiField);
+        return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to create field with images",
+            status: error.response?.status || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Schedule price update (Owner only)
+export const schedulePriceUpdate = createAsyncThunk<
+    { success: boolean; message: string; effectiveDate: string },
+    { id: string; payload: SchedulePriceUpdatePayload },
+    { rejectValue: ErrorResponse }
+>("field/schedulePriceUpdate", async ({ id, payload }, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(SCHEDULE_PRICE_UPDATE_API(id), payload);
+
+        console.log("-----------------------------------------------------");
+        console.log("Schedule price update response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to schedule price update",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Cancel scheduled price update (Owner only)
+export const cancelScheduledPriceUpdate = createAsyncThunk<
+    { success: boolean; message: string },
+    { id: string; payload: CancelScheduledPriceUpdatePayload },
+    { rejectValue: ErrorResponse }
+>("field/cancelScheduledPriceUpdate", async ({ id, payload }, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.delete(CANCEL_SCHEDULED_PRICE_UPDATE_API(id), {
+            data: payload,
+        });
+
+        console.log("-----------------------------------------------------");
+        console.log("Cancel scheduled price update response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to cancel scheduled price update",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get scheduled price updates (Owner only)
+export const getScheduledPriceUpdates = createAsyncThunk<
+    { success: boolean; data: ScheduledPriceUpdate[] },
+    string,
+    { rejectValue: ErrorResponse }
+>("field/getScheduledPriceUpdates", async (id, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(GET_SCHEDULED_PRICE_UPDATES_API(id));
+
+        console.log("-----------------------------------------------------");
+        console.log("Get scheduled price updates response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get scheduled price updates",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

@@ -1,39 +1,42 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import {
-  guestRoutes,
+  guestRoutes, // Includes publicRoutes + legacy routes
   userRoutes,
   coachRoutes,
-  centerRoutes,
+  adminRoutes,
   fieldOwnerRoutes,
   chatRoutes,
 } from "./routes-config";
 import { UnauthorizedPage } from "./protected-routes-config";
 import { RootLayout } from "../layouts/root-layout";
-import { getDefaultRouteByRole, isRouteAllowedForRole } from "../utils/routing/routing-utils"; // Giữ nguyên
 
-// Tạo router configuration chính
+/**
+ * ===== MAIN ROUTER CONFIGURATION =====
+ * Central router configuration using React Router v6
+ * Combines all role-based routes in a structured manner
+ */
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
     children: [
-      // Guest routes (public)
+      // Public & Guest routes (accessible to all)
       ...guestRoutes,
 
-      // Protected routes
+      // Role-specific protected routes
       ...userRoutes,
       ...coachRoutes,
-      ...centerRoutes,
+      ...adminRoutes,
       ...fieldOwnerRoutes,
       ...chatRoutes,
 
-      // Error routes
+      // Error handling routes
       {
         path: "unauthorized",
         element: <UnauthorizedPage />,
       },
 
-      // Catch-all route để redirect về home
+      // Catch-all route - redirect to home
       {
         path: "*",
         element: <Navigate to="/" replace />,
@@ -41,8 +44,5 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-
-// Export lại các functions từ utils để maintain backward compatibility
-export { getDefaultRouteByRole, isRouteAllowedForRole };
 
 export default router;

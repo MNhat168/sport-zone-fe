@@ -13,6 +13,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import type { RootState } from "../../store/store";
 import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
+import FieldOwnerDropdownMenuItems from "./field-owner-dropdown-menu";
 import {
     Dialog,
     DialogContent,
@@ -37,7 +38,9 @@ export const NavbarComponent = () => {
     }, []);
 
     const handleLogout = () => {
-        try { localStorage.clear(); } catch {}
+        try { localStorage.clear(); } catch {
+            // Ignore localStorage errors (e.g., in private browsing mode)
+        }
         dispatch(logout());
         navigate("/");
     };
@@ -122,6 +125,12 @@ export const NavbarComponent = () => {
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (
                                     <CoachDropdownMenuItems userId={auth.user._id} />
+                                )}
+                                {auth.user?.role === "field_owner" && auth.user._id && (
+                                    <FieldOwnerDropdownMenuItems 
+                                        userId={auth.user._id}
+                                        businessName={(auth.user as any).businessName}
+                                    />
                                 )}
                                 <Button
                                     variant="ghost"
