@@ -3,7 +3,8 @@
 import { NavbarDarkComponent } from "../../components/header/navbar-dark-component"
 import PageHeader from "../../components/header-banner/page-header"
 import CoachCard from "./card-list/coach-card-props"
-import { useRef } from "react"
+import { useRef, useEffect, useState } from "react"
+import axios from "axios"
 import { FooterComponent } from "../../components/footer/footer-component"
 
 const BookingPage = () => {
@@ -12,126 +13,32 @@ const BookingPage = () => {
 
     const breadcrumbs = [{ label: "Trang chủ", href: "/" }, { label: "Đặt huấn luyện viên" }]
 
-    // Mock data cho coaches
-    const coachesData = [
-        {
-            name: "Nguyễn Văn A",
-            location: "Hà Nội",
-            description: "Huấn luyện viên bóng đá chuyên nghiệp với 10 năm kinh nghiệm",
-            rating: 4.8,
-            reviews: 156,
-            price: "500k/h",
-            nextAvailability: "Hôm nay",
-        },
-        {
-            name: "Trần Thị B",
-            location: "TP.HCM",
-            description: "Chuyên gia fitness và yoga, giúp bạn có sức khỏe tốt nhất",
-            rating: 4.9,
-            reviews: 203,
-            price: "400k/h",
-            nextAvailability: "Ngày mai",
-        },
-        {
-            name: "Lê Minh C",
-            location: "Đà Nẵng",
-            description: "Huấn luyện viên tennis, từng là vận động viên quốc gia",
-            rating: 4.7,
-            reviews: 89,
-            price: "600k/h",
-            nextAvailability: "Cuối tuần",
-        },
-        {
-            name: "Phạm Thị D",
-            location: "Hải Phòng",
-            description: "Chuyên gia bơi lội và cứu hộ, an toàn tuyệt đối",
-            rating: 4.6,
-            reviews: 134,
-            price: "350k/h",
-            nextAvailability: "Hôm nay",
-        },
-        {
-            name: "Hoàng Văn E",
-            location: "Cần Thơ",
-            description: "Huấn luyện viên bóng rổ, phát triển kỹ năng toàn diện",
-            rating: 4.8,
-            reviews: 98,
-            price: "450k/h",
-            nextAvailability: "Ngày mai",
-        },
-        {
-            name: "Vũ Thị F",
-            location: "Nha Trang",
-            description: "Chuyên gia thể hình và dinh dưỡng thể thao",
-            rating: 4.9,
-            reviews: 167,
-            price: "550k/h",
-            nextAvailability: "Cuối tuần",
-        },
-        {
-            name: "Nguyễn Văn G",
-            location: "Huế",
-            description: "Huấn luyện viên cầu lông chuyên nghiệp",
-            rating: 4.7,
-            reviews: 98,
-            price: "400k/h",
-            nextAvailability: "Hôm nay",
-        },
-        {
-            name: "Trần Thị H",
-            location: "Vũng Tàu",
-            description: "Chuyên gia bóng chuyền và thể thao bãi biển",
-            rating: 4.8,
-            reviews: 145,
-            price: "450k/h",
-            nextAvailability: "Ngày mai",
-        },
-        {
-            name: "Lê Văn I",
-            location: "Quảng Ninh",
-            description: "Huấn luyện viên bóng đá và futsal",
-            rating: 4.6,
-            reviews: 112,
-            price: "380k/h",
-            nextAvailability: "Cuối tuần",
-        },
-        {
-            name: "Phạm Thị K",
-            location: "Bình Dương",
-            description: "Chuyên gia yoga và pilates",
-            rating: 4.9,
-            reviews: 189,
-            price: "520k/h",
-            nextAvailability: "Hôm nay",
-        },
-        {
-            name: "Hoàng Văn L",
-            location: "Đồng Nai",
-            description: "Huấn luyện viên bóng rổ và thể hình",
-            rating: 4.7,
-            reviews: 134,
-            price: "480k/h",
-            nextAvailability: "Ngày mai",
-        },
-        {
-            name: "Vũ Thị M",
-            location: "Long An",
-            description: "Chuyên gia bơi lội và cứu hộ",
-            rating: 4.8,
-            reviews: 156,
-            price: "420k/h",
-            nextAvailability: "Cuối tuần",
-        },
-        {
-            name: "Nguyễn Văn N",
-            location: "Tiền Giang",
-            description: "Huấn luyện viên tennis và badminton",
-            rating: 4.6,
-            reviews: 98,
-            price: "460k/h",
-            nextAvailability: "Hôm nay",
-        },
-    ]
+    // State for API data
+    const [coaches, setCoaches] = useState<any[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchCoaches = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await axios.get(
+                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/coaches/all`
+                );
+                setCoaches(
+                  Array.isArray(response.data)
+                    ? response.data
+                    : response.data?.data || []
+                );
+            } catch (err: any) {
+                setError(err?.message || 'Lỗi khi lấy danh sách huấn luyện viên');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCoaches();
+    }, []);
 
     return (
         <div className="min-h-screen">
@@ -184,16 +91,22 @@ const BookingPage = () => {
                             }}
                         >
                             <div className="space-y-4">
-                                {coachesData.map((coach, index) => (
-                                    <div key={index} className="scroll-snap-start">
+                                {loading && <div>Đang tải danh sách huấn luyện viên...</div>}
+                                {error && <div className="text-red-500">{error}</div>}
+                                {!loading && !error && coaches.length === 0 && (
+                                    <div>Không có huấn luyện viên nào.</div>
+                                )}
+                                {!loading && !error && coaches.map((coach, index) => (
+                                    <div key={coach.id || index} className="scroll-snap-start">
                                         <CoachCard
+                                            id={coach.id}
                                             name={coach.name}
                                             location={coach.location}
                                             description={coach.description}
                                             rating={coach.rating}
-                                            reviews={coach.reviews}
+                                            reviews={coach.totalReviews}
                                             price={coach.price}
-                                            nextAvailability={coach.nextAvailability}
+                                            nextAvailability={coach.nextAvailability ?? ''}
                                         />
                                     </div>
                                 ))}
