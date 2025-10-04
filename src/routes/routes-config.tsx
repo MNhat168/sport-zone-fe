@@ -38,7 +38,7 @@ export const guestRoutes: RouteObject[] = [
   { path: "/user-profile", element: <UserProfileTab /> },
   { path: "/coach-dashboard", element: <CoachDashboardPage /> },
   { path: "/booking", element: <BookingPage /> },
-  { path: "/coach-detail", element: <CoachDetailPage /> },
+  { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/fields", element: <FieldBookingPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
 ];
