@@ -4,26 +4,36 @@ import { Label } from "../../components/ui/label"
 import { Button } from "../../components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PageWrapper } from "../../components/layouts/page-wrapper"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "react-router-dom"
+import axios from "axios"
 import { Calendar, ChevronDown, ChevronUp, User, UserPlus, Users } from "lucide-react"
 
 
 export default function CoachDetailPage() {
-    const trainerData = {
-        name: "Kevin Anderson",
-        description:
-            "Huấn luyện viên Kevin cung cấp các bài học cầu lông tại Santa Monica ở Penmar Park",
-        rating: "4,5",
-        reviewCount: "300 Đánh giá",
-        location: "Santamanica, Hoa Kỳ",
-        level: "Chuyên gia",
-        completedSessions: "25",
-        memberSince: "Với Dreamsports kể từ ngày 5 tháng 4 năm 2023",
-        profileImage: "https://c.animaapp.com/PIKJaZmQ/img/ng--i-d-ng@2x.png",
-        locationIcon: "https://c.animaapp.com/PIKJaZmQ/img/bi-u-t--ng@2x.png",
-    };
+    const { id } = useParams<{ id: string }>();
+    const [trainerData, setTrainerData] = useState<any | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const stats = [
+    useEffect(() => {
+        const fetchCoach = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/coaches/${id}`);
+                setTrainerData(response.data?.data || response.data);
+            } catch (err: any) {
+                setError(err?.message || 'Lỗi khi lấy thông tin huấn luyện viên');
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (id) fetchCoach();
+    }, [id]);
+
+    // Stats fallback if not present in API
+    const stats = trainerData?.stats || [
         {
             icon: "https://c.animaapp.com/PIKJaZmQ/img/vector.svg",
             label: "Cấp bậc: Chuyên gia",
@@ -52,11 +62,9 @@ export default function CoachDetailPage() {
     ];
 
     const profileData = {
-        name: "Kevin Anderson",
-        experience:
-            "10 năm kinh nghiệm huấn luyện cầu lông ở nhiều trình độ khác nhau.",
-        certification:
-            "Huấn luyện viên cầu lông được chứng nhận, am hiểu sâu sắc về kỹ thuật và chiến thuật của môn thể thao",
+        name: trainerData?.name || "",
+        experience: trainerData?.coachingDetails?.experience || "",
+        certification: trainerData?.coachingDetails?.certification || "",
     };
 
     const [bioExpanded, setBioExpanded] = useState(true);
@@ -64,7 +72,7 @@ export default function CoachDetailPage() {
         setBioExpanded(!bioExpanded);
     };
 
-    const availabilityData = [
+    const availabilityData = trainerData?.availabilityData || [
         "Thứ Năm, ngày 24 tháng 9 lúc 3 giờ chiều",
         "Thứ sáu, ngày 25 tháng 9 lúc 3 giờ chiều",
         "Thứ Bảy, ngày 26 tháng 9 lúc 3 giờ chiều",
@@ -83,26 +91,12 @@ export default function CoachDetailPage() {
         }
     };
 
-    const lessonTypes = [
-        {
-            id: "single",
-            name: "Bài học đơn lẻ",
-            icon: User,
-            description: "Học 1-on-1 với huấn luyện viên"
-        },
-        {
-            id: "pair",
-            name: "Bài học 2 người chơi",
-            icon: UserPlus,
-            description: "Học cùng với 1 người bạn"
-        },
-        {
-            id: "group",
-            name: "Bài học nhóm nhỏ",
-            icon: Users,
-            description: "Học trong nhóm 3-4 người"
-        }
-    ];
+    const lessonTypes = trainerData?.lessonTypes?.map(lesson => ({
+        id: lesson.type,
+        name: lesson.name,
+        description: lesson.description,
+        icon: lesson.type === "single" ? User : lesson.type === "pair" ? UserPlus : Users,
+    })) || [];
 
     type LessonTypeOption = typeof lessonTypes[0];
     const [selectedLesson, setSelectedLesson] = useState<LessonTypeOption | null>(null);
@@ -121,6 +115,21 @@ export default function CoachDetailPage() {
     const handleCoachingToggle = () => {
         setCoachingExpanded(!coachingExpanded);
     };
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <span>Đang tải thông tin huấn luyện viên...</span>
+            </div>
+        );
+    }
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <span className="text-red-500">{error}</span>
+            </div>
+        );
+    }
+
     return (
         <>
             <NavbarDarkComponent />
@@ -146,7 +155,6 @@ export default function CoachDetailPage() {
                                                 aria-label={`Profile photo of ${trainerData.name}`}
                                             />
                                         </div>
-
                                         {/* Main Content */}
                                         <div className="flex-1 min-w-0">
                                             <div className="space-y-2.5">
@@ -156,23 +164,19 @@ export default function CoachDetailPage() {
                                                         <h3 className="text-left text-2xl font-semibold text-[#192335] leading-7 font-['Outfit',sans-serif]">
                                                             {trainerData.name}
                                                         </h3>
-
                                                         {/* Status Badge */}
                                                         <div className="bg-[#23b33a] rounded-[20px] px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
                                                             <span className="text-white text-xs font-medium">"</span>
                                                         </div>
                                                     </div>
-
                                                     <button className="bg-[#ffaa00] hover:bg-[#e69900] transition-colors rounded-[5px] px-4 py-2 h-[34px] flex items-center justify-center">
                                                         <span className="text-white text-sm font-medium">Yêu thích</span>
                                                     </button>
                                                 </div>
-
                                                 {/* Description */}
                                                 <p className="text-left text-[#7c7c7c] text-base leading-relaxed">
                                                     {trainerData.description}
                                                 </p>
-
                                                 {/* Rating and Location */}
                                                 <div className="flex items-center gap-4 pb-2">
                                                     {/* Rating */}
@@ -186,7 +190,6 @@ export default function CoachDetailPage() {
                                                             {trainerData.reviewCount}
                                                         </span>
                                                     </div>
-
                                                     {/* Location */}
                                                     <div className="flex items-center gap-2">
                                                         <img
@@ -199,10 +202,6 @@ export default function CoachDetailPage() {
                                                         </span>
                                                     </div>
                                                 </div>
-
-                                                {/* Divider */}
-                                                {/* <hr className="border-t border-[#eaedf0]" /> */}
-
                                                 {/* Stats */}
                                                 <div className="flex items-start gap-4 pt-2">
                                                     {stats.map((stat, index) => (
