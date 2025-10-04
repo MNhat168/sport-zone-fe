@@ -107,6 +107,16 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     email: parsed.email ?? prev.email,
                     phone: parsed.phone ?? prev.phone,
                 }));
+
+                // Cập nhật selectedStartHour và selectedEndHour từ localStorage
+                if (parsed.startTime) {
+                    const startHour = parseInt(parsed.startTime.split(':')[0]);
+                    setSelectedStartHour(startHour);
+                }
+                if (parsed.endTime) {
+                    const endHour = parseInt(parsed.endTime.split(':')[0]);
+                    setSelectedEndHour(endHour);
+                }
             }
         } catch {
             // Ignore malformed storage

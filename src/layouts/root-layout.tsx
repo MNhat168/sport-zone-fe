@@ -2,12 +2,10 @@
 import { useEffect } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import { AuthWrapper } from '../routes/auth-wrapper';
-import { useAutoRedirect } from '../routes/protected-routes-config';
-
 export const RootLayout = () => {
   const { pathname } = useLocation();
 
-  useAutoRedirect();
+  // Auto-redirect logic is handled by AuthWrapper component
 
   useEffect(() => {
     // Only scroll to top for specific routes, not booking page

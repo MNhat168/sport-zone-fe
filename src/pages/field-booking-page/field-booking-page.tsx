@@ -10,6 +10,7 @@ import { PaymentTab } from "./fieldTabs/payment";
 import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { getFieldById } from "@/features/field/fieldThunk";
+import { AuthRequiredPopup } from "@/components/auth/auth-required-popup";
 
 /**
  * Interface for booking form data shared between steps
@@ -29,6 +30,7 @@ const FieldBookingPage = () => {
     const location = useLocation();
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
+    const authUser = useAppSelector((state) => state.auth.user);
     
     // State để quản lý step hiện tại và booking data
     const [currentStep, setCurrentStep] = useState<BookingStep>(BookingStep.BOOK_COURT);
@@ -41,6 +43,9 @@ const FieldBookingPage = () => {
         email: '',
         phone: '',
     });
+    
+    // State để quản lý popup yêu cầu đăng nhập
+    const [showAuthPopup, setShowAuthPopup] = useState(false);
 
     // Restore selected field on refresh: from URL ?fieldId= or localStorage
     useEffect(() => {
@@ -57,9 +62,22 @@ const FieldBookingPage = () => {
     // Persist currently selected field id for refresh
     useEffect(() => {
         if (currentField?.id) {
-            try { localStorage.setItem('selectedFieldId', currentField.id); } catch {}
+            try { localStorage.setItem('selectedFieldId', currentField.id); } catch {
+                // Ignore localStorage errors (e.g., in private browsing mode)
+            }
         }
     }, [currentField?.id]);
+
+    // Handle user login - if user logs in and we have pending booking data, continue the flow
+    useEffect(() => {
+        if (authUser && showAuthPopup) {
+            setShowAuthPopup(false);
+            // If we have booking data, continue to the next step
+            if (bookingData.date && bookingData.startTime && bookingData.endTime && bookingData.court) {
+                setCurrentStep(BookingStep.ORDER_CONFIRMATION);
+            }
+        }
+    }, [authUser, showAuthPopup, bookingData]);
 
     // Mock courts data - thay thế bằng data thật từ API
     const mockCourts = [
@@ -71,12 +89,20 @@ const FieldBookingPage = () => {
 
     const handleBookCourtSubmit = (formData: BookingFormData) => {
         console.log('BookCourt submitted:', formData);
+        
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (!authUser) {
+            setShowAuthPopup(true);
+            return;
+        }
+        
         setBookingData(formData);
         setCurrentStep(BookingStep.ORDER_CONFIRMATION);
     };
 
     const handlePersonalInfoSubmit = (formData: BookingFormData) => {
         console.log('PersonalInfo submitted:', formData);
+        
         setBookingData(formData);
         setCurrentStep(BookingStep.PAYMENT);
     };
@@ -85,12 +111,10 @@ const FieldBookingPage = () => {
         setCurrentStep(BookingStep.BOOK_COURT);
     };
 
-    const handleBackToPersonalInfo = () => {
-        setCurrentStep(BookingStep.BOOK_COURT);
-    };
 
     const handleConfirmSubmit = (formData: BookingFormData) => {
         console.log('Booking confirmed:', formData);
+        
         setBookingData(formData);
         setCurrentStep(BookingStep.PERSONAL_INFO);
     };
@@ -105,8 +129,13 @@ const FieldBookingPage = () => {
 
     const handlePaymentComplete = (formData: BookingFormData) => {
         console.log('Payment completed:', formData);
+        
         // TODO: Implement API call to create booking
         alert('Booking and payment completed successfully!');
+    };
+
+    const handleShowAuthPopup = () => {
+        setShowAuthPopup(true);
     };
 
     return (
@@ -129,6 +158,7 @@ const FieldBookingPage = () => {
                     onSubmit={handlePersonalInfoSubmit}
                     onBack={handleBackToConfirmStep}
                     courts={mockCourts}
+                    onShowAuthPopup={handleShowAuthPopup}
                 />
             )}
             
@@ -149,6 +179,14 @@ const FieldBookingPage = () => {
                     courts={mockCourts}
                 />
             )}
+            
+            {/* Authentication Required Popup */}
+            <AuthRequiredPopup
+                isOpen={showAuthPopup}
+                onClose={() => setShowAuthPopup(false)}
+                title="Yêu cầu đăng nhập"
+                description="Bạn cần đăng nhập để tiếp tục đặt sân. Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
+            />
         </>
     )
 }
