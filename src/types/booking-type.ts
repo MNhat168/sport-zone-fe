@@ -1,4 +1,6 @@
 // Booking types based on API documentation
+import type { UserProfile } from "@/types/user-type"
+import type { Field } from "@/types/field-type"
 
 export interface CreateFieldBookingPayload {
     fieldId: string;
@@ -35,17 +37,20 @@ export interface SetCoachHolidayPayload {
     endDate: string; // YYYY-MM-DD
 }
 
+export type CoachStatus = "pending" | "declined" | "accepted" | "cancelled";
+
 export interface Booking {
     _id: string;
-    user: string;
-    field?: string; // field id for FIELD bookings
+    user: string | UserProfile;
+    field?: Field; // field id for FIELD bookings
     requestedCoach?: string; // coach id for COACH bookings
     date: string; // YYYY-MM-DD
     startTime: string; // HH:mm
     endTime: string; // HH:mm
     numSlots?: number;
-    type: 'FIELD' | 'COACH';
-    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
+    type: 'field' | 'coach';
+    coachStatus?: CoachStatus;
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     totalPrice: number;
     selectedAmenities?: string[];
     amenitiesFee?: number;

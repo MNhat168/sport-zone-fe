@@ -90,6 +90,9 @@ export const NavbarComponent = () => {
                     <Link to="/about" className={linkClass}>
                         Về chúng tôi
                     </Link>
+                    <Link to="/coach-dashboard" className={linkClass}>
+                        coach dashboard
+                    </Link>
                     <Link to="/contact" className={linkClass}>
                         Liên hệ
                     </Link>

@@ -26,10 +26,10 @@ export function CoachDashboardHeader() {
                     title: "Requests",
                     breadcrumb: ["Home", "Coach Dashboard", "Requests"]
                 }
-            case "/coach-bookings":
+            case "/coach-schedule":
                 return {
-                    title: "Bookings",
-                    breadcrumb: ["Home", "Coach Dashboard", "Bookings"]
+                    title: "Schedule",
+                    breadcrumb: ["Home", "Coach Dashboard", "Schedule"]
                 }
             case "/coach-chat":
                 return {

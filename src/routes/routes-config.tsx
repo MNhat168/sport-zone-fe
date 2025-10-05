@@ -17,6 +17,7 @@ import UserProfileTab from "../pages/user-dashboard-page/user-profile/user-profi
 
 // Coach Pages
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
+import CoachSchedulePage from "@/pages/coach-dashboard-page/coach-schedule-page"; 
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 
@@ -45,6 +46,16 @@ const Placeholder = ({ title }: { title: string }) => (
 export const publicRoutes: RouteObject[] = [
   // Core Public Pages
   { path: "/", element: <LandingPage /> },
+  { path: "/user-dashboard", element: <UserDashboardPage /> },
+  { path: "/user-booking-history", element: <UserBookingHistoryPage /> },
+  { path: "/user-invoices", element: <UserInvoicesPage /> },
+  { path: "/user-chat", element: <UserChatPage /> },
+  { path: "/user-wallet", element: <UserWalletPage /> },
+  { path: "/user-profile", element: <UserProfileTab /> },
+  { path: "/coach-dashboard", element: <CoachDashboardPage /> },
+  { path: "/coach-schedule", element: <CoachSchedulePage /> },
+  { path: "/booking", element: <BookingPage /> },
+  { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
   

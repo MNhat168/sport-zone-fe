@@ -9,34 +9,196 @@ import { CoachDashboardTabs } from "@/components/ui/coach-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
 import { useState, useEffect, useRef } from "react"
+import type  { Booking } from "@/types/booking-type"
+import axios from "axios";
+
 
 export default function CoachDashboardPage() {
   const [selectedTab, setSelectedTab] = useState<"court" | "coaching">("court")
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const [coachId, setCoachId] = useState<string | null>(null);
+  const [bookingRequests, setBookingRequests] = useState<Booking[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  //for Yêu cầu đặt lịch
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 3;
 
-  const handleMoreClick = (itemId: string) => {
-    setOpenDropdown(openDropdown === itemId ? null : itemId)
+useEffect(() => {
+  const loadUserAndFetchData = async () => {
+    // --- Get user string ---
+    let userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+    console.log("[useEffect] Raw user object:", userStr);
+
+    if (!userStr) {
+      const match = document.cookie.match(/user=([^;]+)/);
+      if (match) userStr = decodeURIComponent(match[1]);
+    }
+
+    if (!userStr) {
+      console.warn("[useEffect] No user found");
+      return;
+    }
+
+    try {
+      // --- Parse user object ---
+      const user = JSON.parse(userStr);
+      console.log("[useEffect] Parsed user object:", user);
+
+      // --- Extract userId ---
+      let id: string | undefined;
+      if (user._id) {
+        if (typeof user._id === "string") {
+          id = user._id;
+        } else if (user._id.buffer) {
+          const arr = Object.values(user._id.buffer) as number[];
+          id = arr.map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+      } else if (user.id) {
+        id = String(user.id);
+      }
+
+      if (!id) {
+        console.warn("[useEffect] No valid userId found in user object");
+        return;
+      }
+
+      console.log("[useEffect] Loaded userId:", id);
+      setUserId(id);
+
+      // --- Fetch coachId ---
+      const fetchCoachId = async (userId: string) => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/profiles/coach-id/${userId}`);
+          const coachId = response.data?.data?.coachId;
+          console.log("[fetchCoachId] Fetched coachId:", coachId);
+          setCoachId(coachId);
+
+          // --- Fetch bookings immediately after coachId ---
+          if (coachId) {
+            const bookingRes = await axios.get(`${API_BASE_URL}/bookings/coach/${coachId}`);
+            console.log("[fetchBookingRequests] Fetched bookings:", bookingRes.data);
+            setBookingRequests(bookingRes.data.data);
+          }
+        } catch (err) {
+          console.error("[fetchCoachId] Error fetching coachId or bookings:", err);
+        }
+      };
+
+      await fetchCoachId(id);
+
+    } catch (err) {
+      console.error("[useEffect] Failed to parse user:", err);
+    }
+  };
+
+  loadUserAndFetchData();
+}, []);
+
+const today = new Date();
+today.setHours(0, 0, 0, 0); // Reset time to midnight
+
+const isToday = (dateStr: string | undefined) => {
+  if (!dateStr) return false;
+  const date = new Date(dateStr);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime() === today.getTime();
+};
+
+const isFuture = (dateStr: string | undefined) => {
+  if (!dateStr) return false;
+  const date = new Date(dateStr);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime() > today.getTime();
+};
+
+const filteredBookings = bookingRequests.filter(
+  (c) => c.coachStatus === "pending" || c.coachStatus === "declined"
+);
+
+const totalPages = Math.ceil(filteredBookings.length / ITEMS_PER_PAGE);
+
+const paginatedBookings = filteredBookings.slice(
+  (currentPage - 1) * ITEMS_PER_PAGE,
+  currentPage * ITEMS_PER_PAGE
+);
+
+
+  // --- Handle More Dropdown ---
+const handleMoreClick = (itemId: string) => {
+    setOpenDropdown(openDropdown === itemId ? null : itemId);
+};
+
+  // --- Accept / Decline Handlers ---
+const normalizeId = (id: any): string => {
+  if (!id) return "";
+  if (typeof id === "string") return id;
+  if (id._bsontype === "ObjectID" && id.id) {
+    return Buffer.from(id.id).toString("hex");
   }
-
-  const handleCancel = (itemId: string) => {
-    console.log("Cancel booking:", itemId)
-    setOpenDropdown(null)
+  if (id.buffer) {
+    return Object.values(id.buffer)
+      .map((b) => Number(b).toString(16).padStart(2, "0"))
+      .join("");
   }
+  return "";
+};
 
-  // Close dropdown when clicking outside
+const handleAccept = async (bookingId: any) => {
+  if (!coachId) return;
+  try {
+    const normalizedId = normalizeId(bookingId);
+    await axios.patch(`${API_BASE_URL}/bookings/accept`, {
+      coachId,
+      bookingId: normalizedId,
+    });
+
+    setBookingRequests((prev) =>
+      prev.map((b) =>
+        normalizeId(b._id) === normalizedId ? { ...b, coachStatus: "accepted" } : b
+      )
+    );
+  } catch (error) {
+    console.error("[handleAccept]", error);
+  }
+};
+
+const handleDecline = async (bookingId: any, reason?: string) => {
+  if (!coachId) return;
+  try {
+    const normalizedId = normalizeId(bookingId);
+    await axios.patch(`${API_BASE_URL}/bookings/decline`, {
+      coachId,
+      bookingId: normalizedId,
+      reason: reason || "No reason provided",
+    });
+
+    setBookingRequests((prev) =>
+      prev.map((b) =>
+        normalizeId(b._id) === normalizedId ? { ...b, coachStatus: "declined" } : b
+      )
+    );
+  } catch (error) {
+    console.error("[handleDecline]", error);
+  }
+};
+
+  // --- Close dropdown when clicking outside ---
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpenDropdown(null)
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
+    return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // --- For debugging: log bookingRequests whenever it changes ---
+  useEffect(() => {
+    console.log("[bookingRequests] Updated:", bookingRequests);
+  }, [bookingRequests]);
 
   const metrics = [
     {
@@ -72,44 +234,14 @@ export default function CoachDashboardPage() {
     { date: "27 Jul 2023", day: "Friday", timeSlot: "09:00 AM to 7:00 PM" },
     { date: "28 Jul 2023", day: "Saturday", timeSlot: "09:00 AM to 7:00 PM" },
   ]
-  const ongoingAppointments = [
-    {
-      student: "John Smith - Tennis Lesson",
-      time: "2:00 PM - 3:00 PM",
-      status: "ongoing",
-    },
-    {
-      student: "Sarah Wilson - Badminton",
-      time: "3:30 PM - 4:30 PM",
-      status: "upcoming",
-    },
-    {
-      student: "Mike Johnson - Tennis",
-      time: "5:00 PM - 6:00 PM",
-      status: "upcoming",
-    },
-  ]
 
-  const bookingRequests = [
-    {
-      student: "Alex Rodriguez",
-      sport: "Tennis",
-      time: "Tomorrow 2:00 PM",
-      status: "pending",
-    },
-    {
-      student: "Emma Davis",
-      sport: "Badminton",
-      time: "Friday 4:00 PM",
-      status: "pending",
-    },
-    {
-      student: "David Chen",
-      sport: "Tennis",
-      time: "Saturday 10:00 AM",
-      status: "pending",
-    },
-  ]
+  const ongoingTodayBookings = bookingRequests.filter(
+    (b) => b.coachStatus === "accepted" && isToday(b.date)
+  );
+
+  const upcomingFutureBookings = bookingRequests.filter(
+    (b) => b.coachStatus === "accepted" && isFuture(b.date)
+  );
 
   const upcomingBookings = [
     {
@@ -321,7 +453,9 @@ export default function CoachDashboardPage() {
           <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-semibold mb-2 text-start">Ongoing Appointment</CardTitle>
+                <CardTitle className="text-lg font-semibold mb-2 text-start">
+                  Ongoing Appointment
+                </CardTitle>
                 <p className="text-muted-foreground text-start">
                   Manage appointments with our convenient scheduling system
                 </p>
@@ -329,49 +463,86 @@ export default function CoachDashboardPage() {
               <Button className="bg-green-600 hover:bg-green-700 text-white">Complete</Button>
             </CardHeader>
             <div className="border-t border-gray-100" />
-            <CardContent className="">
-              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                {/* Left side - Court info */}
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-start">Leap Sports Academy</p>
-                    <p className="text-sm text-muted-foreground text-start">Standard Synthetic Court 1</p>
-                  </div>
-                </div>
+            <CardContent>
+            {ongoingTodayBookings.length === 0 ? (
+              <p className="text-muted-foreground text-center">No ongoing appointments today</p>
+            ) : (
+              ongoingTodayBookings.map((booking: Booking) => {
+                    // User name & initials
+                    const userName =
+                      typeof booking.user === "string"
+                        ? "Unknown User"
+                        : booking.user.fullName || "Unknown User";
+                    const initials = userName
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .toUpperCase();
 
-                {/* Center - Avatar */}
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src="/male-coach.png" alt="Harry" />
-                    <AvatarFallback className="bg-orange-100 text-orange-600">H</AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium text-start">Harry</span>
-                </div>
+                    // Field info
+                    const fieldName = booking.field?.name || "Unknown Field";
+                    const fieldLocation  = booking.field?.location || "Unknown Location";
 
-                {/* Right side - Appointment details */}
-                <div className="flex-1 grid grid-cols-4 gap-6 text-sm">
-                  <div>
-                    <p className="font-medium text-muted-foreground text-start">Appointment Date</p>
-                    <p className="text-start">Mon, Jul 11</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground text-start">Start Time</p>
-                    <p className="text-start">05:25 AM</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground text-start">End Time</p>
-                    <p className="text-start">06:25 AM</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground text-start">Additional Guests</p>
-                    <p className="text-start">4</p>
-                  </div>
-                </div>
-              </div>
+                    // Booking date
+                    const bookingDate = booking.date
+                      ? new Date(booking.date).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "N/A";
+
+                    return (
+                      <div
+                        key={booking._id}
+                        className="flex items-center p-4 bg-gray-50 rounded-lg mb-2"
+                      >
+                        {/* Left - Field info */}
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-start">{fieldName}</p>
+                          </div>
+                        </div>
+
+                        {/* Center - Avatar */}
+                        <div className="flex items-center gap-3 ml-4">
+                          <Avatar className="h-10 w-10">
+                            {typeof booking.user !== "string" && booking.user.avatarUrl ? (
+                              <AvatarImage src={booking.user.avatarUrl} alt={userName} />
+                            ) : (
+                              <AvatarFallback className="bg-orange-100 text-orange-600">{initials}</AvatarFallback>
+                            )}
+                          </Avatar>
+                          <span className="font-medium text-start">{userName}</span>
+                        </div>
+                        {/* Right - Appointment details */}
+                        <div className="flex-1 grid grid-cols-4 gap-6 text-sm ml-4">
+                          <div>
+                            <p className="font-medium text-muted-foreground text-start">Appointment Date</p>
+                            <p className="text-start">{bookingDate}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-muted-foreground text-start">Start Time</p>
+                            <p className="text-start">{booking.startTime}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-muted-foreground text-start">End Time</p>
+                            <p className="text-start">{booking.endTime}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-muted-foreground text-start">Location</p>
+                            <p className="text-start">{booking.field?.location || "Unknown Location"}</p>
+                          </div>
+                        </div>
+                      </div>                    
+                    );
+                  })
+              )}
             </CardContent>
+
           </Card>
           <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -438,78 +609,114 @@ export default function CoachDashboardPage() {
                     </Badge>
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-4 text-start">
                   <div className="border-t border-gray-100" />
-                  {selectedTab === "court"
-                    ? bookingRequests.map((request, index) => (
-                      <div key={request.student}>
-                        <div className="flex items-center gap-4 p-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-semibold text-xs">
-                              {request.student
-                                .split(" ")
-                                .map((w) => w[0])
-                                .join("")}
-                            </span>
-                          </div>
-                          <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
-                            <div>
-                              <p className="font-medium">{request.student}</p>
-                              <p className="text-muted-foreground">{request.sport}</p>
-                              <p className="text-muted-foreground">{request.time}</p>
-                            </div>
-                            <div>
-                              <p className="font-medium">Trạng thái</p>
-                              <p className="text-muted-foreground">{request.status}</p>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex space-x-2">
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                                  Accept
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  Decline
-                                </Button>
+
+                  {selectedTab === "court" &&
+                    paginatedBookings.map((request) => {
+                      const userName =
+                        typeof request.user === "string"
+                          ? request.user
+                          : request.user?.fullName || "Unknown User";
+
+                        const initials = userName
+                          .split(" ")
+                          .map((w) => w[0])
+                          .join("")
+                          .toUpperCase();
+
+                        const bookingDate = request.date
+                          ? new Date(request.date).toLocaleDateString()
+                          : "N/A";
+
+                        const isDeclined = request.coachStatus === "declined";
+
+                        return (
+                          <div key={normalizeId(request._id)}>
+                            <div className="flex items-center gap-4 p-4">
+                              <Avatar className="h-12 w-12">
+                                {typeof request.user === "object" && request.user.avatarUrl ? (
+                                  <AvatarImage src={request.user.avatarUrl} alt={userName} />
+                                ) : (
+                                  <AvatarFallback className="bg-green-500 text-white font-semibold text-xs">{initials}</AvatarFallback>
+                                )}
+                              </Avatar>
+
+                              <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
+                                <div>
+                                  <p className="font-medium">{userName}</p>
+                                  <p className="text-muted-foreground capitalize">{request.type || "-"}</p>
+                                  <p className="text-muted-foreground">
+                                    {bookingDate} — {request.startTime || "N/A"} - {request.endTime || "N/A"}
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="font-medium">Trạng thái</p>
+                                  <p
+                                    className={`capitalize font-semibold ${
+                                      request.coachStatus === "pending"
+                                        ? "text-yellow-600"
+                                        : request.coachStatus === "declined"
+                                        ? "text-red-600"
+                                        : "text-gray-500"
+                                    }`}
+                                  >
+                                    {request.coachStatus}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                  {/* Only show buttons if status is pending */}
+                                  {!isDeclined && (
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        size="sm"
+                                        className="bg-green-600 hover:bg-green-700"
+                                        onClick={() => handleAccept(request._id)}
+                                      >
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleDecline(request._id)}
+                                      >
+                                        Decline
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            <div className="border-t border-gray-100 mx-4" />
                           </div>
+                        );
+                      })}
+                      {totalPages > 1 && (
+                        <div className="flex justify-center mt-4 space-x-2">
+                          <Button
+                            variant="outline"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                          >
+                            Previous
+                          </Button>
+                          <span className="self-center">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                          >
+                            Next
+                          </Button>
                         </div>
-                        {index < bookingRequests.length - 1 && <div className="border-t border-gray-100 mx-4" />}
-                      </div>
-                    ))
-                    : upcomingBookings.map((booking, index) => (
-                      <div key={booking.student}>
-                        <div className="flex items-center gap-4 p-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-semibold text-xs">
-                              {booking.student
-                                .split(" ")
-                                .map((w) => w[0])
-                                .join("")}
-                            </span>
-                          </div>
-                          <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
-                            <div>
-                              <p className="font-medium">{booking.student}</p>
-                              <p className="text-muted-foreground">{booking.sport}</p>
-                              <p className="text-muted-foreground">{booking.date}</p>
-                            </div>
-                            <div>
-                              <p className="font-medium">Thời gian</p>
-                              <p className="text-muted-foreground">{booking.time}</p>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <p className="text-lg font-bold text-green-600">{booking.amount}</p>
-                              <Button size="sm" variant="outline">
-                                View Details
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                        {index < upcomingBookings.length - 1 && <div className="border-t border-gray-100 mx-4" />}
-                      </div>
-                    ))}
+                      )}
                 </CardContent>
+
               </Card>
             </div>
 
@@ -557,31 +764,58 @@ export default function CoachDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="border-t border-gray-100 pt-4">
-                    {upcomingBookings.slice(0, 2).map((booking, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                          <span className="text-white font-semibold text-xs">
-                            {booking.student
-                              .split(" ")
-                              .map((w) => w[0])
-                              .join("")}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm">{booking.student}</p>
-                          <p className="text-sm text-gray-600 truncate">{booking.sport}</p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                            <Clock className="w-3 h-3" />
-                            <span>{booking.time}</span>
+                    {upcomingFutureBookings.length === 0 ? (
+                      <p className="text-muted-foreground text-center">No upcoming appointments</p>
+                    ) : (
+                      upcomingFutureBookings.map((booking: Booking) => {
+                        const userName =
+                          typeof booking.user === "string"
+                            ? "Unknown User"
+                            : booking.user.fullName || "Unknown User";
+                        const initials = userName
+                          .split(" ")
+                          .map((w) => w[0])
+                          .join("")
+                          .toUpperCase();
+
+                        const fieldName = booking.field?.name || "Unknown Field";
+                        const fieldLocation = booking.field?.location || "Unknown Location";
+
+                        const bookingDate = booking.date
+                          ? new Date(booking.date).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "N/A";
+
+                        return (
+                          <div key={booking._id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-3">
+                            <Avatar className="h-10 w-10">
+                              {typeof booking.user === "object" && booking.user.avatarUrl ? (
+                                <AvatarImage src={booking.user.avatarUrl} alt={userName} />
+                              ) : (
+                                <AvatarFallback className="bg-blue-500 text-white font-semibold text-xs">{initials}</AvatarFallback>
+                              )}
+                            </Avatar>   
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 text-sm">{userName}</p>
+                              <p className="text-sm text-gray-600 truncate">{fieldName}</p>
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{bookingDate} — {booking.startTime || "N/A"} - {booking.endTime || "N/A"}</span>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
                           </div>
-                        </div>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
+                        );
+                      })
+                    )}
                   </div>
                 </CardContent>
+
               </Card>
 
               {/* Recent Chats */}
