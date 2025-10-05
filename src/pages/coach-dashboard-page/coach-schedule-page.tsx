@@ -17,6 +17,7 @@ import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
+import { PageWrapper } from '@/components/layouts/page-wrapper'
 
 export default function CoachSchedulePage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -91,6 +92,7 @@ export default function CoachSchedulePage() {
   return (
     <>
       <NavbarDarkComponent />
+      <PageWrapper>
       <CoachDashboardHeader />
       <CoachDashboardTabs />
 
@@ -256,6 +258,7 @@ export default function CoachSchedulePage() {
           </div>
         </div>
       )}
+      </PageWrapper>
     </>
   )
 }

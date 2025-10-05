@@ -11,7 +11,7 @@ import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header
 import { useState, useEffect, useRef } from "react"
 import type  { Booking } from "@/types/booking-type"
 import axios from "axios";
-
+import { PageWrapper } from '@/components/layouts/page-wrapper'
 
 export default function CoachDashboardPage() {
   const [selectedTab, setSelectedTab] = useState<"court" | "coaching">("court")
@@ -315,6 +315,7 @@ const handleDecline = async (bookingId: any, reason?: string) => {
   return (
     <>
       <NavbarDarkComponent />
+      <PageWrapper>
       <div className="min-h-screen">
         <CoachDashboardHeader />
         <CoachDashboardTabs />
@@ -926,6 +927,7 @@ const handleDecline = async (bookingId: any, reason?: string) => {
           </Card>
         </div>
       </div>
+      </PageWrapper>
     </>
   )
 }

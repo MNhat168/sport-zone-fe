@@ -16,9 +16,9 @@ const CoachDropdownMenuItems = ({ userId }: { userId: string }) => {
             <DropdownMenuSeparator className="bg-gray-200 m-1" />
 
             <DropdownMenuItem asChild className="text-black hover:text-primary-800 cursor-pointer">
-                <Link to="/coach/settings" className="flex items-center">
+                <Link to="/coach-dashboard" className="flex items-center">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>Dashboard</span>
                 </Link>
             </DropdownMenuItem>
         </>
