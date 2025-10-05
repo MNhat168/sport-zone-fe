@@ -20,7 +20,11 @@ export const NavbarDarkComponent = () => {
     const auth = useAppSelector((state: RootState) => state.auth);
 
     const handleLogout = () => {
-        try { localStorage.clear(); } catch {}
+        try { 
+            localStorage.clear(); 
+        } catch (error) {
+            console.warn('Failed to clear localStorage:', error);
+        }
         dispatch(logout());
         navigate("/auth");
     };
@@ -105,7 +109,8 @@ export const NavbarDarkComponent = () => {
                                     />
                                 )}
                                 <Button
-                                    className="w-full justify-start hover:bg-green-50 hover:text-green-600"
+                                    variant="ghost"
+                                    className="w-full justify-start bg-white text-green-600 hover:bg-white-50 hover:text-green-700"
                                     onClick={handleLogout}
                                 >
                                     <LogOut className="mr-2 h-4 w-4" />
@@ -123,7 +128,7 @@ export const NavbarDarkComponent = () => {
                                 <User className="mr-2 h-4 w-4" /> Đăng nhập
                             </Button>
                             <Button
-                                className="bg-yellow-500 text-black hover:bg-yellow-400 font-semibold"
+                                className="bg-yellow-500 text-black font-semibold"
                                 onClick={() => navigate("/auth")}
                             >
                                 Đăng ký ngay

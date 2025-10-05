@@ -11,6 +11,7 @@ import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { getFieldById } from "@/features/field/fieldThunk";
 import { AuthRequiredPopup } from "@/components/auth/auth-required-popup";
+import { PageWrapper } from "@/components/layouts/page-wrapper";
 
 /**
  * Interface for booking form data shared between steps
@@ -31,7 +32,7 @@ const FieldBookingPage = () => {
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
     const authUser = useAppSelector((state) => state.auth.user);
-    
+
     // State để quản lý step hiện tại và booking data
     const [currentStep, setCurrentStep] = useState<BookingStep>(BookingStep.BOOK_COURT);
     const [bookingData, setBookingData] = useState<BookingFormData>({
@@ -43,7 +44,7 @@ const FieldBookingPage = () => {
         email: '',
         phone: '',
     });
-    
+
     // State để quản lý popup yêu cầu đăng nhập
     const [showAuthPopup, setShowAuthPopup] = useState(false);
 
@@ -54,16 +55,38 @@ const FieldBookingPage = () => {
         const stateFieldId = (location.state as any)?.fieldId;
         const storedFieldId = localStorage.getItem('selectedFieldId');
         const fieldId = urlFieldId || stateFieldId || storedFieldId;
+
+        console.log('🔍 [FIELD BOOKING] Checking for field ID:', {
+            urlFieldId,
+            stateFieldId,
+            storedFieldId,
+            finalFieldId: fieldId,
+            hasCurrentField: !!currentField,
+            currentFieldId: currentField?.id
+        });
+
         if (!currentField && fieldId) {
+            console.log('📡 [FIELD BOOKING] Dispatching getFieldById for field:', fieldId);
             dispatch(getFieldById(fieldId));
+        } else if (currentField) {
+            console.log('✅ [FIELD BOOKING] Field already loaded:', {
+                fieldId: currentField.id,
+                fieldName: currentField.name,
+                fieldLocation: currentField.location
+            });
         }
     }, [location.search, location.state, currentField, dispatch]);
 
     // Persist currently selected field id for refresh
     useEffect(() => {
         if (currentField?.id) {
+            console.log('💾 [FIELD BOOKING] Persisting field ID to localStorage:', {
+                fieldId: currentField.id,
+                fieldName: currentField.name
+            });
             try { localStorage.setItem('selectedFieldId', currentField.id); } catch {
                 // Ignore localStorage errors (e.g., in private browsing mode)
+                console.warn('⚠️ [FIELD BOOKING] Failed to save field ID to localStorage');
             }
         }
     }, [currentField?.id]);
@@ -89,20 +112,20 @@ const FieldBookingPage = () => {
 
     const handleBookCourtSubmit = (formData: BookingFormData) => {
         console.log('BookCourt submitted:', formData);
-        
+
         // Kiểm tra xem người dùng đã đăng nhập chưa
         if (!authUser) {
             setShowAuthPopup(true);
             return;
         }
-        
+
         setBookingData(formData);
         setCurrentStep(BookingStep.ORDER_CONFIRMATION);
     };
 
     const handlePersonalInfoSubmit = (formData: BookingFormData) => {
         console.log('PersonalInfo submitted:', formData);
-        
+
         setBookingData(formData);
         setCurrentStep(BookingStep.PAYMENT);
     };
@@ -114,7 +137,7 @@ const FieldBookingPage = () => {
 
     const handleConfirmSubmit = (formData: BookingFormData) => {
         console.log('Booking confirmed:', formData);
-        
+
         setBookingData(formData);
         setCurrentStep(BookingStep.PERSONAL_INFO);
     };
@@ -129,7 +152,7 @@ const FieldBookingPage = () => {
 
     const handlePaymentComplete = (formData: BookingFormData) => {
         console.log('Payment completed:', formData);
-        
+
         // TODO: Implement API call to create booking
         alert('Booking and payment completed successfully!');
     };
@@ -141,52 +164,54 @@ const FieldBookingPage = () => {
     return (
         <>
             <NavbarDarkComponent />
-            <PageHeader title="Đặt sân" breadcrumbs={breadcrumbs} />
-            <BookingFieldTabs currentStep={currentStep} />
-            
-            {/* Conditional rendering based on current step */}
-            {currentStep === BookingStep.BOOK_COURT && (
-                <BookCourtTab 
-                    onSubmit={handleBookCourtSubmit}
-                    courts={mockCourts}
+            <PageWrapper>
+                <PageHeader title="Đặt sân" breadcrumbs={breadcrumbs} />
+                <BookingFieldTabs currentStep={currentStep} />
+
+                {/* Conditional rendering based on current step */}
+                {currentStep === BookingStep.BOOK_COURT && (
+                    <BookCourtTab
+                        onSubmit={handleBookCourtSubmit}
+                        courts={mockCourts}
+                    />
+                )}
+
+                {currentStep === BookingStep.PERSONAL_INFO && (
+                    <PersonalInfoTab
+                        bookingData={bookingData}
+                        onSubmit={handlePersonalInfoSubmit}
+                        onBack={handleBackToConfirmStep}
+                        courts={mockCourts}
+                        onShowAuthPopup={handleShowAuthPopup}
+                    />
+                )}
+
+                {currentStep === BookingStep.ORDER_CONFIRMATION && (
+                    <ConfirmCourtTab
+                        bookingData={bookingData}
+                        onSubmit={handleConfirmSubmit}
+                        onBack={handleBackToBookCourt}
+                        courts={mockCourts}
+                    />
+                )}
+
+                {currentStep === BookingStep.PAYMENT && (
+                    <PaymentTab
+                        bookingData={bookingData}
+                        onPaymentComplete={handlePaymentComplete}
+                        onBack={handleBackToConfirm}
+                        courts={mockCourts}
+                    />
+                )}
+
+                {/* Authentication Required Popup */}
+                <AuthRequiredPopup
+                    isOpen={showAuthPopup}
+                    onClose={() => setShowAuthPopup(false)}
+                    title="Yêu cầu đăng nhập"
+                    description="Bạn cần đăng nhập để tiếp tục đặt sân. Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
                 />
-            )}
-            
-            {currentStep === BookingStep.PERSONAL_INFO && (
-                <PersonalInfoTab 
-                    bookingData={bookingData}
-                    onSubmit={handlePersonalInfoSubmit}
-                    onBack={handleBackToConfirmStep}
-                    courts={mockCourts}
-                    onShowAuthPopup={handleShowAuthPopup}
-                />
-            )}
-            
-            {currentStep === BookingStep.ORDER_CONFIRMATION && (
-                <ConfirmCourtTab 
-                    bookingData={bookingData}
-                    onSubmit={handleConfirmSubmit}
-                    onBack={handleBackToBookCourt}
-                    courts={mockCourts}
-                />
-            )}
-            
-            {currentStep === BookingStep.PAYMENT && (
-                <PaymentTab 
-                    bookingData={bookingData}
-                    onPaymentComplete={handlePaymentComplete}
-                    onBack={handleBackToConfirm}
-                    courts={mockCourts}
-                />
-            )}
-            
-            {/* Authentication Required Popup */}
-            <AuthRequiredPopup
-                isOpen={showAuthPopup}
-                onClose={() => setShowAuthPopup(false)}
-                title="Yêu cầu đăng nhập"
-                description="Bạn cần đăng nhập để tiếp tục đặt sân. Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
-            />
+            </PageWrapper>
         </>
     )
 }

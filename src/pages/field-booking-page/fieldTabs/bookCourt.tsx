@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Calendar as CalendarIcon, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import type { Field } from '@/types/field-type';
+import type { Field, FieldAvailabilityData } from '@/types/field-type';
 import { useLocation } from 'react-router-dom';
-import { useAppSelector } from '@/store/hook';
+import { useAppSelector, useAppDispatch } from '@/store/hook';
+import { checkFieldAvailability } from '@/features/field/fieldThunk';
 
 /**
  * Interface for booking form data
@@ -51,11 +51,26 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     venue: venueProp,
     onSubmit,
     onBack,
-    courts = [],
 }) => {
     const location = useLocation();
+    const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
+
+    // Log field data usage in BookCourt tab
+    console.log('🏟️ [BOOK COURT TAB] Field data loaded:', {
+        hasVenueProp: !!venueProp,
+        hasCurrentField: !!currentField,
+        hasLocationState: !!(location.state as any)?.venue,
+        finalVenue: venue ? {
+            id: venue.id,
+            name: venue.name,
+            location: venue.location,
+            basePrice: venue.basePrice,
+            sportType: venue.sportType,
+            operatingHours: venue.operatingHours
+        } : null
+    });
     const [formData, setFormData] = useState<BookingFormData>({
         date: '',
         startTime: '',
@@ -66,8 +81,150 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null);
     const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null);
 
+    // === State cho availability data ===
+    const [availabilityData, setAvailabilityData] = useState<FieldAvailabilityData | null>(null);
+    const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+    const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+
     // === Thêm danh sách các slot giờ ===
     const timeSlots = Array.from({ length: 24 }, (_, i) => i); // 0 -> 23h
+
+    // === Helper functions for operating hours ===
+    const getOperatingDays = (): string[] => {
+        if (!venue?.operatingHours || venue.operatingHours.length === 0) {
+            return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        }
+        return venue.operatingHours.map(hour => hour.day);
+    };
+
+    const getOperatingHoursForDay = (dayName: string) => {
+        if (!venue?.operatingHours) return null;
+        return venue.operatingHours.find(hour => hour.day === dayName);
+    };
+
+    const isDateDisabled = (date: Date): boolean => {
+        // Disable past dates
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (date < today) {
+            console.log('📅 [CALENDAR] Date disabled - past date:', date.toDateString());
+            return true;
+        }
+
+        // Disable days not in operating hours
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayName = dayNames[date.getDay()];
+        const operatingDays = getOperatingDays();
+        const isOperatingDay = operatingDays.includes(dayName);
+        
+        if (!isOperatingDay) {
+            console.log('📅 [CALENDAR] Date disabled - not operating day:', {
+                date: date.toDateString(),
+                dayName,
+                operatingDays
+            });
+        }
+        
+        return !isOperatingDay;
+    };
+
+    const getAvailableTimeSlots = (selectedDate: Date): number[] => {
+        if (!selectedDate || !venue?.operatingHours) {
+            console.log('⏰ [TIME SLOTS] No date or operating hours, returning all slots');
+            return timeSlots;
+        }
+
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayName = dayNames[selectedDate.getDay()];
+        const operatingHour = getOperatingHoursForDay(dayName);
+
+        if (!operatingHour) {
+            console.log('⏰ [TIME SLOTS] No operating hours for day:', dayName);
+            return [];
+        }
+
+        const startHour = parseInt(operatingHour.start.split(':')[0]);
+        const endHour = parseInt(operatingHour.end.split(':')[0]);
+        // Tạo slots từ startHour đến endHour (bao gồm cả giờ cuối)
+        // Ví dụ: 7:00-12:00 sẽ tạo slots [7, 8, 9, 10, 11, 12]
+        const availableSlots = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
+        
+        console.log('⏰ [TIME SLOTS] Available slots for', dayName, ':', {
+            operatingHour,
+            startHour,
+            endHour,
+            availableSlots
+        });
+        
+        return availableSlots;
+    };
+
+    // === Function để fetch availability data ===
+    const fetchAvailabilityData = useCallback(async (selectedDate: string) => {
+        if (!venue?.id || !selectedDate) {
+            console.log('🚫 [AVAILABILITY] No venue ID or date provided');
+            return;
+        }
+
+        setIsLoadingAvailability(true);
+        setAvailabilityError(null);
+
+        try {
+            console.log('🔄 [AVAILABILITY] Fetching availability for:', {
+                fieldId: venue.id,
+                date: selectedDate
+            });
+
+            const result = await dispatch(checkFieldAvailability({
+                id: venue.id,
+                startDate: selectedDate,
+                endDate: selectedDate
+            })).unwrap();
+
+            console.log('✅ [AVAILABILITY] Data received:', result);
+
+            if (result.success && result.data && result.data.length > 0) {
+                // Tìm data cho ngày được chọn
+                const dayData = result.data.find(item => item.date === selectedDate);
+                setAvailabilityData(dayData || null);
+                
+                console.log('📅 [AVAILABILITY] Day data set:', {
+                    selectedDate,
+                    dayData: dayData ? {
+                        date: dayData.date,
+                        isHoliday: dayData.isHoliday,
+                        slotsCount: dayData.slots.length,
+                        availableSlots: dayData.slots.filter(slot => slot.available).length
+                    } : null
+                });
+            } else {
+                setAvailabilityData(null);
+                console.log('⚠️ [AVAILABILITY] No data received for date:', selectedDate);
+            }
+        } catch (error: any) {
+            console.error('❌ [AVAILABILITY] Error fetching availability:', error);
+            setAvailabilityError(error.message || 'Không thể tải thông tin khả dụng');
+            setAvailabilityData(null);
+        } finally {
+            setIsLoadingAvailability(false);
+        }
+    }, [venue?.id, dispatch]);
+
+    // === Function để check xem slot có available không ===
+    const isSlotAvailable = (hour: number): boolean => {
+        if (!availabilityData || !availabilityData.slots) {
+            return true; // Nếu không có data, assume available
+        }
+
+        const timeString = `${String(hour).padStart(2, '0')}:00`;
+        const slot = availabilityData.slots.find(s => s.startTime === timeString);
+        
+        if (!slot) {
+            return true; // Nếu không tìm thấy slot, assume available
+        }
+
+        return slot.available;
+    };
 
     // === Xử lý khi click giờ ===
     const handleTimeSlotClick = (hour: number, type: "start" | "end") => {
@@ -117,12 +274,17 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     const endHour = parseInt(parsed.endTime.split(':')[0]);
                     setSelectedEndHour(endHour);
                 }
+
+                // Fetch availability data if date is available
+                if (parsed.date && venue?.id) {
+                    fetchAvailabilityData(parsed.date);
+                }
             }
         } catch {
             // Ignore malformed storage
             console.warn('Failed to parse bookingFormData from localStorage');
         }
-    }, []);
+    }, [venue?.id, fetchAvailabilityData]); // Add dependencies
 
     if (!venue) {
         return (
@@ -144,42 +306,42 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             console.log('Missing time values:', { startTime: formData.startTime, endTime: formData.endTime });
             return 0;
         }
-        
+
         try {
             // Parse time strings to calculate duration
             const [startHour, startMinute] = formData.startTime.split(':').map(Number);
             const [endHour, endMinute] = formData.endTime.split(':').map(Number);
-            
-            console.log('Parsed times:', { 
-                startTime: formData.startTime, 
+
+            console.log('Parsed times:', {
+                startTime: formData.startTime,
                 endTime: formData.endTime,
-                startHour, startMinute, endHour, endMinute 
+                startHour, startMinute, endHour, endMinute
             });
-            
+
             // Convert to minutes for easier calculation
             const startTotalMinutes = startHour * 60 + startMinute;
             const endTotalMinutes = endHour * 60 + endMinute;
-            
+
             // Calculate duration in hours
             const durationInMinutes = endTotalMinutes - startTotalMinutes;
             const durationInHours = durationInMinutes / 60;
-            
-            console.log('Duration calculation:', { 
-                startTotalMinutes, 
-                endTotalMinutes, 
-                durationInMinutes, 
-                durationInHours 
+
+            console.log('Duration calculation:', {
+                startTotalMinutes,
+                endTotalMinutes,
+                durationInMinutes,
+                durationInHours
             });
-            
+
             // Return 0 if negative duration (invalid time range)
             if (durationInHours <= 0) {
                 console.log('Invalid duration:', durationInHours);
                 return 0;
             }
-            
+
             // Calculate total price: hours * price per hour
-            console.log('Venue data:', { venue, pricePerHour: venue?.pricePerHour });
-            const subtotal = Math.round(durationInHours * (venue?.pricePerHour || 0) * 100) / 100;
+            console.log('Venue data:', { venue, basePrice: venue?.basePrice });
+            const subtotal = Math.round(durationInHours * (venue?.basePrice || 0) * 100) / 100;
             console.log('Final subtotal:', subtotal);
             return subtotal;
         } catch (error) {
@@ -196,17 +358,26 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         }
     };
 
-    
+    // Kiểm tra xem form đã đầy đủ thông tin chưa
+    const isFormValid = (): boolean => {
+        return !!(
+            formData.date &&
+            formData.startTime &&
+            formData.endTime &&
+            venue?.basePrice &&
+            venue.basePrice > 0
+        );
+    };
 
     const handleSubmit = () => {
         console.log('Form data:', formData);
         console.log('Subtotal:', calculateSubtotal());
 
-        // Validate required fields
-        if (!formData.date || !formData.startTime || !formData.endTime || !formData.court) {
-            alert('Vui lòng điền đầy đủ các trường bắt buộc');
-            return;
-        }
+        // // Validate required fields
+        // if (!formData.date || !formData.startTime || !formData.endTime || !formData.court) {
+        //     alert('Vui lòng điền đầy đủ các trường bắt buộc');
+        //     return;
+        // }
 
         // Validate time range
         const [startHour, startMinute] = formData.startTime.split(':').map(Number);
@@ -220,7 +391,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         }
 
         // Validate price
-        if (!venue?.pricePerHour || venue.pricePerHour <= 0) {
+        if (!venue?.basePrice || venue.basePrice <= 0) {
             alert('Sân chưa có giá. Vui lòng liên hệ quản lý để cập nhật giá.');
             return;
         }
@@ -232,170 +403,249 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     };
 
     return (
-        <div className="w-full max-w-[1320px] mx-auto px-3 flex flex-col gap-10">
-            {/* Header Card */}
-            <Card className="border border-gray-200">
-                <CardContent className="p-6">
-                    <div className="pb-10">
-                        <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
-                            Đặt sân
-                        </h1>
-                        <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
-                            Đặt sân nhanh chóng, tiện lợi với cơ sở vật chất hiện đại.
-                        </p>
-                    </div>
+        
+            <div className="w-full max-w-[1320px] mx-auto px-3 flex flex-col gap-10">
+                {/* Header Card */}
+                <Card className="border border-gray-200">
+                    <CardContent className="p-6">
+                        <div className="pb-10">
+                            <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
+                                Đặt sân
+                            </h1>
+                            <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
+                                Đặt sân nhanh chóng, tiện lợi với cơ sở vật chất hiện đại.
+                            </p>
+                        </div>
 
-                    {/* Venue Info */}
-                    <div className="p-6 bg-gray-50 rounded-lg">
-                        <div className="flex flex-wrap items-start gap-6">
-                            {/* Venue Image and Details */}
-                            <div className="flex-1 min-w-[500px]">
-                                <div className="flex items-start gap-4">
-                                    {venue.images?.[0] && (
-                                        <img
-                                            src={venue.images[0]}
-                                            alt={venue.name}
-                                            className="w-24 h-28 rounded-lg object-cover"
-                                        />
-                                    )}
-                                    <div className="flex-1">
-                                        <h2 className="text-2xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
-                                            {venue.name}
-                                        </h2>
-                                        <p className="text-base text-[#6b7280] font-['Outfit']">
-                                            {venue.description}
-                                        </p>
-                                        <p className="text-sm text-[#6b7280] font-['Outfit'] mt-1">
-                                            {venue.location}
-                                        </p>
+                        {/* Venue Info */}
+                        <div className="p-6 bg-gray-50 rounded-lg">
+                            <div className="flex flex-wrap items-start gap-6">
+                                {/* Venue Image and Details */}
+                                <div className="flex-1 min-w-[500px]">
+                                    <div className="flex items-start gap-4">
+                                        {venue.images?.[0] && (
+                                            <img
+                                                src={venue.images[0]}
+                                                alt={venue.name}
+                                                className="w-24 h-28 rounded-lg object-cover"
+                                            />
+                                        )}
+                                        <div className="flex-1">
+                                            <h2 className="text-2xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
+                                                {venue.name}
+                                            </h2>
+                                            <p className="text-base text-[#6b7280] font-['Outfit']">
+                                                {venue.description}
+                                            </p>
+                                            <p className="text-sm text-[#6b7280] font-['Outfit'] mt-1">
+                                                {venue.location}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Pricing Info */}
-                            <div className="flex-1 min-w-[400px]">
-                                <div className="px-24 py-6 bg-white rounded-lg flex items-center justify-center">
-                                    <div className="text-center">
-                                        <div className="flex items-baseline gap-1 justify-center">
-                                            <span className="text-2xl font-semibold text-emerald-600">
-                                                {formatVND(venue.pricePerHour)}
-                                            </span>
-                                            <span className="text-sm text-gray-500">/giờ</span>
+                                {/* Pricing Info */}
+                                <div className="flex-1 min-w-[400px]">
+                                    <div className="px-24 py-6 bg-white rounded-lg flex items-center justify-center">
+                                        <div className="text-center">
+                                            <div className="flex items-baseline gap-1 justify-center">
+                                                <span className="text-2xl font-semibold text-emerald-600">
+                                                    {formatVND(venue.basePrice)}
+                                                </span>
+                                                <span className="text-sm text-gray-500">/giờ</span>
+                                            </div>
+                                            <p className="text-sm text-[#1a1a1a] mt-1">Đơn giá theo giờ</p>
                                         </div>
-                                        <p className="text-sm text-[#1a1a1a] mt-1">Đơn giá theo giờ</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            {/* Main Content */}
-            <div className="flex flex-wrap gap-6">
-                {/* Booking Form */}
-                <div className="flex-1 min-w-[600px]">
-                    <Card className="border border-gray-200">
-                        <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
-                                Biểu mẫu đặt sân
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-4">
-                            {/* Date Picker (reused from ui) */}
-                            <div className="space-y-2.5">
-                                <DatePicker
-                                    label="Ngày"
-                                    value={formData.date ? new Date(formData.date + 'T00:00:00') : undefined}
-                                    onChange={(day) => {
-                                        if (!day) {
-                                            setFormData(prev => ({ ...prev, date: '' }));
-                                            return;
-                                        }
-                                        const yyyy = day.getFullYear();
-                                        const mm = String(day.getMonth() + 1).padStart(2, '0');
-                                        const dd = String(day.getDate()).padStart(2, '0');
-                                        const ymd = `${yyyy}-${mm}-${dd}`;
-                                        setFormData(prev => ({ ...prev, date: ymd }));
-                                    }}
-                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                    buttonClassName="h-14 bg-gray-50 border-0 text-left"
-                                    popoverAlign="start"
-                                />
-                            </div>
-                            {/* Combined Time Range Selector */}
-                            <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Chọn khung giờ</Label>
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <div className="flex flex-wrap gap-2">
-                                        {timeSlots.map((hour) => {
-                                            const isStartHour = selectedStartHour === hour;
-                                            const isEndHour = selectedEndHour === hour;
-                                            const isInRange = selectedStartHour !== null && selectedEndHour !== null
-                                                && hour > selectedStartHour && hour < selectedEndHour;
-
-                                            return (
-                                                <button
-                                                    key={`time-${hour}`}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (selectedStartHour === null) {
-                                                            // Chọn giờ bắt đầu
-                                                            handleTimeSlotClick(hour, "start");
-                                                        } else if (selectedEndHour === null && hour > selectedStartHour) {
-                                                            // Chọn giờ kết thúc
-                                                            handleTimeSlotClick(hour, "end");
-                                                        } else {
-                                                            // Reset và chọn lại giờ bắt đầu
-                                                            handleTimeSlotClick(hour, "start");
-                                                        }
-                                                    }}
-                                                    className={`
-                                                        w-14 h-14 rounded-lg border-2 font-semibold font-['Outfit'] text-base
-                                                        transition-all duration-200 hover:scale-105
-                                                        ${isStartHour
-                                                            ? "bg-emerald-600 border-emerald-600 text-white shadow-md"
-                                                            : isEndHour
-                                                                ? "bg-emerald-500 border-emerald-500 text-white shadow-md"
-                                                                : isInRange
-                                                                    ? "bg-emerald-100 border-emerald-300 text-emerald-700"
-                                                                    : "bg-white border-gray-200 text-gray-700 hover:border-emerald-400"
-                                                        }
-                                                    `}
+                {/* Main Content */}
+                <div className="flex flex-wrap gap-6">
+                    {/* Booking Form */}
+                    <div className="flex-1 min-w-[600px]">
+                        <Card className="border border-gray-200">
+                            <CardHeader className="border-b border-gray-200">
+                                <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                                    Biểu mẫu đặt sân
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-4">
+                                {/* Date Picker (reused from ui) */}
+                                <div className="space-y-2.5">
+                                    <DatePicker
+                                        label="Ngày"
+                                        value={formData.date ? new Date(formData.date + 'T00:00:00') : undefined}
+                                        onChange={(day) => {
+                                            if (!day) {
+                                                setFormData(prev => ({ ...prev, date: '' }));
+                                                setSelectedStartHour(null);
+                                                setSelectedEndHour(null);
+                                                setAvailabilityData(null);
+                                                return;
+                                            }
+                                            const yyyy = day.getFullYear();
+                                            const mm = String(day.getMonth() + 1).padStart(2, '0');
+                                            const dd = String(day.getDate()).padStart(2, '0');
+                                            const ymd = `${yyyy}-${mm}-${dd}`;
+                                            setFormData(prev => ({ ...prev, date: ymd }));
+                                            
+                                            // Reset time selection when date changes
+                                            setSelectedStartHour(null);
+                                            setSelectedEndHour(null);
+                                            
+                                            // Fetch availability data for selected date
+                                            fetchAvailabilityData(ymd);
+                                        }}
+                                        disabled={isDateDisabled}
+                                        buttonClassName="h-14 bg-gray-50 border-0 text-left"
+                                        popoverAlign="start"
+                                    />
+                                </div>
+                                {/* Combined Time Range Selector */}
+                                <div className="space-y-2.5">
+                                    <Label className="text-base font-normal font-['Outfit']">Chọn khung giờ</Label>
+                                    <div className="p-4 bg-gray-50 rounded-lg">
+                                        {!formData.date ? (
+                                            <p className="text-sm text-gray-500 font-['Outfit'] text-center py-4">
+                                                Vui lòng chọn ngày trước khi chọn giờ
+                                            </p>
+                                        ) : isLoadingAvailability ? (
+                                            <div className="flex items-center justify-center py-8">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                                    <p className="text-sm text-gray-600 font-['Outfit']">
+                                                        Đang tải thông tin khả dụng...
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : availabilityError ? (
+                                            <div className="text-center py-4">
+                                                <p className="text-sm text-red-600 font-['Outfit'] mb-2">
+                                                    {availabilityError}
+                                                </p>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => formData.date && fetchAvailabilityData(formData.date)}
+                                                    className="text-xs"
                                                 >
-                                                    {hour}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    <div className="mt-3 space-y-1">
-                                        {selectedStartHour !== null && (
-                                            <p className="text-sm text-emerald-600 font-['Outfit']">
-                                                Giờ bắt đầu: {String(selectedStartHour).padStart(2, "0")}:00
-                                            </p>
-                                        )}
-                                        {selectedEndHour !== null && (
-                                            <p className="text-sm text-emerald-600 font-['Outfit']">
-                                                Giờ kết thúc: {String(selectedEndHour).padStart(2, "0")}:00
-                                            </p>
-                                        )}
-                                        {selectedStartHour === null && (
-                                            <p className="text-sm text-gray-500 font-['Outfit']">
-                                                Nhấn vào ô để chọn giờ bắt đầu
-                                            </p>
-                                        )}
-                                        {selectedStartHour !== null && selectedEndHour === null && (
-                                            <p className="text-sm text-gray-500 font-['Outfit']">
-                                                Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
-                                            </p>
+                                                    Thử lại
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(() => {
+                                                        const selectedDate = formData.date ? new Date(formData.date + 'T00:00:00') : null;
+                                                        const availableSlots = selectedDate ? getAvailableTimeSlots(selectedDate) : [];
+                                                        
+                                                        if (availableSlots.length === 0) {
+                                                            return (
+                                                                <p className="text-sm text-gray-500 font-['Outfit'] text-center py-4 w-full">
+                                                                    Không có khung giờ khả dụng cho ngày này
+                                                                </p>
+                                                            );
+                                                        }
+                                                        
+                                                        return availableSlots.map((hour) => {
+                                                            const isStartHour = selectedStartHour === hour;
+                                                            const isEndHour = selectedEndHour === hour;
+                                                            const isInRange = selectedStartHour !== null && selectedEndHour !== null
+                                                                && hour > selectedStartHour && hour < selectedEndHour;
+                                                            const isSlotBooked = !isSlotAvailable(hour);
+
+                                                            return (
+                                                                <button
+                                                                    key={`time-${hour}`}
+                                                                    type="button"
+                                                                    disabled={isSlotBooked}
+                                                                    onClick={() => {
+                                                                        if (isSlotBooked) return; // Prevent click if slot is booked
+                                                                        
+                                                                        if (selectedStartHour === null) {
+                                                                            // Chọn giờ bắt đầu
+                                                                            handleTimeSlotClick(hour, "start");
+                                                                        } else if (selectedEndHour === null && hour > selectedStartHour) {
+                                                                            // Chọn giờ kết thúc
+                                                                            handleTimeSlotClick(hour, "end");
+                                                                        } else {
+                                                                            // Reset và chọn lại giờ bắt đầu
+                                                                            handleTimeSlotClick(hour, "start");
+                                                                        }
+                                                                    }}
+                                                                    className={`
+                                                                    w-14 h-14 rounded-lg border-2 font-semibold font-['Outfit'] text-base
+                                                                    transition-all duration-200
+                                                                    ${isSlotBooked
+                                                                        ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed opacity-60"
+                                                                        : isStartHour
+                                                                            ? "bg-emerald-600 border-emerald-600 text-white shadow-md hover:scale-105"
+                                                                            : isEndHour
+                                                                                ? "bg-emerald-500 border-emerald-500 text-white shadow-md hover:scale-105"
+                                                                                : isInRange
+                                                                                    ? "bg-emerald-100 border-emerald-300 text-emerald-700 hover:scale-105"
+                                                                                    : "bg-white border-gray-200 text-gray-700 hover:border-emerald-400 hover:scale-105"
+                                                                    }
+                                                                `}
+                                                                >
+                                                                    {hour}
+                                                                    {isSlotBooked && (
+                                                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        });
+                                                    })()}
+                                                </div>
+                                                <div className="mt-3 space-y-1">
+                                                    {selectedStartHour !== null && (
+                                                        <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                            Giờ bắt đầu: {String(selectedStartHour).padStart(2, "0")}:00
+                                                        </p>
+                                                    )}
+                                                    {selectedEndHour !== null && (
+                                                        <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                            Giờ kết thúc: {String(selectedEndHour).padStart(2, "0")}:00
+                                                        </p>
+                                                    )}
+                                                    {selectedStartHour === null && (
+                                                        <p className="text-sm text-gray-500 font-['Outfit']">
+                                                            Nhấn vào ô để chọn giờ bắt đầu
+                                                        </p>
+                                                    )}
+                                                    {selectedStartHour !== null && selectedEndHour === null && (
+                                                        <p className="text-sm text-gray-500 font-['Outfit']">
+                                                            Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
+                                                        </p>
+                                                    )}
+                                                    
+                                                    {/* Availability status info */}
+                                                    {availabilityData && (
+                                                        <div className="mt-2 pt-2 border-t border-gray-200">
+                                                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                                                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                                                <span>Đã đặt</span>
+                                                                <div className="w-2 h-2 bg-emerald-500 rounded-full ml-3"></div>
+                                                                <span>Có thể đặt</span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                {availabilityData.slots.filter(slot => slot.available).length} / {availabilityData.slots.length} khung giờ có thể đặt
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 </div>
-                            </div>
 
 
-                            {/* Court Selection */}
-                            <div className="space-y-2.5">
+                                {/* Court Selection */}
+                                {/* <div className="space-y-2.5">
                                 <Label className="text-base font-normal font-['Outfit']">Sân</Label>
                                 <Select
                                     value={formData.court}
@@ -412,24 +662,24 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            </div>
+                            </div> */}
 
-                            {/* Guest Selection removed */}
-                        </CardContent>
-                    </Card>
-                </div>
+                                {/* Guest Selection removed */}
+                            </CardContent>
+                        </Card>
+                    </div>
 
-                {/* Booking Details Sidebar */}
-                <div className="w-96">
-                    <Card className="border border-gray-200">
-                        <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
-                                Chi tiết đặt sân
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-5">
-                            {/* Court */}
-                            <div className="flex items-center gap-2">
+                    {/* Booking Details Sidebar */}
+                    <div className="w-96">
+                        <Card className="border border-gray-200">
+                            <CardHeader className="border-b border-gray-200">
+                                <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                                    Chi tiết đặt sân
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-5">
+                                {/* Court */}
+                                {/* <div className="flex items-center gap-2">
                                 <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <CalendarIcon className="w-5 h-5 text-emerald-600" />
                                 </div>
@@ -438,79 +688,93 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                         ? courts.find(c => c.id === formData.court)?.name
                                         : 'Chưa chọn sân'}
                                 </span>
-                            </div>
+                            </div> */}
 
-                            {/* Date */}
-                            <div className="flex items-center gap-2">
-                                <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <CalendarIcon className="w-5 h-5 text-emerald-600" />
-                                </div>
-                                <span className="text-base text-[#6b7280] font-['Outfit']">
-                                    {formData.date || 'Chưa chọn ngày'}
-                                </span>
-                            </div>
-
-                            {/* Time */}
-                            <div className="flex items-center gap-2">
-                                <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <Clock className="w-5 h-5 text-emerald-600" />
-                                </div>
-                                <div className="flex flex-col">
+                                {/* Date */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <CalendarIcon className="w-5 h-5 text-emerald-600" />
+                                    </div>
                                     <span className="text-base text-[#6b7280] font-['Outfit']">
-                                        {formData.startTime && formData.endTime
-                                            ? `${formData.startTime} to ${formData.endTime}`
-                                            : 'Chưa chọn giờ'}
+                                        {formData.date || 'Chưa chọn ngày'}
                                     </span>
-                                    {formData.startTime && formData.endTime && (
-                                        <span className="text-sm text-emerald-600 font-['Outfit']">
-                                            Thời lượng: {(() => {
-                                                const [startHour, startMinute] = formData.startTime.split(':').map(Number);
-                                                const [endHour, endMinute] = formData.endTime.split(':').map(Number);
-                                                const startTotal = startHour * 60 + startMinute;
-                                                const endTotal = endHour * 60 + endMinute;
-                                                const duration = (endTotal - startTotal) / 60;
-                                                return duration > 0 ? `${duration} giờ` : 'Khoảng thời gian không hợp lệ';
-                                            })()}
-                                        </span>
-                                    )}
                                 </div>
-                            </div>
 
-                            {/* Guests removed */}
+                                {/* Time */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Clock className="w-5 h-5 text-emerald-600" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-base text-[#6b7280] font-['Outfit']">
+                                            {formData.startTime && formData.endTime
+                                                ? `${formData.startTime} to ${formData.endTime}`
+                                                : 'Chưa chọn giờ'}
+                                        </span>
+                                        {formData.startTime && formData.endTime && (
+                                            <span className="text-sm text-emerald-600 font-['Outfit']">
+                                                Thời lượng: {(() => {
+                                                    const [startHour, startMinute] = formData.startTime.split(':').map(Number);
+                                                    const [endHour, endMinute] = formData.endTime.split(':').map(Number);
+                                                    const startTotal = startHour * 60 + startMinute;
+                                                    const endTotal = endHour * 60 + endMinute;
+                                                    const duration = (endTotal - startTotal) / 60;
+                                                    return duration > 0 ? `${duration} giờ` : 'Khoảng thời gian không hợp lệ';
+                                                })()}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
 
-                            {/* Subtotal */}
-                            <div className="pt-2">
-                                <Button
-                                    className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
-                                    disabled
-                                >
-                                    Tổng phụ : ${calculateSubtotal()}
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                {/* Guests removed */}
+
+                                {/* Subtotal */}
+                                <div className="pt-2">
+                                    <Button
+                                        className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
+                                        disabled
+                                    >
+                                        Tổng phụ : ${calculateSubtotal()}
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col items-center gap-3 py-5 bg-white/20 shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)]">
+                    {/* Thông báo khi form chưa đầy đủ */}
+                    {/* {!isFormValid() && (
+                    <p className="text-sm text-gray-600 text-center">
+                        Vui lòng điền đầy đủ thông tin: ngày, giờ bắt đầu, giờ kết thúc
+                    </p>
+                )} */}
+
+                    <div className="flex justify-center items-center gap-5">
+                        <Button
+                            variant="outline"
+                            onClick={onBack}
+                            className="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Quay lại
+                        </Button>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={!isFormValid()}
+                            className={`px-5 py-3 text-white ${isFormValid()
+                                    ? 'bg-gray-800 hover:bg-gray-900'
+                                    : 'bg-gray-400 cursor-not-allowed'
+                                }`}
+                        >
+                            Tiếp tục
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                    </div>
                 </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-center items-center gap-5 py-5 bg-white/20 shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)]">
-                <Button
-                    variant="outline"
-                    onClick={onBack}
-                    className="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700"
-                >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Quay lại
-                </Button>
-                <Button
-                    onClick={handleSubmit}
-                    className="px-5 py-3 bg-gray-800 hover:bg-gray-900 text-white"
-                >
-                    Tiếp tục
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-            </div>
-        </div>
+        
     );
 };
 

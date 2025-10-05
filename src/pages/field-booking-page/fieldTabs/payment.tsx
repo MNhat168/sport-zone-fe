@@ -142,7 +142,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         const end = new Date(`1970-01-01T${formData.endTime}:00`);
         const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
         
-        const total = venue.pricePerHour * hours;
+        const total = venue.basePrice * hours;
         return total > 0 ? total : 0;
     }, [venue, formData.startTime, formData.endTime]);
 
@@ -162,11 +162,11 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
             formData.date &&
             formData.startTime &&
             formData.endTime &&
-            formData.court &&
+            // formData.court &&
             calculateDuration() > 0 &&
             calculateTotal() > 0
         );
-    }, [venue, formData.date, formData.startTime, formData.endTime, formData.court, calculateDuration, calculateTotal]);
+    }, [venue, formData.date, formData.startTime, formData.endTime, calculateDuration, calculateTotal]);
 
     // Handle payment and create booking
     const handlePayment = async () => {
@@ -391,12 +391,12 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 
                             {/* Booking Details */}
                             <div className="space-y-3 border-b border-gray-100 pb-4">
-                                <div className="flex justify-between">
+                                {/* <div className="flex justify-between">
                                     <span className="text-sm text-gray-600">Court:</span>
                                     <span className="text-sm font-medium">
                                         {courts.find(c => c.id === formData.court)?.name || 'Selected Court'}
                                     </span>
-                                </div>
+                                </div> */}
                                 <div className="flex justify-between">
                                     <span className="text-sm text-gray-600">Date:</span>
                                     <span className="text-sm font-medium">{formatDate(formData.date)}</span>
@@ -427,7 +427,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <span className="text-sm text-gray-600">
-                                        {formatVND(venue.pricePerHour)}/giờ × {calculateDuration()} giờ
+                                        {formatVND(venue.basePrice)}/giờ × {calculateDuration()} giờ
                                     </span>
                                     <span className="text-sm font-medium">{formatVND(calculateTotal())}</span>
                                 </div>

@@ -57,7 +57,27 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
     const location = useLocation();
     const currentField = useAppSelector((state) => state.field.currentField);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
-    console.log(currentField);
+    
+    // Log field data usage in ConfirmCourt tab
+    console.log('✅ [CONFIRM COURT TAB] Field data loaded:', {
+        hasVenueProp: !!venueProp,
+        hasCurrentField: !!currentField,
+        hasLocationState: !!(location.state as any)?.venue,
+        finalVenue: venue ? {
+            id: venue.id,
+            name: venue.name,
+            location: venue.location,
+            basePrice: venue.basePrice,
+            sportType: venue.sportType,
+            owner: venue.owner
+        } : null,
+        bookingData: bookingData ? {
+            date: bookingData.date,
+            startTime: bookingData.startTime,
+            endTime: bookingData.endTime,
+            court: bookingData.court
+        } : null
+    });
     // Use booking data from props or initialize with empty values
     const formData: BookingFormData = {
         date: bookingData?.date || '',
@@ -99,7 +119,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
         const end = new Date(`1970-01-01T${formData.endTime}:00`);
         const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
         
-        return venue.pricePerHour * hours;
+        return venue.basePrice * hours;
     };
 
     const calculateSubtotal = (): number => {
@@ -181,7 +201,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                                     <div className="text-center">
                                         <div className="flex items-baseline gap-1 justify-center">
                                             <span className="text-2xl font-semibold text-emerald-600">
-                                                ${venue.pricePerHour}
+                                                ${venue.basePrice}
                                             </span>
                                             <span className="text-sm text-gray-500">/hr</span>
                                         </div>
@@ -286,7 +306,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 mb-2">Tiền sân</h4>
                                     <p className="text-sm text-emerald-600 font-medium">
-                                        {formatVND(venue?.pricePerHour || 0)}/giờ × {(() => {
+                                        {formatVND(venue?.basePrice || 0)}/giờ × {(() => {
                                             if (!formData.startTime || !formData.endTime) return '0';
                                             const start = new Date(`1970-01-01T${formData.startTime}:00`);
                                             const end = new Date(`1970-01-01T${formData.endTime}:00`);

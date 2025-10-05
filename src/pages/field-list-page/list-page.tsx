@@ -42,9 +42,9 @@ const FieldBookingPage = () => {
         description: field.description,
         rating: 4.5, // Default rating since it's not in our API yet
         reviews: field.totalBookings || 0, // Use totalBookings as reviews if available
-        price: `${field.pricePerHour}k/h`,
-        nextAvailability: field.availability ? "Có sẵn" : "Không có sẵn",
-        sportType: field.type,
+        price: `${field.basePrice}k/h`,
+        nextAvailability: field.isActive ? "Có sẵn" : "Không có sẵn",
+        sportType: field.sportType,
         imageUrl: field.images?.[0] || "/placeholder-field.jpg"
     }))
 
