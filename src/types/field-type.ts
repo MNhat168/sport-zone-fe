@@ -1,22 +1,42 @@
 export interface Field {
     id: string;
     name: string;
+    sportType: string; // FOOTBALL, BASKETBALL, TENNIS, BADMINTON, VOLLEYBALL, FUTSAL
     description: string;
     location: string;
-    type: string;
-    pricePerHour: number;
-    availability: boolean;
     images: string[];
-    facilities?: string[];
+    operatingHours: {
+        start: string; // HH:mm format
+        end: string; // HH:mm format
+    };
+    slotDuration: number; // in minutes (minimum 30)
+    minSlots: number; // minimum slots per booking
+    maxSlots: number; // maximum slots per booking
+    priceRanges: PriceRange[];
+    basePrice: number; // in VND
+    isActive: boolean;
+    maintenanceNote?: string;
+    maintenanceUntil?: string; // ISO date string
+    rating: number;
+    totalReviews: number;
     owner: {
         id: string;
-        name: string;
-        contact?: string;
+        businessName?: string;
+        name?: string;
+        contactInfo?: {
+            phone?: string;
+            email?: string;
+        };
     };
-    bookings?: Booking[];
     totalBookings?: number;
     createdAt?: string;
     updatedAt?: string;
+}
+
+export interface PriceRange {
+    start: string; // HH:mm format
+    end: string; // HH:mm format
+    multiplier: number; // price multiplier for this time range
 }
 
 export interface Booking {
@@ -28,16 +48,25 @@ export interface Booking {
 
 export interface CreateFieldPayload {
     name: string;
+    sportType: string;
     description: string;
     location: string;
-    type: string;
-    pricePerHour: number;
-    facilities?: string[];
     images?: string[];
+    operatingHours: {
+        start: string;
+        end: string;
+    };
+    slotDuration: number;
+    minSlots: number;
+    maxSlots: number;
+    priceRanges: PriceRange[];
+    basePrice: number;
 }
 
 export interface UpdateFieldPayload extends Partial<CreateFieldPayload> {
-    availability?: boolean;
+    isActive?: boolean;
+    maintenanceNote?: string;
+    maintenanceUntil?: string;
 }
 
 export interface FieldsResponse {
@@ -58,24 +87,54 @@ export interface FieldResponse {
 
 export interface FieldAvailabilityResponse {
     success: boolean;
-    data: {
-        available: boolean;
-        conflictingBookings: Booking[];
-    };
+    data: FieldAvailabilityData[];
+}
+
+export interface FieldAvailabilityData {
+    date: string; // YYYY-MM-DD
+    isHoliday: boolean;
+    slots: AvailabilitySlot[];
+}
+
+export interface AvailabilitySlot {
+    startTime: string; // HH:mm
+    endTime: string; // HH:mm
+    available: boolean;
+    price: number;
+    priceBreakdown: string;
 }
 
 export interface GetFieldsParams {
-    page?: number;
-    limit?: number;
+    name?: string;
     location?: string;
-    type?: string;
+    sportType?: string;
 }
 
 export interface CheckAvailabilityParams {
     id: string;
-    date: string; // YYYY-MM-DD
-    startTime: string; // HH:MM
-    endTime: string; // HH:MM
+    startDate: string; // YYYY-MM-DD
+    endDate: string; // YYYY-MM-DD
+}
+
+// Price Scheduling Interfaces
+export interface SchedulePriceUpdatePayload {
+    newPriceRanges: PriceRange[];
+    newBasePrice: number;
+    effectiveDate: string; // YYYY-MM-DD
+    ownerId: string;
+}
+
+export interface ScheduledPriceUpdate {
+    newPriceRanges: PriceRange[];
+    newBasePrice: number;
+    effectiveDate: string; // ISO date string
+    applied: boolean;
+    createdBy: string;
+    createdAt: string; // ISO date string
+}
+
+export interface CancelScheduledPriceUpdatePayload {
+    effectiveDate: string; // YYYY-MM-DD
 }
 
 export interface ErrorResponse {

@@ -1,10 +1,10 @@
 import {useState} from "react";
 //redux + navigation
 import { useAppDispatch } from "../../store/hook";
-import { useAppNavigation } from "../../hooks/app-navigation";
+// import { useAppNavigation } from "../../hooks/app-navigation"; // File đã bị xóa
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
-import { useAutoRedirect } from "../../routes/protected-routes-config";
+// Auto redirect logic handled by AuthWrapper component
 
 //UI
 import { toast } from "react-toastify";
@@ -43,10 +43,9 @@ export default function AuthenticationPage() {
   });
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { gotoForgotPassword } = useAppNavigation();
+  // const { gotoForgotPassword } = useAppNavigation(); // File đã bị xóa
   
-  // Auto redirect after login - Giải pháp 1: redirect to landing page for all roles
-  useAutoRedirect();
+  // Auto redirect after login is handled by AuthWrapper component
 
   console.log("Dữ liệu trong LOGIN PAGE -----------------------------------");
   console.log("Dữ liệu trong Form Data: ", JSON.stringify(formData, null, 2));
@@ -438,7 +437,7 @@ export default function AuthenticationPage() {
                       </label>
                     </div>
                     <button
-                      onClick={() => gotoForgotPassword()}
+                      onClick={() => navigate("/forgot-password")}
                       type="button"
                       className="text-sm text-black hover:text-green-800 font-medium transition-colors"
                     >

@@ -46,6 +46,10 @@ interface PersonalInfoTabProps {
      * Available courts list
      */
     courts?: Array<{ id: string; name: string }>;
+    /**
+     * Callback to show authentication popup
+     */
+    onShowAuthPopup?: () => void;
 }
 
 /**
@@ -57,6 +61,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     onSubmit,
     onBack,
     courts = [],
+    onShowAuthPopup,
 }) => {
     const location = useLocation();
     const currentField = useAppSelector((state) => state.field.currentField);
@@ -79,6 +84,13 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
     const [notes, setNotes] = useState('');
     const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+    // Check authentication when component mounts
+    useEffect(() => {
+        if (!currentUser && onShowAuthPopup) {
+            onShowAuthPopup();
+        }
+    }, [currentUser, onShowAuthPopup]);
 
     // Update form when user info changes
     useEffect(() => {

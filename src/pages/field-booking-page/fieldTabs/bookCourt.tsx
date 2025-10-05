@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import type { Field } from '@/types/field-type';
 import { useLocation } from 'react-router-dom';
 import { useAppSelector } from '@/store/hook';
@@ -62,7 +62,31 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         endTime: '',
         court: '',
     });
+    // === Thêm state cho giờ bắt đầu & kết thúc ===
+    const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null);
+    const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null);
 
+    // === Thêm danh sách các slot giờ ===
+    const timeSlots = Array.from({ length: 24 }, (_, i) => i); // 0 -> 23h
+
+    // === Xử lý khi click giờ ===
+    const handleTimeSlotClick = (hour: number, type: "start" | "end") => {
+        if (type === "start") {
+            setSelectedStartHour(hour);
+            setFormData((prev) => ({
+                ...prev,
+                startTime: `${String(hour).padStart(2, "0")}:00`,
+                endTime: prev.endTime && Number(prev.endTime.split(":")[0]) <= hour ? "" : prev.endTime,
+            }));
+            setSelectedEndHour(null); // reset giờ kết thúc nếu chọn lại giờ bắt đầu
+        } else {
+            setSelectedEndHour(hour);
+            setFormData((prev) => ({
+                ...prev,
+                endTime: `${String(hour).padStart(2, "0")}:00`,
+            }));
+        }
+    };
     // Prefill form from localStorage if available
     useEffect(() => {
         try {
@@ -83,6 +107,16 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     email: parsed.email ?? prev.email,
                     phone: parsed.phone ?? prev.phone,
                 }));
+
+                // Cập nhật selectedStartHour và selectedEndHour từ localStorage
+                if (parsed.startTime) {
+                    const startHour = parseInt(parsed.startTime.split(':')[0]);
+                    setSelectedStartHour(startHour);
+                }
+                if (parsed.endTime) {
+                    const endHour = parseInt(parsed.endTime.split(':')[0]);
+                    setSelectedEndHour(endHour);
+                }
             }
         } catch {
             // Ignore malformed storage
@@ -95,9 +129,9 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
                 <Card className="border border-gray-200">
                     <CardContent className="p-6">
-                        <p className="text-base text-[#6b7280]">No field selected. Please select a field to book.</p>
+                        <p className="text-base text-[#6b7280]">Chưa chọn sân. Vui lòng chọn sân để đặt.</p>
                         <div className="pt-4">
-                            <Button variant="outline" onClick={onBack}>Back</Button>
+                            <Button variant="outline" onClick={onBack}>Quay lại</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -107,6 +141,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
     const calculateSubtotal = (): number => {
         if (!formData.startTime || !formData.endTime) {
+            console.log('Missing time values:', { startTime: formData.startTime, endTime: formData.endTime });
             return 0;
         }
         
@@ -114,6 +149,12 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             // Parse time strings to calculate duration
             const [startHour, startMinute] = formData.startTime.split(':').map(Number);
             const [endHour, endMinute] = formData.endTime.split(':').map(Number);
+            
+            console.log('Parsed times:', { 
+                startTime: formData.startTime, 
+                endTime: formData.endTime,
+                startHour, startMinute, endHour, endMinute 
+            });
             
             // Convert to minutes for easier calculation
             const startTotalMinutes = startHour * 60 + startMinute;
@@ -123,13 +164,24 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             const durationInMinutes = endTotalMinutes - startTotalMinutes;
             const durationInHours = durationInMinutes / 60;
             
+            console.log('Duration calculation:', { 
+                startTotalMinutes, 
+                endTotalMinutes, 
+                durationInMinutes, 
+                durationInHours 
+            });
+            
             // Return 0 if negative duration (invalid time range)
             if (durationInHours <= 0) {
+                console.log('Invalid duration:', durationInHours);
                 return 0;
             }
             
             // Calculate total price: hours * price per hour
-            return Math.round(durationInHours * venue.pricePerHour * 100) / 100; // Round to 2 decimal places
+            console.log('Venue data:', { venue, pricePerHour: venue?.pricePerHour });
+            const subtotal = Math.round(durationInHours * (venue?.pricePerHour || 0) * 100) / 100;
+            console.log('Final subtotal:', subtotal);
+            return subtotal;
         } catch (error) {
             console.error('Error calculating subtotal:', error);
             return 0;
@@ -144,18 +196,35 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         }
     };
 
+    
+
     const handleSubmit = () => {
-        // Validate form data before submitting
+        console.log('Form data:', formData);
+        console.log('Subtotal:', calculateSubtotal());
+
+        // Validate required fields
         if (!formData.date || !formData.startTime || !formData.endTime || !formData.court) {
-            alert('Please fill in all required fields');
+            alert('Vui lòng điền đầy đủ các trường bắt buộc');
             return;
         }
-        
-        if (calculateSubtotal() <= 0) {
-            alert('Please select a valid time range');
+
+        // Validate time range
+        const [startHour, startMinute] = formData.startTime.split(':').map(Number);
+        const [endHour, endMinute] = formData.endTime.split(':').map(Number);
+        const startTotal = startHour * 60 + startMinute;
+        const endTotal = endHour * 60 + endMinute;
+
+        if (endTotal <= startTotal) {
+            alert('Vui lòng chọn khoảng thời gian hợp lệ (giờ bắt đầu phải trước giờ kết thúc)');
             return;
         }
-        
+
+        // Validate price
+        if (!venue?.pricePerHour || venue.pricePerHour <= 0) {
+            alert('Sân chưa có giá. Vui lòng liên hệ quản lý để cập nhật giá.');
+            return;
+        }
+
         if (onSubmit) {
             onSubmit(formData);
             localStorage.setItem('bookingFormData', JSON.stringify(formData));
@@ -229,45 +298,101 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
                             <CardTitle className="text-2xl font-semibold font-['Outfit']">
-                                Booking Form
+                                Biểu mẫu đặt sân
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-4">
-                            {/* Date Input */}
+                            {/* Date Picker (reused from ui) */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Ngày</Label>
-                                <Input
-                                    type="date"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                                    className="h-14 bg-gray-50 border-0"
-                                    placeholder="Select Date"
+                                <DatePicker
+                                    label="Ngày"
+                                    value={formData.date ? new Date(formData.date + 'T00:00:00') : undefined}
+                                    onChange={(day) => {
+                                        if (!day) {
+                                            setFormData(prev => ({ ...prev, date: '' }));
+                                            return;
+                                        }
+                                        const yyyy = day.getFullYear();
+                                        const mm = String(day.getMonth() + 1).padStart(2, '0');
+                                        const dd = String(day.getDate()).padStart(2, '0');
+                                        const ymd = `${yyyy}-${mm}-${dd}`;
+                                        setFormData(prev => ({ ...prev, date: ymd }));
+                                    }}
+                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                    buttonClassName="h-14 bg-gray-50 border-0 text-left"
+                                    popoverAlign="start"
                                 />
+                            </div>
+                            {/* Combined Time Range Selector */}
+                            <div className="space-y-2.5">
+                                <Label className="text-base font-normal font-['Outfit']">Chọn khung giờ</Label>
+                                <div className="p-4 bg-gray-50 rounded-lg">
+                                    <div className="flex flex-wrap gap-2">
+                                        {timeSlots.map((hour) => {
+                                            const isStartHour = selectedStartHour === hour;
+                                            const isEndHour = selectedEndHour === hour;
+                                            const isInRange = selectedStartHour !== null && selectedEndHour !== null
+                                                && hour > selectedStartHour && hour < selectedEndHour;
+
+                                            return (
+                                                <button
+                                                    key={`time-${hour}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (selectedStartHour === null) {
+                                                            // Chọn giờ bắt đầu
+                                                            handleTimeSlotClick(hour, "start");
+                                                        } else if (selectedEndHour === null && hour > selectedStartHour) {
+                                                            // Chọn giờ kết thúc
+                                                            handleTimeSlotClick(hour, "end");
+                                                        } else {
+                                                            // Reset và chọn lại giờ bắt đầu
+                                                            handleTimeSlotClick(hour, "start");
+                                                        }
+                                                    }}
+                                                    className={`
+                                                        w-14 h-14 rounded-lg border-2 font-semibold font-['Outfit'] text-base
+                                                        transition-all duration-200 hover:scale-105
+                                                        ${isStartHour
+                                                            ? "bg-emerald-600 border-emerald-600 text-white shadow-md"
+                                                            : isEndHour
+                                                                ? "bg-emerald-500 border-emerald-500 text-white shadow-md"
+                                                                : isInRange
+                                                                    ? "bg-emerald-100 border-emerald-300 text-emerald-700"
+                                                                    : "bg-white border-gray-200 text-gray-700 hover:border-emerald-400"
+                                                        }
+                                                    `}
+                                                >
+                                                    {hour}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="mt-3 space-y-1">
+                                        {selectedStartHour !== null && (
+                                            <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                Giờ bắt đầu: {String(selectedStartHour).padStart(2, "0")}:00
+                                            </p>
+                                        )}
+                                        {selectedEndHour !== null && (
+                                            <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                Giờ kết thúc: {String(selectedEndHour).padStart(2, "0")}:00
+                                            </p>
+                                        )}
+                                        {selectedStartHour === null && (
+                                            <p className="text-sm text-gray-500 font-['Outfit']">
+                                                Nhấn vào ô để chọn giờ bắt đầu
+                                            </p>
+                                        )}
+                                        {selectedStartHour !== null && selectedEndHour === null && (
+                                            <p className="text-sm text-gray-500 font-['Outfit']">
+                                                Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Start Time */}
-                            <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Giờ bắt đầu</Label>
-                                <Input
-                                    type="time"
-                                    value={formData.startTime}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
-                                    className="h-14 bg-gray-50 border-0"
-                                    placeholder="Select Start Time"
-                                />
-                            </div>
-
-                            {/* End Time */}
-                            <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Giờ kết thúc</Label>
-                                <Input
-                                    type="time"
-                                    value={formData.endTime}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
-                                    className="h-14 bg-gray-50 border-0"
-                                    placeholder="Select End Time"
-                                />
-                            </div>
 
                             {/* Court Selection */}
                             <div className="space-y-2.5">
@@ -299,29 +424,29 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
                             <CardTitle className="text-2xl font-semibold font-['Outfit']">
-                                Booking Details
+                                Chi tiết đặt sân
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-5">
                             {/* Court */}
                             <div className="flex items-center gap-2">
                                 <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <Calendar className="w-5 h-5 text-emerald-600" />
+                                    <CalendarIcon className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <span className="text-base text-[#6b7280] font-['Outfit']">
                                     {formData.court
                                         ? courts.find(c => c.id === formData.court)?.name
-                                        : 'No court selected'}
+                                        : 'Chưa chọn sân'}
                                 </span>
                             </div>
 
                             {/* Date */}
                             <div className="flex items-center gap-2">
                                 <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <Calendar className="w-5 h-5 text-emerald-600" />
+                                    <CalendarIcon className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <span className="text-base text-[#6b7280] font-['Outfit']">
-                                    {formData.date || 'No date selected'}
+                                    {formData.date || 'Chưa chọn ngày'}
                                 </span>
                             </div>
 
@@ -334,17 +459,17 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     <span className="text-base text-[#6b7280] font-['Outfit']">
                                         {formData.startTime && formData.endTime
                                             ? `${formData.startTime} to ${formData.endTime}`
-                                            : 'No time selected'}
+                                            : 'Chưa chọn giờ'}
                                     </span>
                                     {formData.startTime && formData.endTime && (
                                         <span className="text-sm text-emerald-600 font-['Outfit']">
-                                            Duration: {(() => {
+                                            Thời lượng: {(() => {
                                                 const [startHour, startMinute] = formData.startTime.split(':').map(Number);
                                                 const [endHour, endMinute] = formData.endTime.split(':').map(Number);
                                                 const startTotal = startHour * 60 + startMinute;
                                                 const endTotal = endHour * 60 + endMinute;
                                                 const duration = (endTotal - startTotal) / 60;
-                                                return duration > 0 ? `${duration} hours` : 'Invalid time range';
+                                                return duration > 0 ? `${duration} giờ` : 'Khoảng thời gian không hợp lệ';
                                             })()}
                                         </span>
                                     )}
@@ -359,7 +484,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
                                     disabled
                                 >
-                                    Subtotal : ${calculateSubtotal()}
+                                    Tổng phụ : ${calculateSubtotal()}
                                 </Button>
                             </div>
                         </CardContent>

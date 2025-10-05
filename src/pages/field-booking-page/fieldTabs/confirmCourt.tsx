@@ -52,7 +52,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
     bookingData,
     onSubmit,
     onBack,
-    courts = [],
+    // courts = [],
 }) => {
     const location = useLocation();
     const currentField = useAppSelector((state) => state.field.currentField);
