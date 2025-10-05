@@ -59,11 +59,11 @@ export function CoachDashboardTabs() {
                         </Button>
                         <Button 
                             variant="ghost" 
-                            className={baseTabClasses(isActive("/coach-bookings"))}
-                            onClick={() => handleNavigation("/coach-bookings")}
+                            className={baseTabClasses(isActive("/coach-schedule"))}
+                            onClick={() => handleNavigation("/coach-schedule")}
                         >
                             <Calendar className="w-5 h-5" />
-                            <span className="text-xs font-medium">Bookings</span>
+                            <span className="text-xs font-medium">Schedule</span>
                         </Button>
                         <Button 
                             variant="ghost" 

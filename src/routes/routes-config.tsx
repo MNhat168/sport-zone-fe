@@ -11,6 +11,7 @@ import UserChatPage from "../pages/user-dashboard-page/user-chat-page";
 import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
 import UserProfileTab from "../pages/user-dashboard-page/user-profile/user-profile-tab";
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
+import CoachSchedulePage from "@/pages/coach-dashboard-page/coach-schedule-page"; 
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 import FieldBookingPage from "../pages/field-list-page/list-page";
@@ -37,6 +38,7 @@ export const guestRoutes: RouteObject[] = [
   { path: "/user-wallet", element: <UserWalletPage /> },
   { path: "/user-profile", element: <UserProfileTab /> },
   { path: "/coach-dashboard", element: <CoachDashboardPage /> },
+  { path: "/coach-schedule", element: <CoachSchedulePage /> },
   { path: "/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/fields", element: <FieldBookingPage /> },
