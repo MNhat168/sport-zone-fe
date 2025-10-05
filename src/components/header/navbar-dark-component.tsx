@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
-import { logout } from "../../features/authentication/authSlice";
+import { logout } from "../../features/authentication/authThunk";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,11 +20,7 @@ export const NavbarDarkComponent = () => {
     const auth = useAppSelector((state: RootState) => state.auth);
 
     const handleLogout = () => {
-        try { 
-            localStorage.clear(); 
-        } catch (error) {
-            console.warn('Failed to clear localStorage:', error);
-        }
+        try { localStorage.removeItem("user"); } catch {}
         dispatch(logout());
         navigate("/auth");
     };

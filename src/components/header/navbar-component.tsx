@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
-import { logout } from "../../features/authentication/authSlice";
+import { logout } from "../../features/authentication/authThunk";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -38,9 +38,7 @@ export const NavbarComponent = () => {
     }, []);
 
     const handleLogout = () => {
-        try { localStorage.clear(); } catch {
-            // Ignore localStorage errors (e.g., in private browsing mode)
-        }
+        try { localStorage.removeItem("user"); } catch { /* ignore */ }
         dispatch(logout());
         navigate("/");
     };

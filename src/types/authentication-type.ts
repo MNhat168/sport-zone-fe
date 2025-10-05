@@ -3,6 +3,7 @@ import type { User } from "./user-type"
 export interface LoginPayload {
     email: string
     password: string
+    rememberMe?: boolean
 }
 
 export interface RegisterPayload {
@@ -16,6 +17,7 @@ export interface RegisterPayload {
 export interface GoogleAuthPayload {
     token: string
     avatar?: string
+    rememberMe?: boolean
 }
 
 // Back-end trả về gì thì set ở đây là cái đó
