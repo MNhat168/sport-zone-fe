@@ -57,12 +57,16 @@ const ProfilePage: React.FC = () => {
     const [editSports, setEditSports] = useState(false);
     const [sportsForm, setSportsForm] = useState<string[]>(profile?.coach?.sports || []);
     const [form, setForm] = useState<{ fullName: string; phone?: string; avatarUrl?: string }>({ fullName: "" });
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    // With HttpOnly cookie auth, derive userId from server responses or a lightweight user cookie if present
     const userId = useMemo(() => {
-        if (!token) return null;
-        const payload = decodeJwt(token);
-        return payload?.sub || null;
-    }, [token]);
+        try {
+            const match = typeof document !== "undefined" ? document.cookie.match(/user=([^;]+)/) : null;
+            if (!match) return null;
+            const userStr = decodeURIComponent(match[1]);
+            const userObj = JSON.parse(userStr);
+            return userObj?.id || userObj?._id || null;
+        } catch { return null; }
+    }, []);
 
     useEffect(() => {
     const fetchProfile = async () => {
@@ -244,7 +248,7 @@ const ProfilePage: React.FC = () => {
                                     const { data } = await axiosPublic.patch(
                                     `/profiles/${userId}/certification`,
                                     { certification: certForm }, // now matches backend
-                                    { headers: { Authorization: `Bearer ${token}` } }
+                                    // Cookie-based auth; no manual Authorization header
                                     );
 
                                     // If your API returns the updated coach profile object:
@@ -311,7 +315,7 @@ const ProfilePage: React.FC = () => {
                                             const { data } = await axiosPublic.patch(
                                                 `/profiles/${userId}/sports`,
                                                 { sports: sportsForm },
-                                                { headers: { Authorization: `Bearer ${token}` } }
+                                                // Cookie-based auth; no manual Authorization header
                                             );
                                             setProfile((prev) => prev ? { ...prev, coach: data } : null);
                                             setEditSports(false);
@@ -358,7 +362,7 @@ const ProfilePage: React.FC = () => {
                                 const res = await axiosPublic.patch(
                                     `/profiles/${userId}/hourly-rate`,
                                     { hourlyRate: rateForm },
-                                    { headers: { Authorization: `Bearer ${token}` } }
+                                    // Cookie-based auth; no manual Authorization header
                                 );
                                 setProfile(prev => prev ? { ...prev, coach: res.data } : null);
                                 setEditRate(false);
@@ -408,7 +412,7 @@ const ProfilePage: React.FC = () => {
                                             const { data } = await axiosPublic.patch(
                                                 `/profiles/${userId}/bio`,
                                                 { bio: bioForm },
-                                                { headers: { Authorization: `Bearer ${token}` } }
+                                                // Cookie-based auth; no manual Authorization header
                                             );
                                             setProfile((prev) => prev ? { ...prev, coach: data } : null);
                                             setEditBio(false);

@@ -36,9 +36,14 @@ export const NavbarDarkComponent = () => {
                 {/* Logo */}
                 <Link
                     to="/"
-                    className="text-2xl font-bold text-gray-900 bg-green-700 px-3 py-1 rounded-md"
+                    className="flex items-center"
                 >
-                    SportZone
+                    <img
+                        src="/Spz-nobg.png"
+                        alt="SportZone"
+                        className="h-10 w-auto"
+                        loading="eager"
+                    />
                 </Link>
 
                 {/* Nav links */}

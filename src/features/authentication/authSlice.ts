@@ -17,8 +17,21 @@ interface AuthState {
     verifyMessage?: string;
 }
 
+const readUserFromCookie = (): any | null => {
+    try {
+        if (typeof document === "undefined") return null;
+        const match = document.cookie.match(/user=([^;]+)/);
+        if (!match) return null;
+        const userStr = decodeURIComponent(match[1]);
+        return JSON.parse(userStr);
+    } catch { return null; }
+};
+
 const getStoredUser = () => {
     try {
+        // Ưu tiên cookie trước, rồi fallback localStorage
+        const fromCookie = readUserFromCookie();
+        if (fromCookie) return fromCookie;
         const userStr = localStorage.getItem("user");
         return userStr ? JSON.parse(userStr) : null;
     } catch {
@@ -61,10 +74,14 @@ const authSlice = createSlice({
                 localStorage.setItem("user", JSON.stringify(state.user));
             }
         },
-        // Thêm action để sync từ localStorage
+        // Đồng bộ lại user từ cookie trước, rồi mới đến localStorage
         syncFromLocalStorage: (state) => {
+            const cookieUser = readUserFromCookie();
+            if (cookieUser) {
+                state.user = cookieUser;
+                return;
+            }
             const storedUser = localStorage.getItem("user");
-
             if (storedUser) {
                 try {
                     const parsedUser = JSON.parse(storedUser);

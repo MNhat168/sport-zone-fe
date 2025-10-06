@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import axios from "axios"
+import axiosPublic from "@/utils/axios/axiosPublic"
 import {
   format,
   startOfWeek,
@@ -33,11 +33,11 @@ export default function CoachSchedulePage() {
   // ------------------- Load user and bookings -------------------
   useEffect(() => {
     const loadUserAndFetchData = async () => {
-      let userStr = localStorage.getItem("user") || sessionStorage.getItem("user")
-      if (!userStr) {
-        const match = document.cookie.match(/user=([^;]+)/)
-        if (match) userStr = decodeURIComponent(match[1])
-      }
+      // Prefer cookie first, then storage
+      let userStr: string | null = null
+      const match = typeof document !== 'undefined' ? document.cookie.match(/user=([^;]+)/) : null
+      if (match) userStr = decodeURIComponent(match[1])
+      if (!userStr) userStr = localStorage.getItem("user") || sessionStorage.getItem("user")
       if (!userStr) return
 
       try {
@@ -53,12 +53,12 @@ export default function CoachSchedulePage() {
         if (!id) return
         setUserId(id)
 
-        const response = await axios.get(`${API_BASE_URL}/profiles/coach-id/${id}`)
+        const response = await axiosPublic.get(`/profiles/coach-id/${id}`)
         const coachId = response.data?.data?.coachId
         setCoachId(coachId)
 
         if (coachId) {
-          const bookingRes = await axios.get(`${API_BASE_URL}/bookings/coach/${coachId}`)
+          const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`)
           const allBookings: Booking[] = bookingRes.data?.data || []
           const accepted = allBookings.filter((b) => b.coachStatus === "accepted")
           setBookings(accepted)
