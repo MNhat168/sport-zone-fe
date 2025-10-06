@@ -23,6 +23,13 @@ import {
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   MapPin,
   Star,
   Award,
@@ -36,11 +43,53 @@ import {
   Navigation,
   Heart,
   Eye,
+  ChevronUp,
 } from "lucide-react";
+
+interface LessonType {
+  id: string;
+  type: "single" | "pair" | "group";
+  name: string;
+  description: string;
+  icon: typeof User;
+  iconBg: string;
+  iconColor: string;
+  badge: string;
+}
+
+const lessonTypes: LessonType[] = [
+  {
+    id: "1",
+    type: "single",
+    name: "English Lesson",
+    description:
+      "One-on-one personalized coaching session tailored to your specific needs and skill level. Get undivided attention from the coach to work on technique, strategy, and game improvement. Perfect for players who want intensive, focused training to rapidly improve their skills.",
+    icon: User,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    badge: "1-on-1",
+  },
+  {
+    id: "2",
+    type: "group",
+    name: "Small Group Lesson",
+    description:
+      "Train with 2-4 players in a collaborative and supportive environment. Learn from both the coach and your peers while developing teamwork and competitive skills. Ideal for players who enjoy social learning and want to practice match scenarios with others at similar skill levels.",
+    icon: Users,
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    badge: "2-4 people",
+  },
+];
 
 export default function CoachDetailPage() {
   const [activeTab, setActiveTab] = useState("bio");
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
+  const [selectedLesson, setSelectedLesson] = useState<LessonType | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -88,6 +137,17 @@ export default function CoachDetailPage() {
     }
   };
 
+  const nextGallerySlide = () => {
+    setCurrentGalleryIndex((prev) => (prev + 1) % (galleryImages.length - 2));
+  };
+
+  const prevGallerySlide = () => {
+    setCurrentGalleryIndex(
+      (prev) =>
+        (prev - 1 + (galleryImages.length - 2)) % (galleryImages.length - 2)
+    );
+  };
+
   const tabs = [
     { id: "bio", label: "Short Bio" },
     { id: "lessons", label: "Lesson With Me" },
@@ -98,10 +158,18 @@ export default function CoachDetailPage() {
   ];
 
   const galleryImages = [
-    { url: "/badminton-player-training.jpg", alt: "Training session 1" },
-    { url: "/badminton-court-practice.jpg", alt: "Court practice" },
-    { url: "/badminton-coaching-session.jpg", alt: "Coaching session" },
-    { url: "/badminton-group-training.jpg", alt: "Group training" },
+    {
+      url: "/badminton-player-training-on-green-court.jpg",
+      alt: "Training session 1",
+    },
+    { url: "/badminton-player-hitting-shuttlecock.jpg", alt: "Court practice" },
+    {
+      url: "/badminton-court-with-net-and-lights.jpg",
+      alt: "Coaching session",
+    },
+    { url: "/badminton-doubles-match.jpg", alt: "Group training" },
+    { url: "/badminton-player-serving.jpg", alt: "Serving practice" },
+    { url: "/badminton-indoor-court.jpg", alt: "Indoor facility" },
   ];
 
   const reviews = [
@@ -214,8 +282,8 @@ export default function CoachDetailPage() {
 
                   {/* Coach Info */}
                   <div className="flex-1 space-y-4">
-                    <div className="space-y-2 flex flex-col items-start">
-                      <div className="flex items-center gap-3 flex-wrap w-full">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <h1 className="text-3xl font-bold text-balance">
                           Kevin Anderson
                         </h1>
@@ -230,8 +298,9 @@ export default function CoachDetailPage() {
                           Favourite
                         </Button>
                       </div>
-                      <p className="text-base text-muted-foreground w-full text-left">
-                        Coach Kevin provides Badminton lessons in Santa Monica at Penmar Park
+                      <p className="text-base text-muted-foreground text-left">
+                        Coach Kevin provides Badminton lessons in Santa Monica
+                        at Penmar Park
                       </p>
                     </div>
 
@@ -301,16 +370,17 @@ export default function CoachDetailPage() {
                 className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
               >
                 <CardHeader>
-                  <CardTitle className="text-xl text-left w-full">Short Bio</CardTitle>
-                  <hr className="my-3 border-t-1 border-gray-400" />
+                  <CardTitle className="text-xl text-left">Short Bio</CardTitle>
+                  <hr className="my-2 border-gray-200" />
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-3 text-muted-foreground leading-relaxed text-left w-full">
-                    <p className="font-semibold text-foreground text-left w-full">
+                  <div className="space-y-3 text-muted-foreground leading-relaxed">
+                    <p className="font-semibold text-foreground text-left">
                       Name: Kevin Anderson
                     </p>
-                    <p className="text-left w-full">
-                      Experience: 10 years of experience coaching badminton at various skill levels.
+                    <p className="text-left">
+                      Experience: 10 years of experience coaching badminton at
+                      various skill levels.
                     </p>
                   </div>
                   <Button
@@ -328,52 +398,48 @@ export default function CoachDetailPage() {
                 className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
               >
                 <CardHeader>
-                  <CardTitle className="text-xl text-left w-full">Lesson With Me</CardTitle>
-                  <hr className="my-3 border-t-1 border-gray-400" />
+                  <CardTitle className="text-xl text-left">
+                    Lesson With Me
+                  </CardTitle>
+                  <hr className="my-2 border-gray-200" />
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-muted-foreground leading-relaxed text-left w-full">
-                    Get the most personalized coaching tailored to your needs. Choose from individual 1-on-1 or group lessons for a more collaborative and supportive atmosphere. Brighten your skills and unleash the process of getting better.
+                  <p className="text-muted-foreground leading-relaxed text-left">
+                    Get the most personalized coaching tailored to your needs.
+                    Choose from individual 1-on-1 or group lessons for a more
+                    collaborative and supportive atmosphere. Brighten your
+                    skills and unleash the process of getting better.
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="group">
-                      <Button
-                        variant="outline"
-                        className="w-full h-auto py-6 flex flex-col items-center gap-3 hover:border-green-500 hover:bg-green-50 transition-all duration-300 hover:scale-[1.02] bg-transparent"
-                      >
-                        <div className="bg-green-100 p-3 rounded-full group-hover:bg-green-200 transition-colors">
-                          <User className="h-6 w-6 text-green-600" />
+                    {lessonTypes.map((lesson) => {
+                      const IconComponent = lesson.icon;
+                      return (
+                        <div key={lesson.id} className="group">
+                          <Button
+                            variant="outline"
+                            onClick={() => setSelectedLesson(lesson)}
+                            className="w-full h-auto py-6 flex flex-col items-center gap-3 hover:border-green-500 hover:bg-green-50 transition-all duration-300 hover:scale-[1.02] bg-transparent"
+                          >
+                            <div
+                              className={`${lesson.iconBg} p-3 rounded-full group-hover:opacity-80 transition-opacity`}
+                            >
+                              <IconComponent
+                                className={`h-6 w-6 ${lesson.iconColor}`}
+                              />
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-base">
+                                {lesson.name}
+                              </div>
+                              <Badge variant="secondary" className="mt-2">
+                                {lesson.badge}
+                              </Badge>
+                            </div>
+                          </Button>
                         </div>
-                        <div className="text-center">
-                          <div className="font-semibold text-base">
-                            English Lesson
-                          </div>
-                          <Badge variant="secondary" className="mt-2">
-                            1-on-1
-                          </Badge>
-                        </div>
-                      </Button>
-                    </div>
-
-                    <div className="group">
-                      <Button
-                        variant="outline"
-                        className="w-full h-auto py-6 flex flex-col items-center gap-3 hover:border-green-500 hover:bg-green-50 transition-all duration-300 hover:scale-[1.02] bg-transparent"
-                      >
-                        <div className="bg-blue-100 p-3 rounded-full group-hover:bg-blue-200 transition-colors">
-                          <Users className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold text-base">
-                            Small Group Lesson
-                          </div>
-                          <Badge variant="secondary" className="mt-2">
-                            2-4 people
-                          </Badge>
-                        </div>
-                      </Button>
-                    </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -384,34 +450,41 @@ export default function CoachDetailPage() {
                 className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
               >
                 <CardHeader>
-                  <CardTitle className="text-xl text-left w-full">Coaching</CardTitle>
-                  <hr className="my-3 border-t-1 border-gray-400" />
+                  <CardTitle className="text-xl text-left">Coaching</CardTitle>
+                  <hr className="my-2 border-gray-200" />
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-muted-foreground leading-relaxed text-left w-full">
-                    Experience personalized coaching tailored to your needs. Whether individual 1-on-1 or small group sessions, unlock your potential with personalized instruction for success.
+                  <p className="text-muted-foreground leading-relaxed text-left">
+                    Experience personalized coaching tailored to your needs.
+                    Whether individual 1-on-1 or small group sessions, unlock
+                    your potential with personalized instruction for success.
                   </p>
                   <div className="space-y-3">
-                    <div className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300 text-left w-full">
-                      <h4 className="font-semibold mb-2 text-left w-full">
+                    <div className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300">
+                      <h4 className="font-semibold mb-2 text-left">
                         Technical Skills Development
                       </h4>
-                      <p className="text-sm text-muted-foreground text-left w-full">
-                        Master fundamental techniques including footwork, stroke mechanics, and court positioning.
+                      <p className="text-sm text-muted-foreground text-left">
+                        Master fundamental techniques including footwork, stroke
+                        mechanics, and court positioning.
                       </p>
                     </div>
-                    <div className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300 text-left w-full">
-                      <h4 className="font-semibold mb-2 text-left w-full">Tactical Training</h4>
-                      <p className="text-sm text-muted-foreground text-left w-full">
-                        Learn game strategies, shot selection, and how to read opponents to gain competitive advantage.
+                    <div className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300">
+                      <h4 className="font-semibold mb-2 text-left">
+                        Tactical Training
+                      </h4>
+                      <p className="text-sm text-muted-foreground text-left">
+                        Learn game strategies, shot selection, and how to read
+                        opponents to gain competitive advantage.
                       </p>
                     </div>
-                    <div className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300 text-left w-full">
-                      <h4 className="font-semibold mb-2 text-left w-full">
+                    <div className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300">
+                      <h4 className="font-semibold mb-2 text-left">
                         Mental Conditioning
                       </h4>
-                      <p className="text-sm text-muted-foreground text-left w-full">
-                        Build confidence, focus, and resilience to perform under pressure and overcome challenges.
+                      <p className="text-sm text-muted-foreground text-left">
+                        Build confidence, focus, and resilience to perform under
+                        pressure and overcome challenges.
                       </p>
                     </div>
                   </div>
@@ -424,42 +497,60 @@ export default function CoachDetailPage() {
                 className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
               >
                 <CardHeader>
-                  <CardTitle className="text-xl text-left w-full">Gallery</CardTitle>
-                  <hr className="my-3 border-t-1 border-gray-400" />
+                  <div className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-xl">Gallery</CardTitle>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                  </div>
+                  <hr className="my-2 border-gray-200 w-full" />
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {galleryImages.map((image, index) => (
+                  <div className="relative px-12">
+                    {/* Left Arrow */}
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={prevGallerySlide}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white hover:bg-gray-100 shadow-lg h-10 w-10"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+
+                    {/* Images Container */}
+                    <div className="overflow-hidden">
                       <div
-                        key={index}
-                        className="relative aspect-[3/4] rounded-lg overflow-hidden group cursor-pointer"
-                        style={{ animationDelay: `${index * 100}ms` }}
+                        className="flex gap-4 transition-transform duration-500 ease-in-out"
+                        style={{
+                          transform: `translateX(-${
+                            currentGalleryIndex * (100 / 3 + 1.33)
+                          }%)`,
+                        }}
                       >
-                        <img
-                          src={image.url || "/placeholder.svg"}
-                          alt={image.alt}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              className="rounded-full"
-                            >
-                              <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="secondary"
-                              className="rounded-full"
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
+                        {galleryImages.map((image, index) => (
+                          <div
+                            key={index}
+                            className="flex-shrink-0 w-[calc(33.333%-0.67rem)] aspect-[3/4] rounded-lg overflow-hidden"
+                          >
+                            <img
+                              src={image.url || "/placeholder.svg"}
+                              alt={image.alt}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            />
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Right Arrow */}
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={nextGallerySlide}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white hover:bg-gray-100 shadow-lg h-10 w-10"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -469,16 +560,17 @@ export default function CoachDetailPage() {
                 id="reviews"
                 className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
               >
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div className="flex flex-col w-full">
-                    <div className="flex flex-row items-center justify-between w-full">
-                      <CardTitle className="text-xl text-left">Reviews</CardTitle>
-                      <Button className="bg-green-600 hover:bg-green-700 text-white">
-                        Write a review
-                      </Button>
-                    </div>
-                    <hr className="my-3 border-t border-gray-400 w-full" />
+                <CardHeader>
+                  <div className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-xl">Reviews</CardTitle>
+                    <Button
+                      onClick={() => setShowReviewModal(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Write a review
+                    </Button>
                   </div>
+                  <hr className="my-2 border-gray-200 w-full" />
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="p-6 bg-amber-50 rounded-lg border border-amber-100">
@@ -503,7 +595,7 @@ export default function CoachDetailPage() {
 
                       {/* Right side - Quality Metrics */}
                       <div className="space-y-1">
-                        <p className="text-sm font-semibold mb-3 text-left w-full">
+                        <p className="text-sm font-semibold mb-3 text-left">
                           Recommended by 97% of Players
                         </p>
                         <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
@@ -573,22 +665,28 @@ export default function CoachDetailPage() {
                             </div>
 
                             <div>
-                              <h5 className="font-bold text-base mb-2 text-left w-full">
+                              <h5 className="font-bold text-base mb-2 text-left">
                                 Absolutely Perfect!
                               </h5>
-                              <p className="text-muted-foreground leading-relaxed text-left w-full">
-                                If you are looking for a perfect place for friendly matches with your friends or a competitive match, it is the best place.
+                              <p className="text-muted-foreground leading-relaxed text-left">
+                                If you are looking for a perfect place for
+                                friendly matches with your friends or a
+                                competitive match, it is the best place.
                               </p>
                             </div>
 
-                            {/* Testimonial text replaces review images */}
-                            <div className="bg-muted/50 border-l-4 border-muted-foreground/30 p-4 rounded-r-lg text-left w-full">
-                              <p className="text-sm text-muted-foreground italic leading-relaxed text-left w-full">
-                                Experience badminton excellence at Badminton Academy. Top-notch facilities, well-maintained courts, and a friendly atmosphere. Highly recommended for an exceptional playing experience.
+                            {/* Quote/testimonial box */}
+                            <div className="bg-muted/50 border-l-4 border-muted-foreground/30 p-4 rounded-r-lg">
+                              <p className="text-sm text-muted-foreground italic leading-relaxed text-left">
+                                Experience badminton excellence at Badminton
+                                Academy. Top-notch facilities, well-maintained
+                                courts, and a friendly atmosphere. Highly
+                                recommended for an exceptional playing
+                                experience.
                               </p>
                             </div>
 
-                            <div className="text-xs text-muted-foreground text-left w-full">
+                            <div className="text-xs text-muted-foreground text-left">
                               Sent on 11/05/2023
                             </div>
                           </div>
@@ -639,22 +737,28 @@ export default function CoachDetailPage() {
                             </div>
 
                             <div>
-                              <h5 className="font-bold text-base mb-2 text-left w-full">
+                              <h5 className="font-bold text-base mb-2 text-left">
                                 Awesome. Its very convenient to play.
                               </h5>
-                              <p className="text-muted-foreground leading-relaxed text-left w-full">
-                                If you are looking for a perfect place for friendly matches with your friends or a competitive match, it is the best place.
+                              <p className="text-muted-foreground leading-relaxed text-left">
+                                If you are looking for a perfect place for
+                                friendly matches with your friends or a
+                                competitive match, it is the best place.
                               </p>
                             </div>
 
                             {/* Quote/testimonial box */}
-                            <div className="bg-muted/50 border-l-4 border-muted-foreground/30 p-4 rounded-r-lg text-left w-full">
-                              <p className="text-sm text-muted-foreground italic leading-relaxed text-left w-full">
-                                Experience badminton excellence at Badminton Academy. Top-notch facilities, well-maintained courts, and a friendly atmosphere. Highly recommended for an exceptional playing experience.
+                            <div className="bg-muted/50 border-l-4 border-muted-foreground/30 p-4 rounded-r-lg">
+                              <p className="text-sm text-muted-foreground italic leading-relaxed text-left">
+                                Experience badminton excellence at Badminton
+                                Academy. Top-notch facilities, well-maintained
+                                courts, and a friendly atmosphere. Highly
+                                recommended for an exceptional playing
+                                experience.
                               </p>
                             </div>
 
-                            <div className="text-xs text-muted-foreground text-left w-full">
+                            <div className="text-xs text-muted-foreground text-left">
                               Sent on 09/18/2023
                             </div>
                           </div>
@@ -662,7 +766,6 @@ export default function CoachDetailPage() {
                       </CardContent>
                     </Card>
                   </div>
-                  {/* </CHANGE> */}
 
                   <Button
                     variant="outline"
@@ -678,21 +781,19 @@ export default function CoachDetailPage() {
                 id="location"
                 className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
               >
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div className="flex flex-col w-full">
-                    <div className="flex flex-row items-center justify-between w-full">
-                      <CardTitle className="text-xl text-left">Location</CardTitle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="hover:bg-green-50 hover:border-green-500 bg-transparent"
-                      >
-                        <Navigation className="h-4 w-4 mr-2" />
-                        Get Directions
-                      </Button>
-                    </div>
-                    <hr className="my-3 border-t border-gray-400 w-full" />
+                <CardHeader>
+                  <div className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-xl">Location</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="hover:bg-green-50 hover:border-green-500 bg-transparent"
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      Get Directions
+                    </Button>
                   </div>
+                  <hr className="my-2 border-gray-200 w-full" />
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="aspect-video bg-muted rounded-lg overflow-hidden relative group">
@@ -713,10 +814,10 @@ export default function CoachDetailPage() {
                       <MapPin className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-green-900 text-left w-full">
+                      <h4 className="font-semibold text-green-900 text-left">
                         Our Tennis Location
                       </h4>
-                      <p className="text-sm text-green-700 mt-1 text-left w-full">
+                      <p className="text-sm text-green-700 mt-1">
                         123 Premier Street, New York, NY 10012
                       </p>
                     </div>
@@ -732,12 +833,13 @@ export default function CoachDetailPage() {
               {/* Book A Coach Card */}
               <Card className="shadow-lg border-0 bg-white">
                 <CardHeader className="space-y-4 pb-6">
-                  <CardTitle className="text-2xl font-bold text-left w-full">
+                  <CardTitle className="text-2xl font-bold text-left">
                     Book A Coach
                   </CardTitle>
-                  <hr className="my-3 border-t-1 border-gray-400" />
-                  <p className="text-base text-muted-foreground text-left w-full">
-                    <span className="font-semibold text-foreground text-left w-full">
+                  <hr className="my-2 border-gray-200" />
+
+                  <p className="text-base text-muted-foreground text-left">
+                    <span className="font-semibold text-foreground">
                       Kevin Anderson
                     </span>{" "}
                     Available Now
@@ -761,7 +863,6 @@ export default function CoachDetailPage() {
                   </Button>
                 </CardHeader>
               </Card>
-              {/* </CHANGE> */}
 
               {/* Next Availability */}
               <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -800,10 +901,10 @@ export default function CoachDetailPage() {
               {/* Request Availability */}
               <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
-                  <CardTitle className="text-lg text-left w-full">
+                  <CardTitle className="text-lg text-left">
                     Request for Availability
                   </CardTitle>
-                  <hr className="my-3 border-t-1 border-gray-400" />
+                  <hr className="my-2 border-gray-200" />
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {!showRequestForm ? (
@@ -878,9 +979,12 @@ export default function CoachDetailPage() {
               {/* Listing By Owner */}
               <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
-                  <CardTitle className="text-lg text-left w-full">Listing By Owner</CardTitle>
-                  <hr className="my-3 border-t-1 border-gray-400" />
+                  <CardTitle className="text-lg text-left">
+                    Listing By Owner
+                  </CardTitle>
+                  <hr className="my-2 border-gray-200 w-full" />
                 </CardHeader>
+
                 <CardContent>
                   <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300 cursor-pointer group">
                     <img
@@ -956,7 +1060,7 @@ export default function CoachDetailPage() {
                 </div>
 
                 {/* Card Content */}
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-6 space-y-4">
                   <div>
                     <h3 className="text-xl font-bold group-hover:text-green-600 transition-colors mb-1">
                       {coach.name}
@@ -967,8 +1071,9 @@ export default function CoachDetailPage() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground leading-relaxed text-left w-full">
-                    Certified badminton coach with a deep understanding of the sport's and strategies game.
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Certified badminton coach with a deep understanding of the
+                    sport's and strategies game.
                   </p>
 
                   {/* Action Buttons */}
@@ -988,7 +1093,7 @@ export default function CoachDetailPage() {
                 </CardContent>
 
                 {/* Card Footer */}
-                <CardFooter className="flex items-center justify-between border-t pt-2 pb-2 px-4 bg-muted/20">
+                <CardFooter className="flex items-center justify-between border-t pt-4 pb-4 px-6 bg-muted/20">
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div>
@@ -1014,7 +1119,211 @@ export default function CoachDetailPage() {
           </div>
         </div>
       </div>
-      {/* </CHANGE> */}
+
+      {/* Lesson Details Modal */}
+      <Dialog
+        open={!!selectedLesson}
+        onOpenChange={() => setSelectedLesson(null)}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              {selectedLesson?.name}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Lesson details and information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Lesson Type */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Lesson Type
+              </Label>
+              <div className="flex items-center gap-3">
+                {selectedLesson && (
+                  <>
+                    <div
+                      className={`${selectedLesson.iconBg} p-2.5 rounded-lg`}
+                    >
+                      <selectedLesson.icon
+                        className={`h-5 w-5 ${selectedLesson.iconColor}`}
+                      />
+                    </div>
+                    <div>
+                      <Badge variant="secondary" className="font-semibold">
+                        {selectedLesson.badge}
+                      </Badge>
+                      <p className="text-sm text-muted-foreground mt-1 capitalize">
+                        {selectedLesson.type} Session
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Lesson Name */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Name
+              </Label>
+              <p className="text-lg font-semibold">{selectedLesson?.name}</p>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Description
+              </Label>
+              <p className="text-muted-foreground leading-relaxed">
+                {selectedLesson?.description}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setSelectedLesson(null)}
+                className="flex-1 hover:bg-muted bg-transparent"
+              >
+                Close
+              </Button>
+              <Button className="flex-1 bg-[#1a2332] hover:bg-[#1a2332]/90 text-white">
+                <Calendar className="h-4 w-4 mr-2" />
+                Book This Lesson
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              Write a Review
+            </DialogTitle>
+            <DialogDescription>
+              Share your experience with Kevin Anderson
+            </DialogDescription>
+          </DialogHeader>
+          <form className="space-y-6 py-4">
+            {/* Review Type */}
+            <div className="space-y-2">
+              <Label htmlFor="review-type" className="text-sm font-semibold">
+                Review Type
+              </Label>
+              <Select>
+                <SelectTrigger id="review-type">
+                  <SelectValue placeholder="Select review type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lesson-quality">Lesson Quality</SelectItem>
+                  <SelectItem value="coaching-style">Coaching Style</SelectItem>
+                  <SelectItem value="facility">Facility & Equipment</SelectItem>
+                  <SelectItem value="communication">Communication</SelectItem>
+                  <SelectItem value="value">Value for Money</SelectItem>
+                  <SelectItem value="overall">Overall Experience</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Rating */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Rating</Label>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onMouseLeave={() => setHoveredRating(0)}
+                      className="transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <Star
+                        className={`h-8 w-8 transition-colors ${
+                          star <= (hoveredRating || reviewRating)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {reviewRating > 0 && (
+                  <span className="text-sm font-semibold text-muted-foreground ml-2">
+                    {reviewRating}.0
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Comment */}
+            <div className="space-y-2">
+              <Label htmlFor="review-comment" className="text-sm font-semibold">
+                Comment
+              </Label>
+              <Textarea
+                id="review-comment"
+                placeholder="Share your experience with this coach..."
+                rows={6}
+                className="resize-none"
+              />
+            </div>
+
+            {/* Would you book again? */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                Would you book this coach again?
+              </Label>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 hover:bg-green-50 hover:border-green-500 bg-transparent"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                  Yes
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 hover:bg-red-50 hover:border-red-500 bg-transparent"
+                >
+                  <span className="text-red-600 font-bold mr-2">✕</span>
+                  No
+                </Button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowReviewModal(false);
+                  setReviewRating(0);
+                  setHoveredRating(0);
+                }}
+                className="flex-1 hover:bg-muted bg-transparent"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                Submit Review
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
