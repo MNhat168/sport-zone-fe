@@ -499,9 +499,9 @@ export default function CoachDetailPage() {
                 <CardHeader>
                   <div className="flex flex-row items-center justify-between">
                     <CardTitle className="text-xl">Gallery</CardTitle>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    {/* <Button variant="ghost" size="icon" className="h-8 w-8">
                       <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                    </Button>
+                    </Button> */}
                   </div>
                   <hr className="my-2 border-gray-200 w-full" />
                 </CardHeader>
