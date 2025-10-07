@@ -8,12 +8,12 @@ import type {
     GoogleAuthResponse,
 } from "../../types/authentication-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
-import { LOGIN_API, REGISTER_API, GOOGLE_LOGIN_API } from "./authAPI";
+import { LOGIN_API, REGISTER_API, GOOGLE_LOGIN_API, LOGOUT_API } from "./authAPI";
 
 export const signInWithEmailAndPassword = createAsyncThunk<
-    AuthResponse,
+    Pick<AuthResponse, "user">,
     LoginPayload,
-    { rejectValue: ErrorResponse } // type of error payload
+    { rejectValue: ErrorResponse }
 >("auth/login", async (payload, thunkAPI) => {
     try {
         const response = await axiosPublic.post(LOGIN_API, payload);
@@ -22,7 +22,12 @@ export const signInWithEmailAndPassword = createAsyncThunk<
         console.log("Dữ liệu login trả về:", response.data);
         console.log("-----------------------------------------------------")
 
-        return response.data.data;
+        const raw = response?.data?.data ?? response?.data;
+        const user = raw?.user ?? raw?.data?.user ?? raw?.result?.user ?? null;
+        if (!user) {
+            throw new Error("Invalid login response: missing user");
+        }
+        return { user } as Pick<AuthResponse, "user">;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Login failed",
@@ -56,20 +61,44 @@ export const signUpWithEmailAndPassword = createAsyncThunk<
 
 // Google 
 export const signInWithGoogle = createAsyncThunk<
-    GoogleAuthResponse,
-    { token: string; avatar?: string },
+    Pick<AuthResponse, "user">,
+    { token: string; avatar?: string; rememberMe?: boolean },
     { rejectValue: ErrorResponse }
 >("auth/google", async (payload, thunkAPI) => {
     try {
         const response = await axiosPublic.post(GOOGLE_LOGIN_API, {
             token: payload.token,
             avatar: payload.avatar,
+            rememberMe: payload.rememberMe,
         });
 
-        return response.data.data;
+        const raw = response?.data?.data ?? response?.data;
+        const user = raw?.user ?? raw?.data?.user ?? raw?.result?.user ?? null;
+        if (!user) {
+            throw new Error("Invalid google login response: missing user");
+        }
+        return { user } as Pick<AuthResponse, "user">;
     } catch (error: any) {
         return thunkAPI.rejectWithValue({
             message: error.response?.data?.message || error.message || "Google login failed",
+            status: error.response?.status || "500",
+        });
+    }
+});
+
+
+// logout
+export const logout = createAsyncThunk<
+    { message: string },
+    void,
+    { rejectValue: ErrorResponse }
+>("auth/logout", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPublic.post(LOGOUT_API);
+        return response.data;
+    } catch (error: any) {
+        return thunkAPI.rejectWithValue({
+            message: error.response?.data?.message || error.message || "Logout failed",
             status: error.response?.status || "500",
         });
     }

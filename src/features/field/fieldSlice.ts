@@ -17,6 +17,7 @@ interface FieldState {
     // Fields data
     fields: Field[];
     currentField: Field | null;
+    pagination: import("../../types/field-type").Pagination | null;
     
     // Availability data (Pure Lazy Creation)
     availability: import("../../types/field-type").FieldAvailabilityData[] | null;
@@ -46,6 +47,7 @@ interface FieldState {
 const initialState: FieldState = {
     fields: [],
     currentField: null,
+    pagination: null,
     availability: null,
     scheduledPriceUpdates: null,
     loading: false,
@@ -96,6 +98,7 @@ const fieldSlice = createSlice({
             .addCase(getAllFields.fulfilled, (state, action) => {
                 state.loading = false;
                 state.fields = action.payload.data;
+                state.pagination = action.payload.pagination || null;
                 state.error = null;
             })
             .addCase(getAllFields.rejected, (state, action) => {
@@ -105,15 +108,27 @@ const fieldSlice = createSlice({
 
             // Get field by ID
             .addCase(getFieldById.pending, (state) => {
+                console.log("⏳ [FIELD SLICE] getFieldById pending - setting loading to true");
                 state.loading = true;
                 state.error = null;
             })
             .addCase(getFieldById.fulfilled, (state, action) => {
+                console.log("✅ [FIELD SLICE] getFieldById fulfilled - updating currentField:", {
+                    fieldId: action.payload.data.id,
+                    fieldName: action.payload.data.name,
+                    fieldLocation: action.payload.data.location,
+                    fieldBasePrice: action.payload.data.basePrice,
+                    timestamp: new Date().toISOString()
+                });
                 state.loading = false;
                 state.currentField = action.payload.data;
                 state.error = null;
             })
             .addCase(getFieldById.rejected, (state, action) => {
+                console.error("❌ [FIELD SLICE] getFieldById rejected:", {
+                    error: action.payload,
+                    timestamp: new Date().toISOString()
+                });
                 state.loading = false;
                 state.error = action.payload || { message: "Unknown error", status: "500" };
             })

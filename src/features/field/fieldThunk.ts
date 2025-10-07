@@ -32,16 +32,16 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
     return {
         id: apiField?._id || apiField?.id || "",
         name: apiField?.name || "",
-        sportType: apiField?.sportType || "",
+        sportType: apiField?.sportType || "", // Use only 'sportType' as per new API
         description: apiField?.description || "",
         location: apiField?.location || "",
         images: Array.isArray(apiField?.images) ? apiField.images : [],
-        operatingHours: apiField?.operatingHours || { start: "06:00", end: "22:00" },
+        operatingHours: Array.isArray(apiField?.operatingHours) ? apiField.operatingHours : [],
         slotDuration: apiField?.slotDuration || 60,
         minSlots: apiField?.minSlots || 1,
         maxSlots: apiField?.maxSlots || 4,
         priceRanges: Array.isArray(apiField?.priceRanges) ? apiField.priceRanges : [],
-        basePrice: Number(apiField?.basePrice ?? 0),
+        basePrice: Number(apiField?.basePrice ?? 0), // Use only 'basePrice' as per new API
         isActive: apiField?.isActive ?? true,
         maintenanceNote: apiField?.maintenanceNote,
         maintenanceUntil: apiField?.maintenanceUntil,
@@ -85,7 +85,8 @@ export const getAllFields = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch fields",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }
@@ -98,20 +99,53 @@ export const getFieldById = createAsyncThunk<
     { rejectValue: ErrorResponse }
 >("field/getFieldById", async (id, thunkAPI) => {
     try {
+        console.log("🚀 [FIELD THUNK] Starting getFieldById request:", {
+            fieldId: id,
+            apiUrl: FIELD_BY_ID_API(id),
+            timestamp: new Date().toISOString()
+        });
+        
         const response = await axiosPublic.get(FIELD_BY_ID_API(id));
 
-        console.log("-----------------------------------------------------");
-        console.log("Get field by ID response:", response.data);
-        console.log("-----------------------------------------------------");
+        console.log("📥 [FIELD THUNK] Raw API response received:", {
+            fieldId: id,
+            status: response.status,
+            data: response.data,
+            timestamp: new Date().toISOString()
+        });
 
         const raw = response.data;
         const apiField = raw?.data ?? raw;
         const mapped = mapApiFieldToAppField(apiField);
+        
+        console.log("🔄 [FIELD THUNK] Field data mapped successfully:", {
+            fieldId: id,
+            originalApiField: apiField,
+            mappedField: {
+                id: mapped.id,
+                name: mapped.name,
+                location: mapped.location,
+                basePrice: mapped.basePrice,
+                sportType: mapped.sportType,
+                isActive: mapped.isActive
+            },
+            timestamp: new Date().toISOString()
+        });
+        
         return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
     } catch (error: any) {
+        console.error("❌ [FIELD THUNK] Error fetching field by ID:", {
+            fieldId: id,
+            error: error.message,
+            status: error.response?.status,
+            responseData: error.response?.data,
+            timestamp: new Date().toISOString()
+        });
+        
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch field",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }
@@ -135,11 +169,19 @@ export const checkFieldAvailability = createAsyncThunk<
         console.log("Check availability response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        // According to fieldAPI.md, the response is directly an array of availability data
+        const raw = response.data;
+        const availabilityData = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+        
+        return { 
+            success: true, 
+            data: availabilityData 
+        } as FieldAvailabilityResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to check availability",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }
@@ -165,7 +207,7 @@ export const createField = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to create field",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
@@ -192,7 +234,7 @@ export const updateField = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to update field",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
@@ -216,7 +258,8 @@ export const deleteField = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to delete field",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }
@@ -265,7 +308,7 @@ export const createFieldWithImages = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to create field with images",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
@@ -274,7 +317,7 @@ export const createFieldWithImages = createAsyncThunk<
 
 // Schedule price update (Owner only)
 export const schedulePriceUpdate = createAsyncThunk<
-    { success: boolean; message: string; effectiveDate: string },
+    { success: boolean; message: string; effectiveDate: string; updateId?: string },
     { id: string; payload: SchedulePriceUpdatePayload },
     { rejectValue: ErrorResponse }
 >("field/schedulePriceUpdate", async ({ id, payload }, thunkAPI) => {
@@ -285,11 +328,19 @@ export const schedulePriceUpdate = createAsyncThunk<
         console.log("Schedule price update response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        // According to fieldAPI.md, response includes success, message, effectiveDate, and updateId
+        const raw = response.data;
+        return {
+            success: raw?.success ?? true,
+            message: raw?.message || "Price update scheduled successfully",
+            effectiveDate: raw?.effectiveDate || payload.effectiveDate,
+            updateId: raw?.updateId
+        };
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to schedule price update",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }
@@ -310,11 +361,17 @@ export const cancelScheduledPriceUpdate = createAsyncThunk<
         console.log("Cancel scheduled price update response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        // According to fieldAPI.md, response includes success and message
+        const raw = response.data;
+        return {
+            success: raw?.success ?? true,
+            message: raw?.message || "Scheduled price update cancelled"
+        };
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to cancel scheduled price update",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }
@@ -333,11 +390,19 @@ export const getScheduledPriceUpdates = createAsyncThunk<
         console.log("Get scheduled price updates response:", response.data);
         console.log("-----------------------------------------------------");
 
-        return response.data;
+        // According to fieldAPI.md, the response is directly an array of scheduled updates
+        const raw = response.data;
+        const scheduledUpdates = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+        
+        return {
+            success: true,
+            data: scheduledUpdates
+        };
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to get scheduled price updates",
-            status: error.response?.status || "500",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }

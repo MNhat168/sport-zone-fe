@@ -9,11 +9,14 @@ type Notification = {
   createdAt: string;
 };
 
-const decodeJwt = (token: string): { sub: string } | null => {
+// With cookie-based auth, read a lightweight non-sensitive `user` cookie storing the id for convenience
+const readUserIdFromCookie = (): string | null => {
   try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
+    const match = typeof document !== 'undefined' ? document.cookie.match(/user=([^;]+)/) : null;
+    if (!match) return null;
+    const userStr = decodeURIComponent(match[1]);
+    const user = JSON.parse(userStr);
+    return user?.id || user?._id || null;
   } catch { return null; }
 };
 
@@ -21,8 +24,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-  const userId = useMemo(()=> token ? decodeJwt(token)?.sub ?? null : null, [token]);
+  const userId = useMemo(readUserIdFromCookie, []);
 
   const fetchNotifications = async () => {
     if (!userId) return;

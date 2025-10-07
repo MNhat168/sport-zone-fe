@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
-import { logout } from "../../features/authentication/authSlice";
+import { logout } from "../../features/authentication/authThunk";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,7 +20,7 @@ export const NavbarDarkComponent = () => {
     const auth = useAppSelector((state: RootState) => state.auth);
 
     const handleLogout = () => {
-        try { localStorage.clear(); } catch {}
+        try { localStorage.removeItem("user"); } catch {}
         dispatch(logout());
         navigate("/auth");
     };
@@ -36,9 +36,14 @@ export const NavbarDarkComponent = () => {
                 {/* Logo */}
                 <Link
                     to="/"
-                    className="text-2xl font-bold text-gray-900 bg-green-700 px-3 py-1 rounded-md"
+                    className="flex items-center"
                 >
-                    SportZone
+                    <img
+                        src="/Spz-nobg.png"
+                        alt="SportZone"
+                        className="h-10 w-auto"
+                        loading="eager"
+                    />
                 </Link>
 
                 {/* Nav links */}
@@ -105,7 +110,8 @@ export const NavbarDarkComponent = () => {
                                     />
                                 )}
                                 <Button
-                                    className="w-full justify-start hover:bg-green-50 hover:text-green-600"
+                                    variant="ghost"
+                                    className="w-full justify-start bg-white text-green-600 hover:bg-white-50 hover:text-green-700"
                                     onClick={handleLogout}
                                 >
                                     <LogOut className="mr-2 h-4 w-4" />
@@ -123,7 +129,7 @@ export const NavbarDarkComponent = () => {
                                 <User className="mr-2 h-4 w-4" /> Đăng nhập
                             </Button>
                             <Button
-                                className="bg-yellow-500 text-black hover:bg-yellow-400 font-semibold"
+                                className="bg-yellow-500 text-black font-semibold"
                                 onClick={() => navigate("/auth")}
                             >
                                 Đăng ký ngay

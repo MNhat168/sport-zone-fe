@@ -5,6 +5,7 @@ import ProtectedRoute, { UnauthorizedPage, UserRole } from "./protected-routes-c
 // ===== PAGE IMPORTS =====
 // Auth & Landing Pages
 import AuthenticationPage from "../pages/auth/authentication-page";
+import VerifyTokenPage from "../pages/auth/verify-token-page";
 import LandingPage from "../pages/landing/landing-page";
 
 // User Pages
@@ -46,6 +47,9 @@ const Placeholder = ({ title }: { title: string }) => (
 export const publicRoutes: RouteObject[] = [
   // Core Public Pages
   { path: "/", element: <LandingPage /> },
+  { path: "/verify-email", element: <VerifyTokenPage /> },
+  { path: "/auth/verify-token", element: <VerifyTokenPage /> },
+  { path: "/verify-email/success", element: <VerifyTokenPage /> },
   { path: "/user-dashboard", element: <UserDashboardPage /> },
   { path: "/user-booking-history", element: <UserBookingHistoryPage /> },
   { path: "/user-invoices", element: <UserInvoicesPage /> },

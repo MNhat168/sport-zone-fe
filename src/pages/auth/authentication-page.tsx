@@ -83,7 +83,10 @@ export default function AuthenticationPage() {
         toast.error("Vui lòng điền họ và tên");
         return false;
       }
-
+      if (formData.password.length < 6) {
+          toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+          return false;
+      }
       if (formData.password !== formData.confirmPassword) {
         toast.error("Mật khẩu không khớp");
         return false;
@@ -123,23 +126,15 @@ export default function AuthenticationPage() {
 
         const { picture } = googleUserInfo.data;
 
-        const result = await dispatch(
+        await dispatch(
           signInWithGoogle({
             token: tokenResponse.access_token,
             avatar: picture,
+            rememberMe,
           })
         ).unwrap();
-
-        localStorage.setItem("user", JSON.stringify(result.data.user));
-        localStorage.setItem("token", JSON.stringify(result.data.access_token));
-
-        console.log("Dữ liệu đăng nhập Google:", result);
-        console.log("Dữ liệu user từ Google:", googleUserInfo.data);
-
-        // CustomSuccessToast("Đăng nhập Google thành công!");
-        setTimeout(() => {
-          navigate("/"); // Giải pháp 1: Tất cả roles đều redirect về landing page
-        });
+        CustomSuccessToast("Đăng nhập Google thành công!");
+        navigate("/");
       } catch (error) {
         // Kiểm tra error có phải AxiosError không
         if (axios.isAxiosError(error)) {
@@ -180,35 +175,22 @@ export default function AuthenticationPage() {
           signInWithEmailAndPassword({
             email: formData.email,
             password: formData.password,
+            rememberMe,
           })
         ).unwrap();
 
         if (result) {
-          const { access_token, user } = result;
+          const user = result?.user;
 
-          if (user.isActive === false) {
+          if (user && user.isActive === false) {
             CustomFailedToast("Tài khoản của bạn đã bị khóa.");
             navigate("/lock-account");
             setIsLoading(false);
             return;
           }
 
-          if (rememberMe) {
-            // Nếu người dùng chọn "Ghi nhớ", lưu vào cookies với thời hạn 30 ngày
-            const d = new Date();
-            d.setTime(d.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-            document.cookie = `token=${access_token}; expires=${d.toUTCString()}; path=/`;
-            document.cookie = `user=${JSON.stringify(
-              user
-            )}; expires=${d.toUTCString()}; path=/`;
-          } else {
-            // Nếu không, lưu vào sessionStorage
-            sessionStorage.setItem("token", access_token);
-            sessionStorage.setItem("user", JSON.stringify(user));
-          }
-
           CustomSuccessToast("Đăng nhập thành công!");
-          navigate("/"); // Giải pháp 1: Tất cả roles đều redirect về landing page
+          navigate("/");
         }
       } else {
         const result = await dispatch(

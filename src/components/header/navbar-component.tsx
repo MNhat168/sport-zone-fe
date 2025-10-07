@@ -3,13 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
-import { logout } from "../../features/authentication/authSlice";
+import { logout } from "../../features/authentication/authThunk";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { RootState } from "../../store/store";
 import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
@@ -38,9 +38,7 @@ export const NavbarComponent = () => {
     }, []);
 
     const handleLogout = () => {
-        try { localStorage.clear(); } catch {
-            // Ignore localStorage errors (e.g., in private browsing mode)
-        }
+        try { localStorage.removeItem("user"); } catch { /* ignore */ }
         dispatch(logout());
         navigate("/");
     };
@@ -49,10 +47,10 @@ export const NavbarComponent = () => {
     // Gom style theo trạng thái scroll
     const linkClass = isScrolled
         ? "text-sm font-medium text-gray-900 hover:text-green-600"
-        : "text-sm font-medium text-white hover:text-yellow-400";
+        : "text-sm font-medium text-white";
     const iconClass = isScrolled
         ? "h-5 w-5 text-gray-900 hover:text-green-600"
-        : "h-5 w-5 text-white hover:text-yellow-400";
+        : "h-5 w-5 text-white";
     const btnTriggerClass = isScrolled
         ? "text-gray-900 bg-white"
         : "text-white bg-transparent";
@@ -108,10 +106,14 @@ export const NavbarComponent = () => {
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className={`flex items-center gap-2 transition-all duration-200 hover:bg-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none active:scale-95 ${btnTriggerClass}`}
+                                    className={`flex items-center gap-2 transition-all duration-200 hover:bg-green-800 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none active:scale-95 ${btnTriggerClass}`}
                                 >
                                     <Avatar className="h-7 w-7">
-                                        <AvatarImage src={auth.user.avatarUrl} alt="User avatar" />
+                                        <AvatarImage
+                                            src={auth.user?.avatarUrl}
+                                            alt="User avatar"
+                                        />
+                                        <AvatarFallback>CN</AvatarFallback>
                                     </Avatar>
                                     <span className={linkClass}>{auth.user?.fullName || "Tài khoản"}</span>
                                 </Button>
@@ -169,7 +171,7 @@ export const NavbarComponent = () => {
                                 <User className="mr-2 h-4 w-4" /> Đăng nhập
                             </Button>
                             <Button
-                                className="bg-yellow-500 text-black hover:bg-yellow-400 font-semibold"
+                                className="bg-yellow-500 text-black font-semibold"
                                 onClick={() => navigate("/auth")}
                             >
                                 Đăng ký ngay

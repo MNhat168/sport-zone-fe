@@ -10,7 +10,7 @@ import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
 import { useState, useEffect, useRef } from "react"
 import type  { Booking } from "@/types/booking-type"
-import axios from "axios";
+import axiosPublic from "@/utils/axios/axiosPublic";
 import { PageWrapper } from '@/components/layouts/page-wrapper'
 
 export default function CoachDashboardPage() {
@@ -27,8 +27,11 @@ export default function CoachDashboardPage() {
 
 useEffect(() => {
   const loadUserAndFetchData = async () => {
-    // --- Get user string ---
-    let userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+    // --- Get user string (prefer cookie first) ---
+    let userStr: string | null = null;
+    const match = typeof document !== 'undefined' ? document.cookie.match(/user=([^;]+)/) : null;
+    if (match) userStr = decodeURIComponent(match[1]);
+    if (!userStr) userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
     console.log("[useEffect] Raw user object:", userStr);
 
     if (!userStr) {
@@ -70,14 +73,14 @@ useEffect(() => {
       // --- Fetch coachId ---
       const fetchCoachId = async (userId: string) => {
         try {
-          const response = await axios.get(`${API_BASE_URL}/profiles/coach-id/${userId}`);
+          const response = await axiosPublic.get(`/profiles/coach-id/${userId}`);
           const coachId = response.data?.data?.coachId;
           console.log("[fetchCoachId] Fetched coachId:", coachId);
           setCoachId(coachId);
 
           // --- Fetch bookings immediately after coachId ---
           if (coachId) {
-            const bookingRes = await axios.get(`${API_BASE_URL}/bookings/coach/${coachId}`);
+            const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`);
             console.log("[fetchBookingRequests] Fetched bookings:", bookingRes.data);
             setBookingRequests(bookingRes.data.data);
           }
@@ -149,7 +152,7 @@ const handleAccept = async (bookingId: any) => {
   if (!coachId) return;
   try {
     const normalizedId = normalizeId(bookingId);
-    await axios.patch(`${API_BASE_URL}/bookings/accept`, {
+    await axiosPublic.patch(`/bookings/accept`, {
       coachId,
       bookingId: normalizedId,
     });
@@ -168,7 +171,7 @@ const handleDecline = async (bookingId: any, reason?: string) => {
   if (!coachId) return;
   try {
     const normalizedId = normalizeId(bookingId);
-    await axios.patch(`${API_BASE_URL}/bookings/decline`, {
+    await axiosPublic.patch(`/bookings/decline`, {
       coachId,
       bookingId: normalizedId,
       reason: reason || "No reason provided",
