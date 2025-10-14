@@ -13,9 +13,15 @@ export const UserSyncProvider = ({ children }: { children: React.ReactNode }) =>
     const userStoreUser = useAppSelector((state) => state.user.user);
 
     useEffect(() => {
-        // Sync from auth to user store when auth user changes
-        if (authUser && (!userStoreUser || authUser._id !== userStoreUser._id)) {
-            dispatch(syncUserFromAuth(authUser));
+        // Only sync if authUser contains favouriteField (full profile)
+        if (
+            authUser &&
+            (!userStoreUser || authUser._id !== userStoreUser._id)
+        ) {
+            if (Array.isArray(authUser.favouriteField)) {
+                dispatch(syncUserFromAuth(authUser));
+            }
+            // Otherwise, do not overwrite userStoreUser
         }
     }, [authUser, userStoreUser, dispatch]);
 
