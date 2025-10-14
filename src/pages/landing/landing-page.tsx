@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
+import { getUserProfile, setFavouriteFields } from "@/features/user/userThunk";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -20,6 +22,8 @@ import {
 } from "lucide-react";
 import { NavbarComponent } from "@/components/header/navbar-component";
 import { FooterComponent } from "@/components/footer/footer-component";
+import { FavoriteSportsModal } from "@/components/common/favorite-sports-modal";
+
 
 export default function LandingPage() {
   const [selectedSport, setSelectedSport] = useState("");
@@ -27,6 +31,12 @@ export default function LandingPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showFavoriteSportsModal, setShowFavoriteSportsModal] = useState(false);
+  const [modalShownOnce, setModalShownOnce] = useState(false);
+
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user.user);
+  const isLoggedIn = !!user;
 
   const slideImages = [
     "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757854021/banner-tennis_koajhu.jpg",
@@ -42,12 +52,54 @@ export default function LandingPage() {
 
     return () => clearInterval(interval);
   }, [slideImages.length]);
+  // Fetch user profile on mount (simulate login success)
+  useEffect(() => {
+    dispatch(getUserProfile());
+  }, [dispatch]);
+
+  // Show modal if user is logged in and has no favouriteField
+  useEffect(() => {
+    if (
+      isLoggedIn &&
+      !modalShownOnce &&
+      (!user?.favouriteField || user.favouriteField.length === 0)
+    ) {
+      setShowFavoriteSportsModal(true);
+      setModalShownOnce(true);
+    }
+  }, [isLoggedIn, user, modalShownOnce]);
+
+  // Debug log to inspect user.favouriteField value after login/profile fetch
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log('DEBUG user.favouriteField:', user?.favouriteField);
+    }
+  }, [isLoggedIn, user]);
+
+  const handleFavoriteSportsAccept = (selectedSports: string[]) => {
+    if (!user) return;
+    dispatch(setFavouriteFields({ favouriteFields: selectedSports }))
+      .unwrap()
+      .then(() => {
+        // Refetch profile to update Redux state
+        dispatch(getUserProfile());
+        setShowFavoriteSportsModal(false);
+      })
+      .catch(() => {
+        setShowFavoriteSportsModal(false);
+      });
+  };
 
   return (
     <>
+      <FavoriteSportsModal
+        isOpen={showFavoriteSportsModal}
+        onClose={() => setShowFavoriteSportsModal(false)}
+        onAccept={handleFavoriteSportsAccept}
+      />
       {/* Navbar */}
       <NavbarComponent />
-      <div className="min-h-screen"> 
+      <div className="min-h-screen">
         {/* Hero Section */}
         <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
           {/* Slide Images */}
@@ -55,8 +107,9 @@ export default function LandingPage() {
             {slideImages.map((image, index) => (
               <div
                 key={index}
-                className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
-                  }`}
+                className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${
+                  index === currentSlide ? "opacity-100" : "opacity-0"
+                }`}
                 style={{
                   backgroundImage: `url(${image})`,
                 }}
@@ -95,10 +148,11 @@ export default function LandingPage() {
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide
-                    ? 'bg-white scale-125'
-                    : 'bg-white/50 hover:bg-white/75'
-                  }`}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlide
+                    ? "bg-white scale-125"
+                    : "bg-white/50 hover:bg-white/75"
+                }`}
               />
             ))}
           </div>
@@ -151,7 +205,9 @@ export default function LandingPage() {
                         <SelectValue placeholder="Vị trí của bạn" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="downtown">Trung tâm thành phố</SelectItem>
+                        <SelectItem value="downtown">
+                          Trung tâm thành phố
+                        </SelectItem>
                         <SelectItem value="north">Quận Bắc</SelectItem>
                         <SelectItem value="south">Quận Nam</SelectItem>
                       </SelectContent>
@@ -174,7 +230,10 @@ export default function LandingPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Thời Gian
                     </label>
-                    <Select value={selectedTime} onValueChange={setSelectedTime}>
+                    <Select
+                      value={selectedTime}
+                      onValueChange={setSelectedTime}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Chọn thời gian" />
                       </SelectTrigger>
@@ -225,14 +284,7 @@ export default function LandingPage() {
                 },
                 {
                   title: "Sân Quần Vợt Chuyên Nghiệp",
-                  subtitle: "Câu Lạc Bộ Quần Vợt Elite",
-                  price: "900.000đ/giờ",
-                  rating: "HOT",
-                  image: "/outdoor-tennis-court.png",
-                },
-                {
-                  title: "Sân Cầu Lông Trong Nhà",
-                  subtitle: "Trung Tâm Thể Thao Thành Phố",
+                 
                   price: "650.000đ/giờ",
                   rating: "PHỔ BIẾN",
                   image: "/badminton-court.png",
@@ -379,9 +431,10 @@ export default function LandingPage() {
                   Khóa Học Cho Mọi Lứa Tuổi!
                 </h2>
                 <p className="text-gray-600 mb-8 leading-relaxed">
-                  Chúng tôi cung cấp các khóa học thể thao chất lượng cao cho mọi lứa tuổi.
-                  Từ trẻ em đến người lớn, từ người mới bắt đầu đến vận động viên chuyên nghiệp,
-                  chúng tôi có chương trình phù hợp với nhu cầu và khả năng của bạn.
+                  Chúng tôi cung cấp các khóa học thể thao chất lượng cao cho
+                  mọi lứa tuổi. Từ trẻ em đến người lớn, từ người mới bắt đầu
+                  đến vận động viên chuyên nghiệp, chúng tôi có chương trình phù
+                  hợp với nhu cầu và khả năng của bạn.
                 </p>
               </div>
 
@@ -398,7 +451,9 @@ export default function LandingPage() {
                         <span className="text-xs font-semibold">Hình</span>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500">Nhóm Hỗn Hợp</div>
+                        <div className="text-xs text-gray-500">
+                          Nhóm Hỗn Hợp
+                        </div>
                         <div className="font-semibold">TRÌNH ĐỘ CƠ BẢN</div>
                       </div>
                       <div className="text-lg font-bold">$</div>
@@ -447,7 +502,8 @@ export default function LandingPage() {
                       Giải Đấu Nam
                     </h3>
                     <p className="text-gray-600">
-                      Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
+                      Tiếp cận các huấn luyện viên được chứng nhận để tập luyện
+                      và cải thiện
                     </p>
                   </div>
                 </div>
@@ -465,7 +521,8 @@ export default function LandingPage() {
                       Giải Đấu Nữ
                     </h3>
                     <p className="text-gray-600">
-                      Tiếp cận các huấn luyện viên được chứng nhận để tập luyện và cải thiện
+                      Tiếp cận các huấn luyện viên được chứng nhận để tập luyện
+                      và cải thiện
                     </p>
                   </div>
                 </div>
@@ -533,8 +590,6 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-
-        
       </div>
       {/* Footer */}
       <FooterComponent />

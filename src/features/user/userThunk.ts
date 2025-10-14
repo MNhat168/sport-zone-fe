@@ -1,3 +1,25 @@
+import { SET_FAVOURITE_FIELDS_API } from "./userAPI";
+// Set favourite fields
+export interface SetFavouriteFieldsPayload {
+    favouriteFields: string[];
+}
+
+export const setFavouriteFields = createAsyncThunk<
+    User,
+    SetFavouriteFieldsPayload,
+    { rejectValue: ErrorResponse }
+>("user/setFavouriteFields", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(SET_FAVOURITE_FIELDS_API, payload);
+    return response.data.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to set favourite fields",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axiosPublic from "../../utils/axios/axiosPublic";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
@@ -27,7 +49,7 @@ export const getUserProfile = createAsyncThunk<
         console.log("-----------------------------------------------------");
         console.log("Dữ liệu profile trả về:", response.data);
         console.log("-----------------------------------------------------");
-        return response.data;
+    return response.data.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to get profile",

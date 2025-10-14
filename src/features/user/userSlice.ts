@@ -5,6 +5,7 @@ import {
     forgotPassword,
     resetPassword,
     changePassword,
+    setFavouriteFields,
 } from "./userThunk";
 import type { User, ErrorResponse } from "../../types/user-type";
 
@@ -96,6 +97,11 @@ const userSlice = createSlice({
             .addCase(updateUserProfile.rejected, (state, action) => {
                 state.updateLoading = false;
                 state.updateError = action.payload || { message: "Failed to update profile", status: "500" };
+            })
+
+            // Set favourite fields
+            .addCase(setFavouriteFields.fulfilled, (state, action) => {
+                state.user = action.payload;
             })
 
             // Forgot password
