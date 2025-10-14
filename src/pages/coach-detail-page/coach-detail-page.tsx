@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -43,8 +44,10 @@ import {
   Navigation,
   Heart,
   Eye,
-  ChevronUp,
+//   ChevronUp,
 } from "lucide-react";
+import { getCoachById, clearCurrentCoach } from "@/features/coach";
+import type { RootState, AppDispatch } from "@/store/store";
 
 interface LessonType {
   id: string;
@@ -57,7 +60,8 @@ interface LessonType {
   badge: string;
 }
 
-const lessonTypes: LessonType[] = [
+// Mock lesson types - will be replaced with real data from API when available
+const mockLessonTypes: LessonType[] = [
   {
     id: "1",
     type: "single",
@@ -82,7 +86,14 @@ const lessonTypes: LessonType[] = [
   },
 ];
 
-export default function CoachDetailPage() {
+interface CoachDetailPageProps {
+  coachId?: string;
+}
+
+export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }: CoachDetailPageProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentCoach, detailLoading, detailError } = useSelector((state: RootState) => state.coach);
+  
   const [activeTab, setActiveTab] = useState("bio");
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
@@ -90,6 +101,39 @@ export default function CoachDetailPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
+
+  // Get lesson types from real coach data or fallback to mock data
+  const getLessonTypes = (): LessonType[] => {
+    if (currentCoach?.lessonTypes?.length) {
+      return currentCoach.lessonTypes.map((lesson) => ({
+        id: lesson._id,
+        type: lesson.type as "single" | "pair" | "group",
+        name: lesson.name,
+        description: lesson.description,
+        icon: lesson.type === "single" ? User : Users,
+        iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
+        iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
+        badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+      }));
+    }
+    return mockLessonTypes;
+  };
+
+  const lessonTypes = getLessonTypes();
+
+  // Fetch coach data when component mounts or coachId changes
+  useEffect(() => {
+    if (coachId) {
+      dispatch(getCoachById(coachId));
+    }
+  }, [dispatch, coachId]);
+
+  // Cleanup coach data when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearCurrentCoach());
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -172,33 +216,33 @@ export default function CoachDetailPage() {
     { url: "/badminton-indoor-court.jpg", alt: "Indoor facility" },
   ];
 
-  const reviews = [
-    {
-      name: "Amanda Rosales",
-      date: "09/26/2023",
-      rating: 5,
-      title: "Absolutely Perfect!",
-      content:
-        "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. It is the best place.",
-      images: [
-        "/badminton-court-1.jpg",
-        "/badminton-court-2.jpg",
-        "/badminton-court-3.jpg",
-        "/badminton-court-4.jpg",
-        "/badminton-court-5.jpg",
-      ],
-      helpful: 12,
-    },
-    {
-      name: "Michael Chen",
-      date: "09/18/2023",
-      rating: 5,
-      title: "Awesome. Its very convenient to play.",
-      content:
-        "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. Excellent coaching and atmosphere. Highly recommended for an exceptional playing experience.",
-      helpful: 8,
-    },
-  ];
+//   const reviews = [
+//     {
+//       name: "Amanda Rosales",
+//       date: "09/26/2023",
+//       rating: 5,
+//       title: "Absolutely Perfect!",
+//       content:
+//         "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. It is the best place.",
+//       images: [
+//         "/badminton-court-1.jpg",
+//         "/badminton-court-2.jpg",
+//         "/badminton-court-3.jpg",
+//         "/badminton-court-4.jpg",
+//         "/badminton-court-5.jpg",
+//       ],
+//       helpful: 12,
+//     },
+//     {
+//       name: "Michael Chen",
+//       date: "09/18/2023",
+//       rating: 5,
+//       title: "Awesome. Its very convenient to play.",
+//       content:
+//         "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. Excellent coaching and atmosphere. Highly recommended for an exceptional playing experience.",
+//       helpful: 8,
+//     },
+//   ];
 
   const similarCoaches = [
     {
@@ -242,6 +286,53 @@ export default function CoachDetailPage() {
     },
   ];
 
+  // Show loading state while fetching coach data
+  if (detailLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading coach details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if coach data failed to load
+  if (detailError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading coach data: {detailError.message}</p>
+          <Button onClick={() => dispatch(getCoachById(coachId))}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use real coach data or fallback to mock data
+  const coachData = currentCoach || {
+    id: "64a1b2c3d4e5f6789012345",
+    name: "Kevin Anderson",
+    profileImage: "/professional-coach-portrait.png",
+    description: "Professional tennis coach with 10 years experience",
+    rating: 4.8,
+    reviewCount: 300,
+    location: "Santamonica, United States",
+    level: "Expert",
+    completedSessions: 25,
+    createdAt: "2023-04-05T10:30:00Z",
+    availableSlots: [],
+    lessonTypes: [],
+    price: 250,
+    coachingDetails: {
+      experience: "10 years professional coaching",
+      certification: "USPTA Certified"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Background Section */}
@@ -271,11 +362,11 @@ export default function CoachDetailPage() {
                     <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full opacity-75 group-hover:opacity-100 blur transition duration-300" />
                     <Avatar className="relative h-24 w-24 border-4 border-white shadow-lg">
                       <AvatarImage
-                        src="/professional-coach-portrait.png"
-                        alt="Kevin Anderson"
+                        src={coachData.profileImage || "/professional-coach-portrait.png"}
+                        alt={coachData.name}
                       />
                       <AvatarFallback className="text-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-                        KA
+                        {coachData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -285,7 +376,7 @@ export default function CoachDetailPage() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 flex-wrap">
                         <h1 className="text-3xl font-bold text-balance">
-                          Kevin Anderson
+                          {coachData.name}
                         </h1>
                         <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -299,8 +390,7 @@ export default function CoachDetailPage() {
                         </Button>
                       </div>
                       <p className="text-base text-muted-foreground text-left">
-                        Coach Kevin provides Badminton lessons in Santa Monica
-                        at Penmar Park
+                        {coachData.description}
                       </p>
                     </div>
 
@@ -310,15 +400,15 @@ export default function CoachDetailPage() {
                         <div className="bg-yellow-100 p-1.5 rounded">
                           <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
                         </div>
-                        <span className="font-semibold">4.8</span>
+                        <span className="font-semibold">{coachData.rating}</span>
                         <span className="text-muted-foreground">
-                          300 Reviews
+                          {coachData.reviewCount} Reviews
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4" />
-                        <span>Santamonica, United States</span>
+                        <span>{coachData.location}</span>
                       </div>
                     </div>
 
@@ -326,15 +416,15 @@ export default function CoachDetailPage() {
                     <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground pt-2 border-t">
                       <div className="flex items-center gap-2">
                         <Award className="h-4 w-4" />
-                        <span>Rank : Expert</span>
+                        <span>Rank : {coachData.level}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4" />
-                        <span>Sessions Completed : 25</span>
+                        <span>Sessions Completed : {coachData.completedSessions}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>With Dreamsports Since Apr 5, 2023</span>
+                        <span>With Dreamsports Since {new Date(coachData.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                       </div>
                     </div>
                   </div>
@@ -376,11 +466,13 @@ export default function CoachDetailPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-3 text-muted-foreground leading-relaxed">
                     <p className="font-semibold text-foreground text-left">
-                      Name: Kevin Anderson
+                      Name: {coachData.name}
                     </p>
                     <p className="text-left">
-                      Experience: 10 years of experience coaching badminton at
-                      various skill levels.
+                      Experience: {coachData.coachingDetails.experience}
+                    </p>
+                    <p className="text-left">
+                      Certification: {coachData.coachingDetails.certification}
                     </p>
                   </div>
                   <Button
@@ -840,7 +932,7 @@ export default function CoachDetailPage() {
 
                   <p className="text-base text-muted-foreground text-left">
                     <span className="font-semibold text-foreground">
-                      Kevin Anderson
+                      {coachData.name}
                     </span>{" "}
                     Available Now
                   </p>
@@ -851,7 +943,7 @@ export default function CoachDetailPage() {
                     </p>
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-4xl font-bold text-green-600">
-                        $250
+                        ${coachData.price}
                       </span>
                       <span className="text-lg text-muted-foreground">/hr</span>
                     </div>
@@ -874,12 +966,21 @@ export default function CoachDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { day: "Thu, Sept 24", time: "3 PM" },
-                      { day: "Fri, Sept 25", time: "4 PM" },
-                      { day: "Sat, Sept 26", time: "2 PM" },
-                      { day: "Sun, Sept 27", time: "11 AM" },
-                    ].map((slot, index) => (
+                    {(coachData.availableSlots?.length ? 
+                      coachData.availableSlots.slice(0, 4).map((slot, index) => ({
+                        day: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { 
+                          weekday: "short", 
+                          month: "short", 
+                          day: "numeric" 
+                        }),
+                        time: slot.startTime
+                      })) : [
+                        { day: "Thu, Sept 24", time: "3 PM" },
+                        { day: "Fri, Sept 25", time: "4 PM" },
+                        { day: "Sat, Sept 26", time: "2 PM" },
+                        { day: "Sun, Sept 27", time: "11 AM" },
+                      ]
+                    ).map((slot, index) => (
                       <Button
                         key={index}
                         variant="outline"
@@ -1206,7 +1307,7 @@ export default function CoachDetailPage() {
               Write a Review
             </DialogTitle>
             <DialogDescription>
-              Share your experience with Kevin Anderson
+              Share your experience with {coachData.name}
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-6 py-4">

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
+import { clearUserAuth } from "../../lib/cookies";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -38,7 +39,7 @@ export const NavbarComponent = () => {
     }, []);
 
     const handleLogout = () => {
-        try { localStorage.removeItem("user"); } catch { /* ignore */ }
+        clearUserAuth();
         dispatch(logout());
         navigate("/");
     };

@@ -88,6 +88,135 @@ Authorization: Bearer <access_token>
 ]
 ```
 
+### Create New Field
+
+- **Method**: `POST`
+- **Path**: `/`
+- **Auth**: Field Owner Only
+- **Description**: Create a new field with amenities
+
+**Request Body**:
+```json
+{
+  "name": "Sân bóng Phú Nhuận",
+  "sportType": "football",
+  "description": "Sân bóng đá 11 người, có đèn chiếu sáng",
+  "location": "District 3, Ho Chi Minh City",
+  "images": [
+    "https://example.com/field1.jpg",
+    "https://example.com/field2.jpg"
+  ],
+  "operatingHours": [
+    {
+      "day": "monday",
+      "start": "06:00",
+      "end": "22:00",
+      "duration": 60
+    }
+  ],
+  "slotDuration": 60,
+  "minSlots": 1,
+  "maxSlots": 4,
+  "priceRanges": [
+    {
+      "day": "monday",
+      "start": "06:00",
+      "end": "10:00",
+      "multiplier": 1.0
+    },
+    {
+      "day": "monday",
+      "start": "18:00",
+      "end": "22:00",
+      "multiplier": 1.5
+    }
+  ],
+  "basePrice": 150000,
+  "amenities": [
+    {
+      "amenityId": "507f1f77bcf86cd799439020",
+      "price": 150000
+    },
+    {
+      "amenityId": "507f1f77bcf86cd799439021",
+      "price": 50000
+    }
+  ]
+}
+```
+
+**Success 201**:
+```json
+{
+  "id": "507f1f77bcf86cd799439011",
+  "owner": "507f1f77bcf86cd799439012",
+  "name": "Sân bóng Phú Nhuận",
+  "sportType": "football",
+  "description": "Sân bóng đá 11 người, có đèn chiếu sáng",
+  "location": "District 3, Ho Chi Minh City",
+  "images": [
+    "https://example.com/field1.jpg",
+    "https://example.com/field2.jpg"
+  ],
+  "operatingHours": [
+    {
+      "day": "monday",
+      "start": "06:00",
+      "end": "22:00",
+      "duration": 60
+    }
+  ],
+  "slotDuration": 60,
+  "minSlots": 1,
+  "maxSlots": 4,
+  "priceRanges": [
+    {
+      "day": "monday",
+      "start": "06:00",
+      "end": "10:00",
+      "multiplier": 1.0
+    },
+    {
+      "day": "monday",
+      "start": "18:00",
+      "end": "22:00",
+      "multiplier": 1.5
+    }
+  ],
+  "basePrice": 150000,
+  "isActive": true,
+  "rating": 0,
+  "totalReviews": 0,
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Create Field with Images
+
+- **Method**: `POST`
+- **Path**: `/with-images`
+- **Auth**: Field Owner Only
+- **Description**: Create a new field with image uploads and amenities
+
+**Request Body** (multipart/form-data):
+```
+name: Sân bóng Phú Nhuận
+sportType: football
+description: Sân bóng đá 11 người, có đèn chiếu sáng
+location: District 3, Ho Chi Minh City
+operatingHours: [{"day":"monday","start":"06:00","end":"22:00","duration":60}]
+slotDuration: 60
+minSlots: 1
+maxSlots: 4
+priceRanges: [{"day":"monday","start":"06:00","end":"10:00","multiplier":1.0}]
+basePrice: 150000
+amenities: [{"amenityId":"507f1f77bcf86cd799439020","price":150000},{"amenityId":"507f1f77bcf86cd799439021","price":50000}]
+images: [file1.jpg, file2.jpg]
+```
+
+**Success 201**: Same as Create New Field response
+
 ### Get Field by ID
 
 - **Method**: `GET`
@@ -770,3 +899,240 @@ The `/with-images` endpoint supports automatic image upload to AWS S3:
 - **Form Data**: All field data sent as form-data with images as file uploads
  
  
+## Field Amenities Management
+
+### Get Field Amenities
+
+- **Method**: `GET`
+- **Path**: `/{fieldId}/amenities`
+- **Auth**: Public
+- **Description**: Retrieve all amenities associated with a field
+
+**Success 200**:
+```json
+{
+  "fieldId": "507f1f77bcf86cd799439011",
+  "fieldName": "Sân bóng Phú Nhuận",
+  "amenities": [
+    {
+      "amenity": {
+        "_id": "507f1f77bcf86cd799439020",
+        "name": "Huấn luyện viên bóng đá",
+        "description": "Huấn luyện viên chuyên nghiệp với 5 năm kinh nghiệm",
+        "sportType": "football",
+        "isActive": true,
+        "imageUrl": "https://example.com/coach.jpg",
+        "type": "coach"
+      },
+      "price": 150000
+    },
+    {
+      "amenity": {
+        "_id": "507f1f77bcf86cd799439021",
+        "name": "Nước uống",
+        "description": "Nước suối, nước ngọt các loại",
+        "sportType": "football",
+        "isActive": true,
+        "imageUrl": "https://example.com/drinks.jpg",
+        "type": "drink"
+      },
+      "price": 50000
+    }
+  ]
+}
+```
+
+
+### Update Field Amenities (Replace All)
+
+- **Method**: `PUT`
+- **Path**: `/{fieldId}/amenities`
+- **Auth**: Field Owner Only
+- **Description**: Replace all amenities for a field
+
+**Request Body**:
+```json
+{
+  "amenities": [
+    {
+      "amenityId": "507f1f77bcf86cd799439020",
+      "price": 150000
+    },
+    {
+      "amenityId": "507f1f77bcf86cd799439021",
+      "price": 50000
+    },
+    {
+      "amenityId": "507f1f77bcf86cd799439022",
+      "price": 0
+    }
+  ]
+}
+```
+
+**Success 200**:
+```json
+{
+  "success": true,
+  "message": "Updated field amenities",
+  "field": {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "Sân bóng Phú Nhuận",
+    "amenities": [
+      {
+        "amenity": {
+          "_id": "507f1f77bcf86cd799439020",
+          "name": "Huấn luyện viên bóng đá",
+          "description": "Huấn luyện viên chuyên nghiệp với 5 năm kinh nghiệm",
+          "sportType": "football",
+          "isActive": true,
+          "imageUrl": "https://example.com/coach.jpg",
+          "type": "coach"
+        },
+        "price": 150000
+      },
+      {
+        "amenity": {
+          "_id": "507f1f77bcf86cd799439021",
+          "name": "Nước uống",
+          "description": "Nước suối, nước ngọt các loại",
+          "sportType": "football",
+          "isActive": true,
+          "imageUrl": "https://example.com/drinks.jpg",
+          "type": "drink"
+        },
+        "price": 50000
+      },
+      {
+        "amenity": {
+          "_id": "507f1f77bcf86cd799439022",
+          "name": "Phòng thay đồ",
+          "description": "Phòng thay đồ rộng rãi, có tủ khóa",
+          "sportType": "football",
+          "isActive": true,
+          "imageUrl": "https://example.com/locker.jpg",
+          "type": "facility"
+        },
+        "price": 0
+      }
+    ]
+  }
+}
+```
+
+## Amenities Integration Notes
+
+### Amenity Types
+- **coach**: Huấn luyện viên
+- **drink**: Đồ uống
+- **facility**: Cơ sở vật chất
+- **other**: Khác
+
+### Sport Types
+- **football**: Bóng đá
+- **tennis**: Tennis
+- **badminton**: Cầu lông
+- **pickleball**: Pickleball
+- **basketball**: Bóng rổ
+- **volleyball**: Bóng chuyền
+- **swimming**: Bơi lội
+- **gym**: Gym
+
+### Usage Examples
+
+**Get field amenities**:
+```bash
+curl -X GET "http://localhost:3000/fields/507f1f77bcf86cd799439011/amenities"
+```
+
+**Create field with amenities**:
+```bash
+curl -X POST "http://localhost:3000/fields" \
+  -H "Authorization: Bearer your_jwt_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Sân bóng Phú Nhuận",
+    "sportType": "football",
+    "description": "Sân bóng đá 11 người, có đèn chiếu sáng",
+    "location": "District 3, Ho Chi Minh City",
+    "operatingHours": [
+      {
+        "day": "monday",
+        "start": "06:00",
+        "end": "22:00",
+        "duration": 60
+      }
+    ],
+    "slotDuration": 60,
+    "minSlots": 1,
+    "maxSlots": 4,
+    "priceRanges": [
+      {
+        "day": "monday",
+        "start": "06:00",
+        "end": "10:00",
+        "multiplier": 1.0
+      }
+    ],
+    "basePrice": 150000,
+    "amenities": [
+      {
+        "amenityId": "507f1f77bcf86cd799439020",
+        "price": 150000
+      },
+      {
+        "amenityId": "507f1f77bcf86cd799439021",
+        "price": 50000
+      }
+    ]
+  }'
+```
+
+**Update field amenities**:
+```bash
+curl -X PUT "http://localhost:3000/fields/507f1f77bcf86cd799439011/amenities" \
+  -H "Authorization: Bearer your_jwt_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amenities": [
+      {
+        "amenityId": "507f1f77bcf86cd799439020",
+        "price": 150000
+      },
+      {
+        "amenityId": "507f1f77bcf86cd799439021",
+        "price": 50000
+      },
+      {
+        "amenityId": "507f1f77bcf86cd799439022",
+        "price": 0
+      }
+    ]
+  }'
+```
+
+### Error Handling
+
+**Invalid amenity ID format**:
+```json
+{
+  "statusCode": 400,
+  "message": "Invalid amenity ID format: invalid-id"
+}
+```
+
+**Field not found**:
+```json
+{
+  "statusCode": 404,
+  "message": "Field with ID 507f1f77bcf86cd799439011 not found"
+}
+```
+
+**Access denied**:
+```json
+{
+  "statusCode": 401,
+  "message": "Access denied. Field owner only."
+}
+```

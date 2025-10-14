@@ -18,7 +18,7 @@ import UserProfileTab from "../pages/user-dashboard-page/user-profile/user-profi
 
 // Coach Pages
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
-import CoachSchedulePage from "@/pages/coach-dashboard-page/coach-schedule-page"; 
+
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 
@@ -50,14 +50,6 @@ export const publicRoutes: RouteObject[] = [
   { path: "/verify-email", element: <VerifyTokenPage /> },
   { path: "/auth/verify-token", element: <VerifyTokenPage /> },
   { path: "/verify-email/success", element: <VerifyTokenPage /> },
-  { path: "/user-dashboard", element: <UserDashboardPage /> },
-  { path: "/user-booking-history", element: <UserBookingHistoryPage /> },
-  { path: "/user-invoices", element: <UserInvoicesPage /> },
-  { path: "/user-chat", element: <UserChatPage /> },
-  { path: "/user-wallet", element: <UserWalletPage /> },
-  { path: "/user-profile", element: <UserProfileTab /> },
-  { path: "/coach-dashboard", element: <CoachDashboardPage /> },
-  { path: "/coach-schedule", element: <CoachSchedulePage /> },
   { path: "/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
@@ -97,7 +89,7 @@ export const guestRoutes: RouteObject[] = [
 export const userRoutes: RouteObject[] = [
   // User Dashboard & Profile
   {
-    path: "/user/dashboard",
+    path: "/user-dashboard",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserDashboardPage />
@@ -105,7 +97,7 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/user/profile",
+    path: "/user-profile",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserProfileTab />
@@ -115,7 +107,7 @@ export const userRoutes: RouteObject[] = [
   
   // User Booking Management
   {
-    path: "/user/bookings",
+    path: "/user-booking-history",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserBookingHistoryPage />
@@ -123,7 +115,7 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/user/invoices",
+    path: "/user-invoices",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserInvoicesPage />
@@ -133,7 +125,7 @@ export const userRoutes: RouteObject[] = [
   
   // User Communication & Finance
   {
-    path: "/user/chat",
+    path: "/user-chat",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserChatPage />
@@ -141,7 +133,7 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/user/wallet",
+    path: "/user-wallet",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserWalletPage />

@@ -8,96 +8,75 @@ import { Clock, DollarSign, MoreHorizontal, Building2, Rocket as Racquet, User, 
 import { CoachDashboardTabs } from "@/components/ui/coach-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
+import { useSelector, useDispatch } from "react-redux"
 import type  { Booking } from "@/types/booking-type"
 import axiosPublic from "@/utils/axios/axiosPublic";
 import { PageWrapper } from '@/components/layouts/page-wrapper'
+import { getCoachById, clearCurrentCoach } from "@/features/coach"
+import type { RootState, AppDispatch } from "@/store/store"
 
 export default function CoachDashboardPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentCoach, detailLoading, detailError } = useSelector((state: RootState) => state.coach);
+  
   const [selectedTab, setSelectedTab] = useState<"court" | "coaching">("court")
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
   const [coachId, setCoachId] = useState<string | null>(null);
   const [bookingRequests, setBookingRequests] = useState<Booking[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
   //for Yêu cầu đặt lịch
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 3;
 
 useEffect(() => {
-  const loadUserAndFetchData = async () => {
-    // --- Get user string (prefer cookie first) ---
-    let userStr: string | null = null;
-    const match = typeof document !== 'undefined' ? document.cookie.match(/user=([^;]+)/) : null;
-    if (match) userStr = decodeURIComponent(match[1]);
-    if (!userStr) userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
-    console.log("[useEffect] Raw user object:", userStr);
-
+  const loadCoachData = async () => {
+    // Get userId from cookie (since user is already authenticated to reach this page)
+    const userStr = document.cookie.match(/user=([^;]+)/)?.[1];
     if (!userStr) {
-      const match = document.cookie.match(/user=([^;]+)/);
-      if (match) userStr = decodeURIComponent(match[1]);
-    }
-
-    if (!userStr) {
-      console.warn("[useEffect] No user found");
+      console.warn("[useEffect] No user cookie found");
       return;
     }
 
+    let userId: string;
     try {
-      // --- Parse user object ---
-      const user = JSON.parse(userStr);
-      console.log("[useEffect] Parsed user object:", user);
+      const user = JSON.parse(decodeURIComponent(userStr));
+      userId = user._id;
+    } catch (error) {
+      console.error("[useEffect] Error parsing user cookie:", error);
+      return;
+    }
 
-      // --- Extract userId ---
-      let id: string | undefined;
-      if (user._id) {
-        if (typeof user._id === "string") {
-          id = user._id;
-        } else if (user._id.buffer) {
-          const arr = Object.values(user._id.buffer) as number[];
-          id = arr.map(b => b.toString(16).padStart(2, "0")).join("");
-        }
-      } else if (user.id) {
-        id = String(user.id);
+    console.log("[useEffect] Loading coach data for userId:", userId);
+
+    // Fetch coachId and related data
+    try {
+      const response = await axiosPublic.get(`/profiles/coach-id/${userId}`);
+      const coachId = response.data?.data?.coachId;
+      console.log("[loadCoachData] Fetched coachId:", coachId);
+      setCoachId(coachId);
+
+      if (coachId) {
+        // Fetch coach details using Redux action
+        dispatch(getCoachById(coachId));
+        
+        // Fetch bookings immediately after coachId
+        const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`);
+        console.log("[loadCoachData] Fetched bookings:", bookingRes.data);
+        setBookingRequests(bookingRes.data.data);
       }
-
-      if (!id) {
-        console.warn("[useEffect] No valid userId found in user object");
-        return;
-      }
-
-      console.log("[useEffect] Loaded userId:", id);
-      setUserId(id);
-
-      // --- Fetch coachId ---
-      const fetchCoachId = async (userId: string) => {
-        try {
-          const response = await axiosPublic.get(`/profiles/coach-id/${userId}`);
-          const coachId = response.data?.data?.coachId;
-          console.log("[fetchCoachId] Fetched coachId:", coachId);
-          setCoachId(coachId);
-
-          // --- Fetch bookings immediately after coachId ---
-          if (coachId) {
-            const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`);
-            console.log("[fetchBookingRequests] Fetched bookings:", bookingRes.data);
-            setBookingRequests(bookingRes.data.data);
-          }
-        } catch (err) {
-          console.error("[fetchCoachId] Error fetching coachId or bookings:", err);
-        }
-      };
-
-      await fetchCoachId(id);
-
     } catch (err) {
-      console.error("[useEffect] Failed to parse user:", err);
+      console.error("[loadCoachData] Error fetching coachId or bookings:", err);
     }
   };
 
-  loadUserAndFetchData();
-}, []);
+  loadCoachData();
+}, [dispatch]);
+
+// Cleanup coach data when component unmounts
+useEffect(() => {
+  return () => {
+    dispatch(clearCurrentCoach());
+  };
+}, [dispatch]);
 
 const today = new Date();
 today.setHours(0, 0, 0, 0); // Reset time to midnight
@@ -129,9 +108,9 @@ const paginatedBookings = filteredBookings.slice(
 
 
   // --- Handle More Dropdown ---
-const handleMoreClick = (itemId: string) => {
-    setOpenDropdown(openDropdown === itemId ? null : itemId);
-};
+// const handleMoreClick = (itemId: string) => {
+//     setOpenDropdown(openDropdown === itemId ? null : itemId);
+// };
 
   // --- Accept / Decline Handlers ---
 const normalizeId = (id: any): string => {
@@ -188,55 +167,20 @@ const handleDecline = async (bookingId: any, reason?: string) => {
 };
 
   // --- Close dropdown when clicking outside ---
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpenDropdown(null)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+  //       setOpenDropdown(null)
+  //     }
+  //   }
+  //   document.addEventListener("mousedown", handleClickOutside)
+  //   return () => document.removeEventListener("mousedown", handleClickOutside)
+  // }, [])
 
   // --- For debugging: log bookingRequests whenever it changes ---
   useEffect(() => {
     console.log("[bookingRequests] Updated:", bookingRequests);
   }, [bookingRequests]);
-
-  const metrics = [
-    {
-      title: "Total Courts Booked",
-      value: "78",
-      icon: Building2,
-      color: "text-[#00775C]",
-    },
-    {
-      title: "Upcoming Bookings",
-      value: "06",
-      icon: Racquet,
-      color: "text-[#00775C]",
-    },
-    {
-      title: "Total Lessons Taken",
-      value: "45",
-      icon: User,
-      color: "text-[#00775C]",
-    },
-    {
-      title: "Payments",
-      value: "$45,056",
-      icon: DollarSign,
-      color: "text-[#00775C]",
-    },
-  ]
-  const weeklyAvailability = [
-    { date: "23 Jul 2023", day: "Monday", timeSlot: "09:00 AM to 7:00 PM" },
-    { date: "24 Jul 2023", day: "Tuesday", timeSlot: "09:00 AM to 7:00 PM" },
-    { date: "25 Jul 2023", day: "Wednesday", timeSlot: "09:00 AM to 7:00 PM" },
-    { date: "26 Jul 2023", day: "Thursday", timeSlot: "09:00 AM to 7:00 PM" },
-    { date: "27 Jul 2023", day: "Friday", timeSlot: "09:00 AM to 7:00 PM" },
-    { date: "28 Jul 2023", day: "Saturday", timeSlot: "09:00 AM to 7:00 PM" },
-  ]
 
   const ongoingTodayBookings = bookingRequests.filter(
     (b) => b.coachStatus === "accepted" && isToday(b.date)
@@ -246,29 +190,76 @@ const handleDecline = async (bookingId: any, reason?: string) => {
     (b) => b.coachStatus === "accepted" && isFuture(b.date)
   );
 
-  const upcomingBookings = [
+  // Use real coach data where available, fallback to mock data
+  const metrics = [
     {
-      student: "Lisa Rodriguez",
-      sport: "Tennis",
-      date: "Jan 15, 2025",
-      time: "2:00 PM - 3:00 PM",
-      amount: "$75",
+      title: "Total Courts Booked",
+      value: "78", // Mock data - API doesn't support this yet
+      icon: Building2,
+      color: "text-[#00775C]",
     },
     {
-      student: "Tom Wilson",
-      sport: "Badminton",
-      date: "Jan 16, 2025",
-      time: "4:00 PM - 5:00 PM",
-      amount: "$65",
+      title: "Upcoming Bookings",
+      value: upcomingFutureBookings.length.toString().padStart(2, '0'),
+      icon: Racquet,
+      color: "text-[#00775C]",
     },
     {
-      student: "Anna Smith",
-      sport: "Tennis",
-      date: "Jan 17, 2025",
-      time: "10:00 AM - 11:00 AM",
-      amount: "$75",
+      title: "Total Lessons Taken",
+      value: currentCoach?.completedSessions?.toString() || "45", // Use real data if available
+      icon: User,
+      color: "text-[#00775C]",
+    },
+    {
+      title: "Payments",
+      value: "$45,056", // Mock data - API doesn't support this yet
+      icon: DollarSign,
+      color: "text-[#00775C]",
     },
   ]
+  // Use real coach availability data if available, fallback to mock data
+  const weeklyAvailability = currentCoach?.availableSlots?.length ? 
+    currentCoach.availableSlots.map((slot, index) => ({
+      date: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      }),
+      day: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { weekday: "long" }),
+      timeSlot: `${slot.startTime} to ${slot.endTime}`
+    })) : [
+      { date: "23 Jul 2023", day: "Monday", timeSlot: "09:00 AM to 7:00 PM" },
+      { date: "24 Jul 2023", day: "Tuesday", timeSlot: "09:00 AM to 7:00 PM" },
+      { date: "25 Jul 2023", day: "Wednesday", timeSlot: "09:00 AM to 7:00 PM" },
+      { date: "26 Jul 2023", day: "Thursday", timeSlot: "09:00 AM to 7:00 PM" },
+      { date: "27 Jul 2023", day: "Friday", timeSlot: "09:00 AM to 7:00 PM" },
+      { date: "28 Jul 2023", day: "Saturday", timeSlot: "09:00 AM to 7:00 PM" },
+    ]
+
+  // Mock data for upcoming bookings - API doesn't support this yet
+  // const upcomingBookings = [
+  //   {
+  //     student: "Lisa Rodriguez",
+  //     sport: "Tennis",
+  //     date: "Jan 15, 2025",
+  //     time: "2:00 PM - 3:00 PM",
+  //     amount: "$75",
+  //   },
+  //   {
+  //     student: "Tom Wilson",
+  //     sport: "Badminton",
+  //     date: "Jan 16, 2025",
+  //     time: "4:00 PM - 5:00 PM",
+  //     amount: "$65",
+  //   },
+  //   {
+  //     student: "Anna Smith",
+  //     sport: "Tennis",
+  //     date: "Jan 17, 2025",
+  //     time: "10:00 AM - 11:00 AM",
+  //     amount: "$75",
+  //   },
+  // ]
 
   const recentSessions = [
     {
@@ -294,26 +285,65 @@ const handleDecline = async (bookingId: any, reason?: string) => {
     },
   ]
 
-  const recentChats = [
-    {
-      student: "Mike Chen",
-      message: "Thanks for the great lesson!",
-      time: "2 hours ago",
-      avatar: "/male-tennis-coach.png",
-    },
-    {
-      student: "Sarah Davis",
-      message: "Can we reschedule tomorrow?",
-      time: "4 hours ago",
-      avatar: "/female-tennis-coach.png",
-    },
-    {
-      student: "John Wilson",
-      message: "Looking forward to next session",
-      time: "1 day ago",
-      avatar: "/male-badminton-coach.jpg",
-    },
-  ]
+  // Mock data for recent chats - API doesn't support this yet
+  // const recentChats = [
+  //   {
+  //     student: "Mike Chen",
+  //     message: "Thanks for the great lesson!",
+  //     time: "2 hours ago",
+  //     avatar: "/male-tennis-coach.png",
+  //   },
+  //   {
+  //     student: "Sarah Davis",
+  //     message: "Can we reschedule tomorrow?",
+  //     time: "4 hours ago",
+  //     avatar: "/female-tennis-coach.png",
+  //   },
+  //   {
+  //     student: "John Wilson",
+  //     message: "Looking forward to next session",
+  //     time: "1 day ago",
+  //     avatar: "/male-badminton-coach.jpg",
+  //   },
+  // ]
+
+  // Show loading state while fetching coach data
+  if (detailLoading) {
+    return (
+      <>
+        <NavbarDarkComponent />
+        <PageWrapper>
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+              <p className="text-muted-foreground">
+                Loading coach dashboard...
+              </p>
+            </div>
+          </div>
+        </PageWrapper>
+      </>
+    );
+  }
+
+  // Show error state if coach data failed to load
+  if (detailError) {
+    return (
+      <>
+        <NavbarDarkComponent />
+        <PageWrapper>
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">Error loading coach data: {detailError.message}</p>
+              <Button onClick={() => coachId && dispatch(getCoachById(coachId))}>
+                Retry
+              </Button>
+            </div>
+          </div>
+        </PageWrapper>
+      </>
+    );
+  }
 
   return (
     <>
@@ -485,7 +515,6 @@ const handleDecline = async (bookingId: any, reason?: string) => {
 
                     // Field info
                     const fieldName = booking.field?.name || "Unknown Field";
-                    const fieldLocation  = booking.field?.location || "Unknown Location";
 
                     // Booking date
                     const bookingDate = booking.date
@@ -783,7 +812,6 @@ const handleDecline = async (bookingId: any, reason?: string) => {
                           .toUpperCase();
 
                         const fieldName = booking.field?.name || "Unknown Field";
-                        const fieldLocation = booking.field?.location || "Unknown Location";
 
                         const bookingDate = booking.date
                           ? new Date(booking.date).toLocaleDateString("en-US", {

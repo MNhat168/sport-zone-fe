@@ -11,6 +11,8 @@ import {
     schedulePriceUpdate,
     cancelScheduledPriceUpdate,
     getScheduledPriceUpdates,
+    getFieldAmenities,
+    updateFieldAmenities,
 } from "./fieldThunk";
 
 interface FieldState {
@@ -25,6 +27,9 @@ interface FieldState {
     // Price scheduling data
     scheduledPriceUpdates: import("../../types/field-type").ScheduledPriceUpdate[] | null;
     
+    // Field amenities data
+    fieldAmenities: import("../../types/field-type").FieldAmenity[] | null;
+    
     // Loading states
     loading: boolean;
     createLoading: boolean;
@@ -33,6 +38,7 @@ interface FieldState {
     deleteLoading: boolean;
     availabilityLoading: boolean;
     priceSchedulingLoading: boolean;
+    amenitiesLoading: boolean;
     
     // Error states
     error: ErrorResponse | null;
@@ -42,6 +48,7 @@ interface FieldState {
     deleteError: ErrorResponse | null;
     availabilityError: ErrorResponse | null;
     priceSchedulingError: ErrorResponse | null;
+    amenitiesError: ErrorResponse | null;
 }
 
 const initialState: FieldState = {
@@ -50,6 +57,7 @@ const initialState: FieldState = {
     pagination: null,
     availability: null,
     scheduledPriceUpdates: null,
+    fieldAmenities: null,
     loading: false,
     createLoading: false,
     createWithImagesLoading: false,
@@ -57,6 +65,7 @@ const initialState: FieldState = {
     deleteLoading: false,
     availabilityLoading: false,
     priceSchedulingLoading: false,
+    amenitiesLoading: false,
     error: null,
     createError: null,
     createWithImagesError: null,
@@ -64,6 +73,7 @@ const initialState: FieldState = {
     deleteError: null,
     availabilityError: null,
     priceSchedulingError: null,
+    amenitiesError: null,
 };
 
 const fieldSlice = createSlice({
@@ -85,6 +95,11 @@ const fieldSlice = createSlice({
             state.deleteError = null;
             state.availabilityError = null;
             state.priceSchedulingError = null;
+            state.amenitiesError = null;
+        },
+        clearAmenities: (state) => {
+            state.fieldAmenities = null;
+            state.amenitiesError = null;
         },
         resetFieldState: () => initialState,
     },
@@ -270,6 +285,36 @@ const fieldSlice = createSlice({
             .addCase(getScheduledPriceUpdates.rejected, (state, action) => {
                 state.priceSchedulingLoading = false;
                 state.priceSchedulingError = action.payload || { message: "Unknown error", status: "500" };
+            })
+
+            // Get field amenities
+            .addCase(getFieldAmenities.pending, (state) => {
+                state.amenitiesLoading = true;
+                state.amenitiesError = null;
+            })
+            .addCase(getFieldAmenities.fulfilled, (state, action) => {
+                state.amenitiesLoading = false;
+                state.fieldAmenities = action.payload.amenities;
+                state.amenitiesError = null;
+            })
+            .addCase(getFieldAmenities.rejected, (state, action) => {
+                state.amenitiesLoading = false;
+                state.amenitiesError = action.payload || { message: "Unknown error", status: "500" };
+            })
+
+            // Update field amenities
+            .addCase(updateFieldAmenities.pending, (state) => {
+                state.amenitiesLoading = true;
+                state.amenitiesError = null;
+            })
+            .addCase(updateFieldAmenities.fulfilled, (state, action) => {
+                state.amenitiesLoading = false;
+                state.fieldAmenities = action.payload.field.amenities;
+                state.amenitiesError = null;
+            })
+            .addCase(updateFieldAmenities.rejected, (state, action) => {
+                state.amenitiesLoading = false;
+                state.amenitiesError = action.payload || { message: "Unknown error", status: "500" };
             });
     },
 });
@@ -278,6 +323,7 @@ export const {
     clearCurrentField,
     clearAvailability,
     clearErrors,
+    clearAmenities,
     resetFieldState,
 } = fieldSlice.actions;
 

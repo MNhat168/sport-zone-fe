@@ -15,3 +15,7 @@ export const FIELD_AVAILABILITY_API = (id: string) => `${BASE_URL}/fields/${id}/
 export const SCHEDULE_PRICE_UPDATE_API = (id: string) => `${BASE_URL}/fields/${id}/schedule-price-update`;
 export const CANCEL_SCHEDULED_PRICE_UPDATE_API = (id: string) => `${BASE_URL}/fields/${id}/scheduled-price-update`;
 export const GET_SCHEDULED_PRICE_UPDATES_API = (id: string) => `${BASE_URL}/fields/${id}/scheduled-price-updates`;
+
+// Field amenities endpoints
+export const GET_FIELD_AMENITIES_API = (fieldId: string) => `${BASE_URL}/fields/${fieldId}/amenities`;
+export const UPDATE_FIELD_AMENITIES_API = (fieldId: string) => `${BASE_URL}/fields/${fieldId}/amenities`;

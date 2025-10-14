@@ -1,17 +1,5 @@
 // Sport Type constants matching API documentation
-export const SportType = {
-    FOOTBALL: 'football',
-    TENNIS: 'tennis',
-    BADMINTON: 'badminton',
-    PICKLEBALL: 'pickleball',
-    BASKETBALL: 'basketball',
-    VOLLEYBALL: 'volleyball',
-    SWIMMING: 'swimming',
-    GYM: 'gym'
-} as const;
-
-
-export type SportType = typeof SportType[keyof typeof SportType];
+import { SportType } from '@/components/enums/ENUMS';
 
 // Owner interface matching API response structure
 export interface FieldOwner {
@@ -48,6 +36,7 @@ export interface Field {
     totalBookings?: number;
     createdAt?: string;
     updatedAt?: string;
+    amenities?: FieldAmenity[]; // Field amenities with prices
 }
 
 // Operating Hours interface - now supports day-specific schedules
@@ -73,6 +62,26 @@ export interface Booking {
     status: string;
 }
 
+// Field Amenity interface (for API response)
+export interface FieldAmenity {
+    amenity: {
+        _id: string;
+        name: string;
+        description: string;
+        sportType: string;
+        isActive: boolean;
+        imageUrl?: string;
+        type: string; // coach, drink, facility, other
+    };
+    price: number;
+}
+
+// Field Amenity Request interface (for API request)
+export interface FieldAmenityRequest {
+    amenityId: string;
+    price: number;
+}
+
 // Create Field Payload interface
 export interface CreateFieldPayload {
     name: string;
@@ -86,6 +95,7 @@ export interface CreateFieldPayload {
     maxSlots: number; // maximum 10
     priceRanges: PriceRange[];
     basePrice: number | string; // in VND, can be string for form input
+    amenities?: FieldAmenityRequest[]; // Array of amenities with prices
 }
 
 // Update Field Payload interface
@@ -110,6 +120,27 @@ export interface FieldResponse {
     success: boolean;
     data: Field;
     message?: string;
+}
+
+// Field Amenities Response interfaces
+export interface FieldAmenitiesResponse {
+    fieldId: string;
+    fieldName: string;
+    amenities: FieldAmenity[];
+}
+
+export interface UpdateFieldAmenitiesPayload {
+    amenities: FieldAmenityRequest[];
+}
+
+export interface UpdateFieldAmenitiesResponse {
+    success: boolean;
+    message: string;
+    field: {
+        id: string;
+        name: string;
+        amenities: FieldAmenity[];
+    };
 }
 
 // Pagination interface

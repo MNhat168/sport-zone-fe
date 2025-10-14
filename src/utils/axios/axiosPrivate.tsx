@@ -29,7 +29,13 @@ axiosInstance.interceptors.response.use(
       error.response &&
       (error.response.status === 401 || error.response.status === 403)
     ) {
-      // Với cookie HttpOnly, không thể xóa cookie từ client; chỉ cần điều hướng để re-auth
+      // Clear any persisted client-side user state before forcing re-auth
+      try {
+        localStorage.removeItem("user");
+      } catch {
+        // ignore storage errors
+      }
+      // With HttpOnly cookies, we can't clear cookie here; just navigate to re-auth
       window.location.href = "/auth";
     }
     return Promise.reject(error);

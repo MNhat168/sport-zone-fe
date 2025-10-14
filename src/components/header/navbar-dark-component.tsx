@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
+import { clearUserAuth } from "../../lib/cookies";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,9 +21,9 @@ export const NavbarDarkComponent = () => {
     const auth = useAppSelector((state: RootState) => state.auth);
 
     const handleLogout = () => {
-        try { localStorage.removeItem("user"); } catch {}
+        clearUserAuth();
         dispatch(logout());
-        navigate("/auth");
+        navigate("/");
     };
 
     const linkClass = "text-sm font-medium text-gray-900 hover:text-green-600";

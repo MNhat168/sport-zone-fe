@@ -6,6 +6,7 @@ import {
     logout,
 } from "./authThunk";
 import type { AuthResponse, ErrorResponse } from "../../types/authentication-type";
+import { clearUserAuth } from "../../lib/cookies";
 
 interface AuthState {
     _id: string | null;
@@ -61,7 +62,7 @@ const authSlice = createSlice({
         clearAuth: (state) => {
             state.user = null;
             state.token = null;
-            localStorage.removeItem("user");
+            clearUserAuth();
         },
         updateUser: (state, action: PayloadAction<AuthResponse["user"]>) => {
             state.user = action.payload;
@@ -128,7 +129,7 @@ const authSlice = createSlice({
             .addCase(logout.fulfilled, (state) => {
                 state.user = null;
                 state.token = null;
-                localStorage.removeItem("user");
+                clearUserAuth();
             })
             .addMatcher(
                 (action) => action.type.endsWith("/pending"),
