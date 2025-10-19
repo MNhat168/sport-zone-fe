@@ -27,6 +27,10 @@ import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
 
+// Field Owner Pages
+import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
+import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/field-owner-dashboard-page";
+
 /**
  * Placeholder component for pages under development
  */
@@ -71,6 +75,9 @@ export const publicRoutes: RouteObject[] = [
   { path: "/about", element: <Placeholder title="Về chúng tôi" /> },
   { path: "/contact", element: <Placeholder title="Liên hệ" /> },
   { path: "/services", element: <Placeholder title="Dịch vụ" /> },
+
+  //test
+  { path: "/field-owner-dashboard", element: <FieldOwnerDashboardPage /> },
 ];
 
 /**
@@ -370,7 +377,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner/fields",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <Placeholder title="Quản lý sân" />
+        <OwnerFieldListPage />
       </ProtectedRoute>
     ),
   },

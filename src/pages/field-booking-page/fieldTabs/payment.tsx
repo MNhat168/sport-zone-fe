@@ -17,7 +17,7 @@ interface BookingFormData {
     date: string;
     startTime: string;
     endTime: string;
-    court: string;
+    court?: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -87,7 +87,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         }
         try {
             const raw = localStorage.getItem('bookingFormData');
-            if (!raw) return { date: '', startTime: '', endTime: '', court: '' } as BookingFormData;
+            if (!raw) return { date: '', startTime: '', endTime: '' } as BookingFormData;
             const parsed = JSON.parse(raw);
             return {
                 date: parsed?.date || '',
@@ -99,7 +99,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                 phone: parsed?.phone || '',
             } as BookingFormData;
         } catch {
-            return { date: '', startTime: '', endTime: '', court: '' } as BookingFormData;
+            return { date: '', startTime: '', endTime: '' } as BookingFormData;
         }
     }, [bookingData]);
 
@@ -386,7 +386,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                             {/* Venue Info */}
                             <div className="border-b border-gray-100 pb-4">
                                 <h3 className="font-medium text-gray-900 mb-2">{venue.name}</h3>
-                                <p className="text-sm text-gray-600">{venue.location}</p>
+                                <p className="text-sm text-gray-600">{typeof venue.location === 'string' ? venue.location : venue.location?.address}</p>
                             </div>
 
                             {/* Booking Details */}

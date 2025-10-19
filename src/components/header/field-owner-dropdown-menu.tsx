@@ -56,7 +56,7 @@ const FieldOwnerDropdownMenuItems = ({
             <DropdownMenuItem asChild className="text-black hover:text-green-800 cursor-pointer">
                 <Link to="/field-owner/fields" className="flex items-center">
                     <List className="mr-2 h-4 w-4" />
-                    <span>Quản lý sân</span>
+                    <span>Danh sách sân</span>
                 </Link>
             </DropdownMenuItem>
 

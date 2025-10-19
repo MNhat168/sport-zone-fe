@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { createField, createFieldWithImages } from '@/features/field/fieldThunk';
 import { clearErrors } from '@/features/field/fieldSlice';
 import { getAmenitiesBySportType } from '@/features/amenities';
-import type { CreateFieldPayload, PriceRange } from '@/types/field-type';
+import type { CreateFieldPayload, PriceRange, FieldLocation } from '@/types/field-type';
 import type { AmenityWithPrice } from '@/types/amenity-with-price';
 import { CustomFailedToast, CustomSuccessToast } from '@/components/toast/notificiation-toast';
 import {
@@ -44,9 +44,20 @@ export default function FieldCreatePage() {
         basePrice: ''
     });
     
+    // Location coordinates state
+    const [locationData, setLocationData] = useState<FieldLocation>({
+        address: '',
+        geo: {
+            type: 'Point',
+            coordinates: [0, 0]
+        }
+    });
+    
     // UI state
-    const [imageFiles, setImageFiles] = useState<File[]>([]);
-    const [previewImages, setPreviewImages] = useState<string[]>([]);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
     const [selectedIncludes, setSelectedIncludes] = useState<AmenityWithPrice[]>([]);
     const [selectedAmenities, setSelectedAmenities] = useState<AmenityWithPrice[]>([]);
 
@@ -57,6 +68,14 @@ export default function FieldCreatePage() {
 
     const handleAmenitiesChange = useCallback((amenities: AmenityWithPrice[]) => {
         setSelectedAmenities(amenities);
+    }, []);
+
+    const handleLocationChange = useCallback((location: FieldLocation) => {
+        setLocationData(location);
+        setFormData(prev => ({
+            ...prev,
+            location: location.address
+        }));
     }, []);
 
     const tabs = [
@@ -165,20 +184,31 @@ export default function FieldCreatePage() {
         }));
     };
 
-    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(event.target.files || []);
-        if (files.length > 0) {
-            setImageFiles(prev => [...prev, ...files]);
-            
-            // Create preview URLs
-            const newPreviews = files.map(file => URL.createObjectURL(file));
-            setPreviewImages(prev => [...prev, ...newPreviews]);
-        }
+    const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
     };
 
-    const removeImage = (index: number) => {
-        setImageFiles(prev => prev.filter((_, i) => i !== index));
-        setPreviewImages(prev => {
+    const removeAvatar = () => {
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarFile(null);
+        setAvatarPreview(null);
+    };
+
+    const handleGalleryUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files || []);
+        if (files.length === 0) return;
+        setGalleryFiles(prev => [...prev, ...files]);
+        const newPreviews = files.map(file => URL.createObjectURL(file));
+        setGalleryPreviews(prev => [...prev, ...newPreviews]);
+    };
+
+    const removeGalleryImage = (index: number) => {
+        setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+        setGalleryPreviews(prev => {
             const newPreviews = [...prev];
             URL.revokeObjectURL(newPreviews[index]);
             return newPreviews.filter((_, i) => i !== index);
@@ -203,6 +233,11 @@ export default function FieldCreatePage() {
             CustomFailedToast('Vui lòng nhập địa chỉ sân');
             return false;
         }
+        // Check if coordinates are valid (not default 0,0)
+        if (locationData.geo.coordinates[0] === 0 && locationData.geo.coordinates[1] === 0) {
+            CustomFailedToast('Vui lòng chọn vị trí sân trên bản đồ hoặc tìm kiếm địa chỉ');
+            return false;
+        }
         if (!formData.basePrice || Number(formData.basePrice) <= 0) {
             CustomFailedToast('Vui lòng nhập giá cơ bản hợp lệ');
             return false;
@@ -225,6 +260,7 @@ export default function FieldCreatePage() {
 
         try {
             dispatch(clearErrors());
+            //CustomSuccessToast('Đang gửi yêu cầu tạo sân...');
             
             // Convert basePrice to number before sending
             // Filter operating hours and price ranges to only include selected and available days
@@ -250,17 +286,45 @@ export default function FieldCreatePage() {
                 amenities: amenitiesForAPI
             };
             
+            // Debug: log payload prior to submit
+            console.log('[CreateField] submitData (JSON):', submitData);
             
-            if (imageFiles.length > 0) {
-                // Create field with images
-                await dispatch(createFieldWithImages({ 
+            if (avatarFile || galleryFiles.length > 0) {
+                // Prepare files with suffixes for backend identification
+                const filesToUpload: File[] = [];
+                const renameWithSuffix = (file: File, suffix: string): File => {
+                    const dotIdx = file.name.lastIndexOf('.');
+                    const base = dotIdx > -1 ? file.name.substring(0, dotIdx) : file.name;
+                    const ext = dotIdx > -1 ? file.name.substring(dotIdx) : '';
+                    const newName = `${base}${suffix}${ext}`;
+                    return new File([file], newName, { type: file.type });
+                };
+
+                if (avatarFile) filesToUpload.push(renameWithSuffix(avatarFile, '__avatar'));
+                galleryFiles.forEach(f => filesToUpload.push(renameWithSuffix(f, '__gallery')));
+
+                // Debug: log which API will be called and files list
+                console.log('[CreateField] Using multipart upload (CREATE_FIELD_WITH_IMAGES_API). Files:', filesToUpload.map(f => f.name));
+                console.log('[CreateField] Location data:', locationData);
+
+                const resWithImages = await dispatch(createFieldWithImages({ 
                     payload: submitData, 
-                    images: imageFiles 
+                    images: filesToUpload,
+                    locationData: locationData
                 })).unwrap();
+                console.log('[CreateField] API response (with images):', resWithImages);
                 CustomSuccessToast('Tạo sân thành công với hình ảnh!');
             } else {
-                // Create field without images
-                await dispatch(createField(submitData)).unwrap();
+                // Debug: log which API will be called
+                console.log('[CreateField] Using JSON API (CREATE_FIELD_API)');
+                console.log('[CreateField] Location data:', locationData);
+                // Create field without images - need to update submitData with location object
+                const payloadWithLocation = {
+                    ...submitData,
+                    location: locationData
+                };
+                const resNoImages = await dispatch(createField(payloadWithLocation)).unwrap();
+                console.log('[CreateField] API response (no images):', resNoImages);
                 CustomSuccessToast('Tạo sân thành công!');
             }
             
@@ -278,14 +342,19 @@ export default function FieldCreatePage() {
                 priceRanges: [],
                 basePrice: ''
             });
-            setImageFiles([]);
-            setPreviewImages([]);
+            if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+            galleryPreviews.forEach(url => URL.revokeObjectURL(url));
+            setAvatarFile(null);
+            setAvatarPreview(null);
+            setGalleryFiles([]);
+            setGalleryPreviews([]);
             setSelectedIncludes([]);
             setSelectedAmenities([]);
             setActiveTab('basic');
             
         } catch (error) {
             console.error('Error creating field:', error);
+            CustomFailedToast('Gửi yêu cầu tạo sân thất bại. Vui lòng thử lại.');
         }
     };
 
@@ -386,6 +455,44 @@ export default function FieldCreatePage() {
     const handleSaveAvailability = () => {
     }
 
+    const fillSampleData = () => {
+        const allDays = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+        const defaultHours = allDays.map(day => ({ day, start: '06:00', end: '22:00', duration: 60 }));
+        setFormData(prev => ({
+            ...prev,
+            name: 'Sân Thể Thao Test Đà Nẵng',
+            sportType: 'football',
+            description: 'Sân test để kiểm thử luồng tạo sân. Sân chuẩn 5 người, bề mặt cỏ nhân tạo.',
+            location: 'Đà Nẵng, Việt Nam',
+            operatingHours: defaultHours,
+            priceRanges: [
+                { day: 'monday', start: '06:00', end: '17:00', multiplier: 1.0 },
+                { day: 'monday', start: '17:00', end: '22:00', multiplier: 1.5 }
+            ],
+            basePrice: '200000'
+        }));
+        // Set sample location data for Da Nang
+        setLocationData({
+            address: 'Đà Nẵng, Việt Nam',
+            geo: {
+                type: 'Point',
+                coordinates: [108.2022, 16.0544] // Da Nang coordinates [lng, lat]
+            }
+        });
+        setSelectedDays(allDays);
+        setDayAvailability({
+            monday: true,
+            tuesday: true,
+            wednesday: true,
+            thursday: true,
+            friday: true,
+            saturday: true,
+            sunday: true
+        });
+        setEditingDay(null);
+        CustomSuccessToast('Đã điền dữ liệu mẫu. Bạn có thể bấm Lưu sân.');
+    };
+
     return (
         <>
             <NavbarDarkComponent />
@@ -469,6 +576,56 @@ export default function FieldCreatePage() {
                             onPriceRangeChange={handlePriceRangeChange}
                             onAddPriceRange={addPriceRange}
                             onRemovePriceRange={removePriceRange}
+                            onApplyDaySettings={(sourceDay: string, targetDays: string[]) => {
+                                setFormData(prev => {
+                                    const updated = { ...prev };
+
+                                    // Copy Operating Hours from sourceDay
+                                    const srcHours = updated.operatingHours.find(oh => oh.day === sourceDay);
+                                    if (srcHours) {
+                                        targetDays.forEach(td => {
+                                            const idx = updated.operatingHours.findIndex(oh => oh.day === td);
+                                            if (idx >= 0) {
+                                                updated.operatingHours[idx] = {
+                                                    ...updated.operatingHours[idx],
+                                                    start: srcHours.start,
+                                                    end: srcHours.end,
+                                                    duration: srcHours.duration
+                                                };
+                                            } else {
+                                                updated.operatingHours.push({
+                                                    day: td,
+                                                    start: srcHours.start,
+                                                    end: srcHours.end,
+                                                    duration: srcHours.duration
+                                                });
+                                            }
+                                        });
+                                    }
+
+                                    // Copy Price Ranges from sourceDay
+                                    const srcRanges = updated.priceRanges.filter(pr => pr.day === sourceDay);
+                                    targetDays.forEach(td => {
+                                        // Remove existing ranges of target day
+                                        updated.priceRanges = updated.priceRanges.filter(pr => pr.day !== td);
+                                        // Add cloned ranges for target day
+                                        updated.priceRanges = [
+                                            ...updated.priceRanges,
+                                            ...srcRanges.map(r => ({ ...r, day: td }))
+                                        ];
+                                    });
+
+                                    return updated;
+                                });
+
+                                // Ensure targets are marked as selected and available
+                                setSelectedDays(prev => Array.from(new Set([...prev, ...targetDays])));
+                                setDayAvailability(prev => {
+                                    const copy = { ...prev };
+                                    targetDays.forEach(td => { copy[td] = true; });
+                                    return copy;
+                                });
+                            }}
                             onResetAvailability={handleResetAvailability}
                             onSaveAvailability={handleSaveAvailability}
                         />
@@ -497,20 +654,30 @@ export default function FieldCreatePage() {
 
                         {/* Gallery Section */}
                         <GalleryCard 
-                            imageFiles={imageFiles}
-                            previewImages={previewImages}
-                            onImageUpload={handleImageUpload}
-                            onRemoveImage={removeImage}
+                            avatarPreview={avatarPreview}
+                            onAvatarUpload={handleAvatarUpload}
+                            onRemoveAvatar={removeAvatar}
+                            galleryPreviews={galleryPreviews}
+                            onGalleryUpload={handleGalleryUpload}
+                            onRemoveGalleryImage={removeGalleryImage}
                         />
 
                         {/* Location Section */}
                         <LocationCard 
                             formData={formData}
                             onInputChange={handleInputChange}
+                            onLocationChange={handleLocationChange}
                         />
 
-                        {/* Save Button */}
-                        <div className="flex justify-center">
+                        {/* Actions */}
+                        <div className="flex justify-center gap-3">
+                            <Button 
+                                variant="outline"
+                                onClick={fillSampleData}
+                                disabled={createLoading || createWithImagesLoading}
+                            >
+                                Điền dữ liệu mẫu
+                            </Button>
                             <Button 
                                 size="lg" 
                                 className="px-8"

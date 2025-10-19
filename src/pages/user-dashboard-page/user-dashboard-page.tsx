@@ -13,10 +13,21 @@ import {
 import { UserDashboardTabs } from "@/components/ui/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
-import { mockBookings, mockCoachingSessions, mockFavorites, mockInvoices } from "@/components/mock-data/mock-data"
+import { PageWrapper } from "@/components/layouts/page-wrapper"
+import { mockFavorites, mockInvoices } from "@/components/mock-data/mock-data"
 import { useState, useEffect, useRef } from "react"
+import { useAppSelector, useAppDispatch } from "../../store/hook"
+import { getMyBookings, cancelFieldBooking } from "../../features/booking/bookingThunk"
+import type { Booking } from "../../types/booking-type"
 
 export default function UserDashboardPage() {
+    const dispatch = useAppDispatch()
+    const bookingState = useAppSelector((state) => state?.booking)
+    const bookings = bookingState?.bookings || []
+    const pagination = bookingState?.pagination || null
+    const loading = bookingState?.loading || false
+    const error = bookingState?.error || null
+    
     const [selectedTab, setSelectedTab] = useState<'court' | 'coaching'>('court')
     const [openDropdown, setOpenDropdown] = useState<string | null>(null)
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -25,10 +36,21 @@ export default function UserDashboardPage() {
         setOpenDropdown(openDropdown === itemId ? null : itemId)
     }
 
-    const handleCancel = (itemId: string) => {
-        console.log('Cancel booking:', itemId)
-        setOpenDropdown(null)
+    const handleCancel = async (bookingId: string) => {
+        try {
+            await dispatch(cancelFieldBooking({ id: bookingId })).unwrap()
+            setOpenDropdown(null)
+            // Refresh bookings after cancellation
+            dispatch(getMyBookings({ type: selectedTab === 'court' ? 'field' : 'coach' }))
+        } catch (error) {
+            console.error('Failed to cancel booking:', error)
+        }
     }
+
+    // Load bookings when component mounts and when selectedTab changes
+    useEffect(() => {
+        dispatch(getMyBookings({ type: selectedTab === 'court' ? 'field' : 'coach' }))
+    }, [dispatch, selectedTab])
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -44,10 +66,78 @@ export default function UserDashboardPage() {
         }
     }, [])
 
+    // Helper function to format booking data for display
+    const formatBookingData = (booking: Booking) => {
+        const field = typeof booking.field === 'object' ? booking.field : null
+        const user = typeof booking.user === 'object' ? booking.user : null
+        
+        // Format date - handle both ISO string and date string formats
+        const bookingDate = new Date(booking.date)
+        const formattedDate = bookingDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        })
+        
+        // Format price with Vietnamese currency
+        const formattedPrice = new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(booking.totalPrice)
+        
+        return {
+            id: booking._id,
+            name: field?.name || 'Unknown Field',
+            court: field?.sportType || 'Unknown Sport',
+            date: formattedDate,
+            time: `${booking.startTime} - ${booking.endTime}`,
+            price: formattedPrice,
+            status: booking.status,
+            color: booking.status === 'confirmed' ? 'from-green-500 to-green-600' : 
+                   booking.status === 'pending' ? 'from-yellow-500 to-yellow-600' :
+                   booking.status === 'cancelled' ? 'from-red-500 to-red-600' : 'from-gray-500 to-gray-600'
+        }
+    }
+
+    // Debug logging
+    console.log('Bookings from Redux:', bookings)
+    console.log('Pagination from Redux:', pagination)
+    console.log('Bookings type:', typeof bookings)
+    console.log('Is array:', Array.isArray(bookings))
+
+    // Filter bookings by type
+    const filteredBookings = bookings.filter(booking => {
+        if (selectedTab === 'court') {
+            return booking.type === 'field'
+        } else {
+            return booking.type === 'coach'
+        }
+    })
+
+    // Get today's bookings
+    const today = new Date().toISOString().split('T')[0]
+    const todayBookings = bookings.filter(booking => booking.date === today && booking.status === 'confirmed')
+    const nextBooking = todayBookings.length > 0 ? todayBookings[0] : null
+
+    // Early return if bookings is not properly initialized
+    if (!Array.isArray(bookings)) {
+        return (
+            <>
+                <NavbarDarkComponent />
+                <PageWrapper className="min-h-screen">
+                    <div className="flex items-center justify-center py-8">
+                        <div className="text-muted-foreground">Đang khởi tạo...</div>
+                    </div>
+                </PageWrapper>
+            </>
+        )
+    }
+
     return (
         <>
             <NavbarDarkComponent />
-            <div className="min-h-screen sticky-navbar-offset">
+            <PageWrapper className="min-h-screen">
                 <UserDashboardHeader />
                 <UserDashboardTabs />
 
@@ -64,7 +154,9 @@ export default function UserDashboardPage() {
                                 <CardContent className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-3xl font-bold text-green-600 text-start">78</p>
+                                            <p className="text-3xl font-bold text-green-600 text-start">
+                                                {bookings.filter(b => b.type === 'field').length}
+                                            </p>
                                             <p className="text-sm text-muted-foreground text-start">Tổng số sân đã đặt</p>
                                         </div>
                                         <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -78,7 +170,9 @@ export default function UserDashboardPage() {
                                 <CardContent className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-3xl font-bold text-blue-600 text-start">45</p>
+                                            <p className="text-3xl font-bold text-blue-600 text-start">
+                                                {bookings.filter(b => b.type === 'coach').length}
+                                            </p>
                                             <p className="text-sm text-muted-foreground text-start">Tổng số huấn luyện viên đã đặt</p>
                                         </div>
                                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -92,8 +186,10 @@ export default function UserDashboardPage() {
                                 <CardContent className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-3xl font-bold text-purple-600 text-start">06</p>
-                                            <p className="text-sm text-muted-foreground text-start">Tổng số buổi học</p>
+                                            <p className="text-3xl font-bold text-purple-600 text-start">
+                                                {bookings.filter(b => b.status === 'confirmed').length}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground text-start">Đặt sân đã xác nhận</p>
                                         </div>
                                         <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                                             <Clock className="w-6 h-6 text-purple-600" />
@@ -106,8 +202,13 @@ export default function UserDashboardPage() {
                                 <CardContent className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-3xl font-bold text-emerald-600 text-start">$45,056</p>
-                                            <p className="text-sm text-muted-foreground text-start">Thanh toán</p>
+                                            <p className="text-3xl font-bold text-emerald-600 text-start">
+                                                {new Intl.NumberFormat('vi-VN', {
+                                                    style: 'currency',
+                                                    currency: 'VND'
+                                                }).format(bookings.reduce((total, booking) => total + booking.totalPrice, 0))}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground text-start">Tổng thanh toán</p>
                                         </div>
                                         <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                                             <Wallet className="w-6 h-6 text-emerald-600" />
@@ -126,37 +227,62 @@ export default function UserDashboardPage() {
                         </CardHeader>
                         <div className="border-t border-gray-100" />
                         <CardContent>
-                            <div className="flex items-center gap-4 p-4 rounded-lg">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                                    <span className="text-white font-semibold text-sm text-start">SC</span>
+                            {nextBooking ? (
+                                <div className="flex items-center gap-4 p-4 rounded-lg">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                        <span className="text-white font-semibold text-sm text-start">
+                                            {typeof nextBooking.field === 'object' && nextBooking.field 
+                                                ? nextBooking.field.name.split(' ').map(w => w[0]).join('')
+                                                : 'SC'
+                                            }
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 grid grid-cols-6 gap-4 text-sm">
+                                        <div className="text-start">
+                                            <p className="font-medium text-start">Tên sân</p>
+                                            <p className="text-muted-foreground text-start">
+                                                {typeof nextBooking.field === 'object' && nextBooking.field 
+                                                    ? nextBooking.field.name 
+                                                    : 'Unknown Field'
+                                                }
+                                            </p>
+                                        </div>
+                                        <div className="text-start">
+                                            <p className="font-medium text-start">Ngày hẹn</p>
+                                            <p className="text-muted-foreground text-start">
+                                                {new Date(nextBooking.date).toLocaleDateString('vi-VN', {
+                                                    weekday: 'long',
+                                                    year: 'numeric',
+                                                    month: '2-digit',
+                                                    day: '2-digit'
+                                                })}
+                                            </p>
+                                        </div>
+                                        <div className="text-start">
+                                            <p className="font-medium text-start">Giờ bắt đầu</p>
+                                            <p className="text-muted-foreground text-start">{nextBooking.startTime}</p>
+                                        </div>
+                                        <div className="text-start">
+                                            <p className="font-medium text-start">Giờ kết thúc</p>
+                                            <p className="text-muted-foreground text-start">{nextBooking.endTime}</p>
+                                        </div>
+                                        <div className="text-start">
+                                            <p className="font-medium text-start">Loại</p>
+                                            <p className="text-muted-foreground text-start">
+                                                {nextBooking.type === 'field' ? 'Sân thể thao' : 'Huấn luyện viên'}
+                                            </p>
+                                        </div>
+                                        <div className="text-start">
+                                            <p className="font-medium text-start">Trạng thái</p>
+                                            <p className="text-muted-foreground text-start">{nextBooking.status}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex-1 grid grid-cols-6 gap-4 text-sm">
-                                    <div className="text-start">
-                                        <p className="font-medium text-start">Tên sân</p>
-                                        <p className="text-muted-foreground text-start">Sân tổng hợp tiêu chuẩn 1</p>
-                                    </div>
-                                    <div className="text-start">
-                                        <p className="font-medium text-start">Ngày hẹn</p>
-                                        <p className="text-muted-foreground text-start">Thứ 2, 11/7</p>
-                                    </div>
-                                    <div className="text-start">
-                                        <p className="font-medium text-start">Giờ bắt đầu</p>
-                                        <p className="text-muted-foreground text-start">05:25 sáng</p>
-                                    </div>
-                                    <div className="text-start">
-                                        <p className="font-medium text-start">Giờ kết thúc</p>
-                                        <p className="text-muted-foreground text-start">06:25 sáng</p>
-                                    </div>
-                                    <div className="text-start">
-                                        <p className="font-medium text-start">Khách mời thêm</p>
-                                        <p className="text-muted-foreground text-start">4</p>
-                                    </div>
-                                    <div className="text-start">
-                                        <p className="font-medium text-start">Địa điểm</p>
-                                        <p className="text-muted-foreground text-start">Sant Marco</p>
-                                    </div>
+                            ) : (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="text-muted-foreground">Không có lịch hẹn nào hôm nay</div>
                                 </div>
-                            </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -169,7 +295,14 @@ export default function UserDashboardPage() {
                                 <CardHeader className="flex flex-row items-center justify-between py-2">
                                     <div className="flex flex-col space-y-1">
                                         <CardTitle className="text-xl font-semibold mb-2 text-start">Đặt sân của tôi</CardTitle>
-                                        <p className="text-muted-foreground text-start">Đặt sân dễ dàng</p>
+                                        <p className="text-muted-foreground text-start">
+                                            Đặt sân dễ dàng
+                                            {pagination && (
+                                                <span className="ml-2 text-sm">
+                                                    ({pagination.total} booking{pagination.total !== 1 ? 's' : ''})
+                                                </span>
+                                            )}
+                                        </p>
                                     </div>
                                     <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
                                         <Badge
@@ -190,114 +323,80 @@ export default function UserDashboardPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4 text-start">
                                     <div className="border-t border-gray-100" />
-                                    {selectedTab === 'court' ? (
-                                        mockBookings.map((booking, index) => (
-                                            <div key={booking.id}>
-                                                <div className="flex items-center gap-4 p-4">
-                                                    <div
-                                                        className={`w-12 h-12 bg-gradient-to-br ${booking.color} rounded-lg flex items-center justify-center`}
-                                                    >
-                                                        <span className="text-white font-semibold text-xs">
-                                                            {booking.name
-                                                                .split(" ")
-                                                                .map((w) => w[0])
-                                                                .join("")}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
-                                                        <div>
-                                                            <p className="font-medium">{booking.name}</p>
-                                                            <p className="text-muted-foreground">{booking.court}</p>
-                                                            <p className="text-muted-foreground">
-                                                                Khách: {booking.guests} • {booking.hours}
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium">Date & Time</p>
-                                                            <p className="text-muted-foreground">{booking.date}</p>
-                                                            <p className="text-muted-foreground">{booking.time}</p>
-                                                        </div>
-                                                        <div className="flex items-center justify-between">
-                                                            <p className="text-lg font-bold text-green-600">{booking.price}</p>
-                                                            <div className="relative" ref={dropdownRef}>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleMoreClick(booking.id)}
-                                                                >
-                                                                    <MoreHorizontal className="w-4 h-4" />
-                                                                </Button>
-                                                                {openDropdown === booking.id && (
-                                                                    <div className="absolute right-0 top-8 bg-white rounded-lg shadow-xl z-10 min-w-[120px]">
-                                                                        <button
-                                                                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-lg"
-                                                                            onClick={() => handleCancel(booking.id)}
-                                                                        >
-                                                                            <X className="w-4 h-4" />
-                                                                            Cancel
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {index < mockBookings.length - 1 && (
-                                                    <div className="border-t border-gray-100 mx-4" />
-                                                )}
-                                            </div>
-                                        ))
+                                    {loading ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <div className="text-muted-foreground">Đang tải...</div>
+                                        </div>
+                                    ) : error ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <div className="text-red-600">Lỗi: {error.message}</div>
+                                        </div>
+                                    ) : filteredBookings.length === 0 ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <div className="text-muted-foreground">Chưa có booking nào</div>
+                                        </div>
                                     ) : (
-                                        mockCoachingSessions.map((coach, index) => (
-                                            <div key={coach.id}>
-                                                <div className="flex items-center gap-4 p-4">
-                                                    <div
-                                                        className={`w-12 h-12 bg-gradient-to-br ${coach.color} rounded-lg flex items-center justify-center`}
-                                                    >
-                                                        <span className="text-white font-semibold text-xs">
-                                                            {coach.avatar}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
-                                                        <div>
-                                                            <p className="font-medium">{coach.name}</p>
-                                                            <p className="text-muted-foreground">Một lần</p>
+                                        filteredBookings.map((booking, index) => {
+                                            const formattedBooking = formatBookingData(booking)
+                                            return (
+                                                <div key={booking._id}>
+                                                    <div className="flex items-center gap-4 p-4">
+                                                        <div
+                                                            className={`w-12 h-12 bg-gradient-to-br ${formattedBooking.color} rounded-lg flex items-center justify-center`}
+                                                        >
+                                                            <span className="text-white font-semibold text-xs">
+                                                                {formattedBooking.name
+                                                                    .split(" ")
+                                                                    .map((w) => w[0])
+                                                                    .join("")}
+                                                            </span>
                                                         </div>
-                                                        <div>
-                                                            <p className="font-medium">Date & Time</p>
-                                                            <p className="text-muted-foreground">{coach.date}</p>
-                                                            <p className="text-muted-foreground">{coach.time}</p>
-                                                        </div>
-                                                        <div className="flex items-center justify-between">
-                                                            <p className="text-lg font-bold text-green-600">{coach.price}</p>
-                                                            <div className="relative" ref={dropdownRef}>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleMoreClick(coach.id)}
-                                                                >
-                                                                    <MoreHorizontal className="w-4 h-4" />
-                                                                </Button>
-                                                                {openDropdown === coach.id && (
-                                                                    <div className="absolute right-0 top-8 bg-white rounded-lg shadow-xl z-10 min-w-[120px]">
-                                                                        <button
-                                                                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-lg"
-                                                                            onClick={() => handleCancel(coach.id)}
+                                                        <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
+                                                            <div>
+                                                                <p className="font-medium">{formattedBooking.name}</p>
+                                                                <p className="text-muted-foreground">{formattedBooking.court}</p>
+                                                                <p className="text-muted-foreground">
+                                                                    Trạng thái: {formattedBooking.status}
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-medium">Date & Time</p>
+                                                                <p className="text-muted-foreground">{formattedBooking.date}</p>
+                                                                <p className="text-muted-foreground">{formattedBooking.time}</p>
+                                                            </div>
+                                                            <div className="flex items-center justify-between">
+                                                                <p className="text-lg font-bold text-green-600">{formattedBooking.price}</p>
+                                                                {booking.status !== 'cancelled' && (
+                                                                    <div className="relative" ref={dropdownRef}>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            onClick={() => handleMoreClick(booking._id)}
                                                                         >
-                                                                            <X className="w-4 h-4" />
-                                                                            Cancel
-                                                                        </button>
+                                                                            <MoreHorizontal className="w-4 h-4" />
+                                                                        </Button>
+                                                                        {openDropdown === booking._id && (
+                                                                            <div className="absolute right-0 top-8 bg-white rounded-lg shadow-xl z-10 min-w-[120px]">
+                                                                                <button
+                                                                                    className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-lg"
+                                                                                    onClick={() => handleCancel(booking._id)}
+                                                                                >
+                                                                                    <X className="w-4 h-4" />
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    {index < filteredBookings.length - 1 && (
+                                                        <div className="border-t border-gray-100 mx-4" />
+                                                    )}
                                                 </div>
-                                                {index < mockCoachingSessions.length - 1 && (
-                                                    <div className="border-t border-gray-100 mx-4" />
-                                                )}
-                                            </div>
-                                        ))
+                                            )
+                                        })
                                     )}
                                 </CardContent>
                             </Card>
@@ -475,7 +574,7 @@ export default function UserDashboardPage() {
                         </CardContent>
                     </Card>
                 </div>
-            </div>
+            </PageWrapper>
         </>
     )
 }

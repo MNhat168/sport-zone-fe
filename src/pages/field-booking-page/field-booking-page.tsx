@@ -4,6 +4,7 @@ import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
 import { BookingFieldTabs } from "./component/booking-field-tabs";
 import { BookingStep } from "@/components/enums/ENUMS";
 import { BookCourtTab } from "./fieldTabs/bookCourt";
+import { AmenitiesTab } from "./fieldTabs/amenities";
 import { PersonalInfoTab } from "./fieldTabs/personalInfo";
 import { ConfirmCourtTab } from "./fieldTabs/confirmCourt";
 import { PaymentTab } from "./fieldTabs/payment";
@@ -12,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { getFieldById } from "@/features/field/fieldThunk";
 import { AuthRequiredPopup } from "@/components/auth/auth-required-popup";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
+ 
 
 /**
  * Interface for booking form data shared between steps
@@ -20,7 +22,6 @@ interface BookingFormData {
     date: string;
     startTime: string;
     endTime: string;
-    court: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -39,7 +40,6 @@ const FieldBookingPage = () => {
         date: '',
         startTime: '',
         endTime: '',
-        court: '',
         name: '',
         email: '',
         phone: '',
@@ -47,6 +47,11 @@ const FieldBookingPage = () => {
 
     // State để quản lý popup yêu cầu đăng nhập
     const [showAuthPopup, setShowAuthPopup] = useState(false);
+
+    // Amenities selection data
+    const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
+
+    
 
     // Restore selected field on refresh: from URL ?fieldId= or localStorage
     useEffect(() => {
@@ -77,6 +82,8 @@ const FieldBookingPage = () => {
         }
     }, [location.search, location.state, currentField, dispatch]);
 
+    
+
     // Persist currently selected field id for refresh
     useEffect(() => {
         if (currentField?.id) {
@@ -89,15 +96,15 @@ const FieldBookingPage = () => {
                 console.warn('⚠️ [FIELD BOOKING] Failed to save field ID to localStorage');
             }
         }
-    }, [currentField?.id]);
+    }, [currentField?.id, currentField?.name]);
 
     // Handle user login - if user logs in and we have pending booking data, continue the flow
     useEffect(() => {
         if (authUser && showAuthPopup) {
             setShowAuthPopup(false);
-            // If we have booking data, continue to the next step
-            if (bookingData.date && bookingData.startTime && bookingData.endTime && bookingData.court) {
-                setCurrentStep(BookingStep.ORDER_CONFIRMATION);
+            // If we have booking data, continue to amenities step
+            if (bookingData.date && bookingData.startTime && bookingData.endTime) {
+                setCurrentStep(BookingStep.AMENITIES);
             }
         }
     }, [authUser, showAuthPopup, bookingData]);
@@ -120,8 +127,19 @@ const FieldBookingPage = () => {
         }
 
         setBookingData(formData);
+        // Move to amenities selection before confirmation
+        setCurrentStep(BookingStep.AMENITIES);
+    };
+    // Amenities navigation
+    const handleAmenitiesBack = () => {
+        setCurrentStep(BookingStep.BOOK_COURT);
+    };
+
+    const handleAmenitiesSubmit = (ids: string[]) => {
+        setSelectedAmenityIds(ids);
         setCurrentStep(BookingStep.ORDER_CONFIRMATION);
     };
+
 
     const handlePersonalInfoSubmit = (formData: BookingFormData) => {
         console.log('PersonalInfo submitted:', formData);
@@ -130,22 +148,12 @@ const FieldBookingPage = () => {
         setCurrentStep(BookingStep.PAYMENT);
     };
 
-    const handleBackToBookCourt = () => {
-        setCurrentStep(BookingStep.BOOK_COURT);
-    };
-
-
-    const handleConfirmSubmit = (formData: BookingFormData) => {
-        console.log('Booking confirmed:', formData);
-
-        setBookingData(formData);
-        setCurrentStep(BookingStep.PERSONAL_INFO);
-    };
-
     const handleBackToConfirm = () => {
+        // From Payment -> back to Personal Info
         setCurrentStep(BookingStep.PERSONAL_INFO);
     };
 
+    // From Personal Info -> back to Confirm
     const handleBackToConfirmStep = () => {
         setCurrentStep(BookingStep.ORDER_CONFIRMATION);
     };
@@ -166,9 +174,20 @@ const FieldBookingPage = () => {
             <NavbarDarkComponent />
             <PageWrapper>
                 <PageHeader title="Đặt sân" breadcrumbs={breadcrumbs} />
-                <BookingFieldTabs currentStep={currentStep} />
+                <BookingFieldTabs
+                    currentStep={currentStep}
+                />
 
                 {/* Conditional rendering based on current step */}
+                {currentStep === BookingStep.AMENITIES && (
+                    <AmenitiesTab
+                        venue={currentField || undefined}
+                        selectedAmenityIds={selectedAmenityIds}
+                        onChangeSelected={setSelectedAmenityIds}
+                        onBack={handleAmenitiesBack}
+                        onSubmit={handleAmenitiesSubmit}
+                    />
+                )}
                 {currentStep === BookingStep.BOOK_COURT && (
                     <BookCourtTab
                         onSubmit={handleBookCourtSubmit}
@@ -189,11 +208,12 @@ const FieldBookingPage = () => {
                 {currentStep === BookingStep.ORDER_CONFIRMATION && (
                     <ConfirmCourtTab
                         bookingData={bookingData}
-                        onSubmit={handleConfirmSubmit}
-                        onBack={handleBackToBookCourt}
+                        onSubmit={(data) => { setBookingData(data); setCurrentStep(BookingStep.PERSONAL_INFO); }}
+                        onBack={() => { setCurrentStep(BookingStep.AMENITIES); }}
                         courts={mockCourts}
                     />
                 )}
+
 
                 {currentStep === BookingStep.PAYMENT && (
                     <PaymentTab
@@ -201,6 +221,7 @@ const FieldBookingPage = () => {
                         onPaymentComplete={handlePaymentComplete}
                         onBack={handleBackToConfirm}
                         courts={mockCourts}
+                        // selectedAmenityIds can be used here for pricing if desired
                     />
                 )}
 

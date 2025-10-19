@@ -9,6 +9,8 @@ import type {
     CancelSessionBookingPayload,
     SetCoachHolidayPayload,
     GetCoachScheduleParams,
+    GetMyBookingsParams,
+    MyBookingsResponse,
     ErrorResponse,
 } from "../../types/booking-type";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
@@ -19,6 +21,7 @@ import {
     CREATE_SESSION_BOOKING_API,
     CANCEL_SESSION_BOOKING_API,
     GET_COACH_BOOKINGS_API,
+    GET_MY_BOOKINGS_API,
     GET_COACH_SCHEDULE_API,
     SET_COACH_HOLIDAY_API,
 } from "./bookingAPI";
@@ -137,6 +140,79 @@ export const getCoachBookings = createAsyncThunk<
         console.error("Error getting coach bookings:", error);
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to get coach bookings",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Get my bookings
+ */
+export const getMyBookings = createAsyncThunk<
+    MyBookingsResponse,
+    GetMyBookingsParams,
+    { rejectValue: ErrorResponse }
+>("booking/getMyBookings", async (params, thunkAPI) => {
+    try {
+        console.log("Getting my bookings with params:", params);
+        
+        // Build query string
+        const queryParams = new URLSearchParams();
+        if (params.status) queryParams.append('status', params.status);
+        if (params.type) queryParams.append('type', params.type);
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        
+        const url = queryParams.toString() 
+            ? `${GET_MY_BOOKINGS_API}?${queryParams.toString()}`
+            : GET_MY_BOOKINGS_API;
+            
+        const response = await axiosPrivate.get(url);
+        
+        console.log("My bookings retrieved successfully:", response.data);
+        console.log("Response data type:", typeof response.data);
+        console.log("Is array:", Array.isArray(response.data));
+        
+        // Handle API response format: { success: true, data: { bookings: [...], pagination: {...} } }
+        const responseData = response.data;
+        if (responseData?.success && responseData?.data?.bookings) {
+            return {
+                bookings: responseData.data.bookings,
+                pagination: responseData.data.pagination
+            };
+        }
+        
+        // Fallback for different response formats
+        if (Array.isArray(responseData)) {
+            return {
+                bookings: responseData,
+                pagination: null
+            };
+        }
+        
+        if (responseData?.bookings && Array.isArray(responseData.bookings)) {
+            return {
+                bookings: responseData.bookings,
+                pagination: responseData.pagination || null
+            };
+        }
+        
+        if (responseData?.data && Array.isArray(responseData.data)) {
+            return {
+                bookings: responseData.data,
+                pagination: null
+            };
+        }
+        
+        return {
+            bookings: [],
+            pagination: null
+        };
+    } catch (error: any) {
+        console.error("Error getting my bookings:", error);
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get my bookings",
             status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

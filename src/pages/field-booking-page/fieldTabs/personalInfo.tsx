@@ -16,7 +16,7 @@ interface BookingFormData {
     date: string;
     startTime: string;
     endTime: string;
-    court: string;
+    court?: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -393,7 +393,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                     className="px-5 py-3 bg-gray-800 hover:bg-gray-900 text-white"
                     disabled={!formData.name || !formData.email || !formData.phone}
                 >
-                    Tiếp tục đến xác nhận
+                    Tiếp tục đến thanh toán
                     <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
             </div>

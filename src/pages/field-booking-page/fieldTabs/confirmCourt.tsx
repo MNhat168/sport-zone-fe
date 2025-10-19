@@ -13,7 +13,7 @@ interface BookingFormData {
     date: string;
     startTime: string;
     endTime: string;
-    court: string;
+    court?: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -189,7 +189,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                                             {venue.description}
                                         </p>
                                         <p className="text-sm text-[#6b7280] font-['Outfit'] mt-1">
-                                            {venue.location}
+                                            {typeof venue.location === 'string' ? venue.location : venue.location?.address}
                                         </p>
                                     </div>
                                 </div>
@@ -201,11 +201,11 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                                     <div className="text-center">
                                         <div className="flex items-baseline gap-1 justify-center">
                                             <span className="text-2xl font-semibold text-emerald-600">
-                                                ${venue.basePrice}
+                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(venue.basePrice || 0)}
                                             </span>
-                                            <span className="text-sm text-gray-500">/hr</span>
+                                            <span className="text-sm text-gray-500">/giờ</span>
                                         </div>
-                                        <p className="text-sm text-[#1a1a1a] mt-1">Price per hour</p>
+                                        <p className="text-sm text-[#1a1a1a] mt-1">Đơn giá theo giờ</p>
                                     </div>
                                 </div>
                             </div>
@@ -276,11 +276,11 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                             <div className="grid grid-cols-3 gap-6">
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 mb-2">Chủ sân</h4>
-                                    <p className="text-sm text-gray-600">{venue?.owner?.name || venue?.owner?.id || 'Chưa cập nhật'}</p>
+                                    <p className="text-sm text-gray-600">{(venue as any)?.ownerName || venue?.owner?.name || 'Chưa cập nhật'}</p>
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 mb-2">Liên hệ</h4>
-                                    <p className="text-sm text-gray-600">{venue?.owner?.contact || 'Chưa cập nhật'}</p>
+                                    <p className="text-sm text-gray-600">{(venue as any)?.ownerPhone || venue?.owner?.contact || 'Chưa cập nhật'}</p>
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 mb-2">Tên sân</h4>
@@ -290,7 +290,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                             <div className="mt-4 pt-4 border-t border-gray-200">
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 mb-2">Địa chỉ</h4>
-                                    <p className="text-sm text-gray-600">{venue?.location || 'Location not specified'}</p>
+                                    <p className="text-sm text-gray-600">{typeof venue?.location === 'string' ? venue?.location : venue?.location?.address || 'Location not specified'}</p>
                                 </div>
                             </div>
                         </CardContent>

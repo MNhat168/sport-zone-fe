@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Calendar as CalendarIcon, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -57,6 +57,28 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     const currentField = useAppSelector((state) => state.field.currentField);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
 
+    const getLocationText = (loc: any): string => {
+        return typeof loc === 'string' ? loc : loc?.address || '';
+    };
+
+    const getMapEmbedSrc = (loc: any): string => {
+        try {
+            if (loc && typeof loc === 'object' && loc.geo && Array.isArray(loc.geo.coordinates)) {
+                const [lng, lat] = loc.geo.coordinates as [number, number];
+                if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+                    return `https://www.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=15&output=embed`;
+                }
+            }
+            const query = getLocationText(loc);
+            if (query) {
+                return `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
+            }
+        } catch {
+            // Ignore errors and fall back to blank map
+        }
+        return 'about:blank';
+    };
+
     // Log field data usage in BookCourt tab
     console.log('🏟️ [BOOK COURT TAB] Field data loaded:', {
         hasVenueProp: !!venueProp,
@@ -100,6 +122,25 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     const getOperatingHoursForDay = (dayName: string) => {
         if (!venue?.operatingHours) return null;
         return venue.operatingHours.find(hour => hour.day === dayName);
+    };
+
+    // === Pricing helpers using field.priceRanges ===
+    const toMinutes = (t: string): number => {
+        const [hh = '00', mm = '00'] = (t || '00:00').split(':');
+        return Number(hh) * 60 + Number(mm);
+    };
+
+    const getDayName = (date: Date): string => {
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        return dayNames[date.getDay()];
+    };
+
+    const getMultiplierFor = (day: string, timeHHmm: string): number => {
+        const ranges = (venue?.priceRanges || []).filter(r => r.day === day);
+        if (ranges.length === 0) return 1.0;
+        const t = toMinutes(timeHHmm);
+        const match = ranges.find(r => t >= toMinutes(r.start) && t < toMinutes(r.end));
+        return match?.multiplier ?? 1.0;
     };
 
     const isDateDisabled = (date: Date): boolean => {
@@ -226,6 +267,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         return slot.available;
     };
 
+
     // === Xử lý khi click giờ ===
     const handleTimeSlotClick = (hour: number, type: "start" | "end") => {
         if (type === "start") {
@@ -302,50 +344,20 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     }
 
     const calculateSubtotal = (): number => {
-        if (!formData.startTime || !formData.endTime) {
-            console.log('Missing time values:', { startTime: formData.startTime, endTime: formData.endTime });
-            return 0;
-        }
-
+        if (!venue || !formData.date || !formData.startTime || !formData.endTime) return 0;
         try {
-            // Parse time strings to calculate duration
-            const [startHour, startMinute] = formData.startTime.split(':').map(Number);
-            const [endHour, endMinute] = formData.endTime.split(':').map(Number);
-
-            console.log('Parsed times:', {
-                startTime: formData.startTime,
-                endTime: formData.endTime,
-                startHour, startMinute, endHour, endMinute
-            });
-
-            // Convert to minutes for easier calculation
-            const startTotalMinutes = startHour * 60 + startMinute;
-            const endTotalMinutes = endHour * 60 + endMinute;
-
-            // Calculate duration in hours
-            const durationInMinutes = endTotalMinutes - startTotalMinutes;
-            const durationInHours = durationInMinutes / 60;
-
-            console.log('Duration calculation:', {
-                startTotalMinutes,
-                endTotalMinutes,
-                durationInMinutes,
-                durationInHours
-            });
-
-            // Return 0 if negative duration (invalid time range)
-            if (durationInHours <= 0) {
-                console.log('Invalid duration:', durationInHours);
-                return 0;
+            const dayName = getDayName(new Date(formData.date + 'T00:00:00'));
+            const startHour = Number(formData.startTime.split(':')[0]);
+            const endHour = Number(formData.endTime.split(':')[0]);
+            if (endHour <= startHour) return 0;
+            let total = 0;
+            for (let h = startHour; h < endHour; h++) {
+                const hh = String(h).padStart(2, '0');
+                const mult = getMultiplierFor(dayName, `${hh}:00`);
+                total += (venue.basePrice || 0) * mult;
             }
-
-            // Calculate total price: hours * price per hour
-            console.log('Venue data:', { venue, basePrice: venue?.basePrice });
-            const subtotal = Math.round(durationInHours * (venue?.basePrice || 0) * 100) / 100;
-            console.log('Final subtotal:', subtotal);
-            return subtotal;
-        } catch (error) {
-            console.error('Error calculating subtotal:', error);
+            return Math.round(total);
+        } catch {
             return 0;
         }
     };
@@ -412,16 +424,16 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                             <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
                                 Đặt sân
                             </h1>
-                            <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
+                            {/* <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
                                 Đặt sân nhanh chóng, tiện lợi với cơ sở vật chất hiện đại.
-                            </p>
+                            </p> */}
                         </div>
 
                         {/* Venue Info */}
                         <div className="p-6 bg-gray-50 rounded-lg">
                             <div className="flex flex-wrap items-start gap-6">
                                 {/* Venue Image and Details */}
-                                <div className="flex-1 min-w-[500px]">
+                                <div className="flex-1 min-w-[800px]">
                                     <div className="flex items-start gap-4">
                                         {venue.images?.[0] && (
                                             <img
@@ -434,18 +446,16 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                             <h2 className="text-2xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
                                                 {venue.name}
                                             </h2>
-                                            <p className="text-base text-[#6b7280] font-['Outfit']">
+                                            <p className="text-base text-[#6b7280] font-['Outfit'] text-start">
                                                 {venue.description}
                                             </p>
-                                            <p className="text-sm text-[#6b7280] font-['Outfit'] mt-1">
-                                                {venue.location}
-                                            </p>
+                                            
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Pricing Info */}
-                                <div className="flex-1 min-w-[400px]">
+                                <div className="flex-1 min-w-[100px]">
                                     <div className="px-24 py-6 bg-white rounded-lg flex items-center justify-center">
                                         <div className="text-center">
                                             <div className="flex items-baseline gap-1 justify-center">
@@ -457,6 +467,22 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                             <p className="text-sm text-[#1a1a1a] mt-1">Đơn giá theo giờ</p>
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Static Map Preview (non-interactive) */}
+                                <div className="flex-1 min-w-[400px]">
+                                    <div className="w-full h-64 md:h-72 bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                        <iframe
+                                            title="Venue location map"
+                                            src={getMapEmbedSrc(venue.location as any)}
+                                            className="w-full h-full pointer-events-none"
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                        />
+                                    </div>
+                                <p className="text-md text-[#6b7280] font-['Outfit'] mt-1 text-center">
+                                    Địa chỉ: {getLocationText(venue.location as any)}
+                                </p>
                                 </div>
                             </div>
                         </div>
@@ -474,7 +500,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6 space-y-4">
-                                {/* Date Picker (reused from ui) */}
+                                {/* Date Picker (popup) */}
                                 <div className="space-y-2.5">
                                     <DatePicker
                                         label="Ngày"
@@ -500,9 +526,23 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                             // Fetch availability data for selected date
                                             fetchAvailabilityData(ymd);
                                         }}
-                                        disabled={isDateDisabled}
-                                        buttonClassName="h-14 bg-gray-50 border-0 text-left"
+                                        disabled={(d) => {
+                                            // past dates => disabled
+                                            const today = new Date();
+                                            today.setHours(0,0,0,0);
+                                            const date = new Date(d);
+                                            date.setHours(0,0,0,0);
+                                            if (date < today) return true;
+                                            // over 3 months from today => disabled
+                                            const threeMonthsAhead = new Date(today);
+                                            threeMonthsAhead.setMonth(threeMonthsAhead.getMonth() + 3);
+                                            return date > threeMonthsAhead || isDateDisabled(d);
+                                        }}
+                                        buttonClassName="h-14 bg-white border-0 text-left"
                                         popoverAlign="start"
+                                        captionLayout="dropdown-months"
+                                        fromDate={(() => { const t=new Date(); t.setHours(0,0,0,0); return t; })()}
+                                        toDate={(() => { const t=new Date(); t.setHours(0,0,0,0); t.setMonth(t.getMonth()+3); return t; })()}
                                     />
                                 </div>
                                 {/* Combined Time Range Selector */}
@@ -557,6 +597,8 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                             const isInRange = selectedStartHour !== null && selectedEndHour !== null
                                                                 && hour > selectedStartHour && hour < selectedEndHour;
                                                             const isSlotBooked = !isSlotAvailable(hour);
+                                                            const dayName = formData.date ? getDayName(new Date(formData.date + 'T00:00:00')) : '';
+                                                            const multiplier = dayName ? getMultiplierFor(dayName, `${String(hour).padStart(2,'0')}:00`) : 1.0;
 
                                                             return (
                                                                 <button
@@ -592,7 +634,12 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                                     }
                                                                 `}
                                                                 >
-                                                                    {hour}
+                                                                    <div className="flex flex-col items-center leading-none">
+                                                                        <span>{hour}</span>
+                                                                        {formData.date && (
+                                                                            <span className="text-[10px] opacity-70">x{Number(multiplier).toFixed(1)}</span>
+                                                                        )}
+                                                                    </div>
                                                                     {isSlotBooked && (
                                                                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
                                                                     )}
@@ -643,28 +690,6 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     </div>
                                 </div>
 
-
-                                {/* Court Selection */}
-                                {/* <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Sân</Label>
-                                <Select
-                                    value={formData.court}
-                                    onValueChange={(value) => setFormData(prev => ({ ...prev, court: value }))}
-                                >
-                                    <SelectTrigger className="h-14 bg-gray-50 border-0">
-                                    <SelectValue placeholder="Chọn sân" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {courts.map(court => (
-                                            <SelectItem key={court.id} value={court.id}>
-                                                {court.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div> */}
-
-                                {/* Guest Selection removed */}
                             </CardContent>
                         </Card>
                     </div>
@@ -678,17 +703,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6 space-y-5">
-                                {/* Court */}
-                                {/* <div className="flex items-center gap-2">
-                                <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <CalendarIcon className="w-5 h-5 text-emerald-600" />
-                                </div>
-                                <span className="text-base text-[#6b7280] font-['Outfit']">
-                                    {formData.court
-                                        ? courts.find(c => c.id === formData.court)?.name
-                                        : 'Chưa chọn sân'}
-                                </span>
-                            </div> */}
+                      
 
                                 {/* Date */}
                                 <div className="flex items-center gap-2">
@@ -734,7 +749,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                         className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
                                         disabled
                                     >
-                                        Tổng phụ : ${calculateSubtotal()}
+                                        Tổng phụ: {formatVND(calculateSubtotal())}
                                     </Button>
                                 </div>
                             </CardContent>
@@ -752,14 +767,14 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                 )} */}
 
                     <div className="flex justify-center items-center gap-5">
-                        <Button
+                        {/* <Button
                             variant="outline"
                             onClick={onBack}
                             className="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Quay lại
-                        </Button>
+                        </Button> */}
                         <Button
                             onClick={handleSubmit}
                             disabled={!isFormValid()}

@@ -16,6 +16,7 @@ interface FieldCardProps {
     nextAvailability: string;
     sportType: string;
     imageUrl: string;
+    distance?: string;
 }
 
 const FieldCard: React.FC<FieldCardProps> = ({
@@ -29,6 +30,7 @@ const FieldCard: React.FC<FieldCardProps> = ({
     nextAvailability,
     sportType,
     imageUrl,
+    distance,
 }) => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
@@ -66,6 +68,11 @@ const FieldCard: React.FC<FieldCardProps> = ({
                         <div>
                             <h3 className="text-xl font-bold mb-1">{name}</h3>
                             <p className="text-gray-600 text-sm mb-1">{location}</p>
+                            {distance && (
+                                <p className="text-green-600 text-xs font-medium flex items-center gap-1">
+                                    📍 {distance} từ vị trí của bạn
+                                </p>
+                            )}
                         </div>
                         <div className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
                             From {price}

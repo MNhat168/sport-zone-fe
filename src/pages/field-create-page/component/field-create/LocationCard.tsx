@@ -101,7 +101,17 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
     
     return null;
 };
-
+const reverseGeocode = async (lat: number, lon: number): Promise<string | null> => {
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.display_name ?? null;
+    } catch {
+        return null;
+    }
+};
 export default function LocationCard({ 
     formData, 
     onInputChange, 
@@ -118,8 +128,8 @@ export default function LocationCard({
     
     // Refs
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
-    const mapRef = useRef<L.Map | null>(null);
-    const markerRef = useRef<L.CircleMarker | null>(null);
+	const mapRef = useRef<L.Map | null>(null);
+	const markerRef = useRef<L.Marker | null>(null);
     const addressRef = useRef<string>('');
 
     // Keep latest address
@@ -136,47 +146,75 @@ export default function LocationCard({
             zoom: MAP_CONFIG.zoom,
         });
 
-        L.tileLayer(TILE_LAYER_URL, {
+		L.tileLayer(TILE_LAYER_URL, {
             attribution: '© OpenStreetMap contributors',
             maxZoom: MAP_CONFIG.maxZoom,
         }).addTo(map);
 
-        const marker = L.circleMarker(DEFAULT_CENTER, {
-            radius: MAP_CONFIG.markerRadius,
-            color: MAP_CONFIG.markerColor,
-            fillColor: MAP_CONFIG.markerFillColor,
-            fillOpacity: MAP_CONFIG.markerFillOpacity,
-        }).addTo(map);
+		// Create a draggable marker so user can drag to select location
+		const marker = L.marker(DEFAULT_CENTER, { draggable: true }).addTo(map);
+
+		// Handle drag end -> update state and emit callbacks
+        marker.on('dragend', () => {
+            const pos = marker.getLatLng();
+            setLocationData(prev => ({
+                ...prev,
+                position: [pos.lat, pos.lng]
+            }));
+            onCoordinatesChange?.(pos.lat, pos.lng);
+
+            (async () => {
+                const addr = await reverseGeocode(pos.lat, pos.lng);
+                const address = addr ?? addressRef.current;
+
+                addressRef.current = address;
+                onInputChange('location', address);
+                onLocationChange?.({
+                    address,
+                    geo: { type: 'Point', coordinates: [pos.lng, pos.lat] },
+                });
+
+                console.log('Selected location (drag):', { address, lat: pos.lat, lng: pos.lng });
+            })();
+        });
 
         markerRef.current = marker;
         mapRef.current = map;
 
         return () => {
-            map.remove();
-            mapRef.current = null;
-            markerRef.current = null;
+			map.remove();
+			mapRef.current = null;
+			markerRef.current = null;
         };
     }, []);
 
     // Map click handler
-    const handleMapClick = useCallback((e: L.LeafletMouseEvent) => {
+    const handleMapClick = useCallback(async (e: L.LeafletMouseEvent) => {
         const { lat, lng } = e.latlng;
-        
+
         if (!markerRef.current) return;
-        
+
         markerRef.current.setLatLng([lat, lng]);
-        
+
         setLocationData(prev => ({
             ...prev,
             position: [lat, lng]
         }));
-        
+
         onCoordinatesChange?.(lat, lng);
+
+        const addr = await reverseGeocode(lat, lng);
+        const address = addr ?? addressRef.current;
+
+        addressRef.current = address;
+        onInputChange('location', address);
         onLocationChange?.({
-            address: addressRef.current,
+            address,
             geo: { type: 'Point', coordinates: [lng, lat] },
         });
-    }, [onCoordinatesChange, onLocationChange]);
+
+        console.log('Selected location (map click):', { address, lat, lng });
+    }, [onCoordinatesChange, onLocationChange, onInputChange]);
 
     // Attach click handler
     useEffect(() => {
@@ -192,20 +230,24 @@ export default function LocationCard({
     // Update map position and callbacks
     const updateMapPosition = useCallback((lat: number, lng: number, address: string) => {
         if (!mapRef.current || !markerRef.current) return;
-        
+
         setLocationData({ position: [lat, lng], address });
         markerRef.current.setLatLng([lat, lng]);
         mapRef.current.flyTo([lat, lng], Math.max(mapRef.current.getZoom(), MAP_CONFIG.flyToZoom), {
             duration: MAP_CONFIG.flyToDuration,
             easeLinearity: MAP_CONFIG.flyToEaseLinearity,
         });
-        
+
         onCoordinatesChange?.(lat, lng);
         onLocationChange?.({
             address,
             geo: { type: 'Point', coordinates: [lng, lat] },
         });
-    }, [onCoordinatesChange, onLocationChange]);
+
+        // sync input + ref
+        addressRef.current = address;
+        onInputChange('location', address);
+    }, [onCoordinatesChange, onLocationChange, onInputChange]);
 
     // Handle search for location
     const handleSearchLocation = useCallback(async () => {
@@ -228,6 +270,7 @@ export default function LocationCard({
             
             if (result) {
                 updateMapPosition(result.lat, result.lon, result.display_name);
+				console.log('Selected location (search):', { address: result.display_name, lat: result.lat, lng: result.lon });
             } else {
                 alert('Không tìm thấy địa điểm phù hợp');
             }

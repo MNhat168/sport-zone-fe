@@ -6,34 +6,29 @@ import { Button } from '@/components/ui/button';
 
 interface GalleryCardProps {
     // Avatar (single image)
-    avatarFile?: File | null;
     avatarPreview?: string | null;
     onAvatarUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveAvatar?: () => void;
 
     // Gallery (multiple images) - backward compatible with existing props
-    imageFiles?: File[]; // legacy alias for galleryFiles
+    imageFiles?: File[]; // legacy alias for galleryFiles (unused, kept for backward compatibility)
     previewImages?: string[]; // legacy alias for galleryPreviews
     onImageUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void; // legacy alias for onGalleryUpload
     onRemoveImage?: (index: number) => void; // legacy alias for onRemoveGalleryImage
 
     // Preferred props
-    galleryFiles?: File[];
     galleryPreviews?: string[];
     onGalleryUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveGalleryImage?: (index: number) => void;
 }
 
 export default function GalleryCard({ 
-    avatarFile,
     avatarPreview,
     onAvatarUpload,
     onRemoveAvatar,
-    imageFiles,
     previewImages,
     onImageUpload,
     onRemoveImage,
-    galleryFiles,
     galleryPreviews,
     onGalleryUpload,
     onRemoveGalleryImage,

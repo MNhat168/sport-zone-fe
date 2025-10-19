@@ -35,6 +35,7 @@ interface AvailabilityCardProps {
     onPriceRangeChange: (index: number, field: keyof PriceRange, value: any) => void;
     onAddPriceRange: (day: string) => void;
     onRemovePriceRange: (index: number) => void;
+    onApplyDaySettings: (sourceDay: string, targetDays: string[]) => void;
     onResetAvailability: () => void;
     onSaveAvailability: () => void;
 }
@@ -53,6 +54,7 @@ export default function AvailabilityCard({
     onPriceRangeChange,
     onAddPriceRange,
     onRemovePriceRange,
+    onApplyDaySettings,
     onResetAvailability,
     onSaveAvailability
 }: AvailabilityCardProps) {
@@ -63,8 +65,8 @@ export default function AvailabilityCard({
     };
 
     // Debug: Log priceRanges to console
-    console.log('AvailabilityCard - priceRanges:', formData.priceRanges);
-    console.log('AvailabilityCard - selectedDays:', selectedDays);
+    // console.log('AvailabilityCard - priceRanges:', formData.priceRanges);
+    // console.log('AvailabilityCard - selectedDays:', selectedDays);
 
     return (
         <Card className="shadow-lg border-0">
@@ -136,6 +138,21 @@ export default function AvailabilityCard({
 
                                             {editingDay === day && (
                                                 <div className="mt-6 space-y-6 pt-6 border-t">
+                                                    <div className="flex justify-end">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                // Apply current day's settings to other selected days (excluding itself)
+                                                                const targets = selectedDays.filter(d => d !== day);
+                                                                onApplyDaySettings(day, targets);
+                                                            }}
+                                                            className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                                                        >
+                                                            Áp dụng cho ngày khác
+                                                        </Button>
+                                                    </div>
                                                     {/* Operating Hours */}
                                                     <div className="space-y-4">
                                                         <Label className="text-base font-medium">Giờ hoạt động</Label>

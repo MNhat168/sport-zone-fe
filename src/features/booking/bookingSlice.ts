@@ -6,6 +6,7 @@ import {
     createSessionBooking,
     cancelSessionBooking,
     getCoachBookings,
+    getMyBookings,
     getCoachSchedule,
     setCoachHoliday,
 } from "./bookingThunk";
@@ -15,6 +16,7 @@ const initialState: BookingState = {
     currentBooking: null,
     sessionBooking: null,
     coachSchedules: [],
+    pagination: null,
     loading: false,
     error: null,
 };
@@ -104,6 +106,15 @@ const bookingSlice = createSlice({
             .addCase(getCoachBookings.fulfilled, (state, action) => {
                 state.loading = false;
                 state.bookings = action.payload;
+            })
+            
+
+        // Get My Bookings
+        builder
+            .addCase(getMyBookings.fulfilled, (state, action) => {
+                state.loading = false;
+                state.bookings = action.payload.bookings;
+                state.pagination = action.payload.pagination;
             })
             
 

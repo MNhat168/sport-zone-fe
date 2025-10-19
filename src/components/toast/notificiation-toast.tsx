@@ -18,7 +18,8 @@ export const CustomToast = () => {
       style={{
         fontSize: "14px",
         fontWeight: "500",
-        fontFamily: "system-ui, -apple-system, sans-serif"
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        zIndex: 9999
       }}
       toastStyle={{
         backgroundColor: "white",
@@ -28,6 +29,7 @@ export const CustomToast = () => {
         padding: "12px 16px",
         margin: "8px 0"
       }}
+      containerId="global-toast"
     />
   );
 };
@@ -45,7 +47,8 @@ export const CustomSuccessToast = (msg: any) => {
       backgroundColor: "#ECFDF5",
       color: "#065F46",
       borderLeft: "4px solid #10B981"
-    }
+    },
+    containerId: 'global-toast'
   });
 };
 
@@ -62,6 +65,7 @@ export const CustomFailedToast = (msg: any) => {
       backgroundColor: "#FEF2F2",
       color: "#991B1B",
       borderLeft: "4px solid #EF4444"
-    }
+    },
+    containerId: 'global-toast'
   });
 };

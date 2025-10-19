@@ -11,7 +11,6 @@ import { toast } from "react-toastify";
 import {
   CustomFailedToast,
   CustomSuccessToast,
-  CustomToast,
 } from "../../components/toast/notificiation-toast";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Phone } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -216,7 +215,7 @@ export default function AuthenticationPage() {
   };
   return (
     <div className="h-screen w-screen fixed inset-0 overflow-hidden">
-      <CustomToast />
+      {/* Global toast container is mounted in src/main.tsx */}
 
       {/* Full Screen Background Image */}
       <div
