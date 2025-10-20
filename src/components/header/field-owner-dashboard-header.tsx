@@ -55,9 +55,12 @@ export function FieldOwnerDashboardHeader() {
           title: "Cài đặt",
           breadcrumb: ["Trang chủ", "Chủ sân", "Cài đặt"]
         };
-      // Add other field owner paths here...
-
-      // Default case if no path matches
+      case "/field-owner/profile":
+      case "/user-profile":
+        return {
+          title: "Hồ sơ cá nhân",
+          breadcrumb: ["Trang chủ", "Chủ sân", "Hồ sơ cá nhân"]
+        };
       default:
         return {
           title: "Trang chủ Chủ sân", // Default title

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { changePassword } from "@/features/user/userThunk"
-import { clearError, clearSuccessStates } from "@/features/user/userSlice"
+import { clearSuccessStates } from "@/features/user/userSlice"
 import { toast } from "sonner"
 
 export default function ChangePassword() {
@@ -98,7 +98,7 @@ export default function ChangePassword() {
                 new_password: formData.newPassword,
                 confirm_password: formData.confirmPassword,
             })).unwrap()
-        } catch (error) {
+        } catch {
             // Error is handled by useEffect
         }
     }
@@ -201,3 +201,5 @@ export default function ChangePassword() {
         </Card>
     )
 }
+
+

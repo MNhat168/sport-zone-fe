@@ -26,6 +26,7 @@ export function FieldOwnerDashboardTabs() {
     }
 
     const isActive = (path: string) => location.pathname === path
+    const profilePath = "/field-owner/profile"
 
     return (
         <div className="w-full px-4 pt-6 pb-2 bg-gray-100">
@@ -87,6 +88,15 @@ export function FieldOwnerDashboardTabs() {
 
                     <Button
                         variant="ghost"
+                        className={baseTabClasses(isActive(profilePath))}
+                        onClick={() => handleNavigation(profilePath)}
+                    >
+                        <User className="w-5 h-5" />
+                        <div className="text-center text-sm font-medium font-['Outfit']">Profile</div>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
                         className={baseTabClasses(isActive("/field-owner/customers"))}
                         onClick={() => handleNavigation("/field-owner/customers")}
                     >
@@ -94,14 +104,14 @@ export function FieldOwnerDashboardTabs() {
                         <div className="text-center text-sm font-medium font-['Outfit']">Ví</div>
                     </Button>
 
-                    <Button
+                    {/* <Button
                         variant="ghost"
                         className={baseTabClasses(isActive("/field-owner/settings"))}
                         onClick={() => handleNavigation("/field-owner/settings")}
                     >
                         <User className="w-5 h-5" />
                         <div className="text-center text-sm font-medium font-['Outfit']">Cài đặt</div>
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
         </div>

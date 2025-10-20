@@ -28,15 +28,14 @@ interface FieldOwnerDropdownMenuItemsProps {
 /**
  * FieldOwnerDropdownMenuItems component - Dropdown menu items for field owners
  */
-const FieldOwnerDropdownMenuItems = ({ 
-    userId, 
+const FieldOwnerDropdownMenuItems = ({  
     businessName 
 }: FieldOwnerDropdownMenuItemsProps) => {
     return (
         <>
             {/* Profile Section */}
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer flex-col items-start p-3">
-                <Link to={`/field-owner/profile/${userId}`} className="flex flex-col">
+                <Link to="/field-owner/profile" className="flex flex-col">
                     <span className="text-sm text-gray-500 ml-6">
                         {businessName ? `Go to ${businessName} Profile` : 'Go to Profile'}
                     </span>

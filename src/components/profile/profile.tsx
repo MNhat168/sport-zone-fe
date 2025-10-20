@@ -79,13 +79,15 @@ export default function Profile() {
 
         try {
             await dispatch(updateUserProfile({
-                userId: authUser._id,
                 fullName: formData.fullName,
                 email: formData.email,
                 phone: formData.phone,
                 avatar: selectedAvatar || undefined,
             })).unwrap()
-            
+
+            // Refetch latest profile so UI updates without F5
+            await dispatch(getUserProfile())
+
             toast.success("Profile updated successfully!")
             setSelectedAvatar(null)
         } catch {
@@ -184,6 +186,7 @@ export default function Profile() {
                                 onChange={(e) => handleInputChange('email', e.target.value)}
                                 placeholder="Enter Email Address"
                                 className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                disabled
                             />
                         </div>
 
@@ -305,3 +308,5 @@ export default function Profile() {
         </Card>
     )
 }
+
+
