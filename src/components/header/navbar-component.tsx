@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
+import { clearUserAuth } from "../../lib/cookies";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -38,7 +39,7 @@ export const NavbarComponent = () => {
     }, []);
 
     const handleLogout = () => {
-        try { localStorage.removeItem("user"); } catch { /* ignore */ }
+        clearUserAuth();
         dispatch(logout());
         navigate("/");
     };
@@ -91,6 +92,11 @@ export const NavbarComponent = () => {
                     <Link to="/contact" className={linkClass}>
                         Liên hệ
                     </Link>
+                    {auth.user?.role === "field_owner" && (
+                        <Link to="/field-owner-dashboard" className={linkClass}>
+                            Quản lý đặt sân
+                        </Link>
+                    )}
                 </nav>
 
                 {/* Actions */}
@@ -123,7 +129,7 @@ export const NavbarComponent = () => {
                                 className="w-48 bg-white shadow-md border border-gray-200 rounded-md"
                             >
                                 {auth.user?.role === "user" && (
-                                    <UserDropdownMenuItems userId={auth.user._id} />
+                                    <UserDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (
                                     <CoachDropdownMenuItems userId={auth.user._id} />

@@ -6,6 +6,7 @@ import {
     logout,
 } from "./authThunk";
 import type { AuthResponse, ErrorResponse } from "../../types/authentication-type";
+import { clearUserAuth } from "../../lib/cookies";
 
 interface AuthState {
     _id: string | null;
@@ -32,8 +33,12 @@ const getStoredUser = () => {
         // Ưu tiên cookie trước, rồi fallback localStorage
         const fromCookie = readUserFromCookie();
         if (fromCookie) return fromCookie;
-        const userStr = localStorage.getItem("user");
-        return userStr ? JSON.parse(userStr) : null;
+        // Sau cookie, ưu tiên sessionStorage (rememberMe = false)
+        const sessionUserStr = sessionStorage.getItem("user");
+        if (sessionUserStr) return JSON.parse(sessionUserStr);
+        // Cuối cùng mới đến localStorage (rememberMe = true)
+        const localUserStr = localStorage.getItem("user");
+        return localUserStr ? JSON.parse(localUserStr) : null;
     } catch {
         return null;
     }
@@ -61,17 +66,22 @@ const authSlice = createSlice({
         clearAuth: (state) => {
             state.user = null;
             state.token = null;
-            localStorage.removeItem("user");
+            clearUserAuth();
         },
         updateUser: (state, action: PayloadAction<AuthResponse["user"]>) => {
             state.user = action.payload;
-            localStorage.setItem("user", JSON.stringify(action.payload));
+            // Ghi vào nơi đang sử dụng hiện tại: ưu tiên sessionStorage nếu có, ngược lại localStorage
+            const isSessionActive = !!sessionStorage.getItem("user");
+            const target = isSessionActive ? sessionStorage : localStorage;
+            target.setItem("user", JSON.stringify(action.payload));
         },
         // Thêm action để force refresh avatar
         refreshAvatar: (state) => {
             if (state.user) {
                 state.user = { ...state.user };
-                localStorage.setItem("user", JSON.stringify(state.user));
+                const isSessionActive = !!sessionStorage.getItem("user");
+                const target = isSessionActive ? sessionStorage : localStorage;
+                target.setItem("user", JSON.stringify(state.user));
             }
         },
         // Đồng bộ lại user từ cookie trước, rồi mới đến localStorage
@@ -81,10 +91,20 @@ const authSlice = createSlice({
                 state.user = cookieUser;
                 return;
             }
-            const storedUser = localStorage.getItem("user");
-            if (storedUser) {
+            const sessionUser = sessionStorage.getItem("user");
+            if (sessionUser) {
                 try {
-                    const parsedUser = JSON.parse(storedUser);
+                    const parsedUser = JSON.parse(sessionUser);
+                    state.user = parsedUser;
+                } catch (error) {
+                    console.error("Error parsing user from localStorage:", error);
+                }
+                return;
+            }
+            const localUser = localStorage.getItem("user");
+            if (localUser) {
+                try {
+                    const parsedUser = JSON.parse(localUser);
                     state.user = parsedUser;
                 } catch (error) {
                     console.error("Error parsing user from localStorage:", error);
@@ -102,7 +122,9 @@ const authSlice = createSlice({
                 if (user) {
                     state.user = user;
                     state.token = null; // cookie-based auth: no token stored client-side
-                    localStorage.setItem("user", JSON.stringify(user));
+                    const rememberMe = Boolean((action as any).meta?.arg?.rememberMe);
+                    const target = rememberMe ? localStorage : sessionStorage;
+                    target.setItem("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in login response", status: "500" } as any;
                 }
@@ -114,7 +136,9 @@ const authSlice = createSlice({
                 if (user) {
                     state.user = user;
                     state.token = null;
-                    localStorage.setItem("user", JSON.stringify(user));
+                    const rememberMe = Boolean((action as any).meta?.arg?.rememberMe);
+                    const target = rememberMe ? localStorage : sessionStorage;
+                    target.setItem("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in google login response", status: "500" } as any;
                 }
@@ -128,7 +152,11 @@ const authSlice = createSlice({
             .addCase(logout.fulfilled, (state) => {
                 state.user = null;
                 state.token = null;
-                localStorage.removeItem("user");
+                clearUserAuth();
+                try {
+                    sessionStorage.removeItem("user");
+                    localStorage.removeItem("user");
+                } catch {}
             })
             .addMatcher(
                 (action) => action.type.endsWith("/pending"),

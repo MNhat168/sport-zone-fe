@@ -22,6 +22,8 @@ export interface DatePickerProps {
     buttonClassName?: string
     popoverAlign?: "start" | "center" | "end"
     captionLayout?: "label" | "dropdown" | "dropdown-months" | "dropdown-years"
+    fromDate?: Date
+    toDate?: Date
 }
 
 export function DatePicker({
@@ -33,6 +35,8 @@ export function DatePicker({
     buttonClassName,
     popoverAlign = "start",
     captionLayout = "dropdown",
+    fromDate,
+    toDate,
 }: DatePickerProps) {
     const [open, setOpen] = React.useState(false)
     const [internalDate, setInternalDate] = React.useState<Date | undefined>(undefined)
@@ -65,12 +69,14 @@ export function DatePicker({
                         <ChevronDownIcon />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto overflow-hidden p-0" align={popoverAlign}>
+                <PopoverContent className="w-auto overflow-hidden p-0 bg-white border border-gray-200 shadow-lg" align={popoverAlign}>
                     <Calendar
                         mode="single"
                         selected={selectedDate}
                         disabled={disabled}
                         captionLayout={captionLayout}
+                        fromDate={fromDate}
+                        toDate={toDate}
                         onSelect={handleSelect}
                         initialFocus
                     />

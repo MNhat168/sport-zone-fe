@@ -86,11 +86,33 @@ export interface GetCoachScheduleParams {
     endDate: string; // YYYY-MM-DD
 }
 
+export interface GetMyBookingsParams {
+    status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    type?: 'field' | 'coach';
+    page?: number;
+    limit?: number;
+}
+
+export interface PaginationInfo {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
+
+export interface MyBookingsResponse {
+    bookings: Booking[];
+    pagination: PaginationInfo;
+}
+
 export interface BookingState {
     bookings: Booking[];
     currentBooking: Booking | null;
     sessionBooking: SessionBookingResponse | null;
     coachSchedules: CoachSchedule[];
+    pagination: PaginationInfo | null;
     loading: boolean;
     error: ErrorResponse | null;
 }

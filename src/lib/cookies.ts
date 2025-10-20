@@ -41,3 +41,18 @@ export function removeCookie(name: string): void {
 
   document.cookie = `${name}=; path=/; max-age=0`
 }
+
+/**
+ * Clear user authentication data (both cookie and localStorage)
+ * Used during logout to ensure complete cleanup
+ */
+export function clearUserAuth(): void {
+  try {
+    // Clear localStorage
+    localStorage.removeItem("user");
+    // Clear cookie
+    document.cookie = "user=; path=/; max-age=0";
+  } catch (error) {
+    console.warn("Failed to clear user authentication data:", error);
+  }
+}

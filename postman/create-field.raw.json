@@ -1,0 +1,54 @@
+{
+  "name": "Sân bóng Phú Nhuận",
+  "sportType": "football",
+  "description": "Sân bóng đá 11 người, có đèn chiếu sáng",
+  "location": {
+    "address": "District 3, Ho Chi Minh City",
+    "geo": {
+      "type": "Point",
+      "coordinates": [106.700981, 10.776889]
+    }
+  },
+  "images": [
+    "https://example.com/field1.jpg",
+    "https://example.com/field2.jpg"
+  ],
+  "operatingHours": [
+    {
+      "day": "monday",
+      "start": "06:00",
+      "end": "22:00",
+      "duration": 60
+    }
+  ],
+  "slotDuration": 60,
+  "minSlots": 1,
+  "maxSlots": 4,
+  "priceRanges": [
+    {
+      "day": "monday",
+      "start": "06:00",
+      "end": "10:00",
+      "multiplier": 1.0
+    },
+    {
+      "day": "monday",
+      "start": "18:00",
+      "end": "22:00",
+      "multiplier": 1.5
+    }
+  ],
+  "basePrice": 150000,
+  "amenities": [
+    {
+      "amenityId": "507f1f77bcf86cd799439020",
+      "price": 150000
+    },
+    {
+      "amenityId": "507f1f77bcf86cd799439021",
+      "price": 50000
+    }
+  ]
+}
+
+

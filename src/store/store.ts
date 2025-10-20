@@ -3,6 +3,8 @@ import authReducer from "../features/authentication/authSlice";
 import userReducer from "../features/user/userSlice";
 import fieldReducer from "../features/field/fieldSlice";
 import bookingReducer from "../features/booking/bookingSlice";
+import coachReducer from "../features/coach/coachSlice";
+import { amenitiesReducer } from "../features/amenities";
 
 export const store = configureStore({
     reducer: {
@@ -10,6 +12,8 @@ export const store = configureStore({
         user: userReducer,
         field: fieldReducer,
         booking: bookingReducer,
+        coach: coachReducer,
+        amenities: amenitiesReducer,
     },
 });
 

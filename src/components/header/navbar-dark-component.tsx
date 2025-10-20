@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
+import { clearUserAuth } from "../../lib/cookies";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,9 +21,9 @@ export const NavbarDarkComponent = () => {
     const auth = useAppSelector((state: RootState) => state.auth);
 
     const handleLogout = () => {
-        try { localStorage.removeItem("user"); } catch {}
+        clearUserAuth();
         dispatch(logout());
-        navigate("/auth");
+        navigate("/");
     };
 
     const linkClass = "text-sm font-medium text-gray-900 hover:text-green-600";
@@ -36,14 +37,9 @@ export const NavbarDarkComponent = () => {
                 {/* Logo */}
                 <Link
                     to="/"
-                    className="flex items-center"
+                    className="text-2xl font-bold text-white bg-green-700 px-3 py-1 rounded-md"
                 >
-                    <img
-                        src="/Spz-nobg.png"
-                        alt="SportZone"
-                        className="h-10 w-auto"
-                        loading="eager"
-                    />
+                    SportZone
                 </Link>
 
                 {/* Nav links */}
@@ -66,6 +62,11 @@ export const NavbarDarkComponent = () => {
                     <Link to="/contact" className={linkClass}>
                         Liên hệ
                     </Link>
+                    {auth.user?.role === "field_owner" && (
+                        <Link to="/field-owner-dashboard" className={linkClass}>
+                            Quản lý đặt sân
+                        </Link>
+                    )}
                 </nav>
 
                 {/* Actions */}
@@ -98,10 +99,10 @@ export const NavbarDarkComponent = () => {
                                 className="w-48 bg-white shadow-md border border-gray-200 rounded-md"
                             >
                                 {auth.user?.role === "user" && (
-                                    <CoachDropdownMenuItems userId={auth.user._id} />
+                                    <UserDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (
-                                    <UserDropdownMenuItems userId={auth.user._id} />
+                                    <CoachDropdownMenuItems userId={auth.user._id} />
                                 )}
                                 {auth.user?.role === "field_owner" && auth.user._id && (
                                     <FieldOwnerDropdownMenuItems 

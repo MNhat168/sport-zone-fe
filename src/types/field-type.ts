@@ -1,17 +1,5 @@
 // Sport Type constants matching API documentation
-export const SportType = {
-    FOOTBALL: 'football',
-    TENNIS: 'tennis',
-    BADMINTON: 'badminton',
-    PICKLEBALL: 'pickleball',
-    BASKETBALL: 'basketball',
-    VOLLEYBALL: 'volleyball',
-    SWIMMING: 'swimming',
-    GYM: 'gym'
-} as const;
-
-
-export type SportType = typeof SportType[keyof typeof SportType];
+import { SportType } from '@/components/enums/ENUMS';
 
 // Owner interface matching API response structure
 export interface FieldOwner {
@@ -45,9 +33,12 @@ export interface Field {
     rating: number;
     totalReviews: number;
     owner: FieldOwner;
+    ownerName?: string;
+    ownerPhone?: string;
     totalBookings?: number;
     createdAt?: string;
     updatedAt?: string;
+    amenities?: FieldAmenity[]; // Field amenities with prices
 }
 
 // Operating Hours interface - now supports day-specific schedules
@@ -73,12 +64,41 @@ export interface Booking {
     status: string;
 }
 
+// Field Amenity interface (for API response)
+export interface FieldAmenity {
+    amenity: {
+        _id: string;
+        name: string;
+        description: string;
+        sportType: string;
+        isActive: boolean;
+        imageUrl?: string;
+        type: string; // coach, drink, facility, other
+    };
+    price: number;
+}
+
+// Field Amenity Request interface (for API request)
+export interface FieldAmenityRequest {
+    amenityId: string;
+    price: number;
+}
+
+// Location interface for API requests
+export interface FieldLocation {
+    address: string;
+    geo: {
+        type: 'Point';
+        coordinates: [number, number]; // [longitude, latitude]
+    };
+}
+
 // Create Field Payload interface
 export interface CreateFieldPayload {
     name: string;
     sportType: SportType | string;
     description: string;
-    location: string;
+    location: string | FieldLocation; // Can be string for UI, FieldLocation for API
     images?: string[];
     operatingHours: OperatingHours[];
     slotDuration: number; // 30-180 minutes
@@ -86,6 +106,7 @@ export interface CreateFieldPayload {
     maxSlots: number; // maximum 10
     priceRanges: PriceRange[];
     basePrice: number | string; // in VND, can be string for form input
+    amenities?: FieldAmenityRequest[]; // Array of amenities with prices
 }
 
 // Update Field Payload interface
@@ -110,6 +131,27 @@ export interface FieldResponse {
     success: boolean;
     data: Field;
     message?: string;
+}
+
+// Field Amenities Response interfaces
+export interface FieldAmenitiesResponse {
+    fieldId: string;
+    fieldName: string;
+    amenities: FieldAmenity[];
+}
+
+export interface UpdateFieldAmenitiesPayload {
+    amenities: FieldAmenityRequest[];
+}
+
+export interface UpdateFieldAmenitiesResponse {
+    success: boolean;
+    message: string;
+    field: {
+        id: string;
+        name: string;
+        amenities: FieldAmenity[];
+    };
 }
 
 // Pagination interface
@@ -257,4 +299,58 @@ export interface FieldStatistics {
     averageRating: number;
     totalReviews: number;
     occupancyRate: number; // percentage
+}
+
+// My fields API parameters
+export interface GetMyFieldsParams {
+    name?: string;
+    sportType?: 'football' | 'tennis' | 'badminton' | 'pickleball' | 'basketball' | 'volleyball' | 'swimming' | 'gym';
+    isActive?: boolean;
+    page?: number;
+    limit?: number;
+}
+
+// Field owner bookings interfaces
+export interface FieldOwnerBooking {
+    bookingId: string;
+    fieldId: string;
+    fieldName: string;
+    date: string; // YYYY-MM-DD format
+    startTime: string; // HH:mm format
+    endTime: string; // HH:mm format
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    totalPrice: number;
+    customer: {
+        fullName: string;
+        phone: string;
+        email: string;
+    };
+    selectedAmenities: string[];
+    amenitiesFee?: number;
+    createdAt?: string; // ISO date string
+}
+
+export interface FieldOwnerBookingsParams {
+    fieldName?: string;
+    status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    date?: string; // YYYY-MM-DD format
+    startDate?: string; // YYYY-MM-DD format
+    endDate?: string; // YYYY-MM-DD format
+    page?: number;
+    limit?: number;
+}
+
+export interface FieldOwnerBookingsResponse {
+    success: boolean;
+    data: {
+        bookings: FieldOwnerBooking[];
+        pagination: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    };
 }

@@ -33,7 +33,6 @@ export interface User {
 
 // Payload types for API calls
 export interface UpdateProfilePayload {
-    userId: string
     fullName?: string
     email?: string
     phone?: string

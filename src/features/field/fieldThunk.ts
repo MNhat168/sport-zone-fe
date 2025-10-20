@@ -6,11 +6,17 @@ import type {
     CreateFieldPayload,
     UpdateFieldPayload,
     GetFieldsParams,
+    GetMyFieldsParams,
     CheckAvailabilityParams,
     SchedulePriceUpdatePayload,
     CancelScheduledPriceUpdatePayload,
     ScheduledPriceUpdate,
     ErrorResponse,
+    FieldAmenitiesResponse,
+    UpdateFieldAmenitiesPayload,
+    UpdateFieldAmenitiesResponse,
+    FieldOwnerBookingsParams,
+    FieldOwnerBookingsResponse,
 } from "../../types/field-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
@@ -25,6 +31,10 @@ import {
     SCHEDULE_PRICE_UPDATE_API,
     CANCEL_SCHEDULED_PRICE_UPDATE_API,
     GET_SCHEDULED_PRICE_UPDATES_API,
+    GET_FIELD_AMENITIES_API,
+    UPDATE_FIELD_AMENITIES_API,
+    GET_MY_FIELDS_API,
+    GET_MY_FIELDS_BOOKINGS_API,
 } from "./fieldAPI";
 
 // Map API Field shape (fieldAPI.md) to app Field type used in UI
@@ -32,7 +42,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
     return {
         id: apiField?._id || apiField?.id || "",
         name: apiField?.name || "",
-        sportType: apiField?.sportType || "", // Use only 'sportType' as per new API
+        sportType: apiField?.sportType || "",
         description: apiField?.description || "",
         location: apiField?.location || "",
         images: Array.isArray(apiField?.images) ? apiField.images : [],
@@ -41,7 +51,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         minSlots: apiField?.minSlots || 1,
         maxSlots: apiField?.maxSlots || 4,
         priceRanges: Array.isArray(apiField?.priceRanges) ? apiField.priceRanges : [],
-        basePrice: Number(apiField?.basePrice ?? 0), // Use only 'basePrice' as per new API
+        basePrice: Number(apiField?.basePrice ?? 0),
         isActive: apiField?.isActive ?? true,
         maintenanceNote: apiField?.maintenanceNote,
         maintenanceUntil: apiField?.maintenanceUntil,
@@ -53,9 +63,12 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
             name: apiField?.owner?.name,
             contactInfo: apiField?.owner?.contactInfo,
         },
+        ownerName: apiField?.ownerName,
+        ownerPhone: apiField?.ownerPhone,
         totalBookings: apiField?.totalBookings,
         createdAt: apiField?.createdAt,
         updatedAt: apiField?.updatedAt,
+        amenities: Array.isArray(apiField?.amenities) ? apiField.amenities : [],
     };
 };
 
@@ -85,6 +98,46 @@ export const getAllFields = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch fields",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get my fields (for field owner)
+export const getMyFields = createAsyncThunk<
+    FieldsResponse,
+    GetMyFieldsParams | undefined,
+    { rejectValue: ErrorResponse }
+>("field/getMyFields", async (params = {}, thunkAPI) => {
+    try {
+        const queryParams = new URLSearchParams();
+        if (params.name) queryParams.append("name", params.name);
+        if (params.sportType) queryParams.append("sportType", params.sportType);
+        if (params.isActive !== undefined) queryParams.append("isActive", params.isActive.toString());
+        if (params.page) queryParams.append("page", params.page.toString());
+        if (params.limit) queryParams.append("limit", params.limit.toString());
+
+        const url = queryParams.toString() ? `${GET_MY_FIELDS_API}?${queryParams}` : GET_MY_FIELDS_API;
+        const response = await axiosPrivate.get(url);
+
+        console.log("-----------------------------------------------------");
+        console.log("Get my fields response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        const raw = response.data;
+        // Handle API response format: { success: true, data: { fields: [...], pagination: {...} } }
+        const apiList = raw?.data?.fields || (Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []);
+        const mapped = apiList.map(mapApiFieldToAppField);
+        return { 
+            success: true, 
+            data: mapped,
+            pagination: raw?.data?.pagination || null
+        } as unknown as FieldsResponse;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch my fields",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };
@@ -169,7 +222,6 @@ export const checkFieldAvailability = createAsyncThunk<
         console.log("Check availability response:", response.data);
         console.log("-----------------------------------------------------");
 
-        // According to fieldAPI.md, the response is directly an array of availability data
         const raw = response.data;
         const availabilityData = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
         
@@ -194,7 +246,24 @@ export const createField = createAsyncThunk<
     { rejectValue: ErrorResponse }
 >("field/createField", async (payload, thunkAPI) => {
     try {
-        const response = await axiosPrivate.post(CREATE_FIELD_API, payload);
+        // Ensure location is in the correct format
+        let requestPayload = { ...payload };
+        
+        // If location is a string, convert it to the required object format
+        if (typeof requestPayload.location === 'string') {
+            requestPayload = {
+                ...requestPayload,
+                location: {
+                    address: requestPayload.location,
+                    geo: {
+                        type: "Point",
+                        coordinates: [0, 0] // Default - should be replaced with actual coordinates
+                    }
+                } as any
+            };
+        }
+        
+        const response = await axiosPrivate.post(CREATE_FIELD_API, requestPayload);
 
         console.log("-----------------------------------------------------");
         console.log("Create field response:", response.data);
@@ -207,6 +276,89 @@ export const createField = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to create field",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Create field with image upload (Owner only)
+export const createFieldWithImages = createAsyncThunk<
+    FieldResponse,
+    { payload: CreateFieldPayload; images: File[]; locationData?: { address: string; geo: { type: 'Point'; coordinates: [number, number] } } },
+    { rejectValue: ErrorResponse }
+>("field/createFieldWithImages", async ({ payload, images, locationData }, thunkAPI) => {
+    try {
+        const formData = new FormData();
+        
+        // Add basic field data
+        formData.append("name", payload.name);
+        formData.append("sportType", payload.sportType);
+        formData.append("description", payload.description);
+        
+        // Location must be a JSON string with address and geo.coordinates
+        // Use locationData if provided, otherwise construct from payload.location
+        let locationObject;
+        if (locationData && locationData.geo.coordinates[0] !== 0 && locationData.geo.coordinates[1] !== 0) {
+            locationObject = locationData;
+        } else if (typeof payload.location === 'object' && 'geo' in payload.location) {
+            locationObject = payload.location;
+        } else {
+            // Fallback: if only string address is provided (should not happen with new UI)
+            locationObject = {
+                address: payload.location as string,
+                geo: {
+                    type: "Point" as const,
+                    coordinates: [0, 0] as [number, number]
+                }
+            };
+        }
+        formData.append("location", JSON.stringify(locationObject));
+        
+        // Add operating hours as JSON string
+        formData.append("operatingHours", JSON.stringify(payload.operatingHours));
+        
+        // Add slot configuration as strings (required for multipart/form-data)
+        formData.append("slotDuration", payload.slotDuration.toString());
+        formData.append("minSlots", payload.minSlots.toString());
+        formData.append("maxSlots", payload.maxSlots.toString());
+        
+        // Add base price as string (required for multipart/form-data)
+        formData.append("basePrice", payload.basePrice.toString());
+        
+        // Add price ranges as JSON string (OPTIONAL)
+        if (payload.priceRanges && payload.priceRanges.length > 0) {
+            formData.append("priceRanges", JSON.stringify(payload.priceRanges));
+        }
+        
+        // Add amenities as JSON string (OPTIONAL)
+        if (payload.amenities && payload.amenities.length > 0) {
+            formData.append("amenities", JSON.stringify(payload.amenities));
+        }
+        
+        // Add image files (OPTIONAL)
+        if (images && images.length > 0) {
+            images.forEach((image) => {
+                formData.append("images", image);
+            });
+        }
+
+        // IMPORTANT: Do NOT set Content-Type header
+        // Browser will automatically set it with the correct boundary
+        const response = await axiosPrivate.post(CREATE_FIELD_WITH_IMAGES_API, formData);
+
+        console.log("-----------------------------------------------------");
+        console.log("Create field with images response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        const raw = response.data;
+        const apiField = raw?.data ?? raw;
+        const mapped = mapApiFieldToAppField(apiField);
+        return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to create field with images",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };
@@ -265,56 +417,6 @@ export const deleteField = createAsyncThunk<
     }
 });
 
-// Create field with image upload (Owner only)
-export const createFieldWithImages = createAsyncThunk<
-    FieldResponse,
-    { payload: CreateFieldPayload; images: File[] },
-    { rejectValue: ErrorResponse }
->("field/createFieldWithImages", async ({ payload, images }, thunkAPI) => {
-    try {
-        const formData = new FormData();
-        
-        // Add field data as JSON strings
-        formData.append("name", payload.name);
-        formData.append("sportType", payload.sportType);
-        formData.append("description", payload.description);
-        formData.append("location", payload.location);
-        formData.append("operatingHours", JSON.stringify(payload.operatingHours));
-        formData.append("slotDuration", payload.slotDuration.toString());
-        formData.append("minSlots", payload.minSlots.toString());
-        formData.append("maxSlots", payload.maxSlots.toString());
-        formData.append("priceRanges", JSON.stringify(payload.priceRanges));
-        formData.append("basePrice", payload.basePrice.toString());
-        
-        // Add image files
-        images.forEach((image) => {
-            formData.append("images", image);
-        });
-
-        const response = await axiosPrivate.post(CREATE_FIELD_WITH_IMAGES_API, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
-
-        console.log("-----------------------------------------------------");
-        console.log("Create field with images response:", response.data);
-        console.log("-----------------------------------------------------");
-
-        const raw = response.data;
-        const apiField = raw?.data ?? raw;
-        const mapped = mapApiFieldToAppField(apiField);
-        return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
-    } catch (error: any) {
-        const errorResponse: ErrorResponse = {
-            message: error.response?.data?.message || error.message || "Failed to create field with images",
-            status: error.response?.status?.toString() || "500",
-            errors: error.response?.data?.errors,
-        };
-        return thunkAPI.rejectWithValue(errorResponse);
-    }
-});
-
 // Schedule price update (Owner only)
 export const schedulePriceUpdate = createAsyncThunk<
     { success: boolean; message: string; effectiveDate: string; updateId?: string },
@@ -328,7 +430,6 @@ export const schedulePriceUpdate = createAsyncThunk<
         console.log("Schedule price update response:", response.data);
         console.log("-----------------------------------------------------");
 
-        // According to fieldAPI.md, response includes success, message, effectiveDate, and updateId
         const raw = response.data;
         return {
             success: raw?.success ?? true,
@@ -361,7 +462,6 @@ export const cancelScheduledPriceUpdate = createAsyncThunk<
         console.log("Cancel scheduled price update response:", response.data);
         console.log("-----------------------------------------------------");
 
-        // According to fieldAPI.md, response includes success and message
         const raw = response.data;
         return {
             success: raw?.success ?? true,
@@ -390,7 +490,6 @@ export const getScheduledPriceUpdates = createAsyncThunk<
         console.log("Get scheduled price updates response:", response.data);
         console.log("-----------------------------------------------------");
 
-        // According to fieldAPI.md, the response is directly an array of scheduled updates
         const raw = response.data;
         const scheduledUpdates = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
         
@@ -401,6 +500,101 @@ export const getScheduledPriceUpdates = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to get scheduled price updates",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get field amenities
+export const getFieldAmenities = createAsyncThunk<
+    FieldAmenitiesResponse,
+    string,
+    { rejectValue: ErrorResponse }
+>("field/getFieldAmenities", async (fieldId, thunkAPI) => {
+    try {
+        const response = await axiosPublic.get(GET_FIELD_AMENITIES_API(fieldId));
+
+        console.log("-----------------------------------------------------");
+        console.log("Get field amenities response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        const raw = response.data;
+        return {
+            fieldId: raw?.fieldId || fieldId,
+            fieldName: raw?.fieldName || "",
+            amenities: Array.isArray(raw?.amenities) ? raw.amenities : []
+        };
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch field amenities",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Update field amenities (Owner only)
+export const updateFieldAmenities = createAsyncThunk<
+    UpdateFieldAmenitiesResponse,
+    { fieldId: string; payload: UpdateFieldAmenitiesPayload },
+    { rejectValue: ErrorResponse }
+>("field/updateFieldAmenities", async ({ fieldId, payload }, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.put(UPDATE_FIELD_AMENITIES_API(fieldId), payload);
+
+        console.log("-----------------------------------------------------");
+        console.log("Update field amenities response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        const raw = response.data;
+        return {
+            success: raw?.success ?? true,
+            message: raw?.message || "Updated field amenities",
+            field: {
+                id: raw?.field?.id || fieldId,
+                name: raw?.field?.name || "",
+                amenities: Array.isArray(raw?.field?.amenities) ? raw.field.amenities : []
+            }
+        };
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to update field amenities",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get my fields bookings with filter and pagination
+export const getMyFieldsBookings = createAsyncThunk<
+    FieldOwnerBookingsResponse,
+    FieldOwnerBookingsParams | undefined,
+    { rejectValue: ErrorResponse }
+>("field/getMyFieldsBookings", async (params = {}, thunkAPI) => {
+    try {
+        const queryParams = new URLSearchParams();
+        
+        if (params.fieldName) queryParams.append('fieldName', params.fieldName);
+        if (params.status) queryParams.append('status', params.status);
+        if (params.date) queryParams.append('date', params.date);
+        if (params.startDate) queryParams.append('startDate', params.startDate);
+        if (params.endDate) queryParams.append('endDate', params.endDate);
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+
+        const url = queryParams.toString() 
+            ? `${GET_MY_FIELDS_BOOKINGS_API}?${queryParams.toString()}`
+            : GET_MY_FIELDS_BOOKINGS_API;
+
+        const response = await axiosPrivate.get(url);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch field owner bookings",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };

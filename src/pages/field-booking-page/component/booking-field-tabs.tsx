@@ -14,7 +14,7 @@ interface StepConfig {
     /**
      * Step number (1-4)
      */
-    step: BookingStep;
+    step: number;
     /**
      * Display label for the step
      */
@@ -34,7 +34,12 @@ interface BookingFieldTabsProps {
      * Current active step
      * @example BookingStep.BOOK_COURT
      */
-    currentStep: BookingStep;
+    currentStep?: BookingStep;
+    /**
+     * Optional explicit index of the active step (1-based).
+     * Use this when you have visual-only steps that don't map to BookingStep enum.
+     */
+    currentIndex?: number;
     /**
      * Callback when a step is clicked
      * @param step - The step that was clicked
@@ -59,10 +64,11 @@ interface BookingFieldTabsProps {
  * Default step configurations
  */
 const DEFAULT_STEPS: StepConfig[] = [
-    { step: BookingStep.BOOK_COURT, label: 'Book a Court', showArrow: true },
-    { step: BookingStep.ORDER_CONFIRMATION, label: 'Order Confirmation', showArrow: true },
-    { step: BookingStep.PERSONAL_INFO, label: 'Personal Information', showArrow: true },
-    { step: BookingStep.PAYMENT, label: 'Payment', showArrow: false },
+    { step: 1, label: 'Chọn thời gian', showArrow: true },
+    { step: 2, label: 'Chọn tiện ích', showArrow: true },
+    { step: 3, label: 'Xác nhận', showArrow: true },
+    { step: 4, label: 'Thông tin cá nhân', showArrow: true },
+    { step: 5, label: 'Thanh toán', showArrow: false },
 ];
 
 /**
@@ -72,6 +78,7 @@ const DEFAULT_STEPS: StepConfig[] = [
  */
 export const BookingFieldTabs: React.FC<BookingFieldTabsProps> = ({
     currentStep,
+    currentIndex,
     onStepClick,
     allowStepNavigation = false,
     steps = DEFAULT_STEPS,
@@ -83,12 +90,27 @@ export const BookingFieldTabs: React.FC<BookingFieldTabsProps> = ({
         }
     };
 
-    const isStepCompleted = (step: BookingStep): boolean => {
-        return step < currentStep;
+    const resolveActiveIndex = (): number => {
+        if (typeof currentIndex === 'number') return currentIndex;
+        // Map enum to visual index (1-based) for 5-step flow
+        switch (currentStep) {
+            case BookingStep.BOOK_COURT: return 1;
+            case BookingStep.AMENITIES: return 2;
+            case BookingStep.ORDER_CONFIRMATION: return 3;
+            case BookingStep.PERSONAL_INFO: return 4;
+            case BookingStep.PAYMENT: return 5;
+            default: return 1;
+        }
     };
 
-    const isStepActive = (step: BookingStep): boolean => {
-        return step === currentStep;
+    const activeIdx = resolveActiveIndex();
+
+    const isStepCompleted = (step: number): boolean => {
+        return step < activeIdx;
+    };
+
+    const isStepActive = (step: number): boolean => {
+        return step === activeIdx;
     };
 
     return (
@@ -106,10 +128,10 @@ export const BookingFieldTabs: React.FC<BookingFieldTabsProps> = ({
                     const isClickable = allowStepNavigation && (isCompleted || isActive);
 
                     return (
-                        <React.Fragment key={stepConfig.step}>
+                        <React.Fragment key={`${stepConfig.step}-${index}`}>
                             <div className="relative flex flex-col justify-start items-start">
                                 <button
-                                    onClick={() => handleStepClick(stepConfig.step)}
+                                    onClick={() => currentStep && handleStepClick(currentStep)}
                                     disabled={!isClickable}
                                     className={cn(
                                         'flex items-center gap-2.5 pb-3.5',
@@ -167,56 +189,3 @@ export const BookingFieldTabs: React.FC<BookingFieldTabsProps> = ({
         </div>
     );
 };
-
-/**
- * Example usage component
- */
-/*
-export const BookingFieldTabsExample: React.FC = () => {
-    const [currentStep, setCurrentStep] = React.useState<BookingStep>(BookingStep.BOOK_COURT);
-
-    const handleStepClick = (step: BookingStep) => {
-        console.log('Step clicked:', step);
-        setCurrentStep(step);
-    };
-
-    return (
-        <div className="min-h-screen bg-gray-50">
-            <BookingFieldTabs
-                currentStep={currentStep}
-                onStepClick={handleStepClick}
-                allowStepNavigation={true}
-            />
-
-            <div className="container mx-auto px-4 py-8">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold mb-4">
-                        Current Step: {BookingStep[currentStep]}
-                    </h2>
-                    <p className="text-gray-600 mb-4">
-                        Click on the steps above to navigate (when allowStepNavigation is enabled)
-                    </p>
-
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => setCurrentStep(Math.max(1, currentStep - 1) as BookingStep)}
-                            disabled={currentStep === BookingStep.BOOK_COURT}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                            Previous
-                        </button>
-                        <button
-                            onClick={() => setCurrentStep(Math.min(4, currentStep + 1) as BookingStep)}
-                            disabled={currentStep === BookingStep.PAYMENT}
-                            className="px-4 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default BookingFieldTabs; */

@@ -7,6 +7,9 @@ import { useRef, useEffect, useState } from "react"
 import { FooterComponent } from "../../components/footer/footer-component"
 import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getAllFields } from "../../features/field/fieldThunk"
+import { useGeolocation } from "../../hooks/useGeolocation"
+import { locationAPIService } from "../../utils/geolocation"
+import { Navigation, MapPin, AlertCircle, Filter } from "lucide-react"
 
 const FieldBookingPage = () => {
     const fieldsListRef = useRef<HTMLDivElement>(null)
@@ -23,30 +26,220 @@ const FieldBookingPage = () => {
         limit: 10
     })
 
+    // Geolocation states
+    const {
+        error: geolocationError,
+        loading: geolocationLoading,
+        supported: geolocationSupported,
+        getCoordinates
+    } = useGeolocation()
+    
+    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+    const [nearbyFields, setNearbyFields] = useState<any[]>([])
+    const [isLoadingNearby, setIsLoadingNearby] = useState(false)
+    const [isNearbyMode, setIsNearbyMode] = useState(false)
+
+    // Leaflet map refs
+    const mapContainerId = 'fields-map-container'
+    const mapRef = useRef<any>(null)
+    const markersRef = useRef<any[]>([])
+
     const breadcrumbs = [{ label: "Trang chủ", href: "/" }, { label: "Đặt sân thể thao" }]
 
-    // Debounced search effect for location
+    // Geolocation functions
+    const handleGetLocation = async () => {
+        try {
+            console.log('📍 [FIELD LIST] Getting user location...')
+            const coordinates = await getCoordinates()
+            
+            if (coordinates && coordinates.lat && coordinates.lng) {
+                setUserLocation(coordinates as { lat: number; lng: number })
+                console.log('✅ [FIELD LIST] Location obtained:', coordinates)
+                
+                // Get nearby fields
+                await getNearbyFields(coordinates.lat, coordinates.lng)
+            } else {
+                console.log('❌ [FIELD LIST] Failed to get coordinates')
+            }
+        } catch (error) {
+            console.error('❌ [FIELD LIST] Error getting location:', error)
+        }
+    }
+
+    const getNearbyFields = async (lat: number, lng: number) => {
+        setIsLoadingNearby(true)
+        try {
+            console.log('🔍 [FIELD LIST] Getting nearby fields for:', { lat, lng })
+            
+            const result = await locationAPIService.getNearbyFields({
+                latitude: lat,
+                longitude: lng,
+                radius: 10, // 10km radius
+                limit: 20
+            })
+
+            if (result.success && result.data) {
+                setNearbyFields(result.data)
+                setIsNearbyMode(true)
+                console.log('✅ [FIELD LIST] Nearby fields loaded:', result.data.length)
+            } else {
+                console.error('❌ [FIELD LIST] Failed to get nearby fields:', result.error)
+                setNearbyFields([])
+                setIsNearbyMode(false)
+            }
+        } catch (error) {
+            console.error('❌ [FIELD LIST] Error getting nearby fields:', error)
+            setNearbyFields([])
+            setIsNearbyMode(false)
+        } finally {
+            setIsLoadingNearby(false)
+        }
+    }
+
+    // Debounced fetch for all fields unless nearby mode is active
     useEffect(() => {
         const timeoutId = setTimeout(() => {
+            if (isNearbyMode) return
             dispatch(getAllFields(filters))
         }, 500) // 500ms delay for debouncing
 
         return () => clearTimeout(timeoutId)
-    }, [dispatch, filters])
+    }, [dispatch, filters, isNearbyMode])
 
-    // Transform field data to match FieldCard props
-    const transformedFields = fields.map((field) => ({
-        id: field.id,
-        name: field.name,
-        location: field.location,
-        description: field.description,
-        rating: 4.5, // Default rating since it's not in our API yet
-        reviews: field.totalBookings || 0, // Use totalBookings as reviews if available
-        price: `${field.basePrice}k/h`,
-        nextAvailability: field.isActive ? "Có sẵn" : "Không có sẵn",
-        sportType: field.sportType,
-        imageUrl: field.images?.[0] || "/placeholder-field.jpg"
-    }))
+    // Transform field data to match FieldCard props (prefer nearby when in nearby mode)
+    const transformedFields = ((isNearbyMode && nearbyFields.length > 0) ? nearbyFields : fields).map((field) => {
+        // Normalize location to a string for rendering
+        const rawLocation: any = (field as any).location ?? (field as any).address;
+        let locationText = 'Địa chỉ không xác định';
+        if (typeof rawLocation === 'string' && rawLocation.trim()) {
+            locationText = rawLocation;
+        } else if (rawLocation && typeof rawLocation === 'object') {
+            const address = (rawLocation as any).address;
+            const geo = (rawLocation as any).geo;
+            const lat = geo?.latitude ?? geo?.lat;
+            const lng = geo?.longitude ?? geo?.lng;
+            if (typeof address === 'string' && address.trim()) {
+                locationText = address;
+            } else if (lat != null && lng != null) {
+                locationText = `${lat}, ${lng}`;
+            }
+        }
+
+        return {
+            id: (field as any).id,
+            name: (field as any).name,
+            location: locationText,
+            description: (field as any).description || 'Mô tả không có sẵn',
+            rating: (field as any).rating || 4.5,
+            reviews: (field as any).reviews || (field as any).totalBookings || 0,
+            price: (field as any).price || `${(field as any).basePrice || 0}k/h`,
+            nextAvailability: (field as any).isActive !== false ? 'Có sẵn' : 'Không có sẵn',
+            sportType: (field as any).sportType || 'unknown',
+            imageUrl: (field as any).imageUrl || (field as any).images?.[0] || '/placeholder-field.jpg',
+            distance: (field as any).distance ? `${(field as any).distance.toFixed(1)} km` : undefined,
+            latitude: (field as any).latitude ?? (field as any).lat ?? (field as any)?.geo?.lat ?? (field as any)?.geo?.latitude,
+            longitude: (field as any).longitude ?? (field as any).lng ?? (field as any)?.geo?.lng ?? (field as any)?.geo?.longitude,
+        };
+    })
+
+    // Load Leaflet from CDN if not loaded
+    const ensureLeafletLoaded = async (): Promise<void> => {
+        const hasLeaflet = typeof (window as any).L !== 'undefined'
+        if (hasLeaflet) return
+        await new Promise<void>((resolve) => {
+            // CSS
+            if (!document.getElementById('leaflet-css')) {
+                const link = document.createElement('link')
+                link.id = 'leaflet-css'
+                link.rel = 'stylesheet'
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+                link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY='
+                link.crossOrigin = ''
+                document.head.appendChild(link)
+            }
+            // JS
+            const scriptId = 'leaflet-js'
+            if (document.getElementById(scriptId)) {
+                resolve()
+                return
+            }
+            const script = document.createElement('script')
+            script.id = scriptId
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+            script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='
+            script.crossOrigin = ''
+            script.onload = () => resolve()
+            document.body.appendChild(script)
+        })
+    }
+
+    // Initialize map once
+    useEffect(() => {
+        (async () => {
+            try {
+                await ensureLeafletLoaded()
+                const L: any = (window as any).L
+                if (!mapRef.current) {
+                    const container = document.getElementById(mapContainerId)
+                    if (!container) return
+                    mapRef.current = L.map(mapContainerId).setView([16.0471, 108.2062], 12) // default center Da Nang
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(mapRef.current)
+                }
+            } catch (e) {
+                console.error('Failed to initialize map', e)
+            }
+        })()
+        // no cleanup to preserve map instance
+    }, [])
+
+    // Update markers when data changes
+    useEffect(() => {
+        const L: any = (window as any).L
+        if (!L || !mapRef.current) return
+
+        // Clear old markers
+        markersRef.current.forEach(m => m.remove && m.remove())
+        markersRef.current = []
+
+        const bounds = L.latLngBounds([])
+
+        // User location marker
+        if (userLocation && userLocation.lat && userLocation.lng) {
+            const userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
+                radius: 6,
+                color: '#2563eb',
+                fillColor: '#3b82f6',
+                fillOpacity: 0.9
+            }).addTo(mapRef.current)
+            userMarker.bindPopup('Vị trí của bạn')
+            markersRef.current.push(userMarker)
+            bounds.extend([userLocation.lat, userLocation.lng])
+        }
+
+        // Field markers
+        transformedFields.forEach((f) => {
+            if (f.latitude != null && f.longitude != null) {
+                const marker = L.marker([f.latitude, f.longitude]).addTo(mapRef.current)
+                const popupHtml = `
+                    <div style="min-width: 160px">
+                        <div style="font-weight:600;margin-bottom:4px">${f.name}</div>
+                        <div style="font-size:12px;color:#4b5563;">${f.location}</div>
+                        ${f.price ? `<div style="font-size:12px;margin-top:4px;color:#065f46">Giá: ${f.price}</div>` : ''}
+                    </div>
+                `
+                marker.bindPopup(popupHtml)
+                markersRef.current.push(marker)
+                bounds.extend([f.latitude, f.longitude])
+            }
+        })
+
+        if (bounds.isValid()) {
+            mapRef.current.fitBounds(bounds.pad(0.2))
+        }
+    }, [transformedFields, userLocation])
 
     return (
         <div className="min-h-screen">
@@ -92,46 +285,76 @@ const FieldBookingPage = () => {
                     <div className="flex-[6] bg-white flex flex-col h-screen">
                         {/* Filters */}
                         <div className="p-4 border-b border-gray-200">
-                            <div className="flex flex-wrap gap-4">
-                                <div className="flex-1 min-w-48">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Địa điểm
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Tìm theo địa điểm..."
-                                        value={filters.location}
-                                        onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value, page: 1 }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    />
+                            
+                            {/* Geolocation Section */}
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                            <Filter className="w-4 h-4" />
+                                            Tìm sân gần tôi
+                                        </h3>
+                                        
+                                        {geolocationSupported ? (
+                                            <button
+                                                onClick={handleGetLocation}
+                                                disabled={geolocationLoading || isLoadingNearby}
+                                                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+                                            >
+                                                {geolocationLoading || isLoadingNearby ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                        {isLoadingNearby ? 'Đang tìm...' : 'Đang lấy vị trí...'}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Navigation className="w-4 h-4" />
+                                                        Lấy vị trí của tôi
+                                                    </>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                <AlertCircle className="w-4 h-4" />
+                                                <span>Trình duyệt không hỗ trợ định vị</span>
+                                            </div>
+                                        )}
+                                        
+                                        {userLocation && (
+                                            <div className="flex items-center gap-2 text-sm text-green-600">
+                                                <MapPin className="w-4 h-4" />
+                                                <span>
+                                                    {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        
+                                        {geolocationError && (
+                                            <div className="text-sm text-red-600 flex items-center gap-1">
+                                                <AlertCircle className="w-4 h-4" />
+                                                <span>{geolocationError.message}</span>
                                 </div>
-                                <div className="flex-1 min-w-48">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Loại sân
-                                    </label>
-                                    <select
-                                        value={filters.type}
-                                        onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value, page: 1 }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                    >
-                                        <option value="">Tất cả loại sân</option>
-                                        <option value="football">Bóng đá</option>
-                                        <option value="basketball">Bóng rổ</option>
-                                        <option value="tennis">Tennis</option>
-                                        <option value="badminton">Cầu lông</option>
-                                        <option value="volleyball">Bóng chuyền</option>
-                                        <option value="swimming">Bơi lội</option>
-                                        <option value="gym">Gym</option>
-                                        <option value="yoga">Yoga</option>
-                                    </select>
+                                        )}
                                 </div>
-                                <div className="flex items-end">
+                                    
+                                    {isNearbyMode && nearbyFields.length > 0 && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm text-gray-600">
+                                                Đã tìm thấy {nearbyFields.length} sân gần vị trí của bạn
+                                            </span>
                                     <button
-                                        onClick={() => setFilters({ location: "", type: "", page: 1, limit: 10 })}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                                    >
-                                        Xóa bộ lọc
+                                                onClick={() => {
+                                                    setIsNearbyMode(false)
+                                                    setNearbyFields([])
+                                                    // Trigger reload of normal list
+                                                    dispatch(getAllFields({ ...filters }))
+                                                }}
+                                                className="px-3 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                            >
+                                                Tắt sân gần tôi
                                     </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -144,7 +367,7 @@ const FieldBookingPage = () => {
                                 scrollSnapType: "y mandatory"
                             }}
                         >
-                            {loading && (
+                            {(loading || isLoadingNearby) && (
                                 <div className="space-y-4">
                                     {[1, 2, 3].map((item) => (
                                         <div key={item} className="animate-pulse">
@@ -169,7 +392,7 @@ const FieldBookingPage = () => {
                                 </div>
                             )}
 
-                            {!loading && !error && transformedFields.length === 0 && (
+                            {!loading && !isLoadingNearby && !error && transformedFields.length === 0 && (
                                 <div className="text-center py-12">
                                     <p className="text-gray-500 text-lg">Không tìm thấy sân thể thao nào.</p>
                                 </div>
@@ -190,13 +413,14 @@ const FieldBookingPage = () => {
                                                 nextAvailability={field.nextAvailability}
                                                 sportType={field.sportType}
                                                 imageUrl={field.imageUrl}
+                                                distance={field.distance}
                                             />
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            {!loading && pagination && pagination.total > filters.limit && (
+                            {!loading && !isLoadingNearby && !isNearbyMode && pagination && pagination.total > filters.limit && (
                                 <div className="flex justify-center mt-6 space-x-2">
                                     <button
                                         onClick={() => setFilters(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
@@ -223,13 +447,7 @@ const FieldBookingPage = () => {
                     {/* Right Panel - Map (4/10 columns) */}
                     <div className="flex-[4] relative">
                         <div className="sticky top-16 h-[calc(100vh-4rem)] w-full">
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.004365675287!2d105.85242641540224!3d21.0285118859989!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab98b8d36d05%3A0xe9e26b6de6d6f2d2!2zSOG7jWMgSOG7jWMgTmjDoCBUcsawbmcgVMOibg!5e0!3m2!1svi!2s!4v1632993871239!5m2!1svi!2s"
-                                className="absolute h-full w-full p-0 border-0 m-0 left-0 top-0 pointer-events-auto"
-                                allowFullScreen={true}
-                                loading="lazy"
-                                referrerPolicy="no-referrer-when-downgrade"
-                            ></iframe>
+                            <div id={mapContainerId} className="absolute h-full w-full p-0 border-0 m-0 left-0 top-0" />
                         </div>
                     </div>
                 </div>

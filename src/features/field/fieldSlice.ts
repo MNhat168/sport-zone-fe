@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { Field, ErrorResponse } from "../../types/field-type";
 import {
     getAllFields,
+    getMyFields,
     getFieldById,
     checkFieldAvailability,
     createField,
@@ -11,6 +12,9 @@ import {
     schedulePriceUpdate,
     cancelScheduledPriceUpdate,
     getScheduledPriceUpdates,
+    getFieldAmenities,
+    updateFieldAmenities,
+    getMyFieldsBookings,
 } from "./fieldThunk";
 
 interface FieldState {
@@ -25,6 +29,13 @@ interface FieldState {
     // Price scheduling data
     scheduledPriceUpdates: import("../../types/field-type").ScheduledPriceUpdate[] | null;
     
+    // Field amenities data
+    fieldAmenities: import("../../types/field-type").FieldAmenity[] | null;
+    
+    // Field owner bookings data
+    fieldOwnerBookings: import("../../types/field-type").FieldOwnerBooking[] | null;
+    fieldOwnerBookingsPagination: import("../../types/field-type").Pagination | null;
+    
     // Loading states
     loading: boolean;
     createLoading: boolean;
@@ -33,6 +44,8 @@ interface FieldState {
     deleteLoading: boolean;
     availabilityLoading: boolean;
     priceSchedulingLoading: boolean;
+    amenitiesLoading: boolean;
+    fieldOwnerBookingsLoading: boolean;
     
     // Error states
     error: ErrorResponse | null;
@@ -42,6 +55,8 @@ interface FieldState {
     deleteError: ErrorResponse | null;
     availabilityError: ErrorResponse | null;
     priceSchedulingError: ErrorResponse | null;
+    amenitiesError: ErrorResponse | null;
+    fieldOwnerBookingsError: ErrorResponse | null;
 }
 
 const initialState: FieldState = {
@@ -50,6 +65,9 @@ const initialState: FieldState = {
     pagination: null,
     availability: null,
     scheduledPriceUpdates: null,
+    fieldAmenities: null,
+    fieldOwnerBookings: null,
+    fieldOwnerBookingsPagination: null,
     loading: false,
     createLoading: false,
     createWithImagesLoading: false,
@@ -57,6 +75,8 @@ const initialState: FieldState = {
     deleteLoading: false,
     availabilityLoading: false,
     priceSchedulingLoading: false,
+    amenitiesLoading: false,
+    fieldOwnerBookingsLoading: false,
     error: null,
     createError: null,
     createWithImagesError: null,
@@ -64,6 +84,8 @@ const initialState: FieldState = {
     deleteError: null,
     availabilityError: null,
     priceSchedulingError: null,
+    amenitiesError: null,
+    fieldOwnerBookingsError: null,
 };
 
 const fieldSlice = createSlice({
@@ -77,6 +99,11 @@ const fieldSlice = createSlice({
             state.availability = null;
             state.availabilityError = null;
         },
+        clearFieldOwnerBookings: (state) => {
+            state.fieldOwnerBookings = null;
+            state.fieldOwnerBookingsPagination = null;
+            state.fieldOwnerBookingsError = null;
+        },
         clearErrors: (state) => {
             state.error = null;
             state.createError = null;
@@ -85,6 +112,12 @@ const fieldSlice = createSlice({
             state.deleteError = null;
             state.availabilityError = null;
             state.priceSchedulingError = null;
+            state.amenitiesError = null;
+            state.fieldOwnerBookingsError = null;
+        },
+        clearAmenities: (state) => {
+            state.fieldAmenities = null;
+            state.amenitiesError = null;
         },
         resetFieldState: () => initialState,
     },
@@ -102,6 +135,22 @@ const fieldSlice = createSlice({
                 state.error = null;
             })
             .addCase(getAllFields.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || { message: "Unknown error", status: "500" };
+            })
+
+            // Get my fields (for field owner)
+            .addCase(getMyFields.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getMyFields.fulfilled, (state, action) => {
+                state.loading = false;
+                state.fields = action.payload.data;
+                state.pagination = action.payload.pagination || null;
+                state.error = null;
+            })
+            .addCase(getMyFields.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || { message: "Unknown error", status: "500" };
             })
@@ -270,6 +319,52 @@ const fieldSlice = createSlice({
             .addCase(getScheduledPriceUpdates.rejected, (state, action) => {
                 state.priceSchedulingLoading = false;
                 state.priceSchedulingError = action.payload || { message: "Unknown error", status: "500" };
+            })
+
+            // Get field amenities
+            .addCase(getFieldAmenities.pending, (state) => {
+                state.amenitiesLoading = true;
+                state.amenitiesError = null;
+            })
+            .addCase(getFieldAmenities.fulfilled, (state, action) => {
+                state.amenitiesLoading = false;
+                state.fieldAmenities = action.payload.amenities;
+                state.amenitiesError = null;
+            })
+            .addCase(getFieldAmenities.rejected, (state, action) => {
+                state.amenitiesLoading = false;
+                state.amenitiesError = action.payload || { message: "Unknown error", status: "500" };
+            })
+
+            // Update field amenities
+            .addCase(updateFieldAmenities.pending, (state) => {
+                state.amenitiesLoading = true;
+                state.amenitiesError = null;
+            })
+            .addCase(updateFieldAmenities.fulfilled, (state, action) => {
+                state.amenitiesLoading = false;
+                state.fieldAmenities = action.payload.field.amenities;
+                state.amenitiesError = null;
+            })
+            .addCase(updateFieldAmenities.rejected, (state, action) => {
+                state.amenitiesLoading = false;
+                state.amenitiesError = action.payload || { message: "Unknown error", status: "500" };
+            })
+
+            // Get my fields bookings (for field owner booking management)
+            .addCase(getMyFieldsBookings.pending, (state) => {
+                state.fieldOwnerBookingsLoading = true;
+                state.fieldOwnerBookingsError = null;
+            })
+            .addCase(getMyFieldsBookings.fulfilled, (state, action) => {
+                state.fieldOwnerBookingsLoading = false;
+                state.fieldOwnerBookings = action.payload.data.bookings;
+                state.fieldOwnerBookingsPagination = action.payload.data.pagination;
+                state.fieldOwnerBookingsError = null;
+            })
+            .addCase(getMyFieldsBookings.rejected, (state, action) => {
+                state.fieldOwnerBookingsLoading = false;
+                state.fieldOwnerBookingsError = action.payload || { message: "Unknown error", status: "500" };
             });
     },
 });
@@ -277,7 +372,9 @@ const fieldSlice = createSlice({
 export const {
     clearCurrentField,
     clearAvailability,
+    clearFieldOwnerBookings,
     clearErrors,
+    clearAmenities,
     resetFieldState,
 } = fieldSlice.actions;
 

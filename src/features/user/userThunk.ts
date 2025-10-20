@@ -78,8 +78,8 @@ export const updateUserProfile = createAsyncThunk<
             formData.append('avatar', payload.avatar);
         }
 
-        const response = await axiosPrivate.put(
-            `${UPDATE_PROFILE_API}/${payload.userId}`, 
+        const response = await axiosPrivate.patch(
+            UPDATE_PROFILE_API, 
             formData,
             {
                 headers: {

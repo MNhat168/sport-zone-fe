@@ -14,11 +14,11 @@ import UserBookingHistoryPage from "../pages/user-dashboard-page/user-booking-hi
 import UserInvoicesPage from "../pages/user-dashboard-page/user-invoices-page";
 import UserChatPage from "../pages/user-dashboard-page/user-chat-page";
 import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
-import UserProfileTab from "../pages/user-dashboard-page/user-profile/user-profile-tab";
+import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 
 // Coach Pages
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
-import CoachSchedulePage from "@/pages/coach-dashboard-page/coach-schedule-page"; 
+
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 
@@ -26,6 +26,10 @@ import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
+
+// Field Owner Pages
+import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
+import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/field-owner-dashboard-page";
 
 /**
  * Placeholder component for pages under development
@@ -50,14 +54,6 @@ export const publicRoutes: RouteObject[] = [
   { path: "/verify-email", element: <VerifyTokenPage /> },
   { path: "/auth/verify-token", element: <VerifyTokenPage /> },
   { path: "/verify-email/success", element: <VerifyTokenPage /> },
-  { path: "/user-dashboard", element: <UserDashboardPage /> },
-  { path: "/user-booking-history", element: <UserBookingHistoryPage /> },
-  { path: "/user-invoices", element: <UserInvoicesPage /> },
-  { path: "/user-chat", element: <UserChatPage /> },
-  { path: "/user-wallet", element: <UserWalletPage /> },
-  { path: "/user-profile", element: <UserProfileTab /> },
-  { path: "/coach-dashboard", element: <CoachDashboardPage /> },
-  { path: "/coach-schedule", element: <CoachSchedulePage /> },
   { path: "/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
@@ -79,6 +75,9 @@ export const publicRoutes: RouteObject[] = [
   { path: "/about", element: <Placeholder title="Về chúng tôi" /> },
   { path: "/contact", element: <Placeholder title="Liên hệ" /> },
   { path: "/services", element: <Placeholder title="Dịch vụ" /> },
+
+  //test
+  { path: "/field-owner-dashboard", element: <FieldOwnerDashboardPage /> },
 ];
 
 /**
@@ -97,7 +96,7 @@ export const guestRoutes: RouteObject[] = [
 export const userRoutes: RouteObject[] = [
   // User Dashboard & Profile
   {
-    path: "/user/dashboard",
+    path: "/user-dashboard",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserDashboardPage />
@@ -105,17 +104,17 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/user/profile",
+    path: "/user-profile",
     element: (
-      <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <UserProfileTab />
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.coach, UserRole.FIELD_OWNER]}>
+        <UserProfilePage />
       </ProtectedRoute>
     ),
   },
   
   // User Booking Management
   {
-    path: "/user/bookings",
+    path: "/user-booking-history",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserBookingHistoryPage />
@@ -123,7 +122,7 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/user/invoices",
+    path: "/user-invoices",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserInvoicesPage />
@@ -133,7 +132,7 @@ export const userRoutes: RouteObject[] = [
   
   // User Communication & Finance
   {
-    path: "/user/chat",
+    path: "/user-chat",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserChatPage />
@@ -141,7 +140,7 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/user/wallet",
+    path: "/user-wallet",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserWalletPage />
@@ -178,7 +177,7 @@ export const coachRoutes: RouteObject[] = [
     path: "/coach/profile",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <Placeholder title="Coach Profile" />
+        <UserProfilePage />
       </ProtectedRoute>
     ),
   },
@@ -357,10 +356,10 @@ export const fieldOwnerRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/field-owner/profile/:userId",
+    path: "/field-owner/profile",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <Placeholder title="Field Owner Profile" />
+        <UserProfilePage />
       </ProtectedRoute>
     ),
   },
@@ -378,7 +377,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner/fields",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <Placeholder title="Quản lý sân" />
+        <OwnerFieldListPage />
       </ProtectedRoute>
     ),
   },
