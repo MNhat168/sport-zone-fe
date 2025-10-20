@@ -4,6 +4,8 @@ import {
     signUpWithEmailAndPassword,
     signInWithGoogle,
     logout,
+    validateSession,
+    refreshToken,
 } from "./authThunk";
 import type { AuthResponse, ErrorResponse } from "../../types/authentication-type";
 import { clearUserAuth } from "../../lib/cookies";
@@ -158,6 +160,55 @@ const authSlice = createSlice({
                     localStorage.removeItem("user");
                 } catch {}
             })
+            
+            // Validate session
+            .addCase(validateSession.fulfilled, (state, action) => {
+                state.loading = false;
+                const user = action.payload?.user;
+                if (user) {
+                    state.user = user;
+                    state.error = null;
+                    // Update storage with validated user
+                    const isSessionActive = !!sessionStorage.getItem("user");
+                    const target = isSessionActive ? sessionStorage : localStorage;
+                    target.setItem("user", JSON.stringify(user));
+                }
+            })
+            .addCase(validateSession.rejected, (state, action) => {
+                state.loading = false;
+                state.user = null;
+                state.token = null;
+                clearUserAuth();
+                try {
+                    sessionStorage.removeItem("user");
+                    localStorage.removeItem("user");
+                } catch {}
+            })
+            
+            // Refresh token
+            .addCase(refreshToken.fulfilled, (state, action) => {
+                state.loading = false;
+                const user = action.payload?.user;
+                if (user) {
+                    state.user = user;
+                    state.error = null;
+                    // Update storage with refreshed token
+                    const isSessionActive = !!sessionStorage.getItem("user");
+                    const target = isSessionActive ? sessionStorage : localStorage;
+                    target.setItem("user", JSON.stringify(user));
+                }
+            })
+            .addCase(refreshToken.rejected, (state) => {
+                state.loading = false;
+                state.user = null;
+                state.token = null;
+                clearUserAuth();
+                try {
+                    sessionStorage.removeItem("user");
+                    localStorage.removeItem("user");
+                } catch {}
+            })
+            
             .addMatcher(
                 (action) => action.type.endsWith("/pending"),
                 (state) => {

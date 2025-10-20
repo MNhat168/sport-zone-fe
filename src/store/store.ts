@@ -5,6 +5,7 @@ import fieldReducer from "../features/field/fieldSlice";
 import bookingReducer from "../features/booking/bookingSlice";
 import coachReducer from "../features/coach/coachSlice";
 import { amenitiesReducer } from "../features/amenities";
+import { ownerProfileReducer } from "../features/field-owner-profile";
 
 export const store = configureStore({
     reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
         booking: bookingReducer,
         coach: coachReducer,
         amenities: amenitiesReducer,
+        ownerProfile: ownerProfileReducer,
     },
 });
 

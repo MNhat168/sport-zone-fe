@@ -11,6 +11,7 @@ import { getAmenitiesBySportType } from '@/features/amenities';
 import type { CreateFieldPayload, PriceRange, FieldLocation } from '@/types/field-type';
 import type { AmenityWithPrice } from '@/types/amenity-with-price';
 import { CustomFailedToast, CustomSuccessToast } from '@/components/toast/notificiation-toast';
+import { FieldOwnerDashboardTabs } from '@/components/ui/field-owner-dashboard-tabs';
 import {
     BasicInfoCard,
     PriceCard,
@@ -22,6 +23,7 @@ import {
     GalleryCard,
     LocationCard
 } from '@/pages/field-create-page/component/field-create';
+import { FieldOwnerDashboardHeader } from '@/components/header/field-owner-dashboard-header';
 export default function FieldCreatePage() {
     const dispatch = useAppDispatch();
     const { createLoading, createWithImagesLoading, createError, createWithImagesError } = useAppSelector((state) => state.field);
@@ -495,6 +497,8 @@ export default function FieldCreatePage() {
 
     return (
         <>
+        <FieldOwnerDashboardHeader />
+        <FieldOwnerDashboardTabs />
             <NavbarDarkComponent />
             <PageWrapper>
                 <PageHeader title="Tạo sân" breadcrumbs={[{ label: "Trang chủ", href: "/" }, { label: "Tạo sân" }]} />
