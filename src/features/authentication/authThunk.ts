@@ -8,7 +8,8 @@ import type {
     GoogleAuthResponse,
 } from "../../types/authentication-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
-import { LOGIN_API, REGISTER_API, GOOGLE_LOGIN_API, LOGOUT_API } from "./authAPI";
+import axiosPrivate from "../../utils/axios/axiosPrivate";
+import { LOGIN_API, REGISTER_API, GOOGLE_LOGIN_API, LOGOUT_API, VALIDATE_SESSION_API, REFRESH_TOKEN_API } from "./authAPI";
 
 export const signInWithEmailAndPassword = createAsyncThunk<
     Pick<AuthResponse, "user">,
@@ -100,6 +101,56 @@ export const logout = createAsyncThunk<
         return thunkAPI.rejectWithValue({
             message: error.response?.data?.message || error.message || "Logout failed",
             status: error.response?.status || "500",
+        });
+    }
+});
+
+// Validate session - check if JWT is still valid
+export const validateSession = createAsyncThunk<
+    Pick<AuthResponse, "user">,
+    void,
+    { rejectValue: ErrorResponse }
+>("auth/validateSession", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(VALIDATE_SESSION_API);
+        
+        const raw = response?.data?.data ?? response?.data;
+        const user = raw?.user ?? raw?.data?.user ?? raw?.result?.user ?? null;
+        
+        if (!user) {
+            throw new Error("Invalid session: missing user");
+        }
+        
+        return { user } as Pick<AuthResponse, "user">;
+    } catch (error: any) {
+        return thunkAPI.rejectWithValue({
+            message: error.response?.data?.message || error.message || "Session expired",
+            status: error.response?.status || "401",
+        });
+    }
+});
+
+// Refresh token - get new JWT using refresh token
+export const refreshToken = createAsyncThunk<
+    Pick<AuthResponse, "user">,
+    void,
+    { rejectValue: ErrorResponse }
+>("auth/refreshToken", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPublic.post(REFRESH_TOKEN_API);
+        
+        const raw = response?.data?.data ?? response?.data;
+        const user = raw?.user ?? raw?.data?.user ?? raw?.result?.user ?? null;
+        
+        if (!user) {
+            throw new Error("Failed to refresh token: missing user");
+        }
+        
+        return { user } as Pick<AuthResponse, "user">;
+    } catch (error: any) {
+        return thunkAPI.rejectWithValue({
+            message: error.response?.data?.message || error.message || "Token refresh failed",
+            status: error.response?.status || "401",
         });
     }
 });
