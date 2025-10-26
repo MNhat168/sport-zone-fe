@@ -11,7 +11,7 @@ export function CoachDashboardHeader() {
     
     const getHeaderInfo = (pathname: string): HeaderInfo => {
         switch (pathname) {
-            case "/coach-dashboard":
+            case "/coach/dashboard":
                 return {
                     title: "Coach Dashboard",
                     breadcrumb: ["Home", "Coach Dashboard"]
@@ -26,7 +26,7 @@ export function CoachDashboardHeader() {
                     title: "Requests",
                     breadcrumb: ["Home", "Coach Dashboard", "Requests"]
                 }
-            case "/coach-schedule":
+            case "/coach/schedule":
                 return {
                     title: "Schedule",
                     breadcrumb: ["Home", "Coach Dashboard", "Schedule"]

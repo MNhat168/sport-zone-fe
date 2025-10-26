@@ -35,8 +35,8 @@ export function CoachDashboardTabs() {
                     <div className="flex justify-between items-center w-full">
                         <Button 
                             variant="ghost" 
-                            className={baseTabClasses(isActive("/coach-dashboard"))}
-                            onClick={() => handleNavigation("/coach-dashboard")}
+                            className={baseTabClasses(isActive("/coach/dashboard"))}
+                            onClick={() => handleNavigation("/coach/dashboard")}
                         >
                             <LayoutDashboard className="w-5 h-5" />
                             <span className="text-xs font-medium">Dashboard</span>
@@ -59,8 +59,8 @@ export function CoachDashboardTabs() {
                         </Button>
                         <Button 
                             variant="ghost" 
-                            className={baseTabClasses(isActive("/coach-schedule"))}
-                            onClick={() => handleNavigation("/coach-schedule")}
+                            className={baseTabClasses(isActive("/coach/schedule"))}
+                            onClick={() => handleNavigation("/coach/schedule")}
                         >
                             <Calendar className="w-5 h-5" />
                             <span className="text-xs font-medium">Schedule</span>
@@ -91,11 +91,11 @@ export function CoachDashboardTabs() {
                         </Button>
                         <Button 
                             variant="ghost" 
-                            className={baseTabClasses(isActive("/coach-profile"))}
-                            onClick={() => handleNavigation("/coach-profile")}
+                            className={baseTabClasses(isActive("/coach/coach-profile"))}
+                            onClick={() => handleNavigation("/coach/coach-profile")}
                         >
                             <Settings className="w-5 h-5" />
-                            <span className="text-xs font-medium">Profile Setting</span>
+                            <span className="text-xs font-medium">Profile</span>
                         </Button>
                     </div>
                 </div>
