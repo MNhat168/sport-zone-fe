@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import axiosPublic from "@/utils/axios/axiosPublic";
-import { CoachDashboardTabs } from "@/components/ui/coach-dashboard-tabs"
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
-import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
-import { PageWrapper } from '@/components/layouts/page-wrapper'
+import { CoachDashboardTabs } from "@/components/ui/coach-dashboard-tabs";
+import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
+import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header";
+import { PageWrapper } from "@/components/layouts/page-wrapper";
+import { SPORT_OPTIONS, VIETNAM_CITIES } from "@/utils/constant-value/constant";
 
 interface CoachProfile {
   certification?: string;
@@ -20,6 +21,8 @@ interface User {
   avatarUrl?: string;
   role: string;
 }
+
+
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -41,26 +44,45 @@ export default function ProfilePage() {
         const res = await axiosPublic.get(`/profiles/user/${user._id}`);
         setProfile(res.data.data);
         setForm(res.data.data);
+        console.log("✅ Loaded profile:", res.data.data);
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("❌ Error fetching profile:", err);
       }
     };
     fetchProfile();
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSportToggle = (sport: string) => {
+    setForm((prev) => {
+      const currentSports = prev.sports || [];
+      if (currentSports.includes(sport)) {
+        // unselect
+        return { ...prev, sports: currentSports.filter((s) => s !== sport) };
+      } else if (currentSports.length < 3) {
+        // select up to 3
+        return { ...prev, sports: [...currentSports, sport] };
+      } else {
+        alert("You can only select up to 3 sports!");
+        return prev;
+      }
+    });
   };
 
   const handleSave = async () => {
     if (!user?._id) return;
 
     try {
+      console.log("📤 Saving profile:", form);
       const res = await axiosPublic.patch(`/profiles/coach/update/${user._id}`, form);
       setProfile(res.data.data);
       setEditing(false);
+      console.log("✅ Updated profile:", res.data.data);
     } catch (err) {
-      console.error("Error updating profile:", err);
+      console.error("❌ Error updating profile:", err);
     }
   };
 
@@ -114,27 +136,48 @@ export default function ProfilePage() {
                 placeholder="Bio"
                 className="w-full border rounded-lg p-2"
               />
-              <input
-                type="text"
-                name="sports"
-                value={form.sports?.join(", ") || ""}
-                onChange={e =>
-                  setForm(prev => ({
-                    ...prev,
-                    sports: e.target.value.split(",").map(s => s.trim()),
-                  }))
-                }
-                placeholder="Sports (comma-separated)"
-                className="w-full border rounded-lg p-2"
-              />
-              <input
-                type="text"
-                name="location"
-                value={form.location || ""}
-                onChange={handleChange}
-                placeholder="Location"
-                className="w-full border rounded-lg p-2"
-              />
+
+              {/* ✅ Sports checklist */}
+              <div>
+                <p className="font-semibold mb-2">Sports (choose up to 3):</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {SPORT_OPTIONS.map((sport) => (
+                    <label
+                      key={sport}
+                      className={`flex items-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-gray-50 ${
+                        form.sports?.includes(sport)
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.sports?.includes(sport) || false}
+                        onChange={() => handleSportToggle(sport)}
+                      />
+                      <span className="capitalize">{sport}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="font-semibold mb-2">Location:</p>
+                <select
+                  name="location"
+                  value={form.location || ""}
+                  onChange={handleChange}
+                  className="w-full border rounded-lg p-2"
+                >
+                  <option value="">Select City</option>
+                  {VIETNAM_CITIES.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <input
                 type="text"
                 name="experience"
@@ -164,5 +207,4 @@ export default function ProfilePage() {
       </PageWrapper>
     </>
   );
-};
-
+}
