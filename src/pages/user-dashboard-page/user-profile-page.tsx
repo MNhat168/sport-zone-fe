@@ -1,5 +1,6 @@
 import { UserDashboardTabs } from "@/components/ui/user-dashboard-tabs"
 import { FieldOwnerDashboardTabs } from "@/components/ui/field-owner-dashboard-tabs"
+import {CoachDashboardTabs} from "@/components/ui/coach-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { FieldOwnerDashboardHeader } from "@/components/header/field-owner-dashboard-header"
@@ -17,8 +18,7 @@ export default function UserProfilePage() {
             case 'field_owner':
                 return <FieldOwnerDashboardTabs />
             case 'coach':
-                // TODO: Add CoachDashboardTabs when available
-                return <UserDashboardTabs />
+                return <CoachDashboardTabs />
             case 'user':
             default:
                 return <UserDashboardTabs />
