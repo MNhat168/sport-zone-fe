@@ -1,7 +1,7 @@
 "use client";
 import { useParams } from "react-router-dom";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,9 +45,15 @@ import {
   Navigation,
   Heart,
   Eye,
-//   ChevronUp,
+  //   ChevronUp,
 } from "lucide-react";
 import { getCoachById, clearCurrentCoach } from "@/features/coach";
+import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
+import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
+import {
+  CustomFailedToast,
+  CustomSuccessToast,
+} from "@/components/toast/notificiation-toast";
 import type { RootState, AppDispatch } from "@/store/store";
 
 interface LessonType {
@@ -95,8 +101,10 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const params = useParams();
   const effectiveCoachId = coachId ?? params.id;
   const dispatch = useDispatch<AppDispatch>();
-  const { currentCoach, detailLoading, detailError } = useSelector((state: RootState) => state.coach);
-  
+  const { currentCoach, detailLoading, detailError } = useSelector(
+    (state: RootState) => state.coach
+  );
+
   const [activeTab, setActiveTab] = useState("bio");
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
@@ -104,6 +112,14 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
+  
+  const [reviewComment, setReviewComment] = useState<string>("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [coachReviews, setCoachReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
+  const REVIEW_PAGE_LIMIT = 5;
 
   // Get lesson types from real coach data or fallback to mock data
   const getLessonTypes = (): LessonType[] => {
@@ -115,7 +131,8 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
         description: lesson.description,
         icon: lesson.type === "single" ? User : Users,
         iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
-        iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
+        iconColor:
+          lesson.type === "single" ? "text-green-600" : "text-blue-600",
         badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
       }));
     }
@@ -130,6 +147,38 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       dispatch(getCoachById(effectiveCoachId));
     }
   }, [dispatch, effectiveCoachId]);
+
+  // Fetch reviews for this coach (paginated) and set up auto-refresh (polling)
+  const fetchReviews = useCallback(
+    async (page = 1, append = false) => {
+      if (!effectiveCoachId) return;
+      try {
+        setReviewsLoading(true);
+        const resp = await getReviewsForCoachAPI(effectiveCoachId, page, REVIEW_PAGE_LIMIT);
+        const items = Array.isArray(resp?.data) ? resp.data : resp?.data ?? [];
+        if (append) setCoachReviews((prev) => [...prev, ...items]);
+        else setCoachReviews(items);
+        setReviewsPage(resp?.pagination?.page ?? page);
+        setReviewsTotalPages(resp?.pagination?.totalPages ?? 1);
+      } catch (err) {
+        console.error('Failed to load coach reviews', err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    },
+    [effectiveCoachId],
+  );
+
+  useEffect(() => {
+    if (!effectiveCoachId) return;
+    // initial fetch page 1
+    fetchReviews(1, false);
+    // poll every 20 seconds to refresh first page
+    const timer = setInterval(() => {
+      fetchReviews(1, false);
+    }, 20000);
+    return () => clearInterval(timer);
+  }, [effectiveCoachId, fetchReviews]);
 
   // Cleanup coach data when component unmounts
   useEffect(() => {
@@ -219,33 +268,33 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     { url: "/badminton-indoor-court.jpg", alt: "Indoor facility" },
   ];
 
-//   const reviews = [
-//     {
-//       name: "Amanda Rosales",
-//       date: "09/26/2023",
-//       rating: 5,
-//       title: "Absolutely Perfect!",
-//       content:
-//         "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. It is the best place.",
-//       images: [
-//         "/badminton-court-1.jpg",
-//         "/badminton-court-2.jpg",
-//         "/badminton-court-3.jpg",
-//         "/badminton-court-4.jpg",
-//         "/badminton-court-5.jpg",
-//       ],
-//       helpful: 12,
-//     },
-//     {
-//       name: "Michael Chen",
-//       date: "09/18/2023",
-//       rating: 5,
-//       title: "Awesome. Its very convenient to play.",
-//       content:
-//         "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. Excellent coaching and atmosphere. Highly recommended for an exceptional playing experience.",
-//       helpful: 8,
-//     },
-//   ];
+  //   const reviews = [
+  //     {
+  //       name: "Amanda Rosales",
+  //       date: "09/26/2023",
+  //       rating: 5,
+  //       title: "Absolutely Perfect!",
+  //       content:
+  //         "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. It is the best place.",
+  //       images: [
+  //         "/badminton-court-1.jpg",
+  //         "/badminton-court-2.jpg",
+  //         "/badminton-court-3.jpg",
+  //         "/badminton-court-4.jpg",
+  //         "/badminton-court-5.jpg",
+  //       ],
+  //       helpful: 12,
+  //     },
+  //     {
+  //       name: "Michael Chen",
+  //       date: "09/18/2023",
+  //       rating: 5,
+  //       title: "Awesome. Its very convenient to play.",
+  //       content:
+  //         "Amazing facility. It is a perfect place for friendly match with your friends or a competitive match. Excellent coaching and atmosphere. Highly recommended for an exceptional playing experience.",
+  //       helpful: 8,
+  //     },
+  //   ];
 
   const similarCoaches = [
     {
@@ -306,8 +355,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Error loading coach data: {detailError.message}</p>
-          <Button onClick={() => dispatch(getCoachById(effectiveCoachId ?? ""))}>
+          <p className="text-red-600 mb-4">
+            Error loading coach data: {detailError.message}
+          </p>
+          <Button
+            onClick={() => dispatch(getCoachById(effectiveCoachId ?? ""))}
+          >
             Retry
           </Button>
         </div>
@@ -348,11 +401,19 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                       <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full opacity-75 group-hover:opacity-100 blur transition duration-300" />
                       <Avatar className="relative h-24 w-24 border-4 border-white shadow-lg">
                         <AvatarImage
-                          src={coachData.avatar || coachData.profileImage || "/professional-coach-portrait.png"}
+                          src={
+                            coachData.avatar ||
+                            coachData.profileImage ||
+                            "/professional-coach-portrait.png"
+                          }
                           alt={coachData.name}
                         />
                         <AvatarFallback className="text-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-                          {coachData.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          {coachData.name
+                            ?.split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </div>
@@ -386,7 +447,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                           <div className="bg-yellow-100 p-1.5 rounded">
                             <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
                           </div>
-                          <span className="font-semibold">{coachData.rating}</span>
+                          <span className="font-semibold">
+                            {coachData.rating}
+                          </span>
                           <span className="text-muted-foreground">
                             {coachData.reviewCount} Reviews
                           </span>
@@ -406,17 +469,32 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4" />
-                          <span>Sessions Completed : {coachData.completedSessions}</span>
+                          <span>
+                            Sessions Completed : {coachData.completedSessions}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          <span>With Dreamsports Since: {coachData.memberSince ? new Date(coachData.memberSince).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}</span>
+                          <span>
+                            With Dreamsports Since:{" "}
+                            {coachData.memberSince
+                              ? new Date(
+                                  coachData.memberSince
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
+                              : "-"}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground">Coach data not found.</div>
+                  <div className="text-center text-muted-foreground">
+                    Coach data not found.
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -458,10 +536,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                       Name: {coachData?.name ?? "-"}
                     </p>
                     <p className="text-left">
-                      Experience: {coachData?.coachingDetails?.experience ?? "-"}
+                      Experience:{" "}
+                      {coachData?.coachingDetails?.experience ?? "-"}
                     </p>
                     <p className="text-left">
-                      Certification: {coachData?.coachingDetails?.certification ?? "-"}
+                      Certification:{" "}
+                      {coachData?.coachingDetails?.certification ?? "-"}
                     </p>
                   </div>
                   <Button
@@ -705,146 +785,81 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   </div>
 
                   <div className="space-y-4">
-                    {/* Review 1 - Positive */}
-                    <Card className="shadow-md hover:shadow-lg transition-all duration-300 border border-border">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12 flex-shrink-0">
-                            <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                              AR
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <h4 className="font-semibold">
-                                  Amanda Booked on 06/04/2023
-                                </h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <div className="flex gap-0.5">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star
-                                        key={star}
-                                        className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                                      />
-                                    ))}
+                    {reviewsLoading ? (
+                      <div className="text-center text-muted-foreground">Loading reviews...</div>
+                    ) : coachReviews && coachReviews.length > 0 ? (
+                      coachReviews.map((r: any, idx: number) => {
+                        const author = r.user?.fullName || 'Anonymous';
+                        const rating = r.rating || 0;
+                        const comment = r.comment || '';
+                        const dateStr = r.createdAt || r.booking?.createdAt;
+                        const date = dateStr ? new Date(dateStr).toLocaleDateString() : '';
+                        return (
+                          <Card key={idx} className="shadow-md hover:shadow-lg transition-all duration-300 border border-border">
+                            <CardContent className="p-6">
+                              <div className="flex items-start gap-4">
+                                <Avatar className="h-12 w-12 flex-shrink-0">
+                                  <AvatarImage src="/placeholder.svg?height=48&width=48" />
+                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                                    {author
+                                      .split(" ")
+                                      .map((n: string) => n[0])
+                                      .join("")
+                                      .toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 space-y-3">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                      <h4 className="font-semibold">{author}</h4>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <div className="flex gap-0.5">
+                                          {Array.from({ length: 5 }).map((_, s) => (
+                                            <Star
+                                              key={s}
+                                              className={`h-4 w-4 ${s < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                            />
+                                          ))}
+                                        </div>
+                                        <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <span className="text-sm font-semibold">
-                                    5.0
-                                  </span>
+
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Badge className={` ${r.rating >= 4 ? 'bg-green-600' : 'bg-red-600'} text-white font-medium`}>
+                                      Review Type
+                                    </Badge>
+                                  </div>
+
+                                  <div>
+                                    <h5 className="font-bold text-base mb-2 text-left">{comment.slice(0, 120)}</h5>
+                                    <p className="text-muted-foreground leading-relaxed text-left">{comment}</p>
+                                  </div>
+
+                                  <div className="text-xs text-muted-foreground text-left">{date}</div>
                                 </div>
                               </div>
-                            </div>
-
-                            {/* Booking indicator */}
-                            <div className="flex items-center gap-2 text-sm">
-                              <Badge className="bg-green-600 text-white font-medium">Review Type: Positive</Badge>
-                            </div>
-
-                            <div>
-                              <h5 className="font-bold text-base mb-2 text-left">
-                                Absolutely Perfect!
-                              </h5>
-                              <p className="text-muted-foreground leading-relaxed text-left">
-                                If you are looking for a perfect place for
-                                friendly matches with your friends or a
-                                competitive match, it is the best place.
-                              </p>
-                            </div>
-
-                            {/* Quote/testimonial box */}
-                            <div className="bg-muted/50 border-l-4 border-muted-foreground/30 p-4 rounded-r-lg">
-                              <p className="text-sm text-muted-foreground italic leading-relaxed text-left">
-                                Experience badminton excellence at Badminton
-                                Academy. Top-notch facilities, well-maintained
-                                courts, and a friendly atmosphere. Highly
-                                recommended for an exceptional playing
-                                experience.
-                              </p>
-                            </div>
-
-                            <div className="text-xs text-muted-foreground text-left">
-                              Sent on 11/05/2023
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Review 2 - Negative */}
-                    <Card className="shadow-md hover:shadow-lg transition-all duration-300 border border-border">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12 flex-shrink-0">
-                            <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
-                              AR
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <h4 className="font-semibold">
-                                  Amanda Booked on 06/04/2023
-                                </h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <div className="flex gap-0.5">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star
-                                        key={star}
-                                        className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-sm font-semibold">
-                                    5.0
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Booking indicator - Negative */}
-                            <div className="flex items-center gap-2 text-sm">
-                              <Badge className="bg-red-600 text-white font-medium">Review Type: Negative</Badge>
-                            </div>
-
-                            <div>
-                              <h5 className="font-bold text-base mb-2 text-left">
-                                Awesome. Its very convenient to play.
-                              </h5>
-                              <p className="text-muted-foreground leading-relaxed text-left">
-                                If you are looking for a perfect place for
-                                friendly matches with your friends or a
-                                competitive match, it is the best place.
-                              </p>
-                            </div>
-
-                            {/* Quote/testimonial box */}
-                            <div className="bg-muted/50 border-l-4 border-muted-foreground/30 p-4 rounded-r-lg">
-                              <p className="text-sm text-muted-foreground italic leading-relaxed text-left">
-                                Experience badminton excellence at Badminton
-                                Academy. Top-notch facilities, well-maintained
-                                courts, and a friendly atmosphere. Highly
-                                recommended for an exceptional playing
-                                experience.
-                              </p>
-                            </div>
-
-                            <div className="text-xs text-muted-foreground text-left">
-                              Sent on 09/18/2023
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                            </CardContent>
+                          </Card>
+                        );
+                      })
+                    ) : (
+                      <div className="text-muted-foreground">No reviews yet.</div>
+                    )}
                   </div>
 
                   <Button
                     variant="outline"
                     className="w-full hover:bg-muted bg-transparent"
+                    onClick={async () => {
+                      if (reviewsLoading) return;
+                      if (reviewsPage >= reviewsTotalPages) return;
+                      await fetchReviews(reviewsPage + 1, true);
+                    }}
+                    disabled={reviewsLoading || reviewsPage >= reviewsTotalPages}
                   >
-                    Load More
+                    {reviewsPage >= reviewsTotalPages ? 'No more reviews' : 'Load More'}
                   </Button>
                 </CardContent>
               </Card>
@@ -947,20 +962,25 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    {(coachData?.availableSlots?.length ? 
-                      coachData.availableSlots.slice(0, 4).map((slot, index) => ({
-                        day: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { 
-                          weekday: "short", 
-                          month: "short", 
-                          day: "numeric" 
-                        }),
-                        time: slot.startTime
-                      })) : [
-                        { day: "Thu, Sept 24", time: "3 PM" },
-                        { day: "Fri, Sept 25", time: "4 PM" },
-                        { day: "Sat, Sept 26", time: "2 PM" },
-                        { day: "Sun, Sept 27", time: "11 AM" },
-                      ]
+                    {(coachData?.availableSlots?.length
+                      ? coachData.availableSlots
+                          .slice(0, 4)
+                          .map((slot, index) => ({
+                            day: new Date(
+                              Date.now() + index * 24 * 60 * 60 * 1000
+                            ).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            }),
+                            time: slot.startTime,
+                          }))
+                      : [
+                          { day: "Thu, Sept 24", time: "3 PM" },
+                          { day: "Fri, Sept 25", time: "4 PM" },
+                          { day: "Sat, Sept 26", time: "2 PM" },
+                          { day: "Sun, Sept 27", time: "11 AM" },
+                        ]
                     ).map((slot, index) => (
                       <Button
                         key={index}
@@ -1291,25 +1311,67 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
               Share your experience with {coachData?.name ?? "this coach"}
             </DialogDescription>
           </DialogHeader>
-          <form className="space-y-6 py-4">
-            {/* Review Type */}
+          <form
+            className="space-y-6 py-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              // Simple client-side validation
+              if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+                return CustomFailedToast(
+                  "Please provide a rating between 1 and 5"
+                );
+              }
+              if (!reviewComment || reviewComment.trim().length < 10) {
+                return CustomFailedToast(
+                  "Please provide a comment (at least 10 characters)"
+                );
+              }
+
+              setIsSubmittingReview(true);
+              try {
+                const payload = {
+                  type: "coach" as const,
+                  rating: reviewRating,
+                  comment: reviewComment.trim(),
+                  coachId: effectiveCoachId ?? "",
+                  bookingId: "",
+                };
+
+                const action: any = await dispatch(
+                  createCoachReviewThunk(payload as any)
+                );
+
+                  if (action?.meta?.requestStatus === "fulfilled") {
+                  // reset and close
+                  setShowReviewModal(false);
+                  setReviewRating(0);
+                  setHoveredRating(0);
+                  setReviewComment("");
+                  
+                  CustomSuccessToast(
+                    "Thank you — your review has been submitted."
+                  );
+                  // Refresh reviews immediately after successful submission
+                  try {
+                    await fetchReviews();
+                  } catch (err) {
+                    console.error('Failed to refresh reviews after submit', err);
+                  }
+                } else {
+                  const message = action?.payload || "Failed to submit review";
+                  CustomFailedToast(String(message));
+                }
+              } catch (err: any) {
+                CustomFailedToast(err?.message || "Failed to submit review");
+              } finally {
+                setIsSubmittingReview(false);
+              }
+            }}
+          >
+            {/* Review Type (fixed to Coach) */}
             <div className="space-y-2">
-              <Label htmlFor="review-type" className="text-sm font-semibold">
-                Review Type
-              </Label>
-              <Select>
-                <SelectTrigger id="review-type">
-                  <SelectValue placeholder="Select review type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="lesson-quality">Lesson Quality</SelectItem>
-                  <SelectItem value="coaching-style">Coaching Style</SelectItem>
-                  <SelectItem value="facility">Facility & Equipment</SelectItem>
-                  <SelectItem value="communication">Communication</SelectItem>
-                  <SelectItem value="value">Value for Money</SelectItem>
-                  <SelectItem value="overall">Overall Experience</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label className="text-sm font-semibold">Review Type</Label>
+              <Badge className="bg-green-600 text-white">Coach</Badge>
             </div>
 
             {/* Rating */}
@@ -1354,6 +1416,8 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                 placeholder="Share your experience with this coach..."
                 rows={6}
                 className="resize-none"
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
               />
             </div>
 
@@ -1376,8 +1440,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
               <Button
                 type="submit"
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                disabled={isSubmittingReview}
               >
-                Submit Review
+                {isSubmittingReview ? "Submitting..." : "Submit Review"}
               </Button>
             </div>
           </form>
