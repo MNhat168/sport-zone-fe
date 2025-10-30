@@ -44,6 +44,7 @@ export interface CoachDetail {
     id: string;
     name: string;
     profileImage: string;
+    avatar?: string;
     description: string;
     rating: number;
     reviewCount: number;
@@ -51,6 +52,7 @@ export interface CoachDetail {
     level: string;
     completedSessions: number;
     createdAt: string;
+    memberSince?: string;
     availableSlots: TimeSlot[];
     lessonTypes: LessonType[];
     price: number;

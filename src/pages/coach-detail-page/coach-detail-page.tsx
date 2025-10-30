@@ -1,4 +1,5 @@
 "use client";
+import { useParams } from "react-router-dom";
 
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -90,7 +91,9 @@ interface CoachDetailPageProps {
   coachId?: string;
 }
 
-export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }: CoachDetailPageProps) {
+export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
+  const params = useParams();
+  const effectiveCoachId = coachId ?? params.id;
   const dispatch = useDispatch<AppDispatch>();
   const { currentCoach, detailLoading, detailError } = useSelector((state: RootState) => state.coach);
   
@@ -123,10 +126,10 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
 
   // Fetch coach data when component mounts or coachId changes
   useEffect(() => {
-    if (coachId) {
-      dispatch(getCoachById(coachId));
+    if (effectiveCoachId) {
+      dispatch(getCoachById(effectiveCoachId));
     }
-  }, [dispatch, coachId]);
+  }, [dispatch, effectiveCoachId]);
 
   // Cleanup coach data when component unmounts
   useEffect(() => {
@@ -304,7 +307,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Error loading coach data: {detailError.message}</p>
-          <Button onClick={() => dispatch(getCoachById(coachId))}>
+          <Button onClick={() => dispatch(getCoachById(effectiveCoachId ?? ""))}>
             Retry
           </Button>
         </div>
@@ -312,26 +315,8 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
     );
   }
 
-  // Use real coach data or fallback to mock data
-  const coachData = currentCoach || {
-    id: "64a1b2c3d4e5f6789012345",
-    name: "Kevin Anderson",
-    profileImage: "/professional-coach-portrait.png",
-    description: "Professional tennis coach with 10 years experience",
-    rating: 4.8,
-    reviewCount: 300,
-    location: "Santamonica, United States",
-    level: "Expert",
-    completedSessions: 25,
-    createdAt: "2023-04-05T10:30:00Z",
-    availableSlots: [],
-    lessonTypes: [],
-    price: 250,
-    coachingDetails: {
-      experience: "10 years professional coaching",
-      certification: "USPTA Certified"
-    }
-  };
+  // Use real coach data from API only
+  const coachData = currentCoach;
 
   return (
     <div className="min-h-screen bg-background">
@@ -356,79 +341,83 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
             {/* Coach Information Card - Standalone */}
             <Card className="shadow-2xl border-0 animate-fade-in-up bg-white">
               <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row items-start gap-6">
-                  {/* Coach Avatar */}
-                  <div className="relative group flex-shrink-0">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full opacity-75 group-hover:opacity-100 blur transition duration-300" />
-                    <Avatar className="relative h-24 w-24 border-4 border-white shadow-lg">
-                      <AvatarImage
-                        src={coachData.profileImage || "/professional-coach-portrait.png"}
-                        alt={coachData.name}
-                      />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-                        {coachData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-
-                  {/* Coach Info */}
-                  <div className="flex-1 space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <h1 className="text-3xl font-bold text-balance">
-                          {coachData.name}
-                        </h1>
-                        <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                        </Badge>
-                        <Button
-                          size="sm"
-                          className="ml-auto bg-yellow-500 hover:bg-yellow-600 text-white border-0 flex items-center gap-2"
-                        >
-                          <Heart className="h-4 w-4" />
-                          Favourite
-                        </Button>
-                      </div>
-                      <p className="text-base text-muted-foreground text-left">
-                        {coachData.description}
-                      </p>
+                {coachData ? (
+                  <div className="flex flex-col sm:flex-row items-start gap-6">
+                    {/* Coach Avatar */}
+                    <div className="relative group flex-shrink-0">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full opacity-75 group-hover:opacity-100 blur transition duration-300" />
+                      <Avatar className="relative h-24 w-24 border-4 border-white shadow-lg">
+                        <AvatarImage
+                          src={coachData.avatar || coachData.profileImage || "/professional-coach-portrait.png"}
+                          alt={coachData.name}
+                        />
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                          {coachData.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
 
-                    {/* Stats Row */}
-                    <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-yellow-100 p-1.5 rounded">
-                          <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
+                    {/* Coach Info */}
+                    <div className="flex-1 space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h1 className="text-3xl font-bold text-balance">
+                            {coachData.name}
+                          </h1>
+                          <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                          </Badge>
+                          <Button
+                            size="sm"
+                            className="ml-auto bg-yellow-500 hover:bg-yellow-600 text-white border-0 flex items-center gap-2"
+                          >
+                            <Heart className="h-4 w-4" />
+                            Favourite
+                          </Button>
                         </div>
-                        <span className="font-semibold">{coachData.rating}</span>
-                        <span className="text-muted-foreground">
-                          {coachData.reviewCount} Reviews
-                        </span>
+                        <p className="text-base text-muted-foreground text-left">
+                          {coachData.description}
+                        </p>
                       </div>
 
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{coachData.location}</span>
-                      </div>
-                    </div>
+                      {/* Stats Row */}
+                      <div className="flex flex-wrap items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-yellow-100 p-1.5 rounded">
+                            <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
+                          </div>
+                          <span className="font-semibold">{coachData.rating}</span>
+                          <span className="text-muted-foreground">
+                            {coachData.reviewCount} Reviews
+                          </span>
+                        </div>
 
-                    {/* Additional Stats */}
-                    <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground pt-2 border-t">
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4" />
-                        <span>Rank : {coachData.level}</span>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          <span>{coachData.location}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4" />
-                        <span>Sessions Completed : {coachData.completedSessions}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>With Dreamsports Since {new Date(coachData.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+
+                      {/* Additional Stats */}
+                      <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground pt-2 border-t">
+                        <div className="flex items-center gap-2">
+                          <Award className="h-4 w-4" />
+                          <span>Rank : {coachData.level}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>Sessions Completed : {coachData.completedSessions}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>With Dreamsports Since: {coachData.memberSince ? new Date(coachData.memberSince).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center text-muted-foreground">Coach data not found.</div>
+                )}
               </CardContent>
             </Card>
 
@@ -466,13 +455,13 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
                 <CardContent className="space-y-4">
                   <div className="space-y-3 text-muted-foreground leading-relaxed">
                     <p className="font-semibold text-foreground text-left">
-                      Name: {coachData.name}
+                      Name: {coachData?.name ?? "-"}
                     </p>
                     <p className="text-left">
-                      Experience: {coachData.coachingDetails.experience}
+                      Experience: {coachData?.coachingDetails?.experience ?? "-"}
                     </p>
                     <p className="text-left">
-                      Certification: {coachData.coachingDetails.certification}
+                      Certification: {coachData?.coachingDetails?.certification ?? "-"}
                     </p>
                   </div>
                   <Button
@@ -750,10 +739,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
 
                             {/* Booking indicator */}
                             <div className="flex items-center gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
-                              <span className="text-green-600 font-medium">
-                                Yes, I would book again.
-                              </span>
+                              <Badge className="bg-green-600 text-white font-medium">Review Type: Positive</Badge>
                             </div>
 
                             <div>
@@ -820,12 +806,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
 
                             {/* Booking indicator - Negative */}
                             <div className="flex items-center gap-2 text-sm">
-                              <span className="text-red-600 font-bold text-lg">
-                                ✕
-                              </span>
-                              <span className="text-red-600 font-medium">
-                                No, I don't want to book again.
-                              </span>
+                              <Badge className="bg-red-600 text-white font-medium">Review Type: Negative</Badge>
                             </div>
 
                             <div>
@@ -932,7 +913,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
 
                   <p className="text-base text-muted-foreground text-left">
                     <span className="font-semibold text-foreground">
-                      {coachData.name}
+                      {coachData?.name ?? "-"}
                     </span>{" "}
                     Available Now
                   </p>
@@ -943,7 +924,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
                     </p>
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-4xl font-bold text-green-600">
-                        ${coachData.price}
+                        ${coachData?.price ?? "-"}
                       </span>
                       <span className="text-lg text-muted-foreground">/hr</span>
                     </div>
@@ -966,7 +947,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    {(coachData.availableSlots?.length ? 
+                    {(coachData?.availableSlots?.length ? 
                       coachData.availableSlots.slice(0, 4).map((slot, index) => ({
                         day: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { 
                           weekday: "short", 
@@ -1307,7 +1288,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
               Write a Review
             </DialogTitle>
             <DialogDescription>
-              Share your experience with {coachData.name}
+              Share your experience with {coachData?.name ?? "this coach"}
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-6 py-4">
@@ -1376,30 +1357,7 @@ export default function CoachDetailPage({ coachId = "64a1b2c3d4e5f6789012345" }:
               />
             </div>
 
-            {/* Would you book again? */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">
-                Would you book this coach again?
-              </Label>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 hover:bg-green-50 hover:border-green-500 bg-transparent"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
-                  Yes
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 hover:bg-red-50 hover:border-red-500 bg-transparent"
-                >
-                  <span className="text-red-600 font-bold mr-2">✕</span>
-                  No
-                </Button>
-              </div>
-            </div>
+            {/* Removed: Would you book this coach again? section */}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4 border-t">
