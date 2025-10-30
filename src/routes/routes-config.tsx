@@ -18,6 +18,8 @@ import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 
 // Coach Pages
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
+import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page";
+import CoachProfilePage from "../pages/coach-dashboard-page/coach-profile-page";
 
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
@@ -170,6 +172,22 @@ export const coachRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <CoachDashboardPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/coach/schedule",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachSchedulePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/coach/coach-profile",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachProfilePage />
       </ProtectedRoute>
     ),
   },
