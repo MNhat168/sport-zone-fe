@@ -1,8 +1,8 @@
-import { FieldOwnerDashboardTabs } from "@/components/ui/field-owner-dashboard-tabs"
+import { FieldOwnerDashboardTabs } from "@/components/tabs/field-owner-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { FieldOwnerDashboardHeader } from "@/components/header/field-owner-dashboard-header"
 import {PageWrapper} from "@/components/layouts/page-wrapper"
-import ProfileTabs from "@/components/common/profile-tabs"
+import ProfileTabs from "@/components/tabs/profile-tabs"
 
 export default function FieldOwnerProfileTab() {
     return (

@@ -19,7 +19,8 @@ import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 // Coach Pages
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
 import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page";
-import CoachProfilePage from "../pages/coach-dashboard-page/coach-profile-page";
+// Coach profile self-page for coaches only
+import CoachSelfDetailPage from "../pages/coach-profile-page/coach-profile-page";
 
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
@@ -28,6 +29,11 @@ import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
+
+// Payment Pages
+import VNPayReturnPage from "../pages/payment/vnpay-return-page.tsx";
+import PaymentSuccessPage from "../pages/payment/payment-success-page";
+import PaymentErrorPage from "../pages/payment/payment-error-page";
 
 // Field Owner Pages
 import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
@@ -59,7 +65,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/verify-email", element: <VerifyTokenPage /> },
   { path: "/auth/verify-token", element: <VerifyTokenPage /> },
   { path: "/verify-email/success", element: <VerifyTokenPage /> },
-  { path: "/booking", element: <BookingPage /> },
+  { path: "/coach/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
@@ -67,6 +73,12 @@ export const publicRoutes: RouteObject[] = [
   // Field Discovery & Booking (Public)
   { path: "/fields", element: <FieldBookingPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
+  
+  // Payment Pages (Public)
+  { path: "/payments/vnpay/return", element: <VNPayReturnPage /> },
+  { path: "/api/reservations/vnpay_return", element: <VNPayReturnPage /> },
+  { path: "/payment/success", element: <PaymentSuccessPage /> },
+  { path: "/payment/error", element: <PaymentErrorPage /> },
 
   // Coach Discovery (Public)
   { path: "/coaches", element: <Placeholder title="Danh sách HLV" /> },
@@ -74,7 +86,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/coach/:id", element: <CoachDetailPage /> },
 
   // General Booking (Public)
-  { path: "/booking", element: <BookingPage /> },
+  { path: "/coach/booking", element: <BookingPage /> },
 
   // About & Contact (Public)
   { path: "/about", element: <Placeholder title="Về chúng tôi" /> },
@@ -192,6 +204,14 @@ export const coachRoutes: RouteObject[] = [
     ),
   },
   {
+    path: "/coach/profile",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachSelfDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/coach/schedule",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
@@ -199,24 +219,7 @@ export const coachRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  {
-    path: "/coach/coach-profile",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <CoachProfilePage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/coach/profile",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <UserProfilePage />
-      </ProtectedRoute>
-    ),
-  },
 
-  // Coach Class & Booking Management
   {
     path: "/coach/classes",
     element: (
@@ -230,14 +233,6 @@ export const coachRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <BookingPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/coach/schedule",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <Placeholder title="Lịch dạy" />
       </ProtectedRoute>
     ),
   },

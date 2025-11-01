@@ -25,8 +25,14 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
 
     // Auto-redirect logic sau khi login thành công (chỉ từ trang auth/login)
     if (isAuthenticated && (location.pathname === '/auth')) {
-      console.log('AuthWrapper - Redirecting from auth page to landing page for role:', user.role);
-      navigate('/', { replace: true });
+      console.log('AuthWrapper - Redirecting from auth page for role:', user.role);
+      
+      // Redirect based on user role
+      if (user.role === "field_owner") {
+        navigate("/field-owner-dashboard", { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
       return; // Ngừng thực hiện logic khác
     }
 

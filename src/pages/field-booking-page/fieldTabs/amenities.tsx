@@ -9,7 +9,7 @@ interface AmenitiesTabProps {
     venue?: Field
     selectedAmenityIds?: string[]
     onChangeSelected?: (ids: string[]) => void
-    onSubmit?: (ids: string[]) => void
+    onSubmit?: (ids: string[], note?: string) => void
     onBack?: () => void
 }
 
@@ -20,31 +20,24 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
     onSubmit,
     onBack,
 }) => {
-    const getLocationText = (loc: any): string => {
-        return typeof loc === 'string' ? loc : loc?.address || ''
-    }
+    
+    
 
-    const getMapEmbedSrc = (loc: any): string => {
-        try {
-            if (loc && typeof loc === 'object' && (loc as any).geo && Array.isArray((loc as any).geo.coordinates)) {
-                const [lng, lat] = (loc as any).geo.coordinates as [number, number]
-                if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
-                    return `https://www.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=15&output=embed`
-                }
-            }
-            const query = getLocationText(loc)
-            if (query) {
-                return `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`
-            }
-        } catch {
-            // ignore
-        }
-        return 'about:blank'
-    }
-
+    // Normalize amenities: de-duplicate by amenityId (keep the lowest price)
     const amenities = useMemo(() => {
-        return venue?.amenities || []
-    }, [venue?.amenities])
+        const raw = (venue as any)?.amenities || []
+        if (!Array.isArray(raw)) return []
+        const byId = new Map<string, any>()
+        for (const item of raw) {
+            const id = item?.amenityId
+            if (!id) continue
+            const existing = byId.get(id)
+            if (!existing || (typeof item?.price === 'number' && item.price < (existing?.price ?? Number.POSITIVE_INFINITY))) {
+                byId.set(id, item)
+            }
+        }
+        return Array.from(byId.values())
+    }, [venue])
 
     const toggleAmenity = (amenityId: string) => {
         const set = new Set(selectedAmenityIds)
@@ -55,14 +48,14 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
 
     const totalAmenityFee = useMemo(() => {
         return amenities
-            .filter(a => selectedAmenityIds.includes(a.amenity._id))
-            .reduce((acc, cur) => acc + (cur.price || 0), 0)
+            .filter((a: any) => selectedAmenityIds.includes(a?.amenityId))
+            .reduce((acc: number, cur: any) => acc + (cur?.price || 0), 0)
     }, [amenities, selectedAmenityIds])
 
     return (
         <div className="w-full max-w-[1320px] mx-auto px-3 flex flex-col gap-10">
             {/* Header Card - venue summary like BookCourt */}
-            <Card className="border border-gray-200">
+            {/* <Card className="border border-gray-200">
                 <CardContent className="p-6">
                     <div className="pb-10">
                         <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
@@ -123,7 +116,7 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                         </div>
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Main Content - left amenities list, right summary */}
             <div className="flex flex-wrap gap-6">
@@ -135,13 +128,13 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                                 Danh sách tiện ích
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-6 space-y-6">
+                        <CardContent className="space-y-6">
                             {amenities.length === 0 ? (
                                 <p className="text-sm text-gray-600">Sân này chưa có tiện ích.</p>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {amenities.map((item) => {
-                                        const id = item.amenity._id
+                                    {amenities.map((item: any) => {
+                                        const id = item?.amenityId
                                         const checked = selectedAmenityIds.includes(id)
                                         return (
                                             <div key={id} className="flex items-start gap-3 p-4 rounded-lg border bg-white">
@@ -151,10 +144,12 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                                                     onCheckedChange={() => toggleAmenity(id)}
                                                 />
                                                 <label htmlFor={`amenity-${id}`} className="flex-1 cursor-pointer">
-                                                    <div className="font-medium text-gray-900">{item.amenity.name}</div>
-                                                    <div className="text-sm text-gray-600">{item.amenity.type}</div>
+                                                    <div className="font-medium text-gray-900">{item?.name || 'Tiện ích'}</div>
+                                                    {item?.type && (
+                                                        <div className="text-sm text-gray-600">{item.type}</div>
+                                                    )}
                                                     <div className="text-sm text-emerald-600 font-semibold mt-1">
-                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price || 0)}
+                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item?.price || 0)}
                                                     </div>
                                                 </label>
                                             </div>
@@ -162,8 +157,10 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                                     })}
                                 </div>
                             )}
+
                         </CardContent>
                     </Card>
+                    
                 </div>
 
                 {/* Summary Sidebar */}

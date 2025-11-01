@@ -1,6 +1,7 @@
 // Booking types based on API documentation
 import type { UserProfile } from "@/types/user-type"
 import type { Field } from "@/types/field-type"
+import type { Payment } from "@/types/payment-type"
 
 export interface CreateFieldBookingPayload {
     fieldId: string;
@@ -8,6 +9,8 @@ export interface CreateFieldBookingPayload {
     startTime: string; // HH:mm
     endTime: string; // HH:mm
     selectedAmenities?: string[];
+    paymentMethod?: number; // PaymentMethod enum (1-9)
+    paymentNote?: string;
 }
 
 export interface CreateSessionBookingPayload {
@@ -54,6 +57,7 @@ export interface Booking {
     totalPrice: number;
     selectedAmenities?: string[];
     amenitiesFee?: number;
+    payment?: string | Payment; // Payment ObjectId reference or populated Payment
     pricingSnapshot?: {
         basePrice: number;
         appliedMultiplier?: number;

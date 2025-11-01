@@ -1,11 +1,11 @@
-import { UserDashboardTabs } from "@/components/ui/user-dashboard-tabs"
-import { FieldOwnerDashboardTabs } from "@/components/ui/field-owner-dashboard-tabs"
-import {CoachDashboardTabs} from "@/components/ui/coach-dashboard-tabs"
+import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
+import { FieldOwnerDashboardTabs } from "@/components/tabs/field-owner-dashboard-tabs"
+import {CoachDashboardTabs} from "@/components/tabs/coach-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { FieldOwnerDashboardHeader } from "@/components/header/field-owner-dashboard-header"
 import {PageWrapper} from "@/components/layouts/page-wrapper"
-import ProfileTabs from "@/components/common/profile-tabs"
+import ProfileTabs from "@/components/tabs/profile-tabs"
 import { useAppSelector } from "@/store/hook"
 
 export default function UserProfilePage() {

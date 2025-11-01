@@ -39,6 +39,8 @@ const FieldBookingPage = () => {
     const [isLoadingNearby, setIsLoadingNearby] = useState(false)
     const [isNearbyMode, setIsNearbyMode] = useState(false)
 
+    
+
     // Leaflet map refs
     const mapContainerId = 'fields-map-container'
     const mapRef = useRef<any>(null)
@@ -142,47 +144,41 @@ const FieldBookingPage = () => {
         };
     })
 
-    // Load Leaflet from CDN if not loaded
-    const ensureLeafletLoaded = async (): Promise<void> => {
-        const hasLeaflet = typeof (window as any).L !== 'undefined'
-        if (hasLeaflet) return
-        await new Promise<void>((resolve) => {
-            // CSS
-            if (!document.getElementById('leaflet-css')) {
-                const link = document.createElement('link')
-                link.id = 'leaflet-css'
-                link.rel = 'stylesheet'
-                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-                link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY='
-                link.crossOrigin = ''
-                document.head.appendChild(link)
-            }
-            // JS
-            const scriptId = 'leaflet-js'
-            if (document.getElementById(scriptId)) {
-                resolve()
-                return
-            }
-            const script = document.createElement('script')
-            script.id = scriptId
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-            script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='
-            script.crossOrigin = ''
-            script.onload = () => resolve()
-            document.body.appendChild(script)
-        })
-    }
-
     // Initialize map once
     useEffect(() => {
-        (async () => {
+        ;(async () => {
             try {
-                await ensureLeafletLoaded()
+                const hasLeaflet = typeof (window as any).L !== 'undefined'
+                if (!hasLeaflet) {
+                    await new Promise<void>((resolve) => {
+                        if (!document.getElementById('leaflet-css')) {
+                            const link = document.createElement('link')
+                            link.id = 'leaflet-css'
+                            link.rel = 'stylesheet'
+                            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+                            link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY='
+                            link.crossOrigin = ''
+                            document.head.appendChild(link)
+                        }
+                        const scriptId = 'leaflet-js'
+                        if (document.getElementById(scriptId)) {
+                            resolve()
+                            return
+                        }
+                        const script = document.createElement('script')
+                        script.id = scriptId
+                        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+                        script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='
+                        script.crossOrigin = ''
+                        script.onload = () => resolve()
+                        document.body.appendChild(script)
+                    })
+                }
                 const L: any = (window as any).L
                 if (!mapRef.current) {
                     const container = document.getElementById(mapContainerId)
                     if (!container) return
-                    mapRef.current = L.map(mapContainerId).setView([16.0471, 108.2062], 12) // default center Da Nang
+                    mapRef.current = L.map(mapContainerId).setView([16.0471, 108.2062], 12)
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         maxZoom: 19,
                         attribution: '&copy; OpenStreetMap contributors'
@@ -192,7 +188,6 @@ const FieldBookingPage = () => {
                 console.error('Failed to initialize map', e)
             }
         })()
-        // no cleanup to preserve map instance
     }, [])
 
     // Update markers when data changes
