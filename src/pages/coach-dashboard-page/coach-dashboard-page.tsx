@@ -29,25 +29,28 @@ export default function CoachDashboardPage() {
 
 useEffect(() => {
   const loadCoachData = async () => {
-    // Get userId from cookie (since user is already authenticated to reach this page)
-    const userStr = document.cookie.match(/user=([^;]+)/)?.[1];
-    if (!userStr) {
-      console.warn("[useEffect] No user cookie found");
+    const storedUser = sessionStorage.getItem("user");
+    if (!storedUser) {
+      console.warn("[useEffect] No user found in sessionStorage");
       return;
     }
 
-    let userId: string;
+    let user;
     try {
-      const user = JSON.parse(decodeURIComponent(userStr));
-      userId = user._id;
+      user = JSON.parse(storedUser);
     } catch (error) {
-      console.error("[useEffect] Error parsing user cookie:", error);
+      console.error("[useEffect] Error parsing user from sessionStorage:", error);
+      return;
+    }
+
+    const userId = user?._id;
+    if (!userId) {
+      console.warn("[useEffect] user._id not found");
       return;
     }
 
     console.log("[useEffect] Loading coach data for userId:", userId);
 
-    // Fetch coachId and related data
     try {
       const response = await axiosPublic.get(`/profiles/coach-id/${userId}`);
       const coachId = response.data?.data?.coachId;
@@ -55,10 +58,10 @@ useEffect(() => {
       setCoachId(coachId);
 
       if (coachId) {
-        // Fetch coach details using Redux action
+        // Fetch coach details via Redux
         dispatch(getCoachById(coachId));
-        
-        // Fetch bookings immediately after coachId
+
+        // Fetch related bookings
         const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`);
         console.log("[loadCoachData] Fetched bookings:", bookingRes.data);
         setBookingRequests(bookingRes.data.data);
@@ -70,6 +73,7 @@ useEffect(() => {
 
   loadCoachData();
 }, [dispatch]);
+
 
 // Cleanup coach data when component unmounts
 useEffect(() => {
