@@ -14,8 +14,7 @@ import {
 } from "../../components/toast/notificiation-toast";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Phone } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AnimatedButton } from "@/components/animation/motion.config";
-import { Button } from "@/components/ui/button";
+ 
 
 //axios
 //import axiosPublic from "../../utils/axios/axiosPublic";
@@ -125,15 +124,22 @@ export default function AuthenticationPage() {
 
         const { picture } = googleUserInfo.data;
 
-        await dispatch(
+        const result = await dispatch(
           signInWithGoogle({
             token: tokenResponse.access_token,
             avatar: picture,
             rememberMe,
           })
         ).unwrap();
+        
         CustomSuccessToast("Đăng nhập Google thành công!");
-        navigate("/");
+        
+        // Redirect based on user role
+        if (result?.user?.role === "field_owner") {
+          navigate("/field-owner-dashboard");
+        } else {
+          navigate("/");
+        }
       } catch (error) {
         // Kiểm tra error có phải AxiosError không
         if (axios.isAxiosError(error)) {
@@ -189,7 +195,13 @@ export default function AuthenticationPage() {
           }
 
           CustomSuccessToast("Đăng nhập thành công!");
-          navigate("/");
+          
+          // Redirect based on user role
+          if (user.role === "field_owner") {
+            navigate("/field-owner-dashboard");
+          } else {
+            navigate("/");
+          }
         }
       } else {
         const result = await dispatch(
@@ -441,14 +453,7 @@ export default function AuthenticationPage() {
                     </>
                   )}
                 </button>
-                <AnimatedButton >
-                  <Button
-                    onClick={() => navigate("/")}
-                    className="w-full bg-gradient-to-r from-green-800 to-green-400 text-white py-4 px-6 rounded-xl text-base font-mediu focus:ring-4 focus:ring-blue-200 transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Xem trước
-                  </Button>
-                </AnimatedButton>
+                
               </div>
               {/* Toggle Mode */}
               <div className="mt-8 text-center">

@@ -104,6 +104,47 @@ export interface CoachDetailResponse {
     message?: string;
 }
 
+// Coach Profile (resolve by userId) - dedicated type for /profiles/coach-id/:userId
+export interface CoachProfileUser {
+    favouriteField: string[];
+    isActive: boolean;
+    _id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    password: string;
+    role: string;
+    isVerified: boolean;
+    verificationToken: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+    avatarUrl: string;
+}
+
+export interface CoachProfile {
+    _id: string;
+    user: CoachProfileUser;
+    sports: string[];
+    certification: string;
+    hourlyRate: number;
+    bio: string;
+    rating: number;
+    totalReviews: number;
+    createdAt: string;
+    updatedAt: string;
+    completedSessions: number;
+    experience: string;
+    location: string;
+    rank: string;
+}
+
+export interface CoachProfileResponse {
+    success: boolean;
+    data: CoachProfile;
+    message?: string;
+}
+
 // Error handling interfaces
 export interface ErrorResponse {
     message: string;

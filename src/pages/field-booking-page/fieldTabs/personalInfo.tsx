@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, User, Mail, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useAppSelector } from "@/store/hook";
 import { useLocation } from "react-router-dom";
 import type { Field } from "@/types/field-type";
@@ -60,7 +59,6 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     bookingData,
     onSubmit,
     onBack,
-    courts = [],
     onShowAuthPopup,
 }) => {
     const location = useLocation();
@@ -82,7 +80,6 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         phone: bookingData?.phone || currentUser?.phone || '',
     });
 
-    const [notes, setNotes] = useState('');
     const [errors, setErrors] = useState<{[key: string]: string}>({});
 
     // Check authentication when component mounts
@@ -104,30 +101,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         }
     }, [currentUser, bookingData]);
 
-    // Helper function to format date
-    const formatDate = (dateString: string): string => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('vi-VN', { 
-            weekday: 'long', 
-            year: 'numeric',
-            month: 'long', 
-            day: 'numeric' 
-        });
-    };
-
-    // Helper function to format time
-    const formatTime = (timeString: string): string => {
-        if (!timeString) return '';
-        const [hours, minutes] = timeString.split(':');
-        const date = new Date();
-        date.setHours(parseInt(hours), parseInt(minutes));
-        return date.toLocaleTimeString('vi-VN', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-        });
-    };
+    // (Removed unused date/time formatting helpers)
 
     // Form validation
     const validateForm = (): boolean => {
@@ -188,66 +162,8 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
     return (
         <div className="w-full max-w-[1320px] mx-auto px-3 flex flex-col gap-10">
-            {/* Header Card */}
-            <Card className="border border-gray-200">
-                <CardContent className="p-6">
-                    <div className="pb-10">
-                        <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
-                            Thông tin cá nhân
-                        </h1>
-                        <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
-                            Vui lòng xác nhận thông tin liên hệ cho đặt sân này.
-                        </p>
-                    </div>
-
-                    {/* Booking Summary */}
-                    <div className="p-6 bg-gray-50 rounded-lg">
-                        <div className="flex flex-wrap items-center gap-8">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                    <User className="w-6 h-6 text-emerald-600" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">Sân</p>
-                                    <p className="text-sm text-gray-600">
-                                        {courts.find(c => c.id === formData.court)?.name || 'Selected Court'}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <Mail className="w-6 h-6 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">Ngày</p>
-                                    <p className="text-sm text-gray-600">
-                                        {formatDate(formData.date) || 'Selected Date'}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                    <Phone className="w-6 h-6 text-purple-600" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">Thời gian</p>
-                                    <p className="text-sm text-gray-600">
-                                        {formData.startTime && formData.endTime 
-                                            ? `${formatTime(formData.startTime)} - ${formatTime(formData.endTime)}`
-                                            : 'Selected Time'
-                                        }
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
             {/* Personal Information Form */}
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-6 mt-6">
                 {/* Form Section */}
                 <div className="flex-1 min-w-[600px]">
                     <Card className="border border-gray-200">
@@ -311,71 +227,12 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                 )}
                             </div>
 
-                            {/* Special Notes */}
-                            <div className="space-y-2">
-                                <Label htmlFor="notes" className="text-base font-medium font-['Outfit']">
-                                    Ghi chú (không bắt buộc)
-                                </Label>
-                                <Textarea
-                                    id="notes"
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    className="min-h-[100px] bg-gray-50 border-0"
-                                    placeholder="Yêu cầu/ghi chú cho đặt sân..."
-                                />
-                            </div>
+                            
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* User Info Sidebar */}
-                {/* <div className="w-96">
-                    <Card className="border border-gray-200">
-                        <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-xl font-semibold font-['Outfit']">
-                                Account Information
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-4">
-                            {currentUser ? (
-                                <>
-                                    <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
-                                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                                            <User className="w-5 h-5 text-emerald-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-900">Logged in as</p>
-                                            <p className="text-sm text-emerald-600 font-medium">
-                                                {currentUser.fullName || currentUser.email}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="space-y-3">
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</p>
-                                            <p className="text-sm text-gray-900 mt-1">{currentUser.email}</p>
-                                        </div>
-                                        {currentUser.phone && (
-                                            <div>
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</p>
-                                                <p className="text-sm text-gray-900 mt-1">{currentUser.phone}</p>
-                                            </div>
-                                        )}
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Role</p>
-                                            <p className="text-sm text-gray-900 mt-1 capitalize">{currentUser.role}</p>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <p className="text-sm text-gray-500">Not logged in</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div> */}
+                {/* User Info Sidebar (removed) */}
             </div>
 
             {/* Action Buttons */}

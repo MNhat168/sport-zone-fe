@@ -4,11 +4,11 @@ import {
     Calendar,
     MessageSquare,
     Wallet,
-    Settings,
     LayoutDashboard,
     MapPin,
     UserCheck,
     DollarSign,
+    User,
 } from "lucide-react"
 
 export function CoachDashboardTabs() {
@@ -40,6 +40,14 @@ export function CoachDashboardTabs() {
                         >
                             <LayoutDashboard className="w-5 h-5" />
                             <span className="text-xs font-medium">Dashboard</span>
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            className={baseTabClasses(isActive("/user-profile"))}
+                            onClick={() => handleNavigation("/user-profile")}
+                        >
+                            <User className="w-5 h-5" />
+                            <span className="text-xs font-medium">Profile</span>
                         </Button>
                         <Button 
                             variant="ghost" 
@@ -88,14 +96,6 @@ export function CoachDashboardTabs() {
                         >
                             <Wallet className="w-5 h-5" />
                             <span className="text-xs font-medium">Wallet</span>
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            className={baseTabClasses(isActive("/coach/coach-profile"))}
-                            onClick={() => handleNavigation("/coach/coach-profile")}
-                        >
-                            <Settings className="w-5 h-5" />
-                            <span className="text-xs font-medium">Profile</span>
                         </Button>
                     </div>
                 </div>

@@ -11,7 +11,7 @@ import { useState, useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
 import { PageWrapper } from '@/components/layouts/page-wrapper'
 import { getMyFields, getMyFieldsBookings } from "@/features/field/fieldThunk"
-import { FieldOwnerDashboardTabs } from "@/components/ui/field-owner-dashboard-tabs"
+import { FieldOwnerDashboardTabs } from "@/components/tabs/field-owner-dashboard-tabs"
 
 export default function FieldOwnerDashboardPage() {
     const dispatch = useAppDispatch();
@@ -232,9 +232,9 @@ export default function FieldOwnerDashboardPage() {
                     <FieldOwnerDashboardHeader />
                     <FieldOwnerDashboardTabs />
                     <div className="max-w-[1320px] mx-auto py-8 space-y-8">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            {/* Phần thống kê - Bên trái */}
-                            <div className="lg:col-span-1">
+                        <div className="grid grid-cols-1 gap-8">
+                            {/* Phần thống kê */}
+                            <div>
                                 <div className="bg-white rounded-xl p-4 shadow-lg">
                                     <div>
                                         <h4 className="text-xl font-semibold mb-1 text-start">Thống kê</h4>
@@ -263,102 +263,6 @@ export default function FieldOwnerDashboardPage() {
                                 </div>
                             </div>
 
-                            <div className="lg:col-span-1">
-                                <div className="bg-white rounded-xl p-4 shadow-lg h-full">
-                                    <div>
-                                        <h4 className="text-xl font-semibold mb-1 text-start">Hồ sơ kinh doanh</h4>
-                                        <p className="text-muted-foreground mb-4 text-start">
-                                            Quản lý hồ sơ và cài đặt của chủ sân
-                                        </p>
-                                    </div>
-                                    <div className="border-t border-gray-100 my-4" />
-
-                                    {/* Tiến độ hôm nay */}
-                                    <div className="mb-4">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm font-medium text-start">Lượt đặt hôm nay</span>
-                                            <span className="text-sm font-medium text-start">{ongoingTodayBookings.length}</span>
-                                        </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2">
-                                            <div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min((ongoingTodayBookings.length / (totalFields || 1)) * 100, 100)}%` }}></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Phần đã hoàn thành */}
-                                    <div className="mb-4">
-                                        <h3 className="text-sm font-semibold mb-2 text-start">Trạng thái hồ sơ</h3>
-                                        <ul className="flex flex-wrap gap-2">
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <span className="text-sm text-start">Thông tin kinh doanh</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <span className="text-sm text-start">Thiết lập thanh toán</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <span className="text-sm text-start">Quản lý sân</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    {/* Phần cần hoàn thành */}
-                                    <div>
-                                        <h3 className="text-sm font-semibold mb-2 text-start">Cần hoàn thành</h3>
-                                        <ul className="flex flex-wrap gap-2">
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <span className="text-sm text-start">Thêm sân mới</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <span className="text-sm text-start">Thiết lập các mức giá</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         {/* Phần lịch đặt trong ngày */}

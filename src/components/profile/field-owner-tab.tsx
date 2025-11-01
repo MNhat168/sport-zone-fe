@@ -31,6 +31,7 @@ export default function FieldOwnerTab() {
         website: "",
         businessEmail: "",
     })
+    const [isEditing, setIsEditing] = useState(false)
 
     // Nhãn hiển thị tiếng Việt cho các môn thể thao
     const SPORT_LABELS: Record<string, string> = {
@@ -67,12 +68,16 @@ export default function FieldOwnerTab() {
                 website: myProfile.website || "",
                 businessEmail: user?.email || "",
             })
+            // Existing profile: default to view mode
+            setIsEditing(false)
         } else if (user) {
             setFormData((prev) => ({
                 ...prev,
                 contactPhone: user.phone || "",
                 businessEmail: user.email || "",
             }))
+            // No profile yet: allow editing to create
+            setIsEditing(true)
         }
     }, [myProfile, user, authUser?.role])
 
@@ -102,40 +107,49 @@ export default function FieldOwnerTab() {
             if (myProfile?.id) {
                 await dispatch(updateMyOwnerProfile(payload as any)).unwrap()
                 toast.success("Cập nhật hồ sơ chủ sân thành công!")
+                setIsEditing(false)
             } else {
                 await dispatch(createOwnerProfile(payload as any)).unwrap()
                 toast.success("Tạo hồ sơ chủ sân thành công!")
+                setIsEditing(false)
             }
         } catch (error: any) {
             toast.error(error?.message || "Thao tác với hồ sơ chủ sân thất bại")
         }
     }
 
-    // Handle reset form
+    // Handle toggle edit mode via "Đặt lại" button
     const handleReset = () => {
         if (!authUser?._id || authUser?.role !== "field_owner") return
-        if (myProfile) {
-            setFormData({
-                facilityName: myProfile.facilityName || "",
-                facilityLocation: myProfile.facilityLocation || "",
-                supportedSports: myProfile.supportedSports || [],
-                description: myProfile.description || "",
-                businessHours: myProfile.businessHours || "",
-                contactPhone: myProfile.contactPhone || user?.phone || "",
-                website: myProfile.website || "",
-                businessEmail: user?.email || "",
-            })
-        } else if (user) {
-            setFormData({
-                facilityName: "",
-                facilityLocation: "",
-                supportedSports: [],
-                description: "",
-                businessHours: "",
-                contactPhone: user.phone || "",
-                website: "",
-                businessEmail: user.email || "",
-            })
+        // If currently editing, turn off edit mode and reset to last saved values
+        if (isEditing) {
+            if (myProfile) {
+                setFormData({
+                    facilityName: myProfile.facilityName || "",
+                    facilityLocation: myProfile.facilityLocation || "",
+                    supportedSports: myProfile.supportedSports || [],
+                    description: myProfile.description || "",
+                    businessHours: myProfile.businessHours || "",
+                    contactPhone: myProfile.contactPhone || user?.phone || "",
+                    website: myProfile.website || "",
+                    businessEmail: user?.email || "",
+                })
+            } else if (user) {
+                setFormData({
+                    facilityName: "",
+                    facilityLocation: "",
+                    supportedSports: [],
+                    description: "",
+                    businessHours: "",
+                    contactPhone: user.phone || "",
+                    website: "",
+                    businessEmail: user.email || "",
+                })
+            }
+            setIsEditing(false)
+        } else {
+            // If currently not editing, enable edit mode
+            setIsEditing(true)
         }
     }
 
@@ -163,6 +177,7 @@ export default function FieldOwnerTab() {
                                     onChange={(e) => handleInputChange('facilityName', e.target.value)}
                                     placeholder="Nhập tên cơ sở"
                                     className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                    disabled={!isEditing}
                                 />
                             </div>
                             <div className="space-y-2.5 md:col-span-2">
@@ -173,10 +188,13 @@ export default function FieldOwnerTab() {
                                     {Object.values(SportType).map((sport) => {
                                         const checked = formData.supportedSports.includes(sport)
                                         return (
-                                            <label key={sport} className="flex items-center gap-2 text-sm text-[#6B7385]">
+                                            <label
+                                                key={sport}
+                                                className={`flex items-center gap-2 text-sm rounded-md border px-3 py-2 transition-colors ${checked ? 'bg-emerald-50 border-emerald-500 text-emerald-700 font-medium' : 'bg-white border-gray-300 text-[#6B7385]'} ${!isEditing ? 'opacity-70' : 'cursor-pointer'}`}
+                                            >
                                                 <input
                                                     type="checkbox"
-                                                    className="h-4 w-4"
+                                                    className="h-4 w-4 accent-emerald-600"
                                                     checked={checked}
                                                     onChange={(e) => {
                                                         setFormData((prev) => {
@@ -186,6 +204,7 @@ export default function FieldOwnerTab() {
                                                             return { ...prev, supportedSports: Array.from(next) }
                                                         })
                                                     }}
+                                                    disabled={!isEditing}
                                                 />
                                                 <span className="capitalize">{SPORT_LABELS[sport] || sport.replace("_", " ")}</span>
                                             </label>
@@ -206,6 +225,7 @@ export default function FieldOwnerTab() {
                                 onChange={(e) => handleInputChange('description', e.target.value)}
                                 placeholder="Mô tả về cơ sở của bạn..."
                                 className="min-h-[100px] p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] resize-none"
+                                disabled={!isEditing}
                             />
                         </div>
                     </div>
@@ -228,6 +248,7 @@ export default function FieldOwnerTab() {
                                     onChange={(e) => handleInputChange('contactPhone', e.target.value)}
                                     placeholder="Nhập số điện thoại liên hệ"
                                     className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                    disabled={!isEditing}
                                 />
                             </div>
 
@@ -256,6 +277,7 @@ export default function FieldOwnerTab() {
                                 onChange={(e) => handleInputChange('facilityLocation', e.target.value)}
                                 placeholder="Nhập địa chỉ cơ sở..."
                                 className="min-h-[80px] p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] resize-none"
+                                disabled={!isEditing}
                             />
                         </div>
 
@@ -269,6 +291,7 @@ export default function FieldOwnerTab() {
                                     onChange={(e) => handleInputChange('businessHours', e.target.value)}
                                     placeholder="Ví dụ: Thứ 2-CN: 6:00-22:00"
                                     className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                    disabled={!isEditing}
                                 />
                             </div>
                             <div className="space-y-2.5">
@@ -280,6 +303,7 @@ export default function FieldOwnerTab() {
                                     onChange={(e) => handleInputChange('website', e.target.value)}
                                     placeholder="https://example.com"
                                     className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                    disabled={!isEditing}
                                 />
                             </div>
                         </div>
@@ -311,12 +335,12 @@ export default function FieldOwnerTab() {
                             onClick={handleReset}
                             className="min-w-24 px-8 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700 rounded-[10px] text-base font-medium"
                         >
-                            Đặt lại
+                            {isEditing ? 'Hủy' : 'Chỉnh sửa'}
                         </Button>
                         <Button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={loading || creating || updating || !formData.facilityName}
+                            disabled={!isEditing || loading || creating || updating || !formData.facilityName}
                             className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium"
                         >
                             {myProfile ? (updating ? 'Đang lưu...' : 'Lưu thay đổi') : (creating ? 'Đang tạo...' : 'Tạo hồ sơ')}

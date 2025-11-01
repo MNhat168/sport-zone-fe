@@ -44,6 +44,7 @@ const FieldBookingPage = () => {
         email: '',
         phone: '',
     });
+    
 
     // State để quản lý popup yêu cầu đăng nhập
     const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -208,6 +209,12 @@ const FieldBookingPage = () => {
                 {currentStep === BookingStep.ORDER_CONFIRMATION && (
                     <ConfirmCourtTab
                         bookingData={bookingData}
+                        selectedAmenityIds={selectedAmenityIds}
+                        amenities={(currentField as any)?.amenities?.map((a: any) => ({
+                            id: a?.amenityId,
+                            name: a?.name,
+                            price: Number(a?.price) || 0,
+                        })) || []}
                         onSubmit={(data) => { setBookingData(data); setCurrentStep(BookingStep.PERSONAL_INFO); }}
                         onBack={() => { setCurrentStep(BookingStep.AMENITIES); }}
                         courts={mockCourts}
@@ -218,6 +225,12 @@ const FieldBookingPage = () => {
                 {currentStep === BookingStep.PAYMENT && (
                     <PaymentTab
                         bookingData={bookingData}
+                        selectedAmenityIds={selectedAmenityIds}
+                        amenities={(currentField as any)?.amenities?.map((a: any) => ({
+                            id: a?.amenityId,
+                            name: a?.name,
+                            price: Number(a?.price) || 0,
+                        })) || []}
                         onPaymentComplete={handlePaymentComplete}
                         onBack={handleBackToConfirm}
                         courts={mockCourts}

@@ -80,7 +80,7 @@ export const NavbarComponent = () => {
                     <Link to="/fields" className={linkClass}>
                         Sân thể thao
                     </Link>
-                    <Link to="/booking" className={linkClass}>
+                    <Link to="/coach/booking" className={linkClass}>
                         Huấn luyện viên
                     </Link>
                     <Link to="/reviews" className={linkClass}>

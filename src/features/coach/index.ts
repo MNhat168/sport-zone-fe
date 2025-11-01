@@ -10,12 +10,14 @@ export {
     getCoaches,
     getCoachById,
     getAllCoaches,
+    getCoachIdByUserId,
 } from './coachThunk';
 
 export {
     COACHES_API,
     COACH_BY_ID_API,
     ALL_COACHES_API,
+    COACH_ID_BY_USER_ID_API,
 } from './coachAPI';
 
 // Export types

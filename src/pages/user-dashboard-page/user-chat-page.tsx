@@ -1,4 +1,4 @@
-import { UserDashboardTabs } from "@/components/ui/user-dashboard-tabs"
+import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
