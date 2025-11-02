@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { type RouteObject} from "react-router-dom";
+import { type RouteObject } from "react-router-dom";
 import ProtectedRoute, { UnauthorizedPage, UserRole } from "./protected-routes-config";
 
 // ===== PAGE IMPORTS =====
@@ -33,6 +33,9 @@ import FieldCreatePage from "../pages/field-create-page/field-create-page";
 import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
 import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/field-owner-dashboard-page";
 
+//Notification
+import NotificationsPage from "../pages/notifications/page";
+
 /**
  * Placeholder component for pages under development
  */
@@ -60,19 +63,19 @@ export const publicRoutes: RouteObject[] = [
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
-  
+
   // Field Discovery & Booking (Public)
   { path: "/fields", element: <FieldBookingPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
-  
+
   // Coach Discovery (Public)
   { path: "/coaches", element: <Placeholder title="Danh sách HLV" /> },
   { path: "/coach-detail", element: <CoachDetailPage /> },
   { path: "/coach/:id", element: <CoachDetailPage /> },
-  
+
   // General Booking (Public)
   { path: "/booking", element: <BookingPage /> },
-  
+
   // About & Contact (Public)
   { path: "/about", element: <Placeholder title="Về chúng tôi" /> },
   { path: "/contact", element: <Placeholder title="Liên hệ" /> },
@@ -113,7 +116,7 @@ export const userRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // User Booking Management
   {
     path: "/user-booking-history",
@@ -131,7 +134,7 @@ export const userRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // User Communication & Finance
   {
     path: "/user-chat",
@@ -149,7 +152,20 @@ export const userRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+  {
+    path: "/notifications",
+    element: (
+      <ProtectedRoute
+        allowedRoles={[
+          UserRole.user,
+          UserRole.coach,
+          UserRole.FIELD_OWNER
+        ]}
+      >
+        <NotificationsPage />
+      </ProtectedRoute>
+    ),
+  },
   // Fallback User Area
   {
     path: "/user",
@@ -199,7 +215,7 @@ export const coachRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Coach Class & Booking Management
   {
     path: "/coach/classes",
@@ -225,7 +241,7 @@ export const coachRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Coach Students & Performance
   {
     path: "/coach/students",
@@ -251,7 +267,7 @@ export const coachRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Fallback Coach Area
   {
     path: "/coach",
@@ -277,7 +293,7 @@ export const adminRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // User Management
   {
     path: "/admin/users",
@@ -303,7 +319,7 @@ export const adminRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Content & System Management
   {
     path: "/admin/fields",
@@ -337,7 +353,7 @@ export const adminRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Legacy Support
   {
     path: "/center",
@@ -347,7 +363,7 @@ export const adminRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Fallback Admin Area
   {
     path: "/admin",
@@ -381,7 +397,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Field Management
   {
     path: "/field/create",
@@ -415,7 +431,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Booking & Schedule Management
   {
     path: "/field-owner/bookings",
@@ -433,7 +449,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Customer Management
   {
     path: "/field-owner/customers",
@@ -443,7 +459,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Analytics & Financial Management
   {
     path: "/field-owner/analytics",
@@ -469,7 +485,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Settings & Configuration
   {
     path: "/field-owner/settings",
@@ -479,7 +495,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  
+
   // Fallback Field Owner Area
   {
     path: "/field-owner",
@@ -525,7 +541,7 @@ export const getPublicRoutePaths = (): string[] => {
  */
 export const isPublicRoute = (pathname: string): boolean => {
   const publicPaths = getPublicRoutePaths();
-  
+
   return publicPaths.some(route =>
     pathname === route ||
     (route !== '/' && pathname.startsWith(route))
