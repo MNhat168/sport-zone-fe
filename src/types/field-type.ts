@@ -27,6 +27,7 @@ export interface Field {
     maxSlots: number; // maximum slots per booking
     priceRanges: PriceRange[];
     basePrice: number; // in VND
+    price?: string; // Formatted price from backend (e.g., "250.000đ/giờ" or "N/A")
     isActive: boolean;
     maintenanceNote?: string;
     maintenanceUntil?: string; // ISO date string

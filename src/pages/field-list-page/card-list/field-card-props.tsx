@@ -75,7 +75,7 @@ const FieldCard: React.FC<FieldCardProps> = ({
                             )}
                         </div>
                         <div className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
-                            From {price}
+                            {price}
                         </div>
                     </div>
                     

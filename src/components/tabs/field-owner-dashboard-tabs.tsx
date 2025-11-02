@@ -9,6 +9,7 @@ import {
     FileText,
     Wallet,
     User,
+    History,
 } from "lucide-react"
 
 export function FieldOwnerDashboardTabs() {
@@ -66,6 +67,15 @@ export function FieldOwnerDashboardTabs() {
                     >
                         <Calendar className="w-5 h-5" />
                         <div className="text-center text-sm font-medium font-['Outfit']">Đặt sân</div>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        className={baseTabClasses(isActive("/field-owner/booking-history"))}
+                        onClick={() => handleNavigation("/field-owner/booking-history")}
+                    >
+                        <History className="w-5 h-5" />
+                        <div className="text-center text-sm font-medium font-['Outfit']">Lịch sử booking</div>
                     </Button>
 
                     <Button

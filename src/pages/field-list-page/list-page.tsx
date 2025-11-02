@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { NavbarDarkComponent } from "../../components/header/navbar-dark-component";
-import PageHeader from "../../components/header-banner/page-header";
-import FieldCard from "./card-list/field-card-props";
-import { useRef, useEffect, useState } from "react";
-import { FooterComponent } from "../../components/footer/footer-component";
-import { useAppDispatch, useAppSelector } from "../../store/hook";
-import { getAllFields } from "../../features/field/fieldThunk";
-import { useGeolocation } from "../../hooks/useGeolocation";
-import { locationAPIService } from "../../utils/geolocation";
-import { Navigation, MapPin, AlertCircle, Filter } from "lucide-react";
-import { FavoriteSportsModal } from "@/components/common/favorite-sports-modal";
-import { getUserProfile, setFavouriteSports } from "@/features/user/userThunk";
+import { NavbarDarkComponent } from "../../components/header/navbar-dark-component"
+import PageHeader from "../../components/header-banner/page-header"
+import FieldCard from "./card-list/field-card-props"
+import { useRef, useEffect, useState } from "react"
+import { FooterComponent } from "../../components/footer/footer-component"
+import { useAppDispatch, useAppSelector } from "../../store/hook"
+import { getAllFields } from "../../features/field/fieldThunk"
+import { getUserProfile, setFavouriteSports } from "../../features/user/userThunk"
+import { useGeolocation } from "../../hooks/useGeolocation"
+import { locationAPIService } from "../../utils/geolocation"
+import { Navigation, MapPin, AlertCircle, Filter } from "lucide-react"
+import { FavoriteSportsModal } from "../../components/common/favorite-sports-modal"
 
 const FieldBookingPage = () => {
   const fieldsListRef = useRef<HTMLDivElement>(null);
@@ -120,60 +120,47 @@ const FieldBookingPage = () => {
       dispatch(getAllFields(filters));
     }, 500); // 500ms delay for debouncing
 
-    return () => clearTimeout(timeoutId);
-  }, [dispatch, filters, isNearbyMode]);
+        return () => clearTimeout(timeoutId)
+    }, [dispatch, filters, isNearbyMode])
 
-  // Transform field data to match FieldCard props (prefer nearby when in nearby mode)
-  const transformedFields = (
-    isNearbyMode && nearbyFields.length > 0 ? nearbyFields : fields
-  ).map((field) => {
-    // Normalize location to a string for rendering
-    const rawLocation: any = (field as any).location ?? (field as any).address;
-    let locationText = "Địa chỉ không xác định";
-    if (typeof rawLocation === "string" && rawLocation.trim()) {
-      locationText = rawLocation;
-    } else if (rawLocation && typeof rawLocation === "object") {
-      const address = (rawLocation as any).address;
-      const geo = (rawLocation as any).geo;
-      const lat = geo?.latitude ?? geo?.lat;
-      const lng = geo?.longitude ?? geo?.lng;
-      if (typeof address === "string" && address.trim()) {
-        locationText = address;
-      } else if (lat != null && lng != null) {
-        locationText = `${lat}, ${lng}`;
-      }
-    }
+    // Transform field data to match FieldCard props (prefer nearby when in nearby mode)
+    const transformedFields = ((isNearbyMode && nearbyFields.length > 0) ? nearbyFields : fields).map((field) => {
+        // Normalize location to a string for rendering
+        const rawLocation: any = (field as any).location ?? (field as any).address;
+        let locationText = 'Địa chỉ không xác định';
+        if (typeof rawLocation === 'string' && rawLocation.trim()) {
+            locationText = rawLocation;
+        } else if (rawLocation && typeof rawLocation === 'object') {
+            const address = (rawLocation as any).address;
+            const geo = (rawLocation as any).geo;
+            const lat = geo?.latitude ?? geo?.lat;
+            const lng = geo?.longitude ?? geo?.lng;
+            if (typeof address === 'string' && address.trim()) {
+                locationText = address;
+            } else if (lat != null && lng != null) {
+                locationText = `${lat}, ${lng}`;
+            }
+        }
 
-    return {
-      id: (field as any).id,
-      name: (field as any).name,
-      location: locationText,
-      description: (field as any).description || "Mô tả không có sẵn",
-      rating: (field as any).rating || 4.5,
-      reviews: (field as any).reviews || (field as any).totalBookings || 0,
-      price: (field as any).price || `${(field as any).basePrice || 0}k/h`,
-      nextAvailability:
-        (field as any).isActive !== false ? "Có sẵn" : "Không có sẵn",
-      sportType: (field as any).sportType || "unknown",
-      imageUrl:
-        (field as any).imageUrl ||
-        (field as any).images?.[0] ||
-        "/placeholder-field.jpg",
-      distance: (field as any).distance
-        ? `${(field as any).distance.toFixed(1)} km`
-        : undefined,
-      latitude:
-        (field as any).latitude ??
-        (field as any).lat ??
-        (field as any)?.geo?.lat ??
-        (field as any)?.geo?.latitude,
-      longitude:
-        (field as any).longitude ??
-        (field as any).lng ??
-        (field as any)?.geo?.lng ??
-        (field as any)?.geo?.longitude,
-    };
-  });
+        // Backend provides formatted price in 'price' field (e.g., "200.000đ/giờ" or "N/A")
+        const formattedPrice = (field as any).price || `${(field as any).basePrice || 0}k/h`;
+
+        return {
+            id: (field as any).id,
+            name: (field as any).name,
+            location: locationText,
+            description: (field as any).description || 'Mô tả không có sẵn',
+            rating: (field as any).rating || 4.5,
+            reviews: (field as any).reviews || (field as any).totalBookings || 0,
+            price: formattedPrice,
+            nextAvailability: (field as any).isActive !== false ? 'Có sẵn' : 'Không có sẵn',
+            sportType: (field as any).sportType || 'unknown',
+            imageUrl: (field as any).imageUrl || (field as any).images?.[0] || '/placeholder-field.jpg',
+            distance: (field as any).distance ? `${(field as any).distance.toFixed(1)} km` : undefined,
+            latitude: (field as any).latitude ?? (field as any).lat ?? (field as any)?.geo?.lat ?? (field as any)?.geo?.latitude,
+            longitude: (field as any).longitude ?? (field as any).lng ?? (field as any)?.geo?.lng ?? (field as any)?.geo?.longitude,
+        };
+    })
 
     // Load Leaflet from CDN if not loaded
     const ensureLeafletLoaded = async (): Promise<void> => {

@@ -1,8 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch } from '@/store/hook';
-import { getMyBookings } from '@/features/booking/bookingThunk';
-import { verifyVNPayPayment } from '@/features/payment/paymentThunk';
+import { verifyVNPayPayment } from '@/features/transactions/transactionsThunk';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
@@ -12,7 +11,7 @@ import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
  */
 interface PaymentVerificationResult {
   success: boolean;
-  paymentStatus: 'succeeded' | 'failed' | 'pending';
+  paymentStatus: 'succeeded' | 'failed' | 'pending' | 'completed' | string;
   bookingId: string;
   message: string;
   reason?: string;
@@ -27,82 +26,15 @@ export default function VNPayReturnPage() {
   const location = useLocation();
   const dispatch = useAppDispatch();
   
-  const [status, setStatus] = useState<'verifying' | 'polling' | 'success' | 'error'>('verifying');
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [error, setError] = useState<string | null>(null);
-  const [pollingAttempt, setPollingAttempt] = useState(0);
-  const [verificationMessage, setVerificationMessage] = useState<string>('');
-
-  /**
-   * Step 2: Poll for booking confirmation
-   * Backend event listeners should update booking status within 1-2 seconds
-   */
-  const startPolling = useCallback((bookingId: string) => {
-    const maxAttempts = 5; // Reduced from 24 to 5
-    const pollInterval = 2000; // 2 seconds
-
-    console.log(`[VNPay Return] Starting polling for booking ${bookingId} (max ${maxAttempts} attempts)`);
-
-    const pollBookingStatus = async (attempt: number) => {
-      if (attempt >= maxAttempts) {
-        console.log('[VNPay Return] ⚠️ Polling timeout reached');
-        // Even if polling times out, payment was verified
-        // Navigate to success page anyway - booking is likely confirmed
-        setStatus('success');
-        setTimeout(() => {
-          navigate(`/my-bookings/${bookingId}`);
-        }, 2000);
-        return;
-      }
-
-      setPollingAttempt(attempt + 1);
-      console.log(`[VNPay Return] Polling booking status (attempt ${attempt + 1}/${maxAttempts})`);
-
-      try {
-        // Fetch user's bookings
-        const result = await dispatch(getMyBookings({ limit: 20 })).unwrap();
-        
-        // Handle different response structures
-        const anyResult: any = result as any;
-        const bookings = anyResult?.data?.bookings || anyResult?.bookings || [];
-        console.log(`[VNPay Return] Fetched ${bookings.length} bookings`);
-        
-        const booking = bookings.find((b: any) => b._id === bookingId);
-        
-        if (booking) {
-          console.log('[VNPay Return] Found booking, status:', booking.status);
-          
-          if (booking.status === 'confirmed') {
-            console.log('[VNPay Return] ✅ Booking confirmed!');
-            setStatus('success');
-            // Wait 2 seconds to show success message, then navigate
-            setTimeout(() => {
-              navigate(`/my-bookings/${bookingId}`);
-            }, 2000);
-            return;
-          }
-        } else {
-          console.log('[VNPay Return] Booking not found in list yet');
-        }
-
-        // Continue polling
-        setTimeout(() => pollBookingStatus(attempt + 1), pollInterval);
-        
-      } catch (error) {
-        console.error('[VNPay Return] Polling error:', error);
-        // Continue polling despite errors - don't fail the whole flow
-        setTimeout(() => pollBookingStatus(attempt + 1), pollInterval);
-      }
-    };
-
-    pollBookingStatus(0);
-  }, [dispatch, navigate]);
 
   /**
    * Step 1: Verify payment with backend immediately
    * This triggers payment status update and booking confirmation
    * 
-   * Note: VNPay redirects to backend endpoint: http://localhost:3000/api/reservations/vnpay_return
-   * Backend should then redirect to frontend with all query params, or frontend route should handle it
+   * Note: VNPay redirects to backend endpoint which then redirects to /transactions/vnpay/return
+   * Backend redirects to frontend with all query params from VNPay
    */
   useEffect(() => {
     const verifyPayment = async () => {
@@ -112,14 +44,10 @@ export default function VNPayReturnPage() {
         console.log('[VNPay Return] Location search:', location.search);
         console.log('[VNPay Return] Current pathname:', location.pathname);
         
-        // Check if we're on the backend route path (when backend redirects to frontend)
-        // Backend return URL: http://localhost:3000/api/reservations/vnpay_return
-        // Frontend route: /api/reservations/vnpay_return or /payments/vnpay/return
-        const isBackendRoute = location.pathname === '/api/reservations/vnpay_return';
-        
-        if (isBackendRoute) {
-          console.log('[VNPay Return] ✅ Detected backend return route');
-        }
+        // VNPay redirects flow:
+        // 1. VNPay -> Backend endpoint (verifies signature)
+        // 2. Backend redirects -> /transactions/vnpay/return (with all VNPay query params)
+        // 3. Frontend page verifies payment via API call
         
         // CRITICAL: Get the COMPLETE query string from VNPay redirect
         // VNPay redirects with params like: ?vnp_TxnRef=xxx&vnp_ResponseCode=00&vnp_SecureHash=yyy&...
@@ -165,7 +93,7 @@ export default function VNPayReturnPage() {
           console.error('[VNPay Return] Backend should redirect with VNPay query params from original redirect');
           console.error('[VNPay Return] Expected: ?vnp_TxnRef=...&vnp_ResponseCode=...&vnp_SecureHash=...');
           console.error('[VNPay Return] Got: ?amount=...&orderId=...');
-          console.error('[VNPay Return] Backend endpoint /api/reservations/vnpay_return must preserve VNPay params!');
+          console.error('[VNPay Return] Backend must preserve VNPay params when redirecting!');
           setError('Backend không truyền đúng tham số từ VNPay. Vui lòng liên hệ admin.');
           setStatus('error');
           return;
@@ -176,9 +104,9 @@ export default function VNPayReturnPage() {
           console.warn('[VNPay Return] ⚠️ vnp_SecureHash is missing from URL!');
           console.warn('[VNPay Return] This means VNPay did not redirect correctly.');
           console.warn('[VNPay Return] Please check:');
-          console.warn('  1. Backend endpoint /api/reservations/vnpay_return must preserve VNPay query params');
-          console.warn('  2. Backend should redirect to frontend with SAME query string from VNPay');
-          console.warn('  3. VNPAY_RETURN_URL in backend .env should point to backend endpoint');
+          console.warn('  1. Backend must preserve VNPay query params when redirecting');
+          console.warn('  2. Backend should redirect to /transactions/vnpay/return with SAME query string from VNPay');
+          console.warn('  3. VNPAY_RETURN_URL in backend .env should point to backend endpoint (which redirects to frontend)');
         }
 
         // Call verify endpoint via Redux thunk with COMPLETE query string from VNPay
@@ -192,16 +120,88 @@ export default function VNPayReturnPage() {
           verifyVNPayPayment(queryString)
         ).unwrap();
         console.log('[VNPay Return] ✅ Verification result:', result);
+        console.log('[VNPay Return] Result details:', {
+          success: result.success,
+          successType: typeof result.success,
+          paymentStatus: result.paymentStatus,
+          paymentStatusType: typeof result.paymentStatus,
+          bookingId: result.bookingId,
+          message: result.message,
+          fullResult: JSON.stringify(result, null, 2)
+        });
 
-        setVerificationMessage(result.message);
 
-        if (result.success && result.paymentStatus === 'succeeded') {
-          // Payment successful - start polling for booking confirmation
-          setStatus('polling');
-          startPolling(result.bookingId);
+        // Đơn giản hóa: Chỉ dựa vào VNPay response code từ URL params
+        // VNPay response code '00' = thanh toán thành công
+        const vnpayResponseCode = queryParams.get('vnp_ResponseCode');
+        const isSucceeded = vnpayResponseCode === '00';
+
+        console.log('[VNPay Return] Payment status check:', {
+          isSucceeded,
+          vnpayResponseCode,
+          message: isSucceeded ? 'VNPay báo thanh toán thành công' : `VNPay báo thanh toán thất bại (code: ${vnpayResponseCode})`
+        });
+
+        if (isSucceeded) {
+          // Payment successful - lấy bookingId và redirect trực tiếp
+          // Không cần polling, VNPay đã xác nhận thanh toán thành công
+          console.log('[VNPay Return] ✅ VNPay báo thanh toán thành công!');
+          
+          // Lấy bookingId từ vnp_TxnRef (đây là booking ID từ VNPay)
+          const bookingIdFromVNPay = queryParams.get('vnp_TxnRef') || result.bookingId;
+          const bookingIdStr = bookingIdFromVNPay ? String(bookingIdFromVNPay).trim() : '';
+          
+          console.log('[VNPay Return] Booking ID:', bookingIdStr);
+          
+          if (bookingIdStr && bookingIdStr.length > 0) {
+            // Hiển thị màn hình thành công và redirect sau 2 giây
+            setStatus('success');
+            setTimeout(() => {
+              navigate(`/my-bookings/${bookingIdStr}`, {
+                state: { message: 'Thanh toán thành công!' }
+              });
+            }, 2000);
+          } else {
+            // Không có bookingId nhưng thanh toán thành công - redirect về my-bookings
+            console.warn('[VNPay Return] ⚠️ Không tìm thấy bookingId, redirect về danh sách booking');
+            setStatus('success');
+            setTimeout(() => {
+              navigate('/my-bookings', {
+                state: { message: 'Thanh toán thành công!' }
+              });
+            }, 2000);
+          }
         } else {
-          // Payment failed
-          setError(result.reason || result.message || 'Payment failed');
+          // Payment failed - VNPay response code không phải '00'
+          const errorCode = queryParams.get('vnp_ResponseCode');
+          
+          console.log('[VNPay Return] ❌ VNPay báo thanh toán thất bại với code:', errorCode);
+          
+          // Lấy thông báo lỗi từ VNPay hoặc từ backend
+          let errorMessage = 'Thanh toán thất bại';
+          
+          // VNPay error codes mapping
+          const vnpayErrors: Record<string, string> = {
+            '07': 'Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).',
+            '09': 'Thẻ/Tài khoản chưa đăng ký dịch vụ InternetBanking',
+            '10': 'Xác thực thông tin thẻ/tài khoản không đúng. Quá 3 lần',
+            '11': 'Đã hết hạn chờ thanh toán. Xin vui lòng thực hiện lại giao dịch.',
+            '12': 'Thẻ/Tài khoản bị khóa.',
+            '13': 'Nhập sai mật khẩu xác thực giao dịch (OTP). Quá 3 lần',
+            '51': 'Tài khoản không đủ số dư để thực hiện giao dịch.',
+            '65': 'Tài khoản đã vượt quá hạn mức giao dịch trong ngày.',
+            '75': 'Ngân hàng thanh toán đang bảo trì.',
+            '79': 'Nhập sai mật khẩu thanh toán quá số lần quy định.',
+            '99': 'Lỗi không xác định'
+          };
+          
+          if (errorCode && vnpayErrors[errorCode]) {
+            errorMessage = vnpayErrors[errorCode];
+          } else if (result.reason || result.message) {
+            errorMessage = result.reason || result.message || errorMessage;
+          }
+          
+          setError(errorMessage);
           setStatus('error');
         }
         
@@ -213,7 +213,7 @@ export default function VNPayReturnPage() {
     };
 
     verifyPayment();
-  }, [location.search, location.pathname, dispatch, startPolling]);
+  }, [location.search, location.pathname, dispatch, navigate]);
 
   /**
    * Render: Verifying payment state
@@ -239,39 +239,7 @@ export default function VNPayReturnPage() {
   }
 
   /**
-   * Render: Polling for booking confirmation
-   */
-  if (status === 'polling') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="relative">
-                <CheckCircle className="w-16 h-16 text-green-500" />
-                <Loader2 className="w-6 h-6 text-green-600 animate-spin absolute -bottom-1 -right-1" />
-              </div>
-              <h2 className="text-2xl font-semibold text-green-800">
-                Thanh toán thành công!
-              </h2>
-              <p className="text-gray-600">
-                {verificationMessage || 'Đang xác nhận đặt sân của bạn...'}
-              </p>
-              {pollingAttempt > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Đang kiểm tra ({pollingAttempt}/5)</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  /**
-   * Render: Success state (booking confirmed)
+   * Render: Success state (payment successful from VNPay)
    */
   if (status === 'success') {
     return (

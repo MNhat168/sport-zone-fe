@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import L from "leaflet";
@@ -15,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -33,10 +31,6 @@ import {
   Clock,
   Users,
   User,
-  ChevronLeft,
-  ChevronRight,
-  Navigation,
-  Search,
   //   ChevronUp,
 } from "lucide-react";
 import { getCoachIdByUserId, clearCurrentCoach } from "@/features/coach";
@@ -44,6 +38,11 @@ import { CustomSuccessToast } from "@/components/toast/notificiation-toast";
 import type { RootState, AppDispatch } from "@/store/store";
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
+import { BioSection } from "./components/BioSection";
+import { LessonsSection } from "./components/LessonsSection";
+import { CoachingSection } from "./components/CoachingSection";
+import { GallerySection } from "./components/GallerySection";
+import { LocationSection } from "./components/LocationSection";
 
 interface LessonType {
   id: string;
@@ -306,30 +305,91 @@ export default function CoachSelfDetailPage() {
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    // Small delay to ensure container is properly rendered
+    // Wait for container to have proper dimensions
+    const checkContainerSize = () => {
+      if (!mapContainerRef.current) return false;
+      const rect = mapContainerRef.current.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    };
+
+    // Retry initialization with longer delay and size check
     const initTimeout = setTimeout(() => {
       if (!mapContainerRef.current || mapRef.current) return;
+      
+      // Check if container has dimensions
+      if (!checkContainerSize()) {
+        console.warn('[Leaflet] Container has no dimensions, retrying...');
+        setTimeout(() => {
+          if (!mapContainerRef.current || mapRef.current || !checkContainerSize()) return;
+          initializeMap();
+        }, 300);
+        return;
+      }
 
+      initializeMap();
+    }, 200);
+
+    const initializeMap = () => {
+      if (!mapContainerRef.current || mapRef.current) return;
+
+      console.log('[Leaflet] Initializing map...');
       const map = L.map(mapContainerRef.current, {
         center: DEFAULT_CENTER,
         zoom: MAP_CONFIG.zoom,
+        // Disable double-click zoom to prevent conflicts
+        doubleClickZoom: false,
+        // Ensure zoom controls are visible
+        zoomControl: true,
       });
 
-      L.tileLayer(TILE_LAYER_URL, {
+      // Add tile layer with error handling
+      const tileLayer = L.tileLayer(TILE_LAYER_URL, {
         attribution: '© OpenStreetMap contributors',
         maxZoom: MAP_CONFIG.maxZoom,
-      }).addTo(map);
+        // Add error handling for tiles
+        errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+      });
 
-      const marker = L.marker(DEFAULT_CENTER, { draggable: true }).addTo(map);
+      tileLayer.addTo(map);
+
+      // Add error event listener
+      tileLayer.on('tileerror', (error) => {
+        console.error('[Leaflet] Tile loading error:', error);
+      });
+
+      // Create default icon for marker (fix for missing default icons)
+      const defaultIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+      L.Marker.prototype.options.icon = defaultIcon;
+
+      const marker = L.marker(DEFAULT_CENTER, { 
+        draggable: true,
+        icon: defaultIcon
+      }).addTo(map);
 
       markerRef.current = marker;
       mapRef.current = map;
 
-      // Invalidate size to ensure map renders correctly
+      // Multiple invalidateSize calls to ensure map renders
       setTimeout(() => {
         map.invalidateSize();
       }, 100);
-    }, 100);
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 300);
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 500);
+
+      console.log('[Leaflet] Map initialized successfully');
+    };
 
     return () => {
       clearTimeout(initTimeout);
@@ -344,9 +404,16 @@ export default function CoachSelfDetailPage() {
   // Invalidate map size when edit mode changes or component mounts
   useEffect(() => {
     if (mapRef.current) {
+      // Multiple timeouts to ensure map resizes properly
       setTimeout(() => {
         mapRef.current?.invalidateSize();
       }, 100);
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 300);
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 500);
     }
   }, [isEditMode]);
 
@@ -836,244 +903,44 @@ export default function CoachSelfDetailPage() {
             {/* Các phần nội dung */}
             <div className="space-y-6">
               {/* Short Bio Section */}
-              <Card
-                id="summary"
-                className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
-              >
-                <CardHeader>
-                  <CardTitle className="text-xl text-left">Giới thiệu ngắn</CardTitle>
-                  <hr className="my-2 border-gray-200" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className=" text-muted-foreground leading-relaxed">
-                    {isEditMode ? (
-                      <div className="space-y-1">
-                        <Textarea rows={5} value={editableSummary} onChange={(e) => setEditableSummary(e.target.value)} />
-                      </div>
-                    ) : (
-                      <p className="text-left">{editableSummary || coachData?.description || "-"}</p>
-                    )}
-                  </div>
-                  <Button
-                    variant="link"
-                    className="text-green-600 hover:text-green-700 p-0 h-auto"
-                  >
-                    Xem thêm
-                  </Button>
-                </CardContent>
-              </Card>
+              <BioSection
+                summary={editableSummary}
+                coachDescription={coachData?.description}
+                isEditMode={isEditMode}
+                onSummaryChange={setEditableSummary}
+              />
 
               {/* Phần: Buổi học cùng tôi */}
-              <Card
-                id="lessons"
-                className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
-              >
-                <CardHeader>
-                  <CardTitle className="text-xl text-left">Buổi học cùng tôi</CardTitle>
-                  <hr className="my-2 border-gray-200" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground leading-relaxed text-left">
-                    Huấn luyện cá nhân hóa theo nhu cầu của bạn. Chọn buổi 1 kèm 1
-                    hoặc học nhóm để có môi trường hợp tác và hỗ trợ.
-                  </p>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {lessonTypes.map((lesson) => {
-                      const IconComponent = lesson.icon;
-                      return (
-                        <div key={lesson.id} className="group">
-                          <Button
-                            variant="outline"
-                            onClick={() => setSelectedLesson(lesson)}
-                            className="w-full h-auto py-6 flex flex-col items-center gap-3 hover:border-green-500 hover:bg-green-50 transition-all duration-300 hover:scale-[1.02] bg-transparent"
-                          >
-                            <div
-                              className={`${lesson.iconBg} p-3 rounded-full group-hover:opacity-80 transition-opacity`}
-                            >
-                              <IconComponent
-                                className={`h-6 w-6 ${lesson.iconColor}`}
-                              />
-                            </div>
-                            <div className="text-center">
-                              <div className="font-semibold text-base">
-                                {lesson.name}
-                              </div>
-                              <Badge variant="secondary" className="mt-2">
-                                {lesson.badge}
-                              </Badge>
-                            </div>
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+              <LessonsSection
+                lessonTypes={lessonTypes}
+                onLessonSelect={setSelectedLesson}
+              />
 
               {/* Phần: Coaching summary */}
-              <Card
-                id="coaching"
-                className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
-              >
-                <CardHeader>
-                  <CardTitle className="text-xl text-left">Coaching summary</CardTitle>
-                  <hr className="my-2 border-gray-200" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className=" text-muted-foreground leading-relaxed">
-                    {isEditMode ? (
-                      <div className="space-y-1">
-                        <Textarea rows={5} value={editableCoachingSummary} onChange={(e) => setEditableCoachingSummary(e.target.value)} />
-                      </div>
-                    ) : (
-                      <p className="text-left">{editableCoachingSummary || "-"}</p>
-                    )}
-                  </div>
-                  <Button
-                    variant="link"
-                    className="text-green-600 hover:text-green-700 p-0 h-auto"
-                  >
-                    Xem thêm
-                  </Button>
-                </CardContent>
-              </Card>
+              <CoachingSection
+                coachingSummary={editableCoachingSummary}
+                isEditMode={isEditMode}
+                onCoachingSummaryChange={setEditableCoachingSummary}
+              />
 
               {/* Phần: Thư viện ảnh */}
-              <Card
-                id="gallery"
-                className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
-              >
-                <CardHeader>
-                  <div className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-xl">Thư viện ảnh</CardTitle>
-                    {/* <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                    </Button> */}
-                  </div>
-                  <hr className="my-2 border-gray-200 w-full" />
-                </CardHeader>
-                <CardContent>
-                  <div className="relative px-12">
-                    {/* Mũi tên trái */}
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={prevGallerySlide}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white hover:bg-gray-100 shadow-lg h-10 w-10"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </Button>
-
-                    {/* Vùng ảnh */}
-                    <div className="overflow-hidden">
-                      <div
-                        className="flex gap-4 transition-transform duration-500 ease-in-out"
-                        style={{
-                          transform: `translateX(-${
-                            currentGalleryIndex * (100 / 3 + 1.33)
-                          }%)`,
-                        }}
-                      >
-                        {galleryImages.map((image, index) => (
-                          <div
-                            key={index}
-                            className="flex-shrink-0 w-[calc(33.333%-0.67rem)] aspect-[3/4] rounded-lg overflow-hidden"
-                          >
-                            <img
-                              src={image.url || "/placeholder.svg"}
-                              alt={image.alt}
-                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Mũi tên phải */}
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={nextGallerySlide}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white hover:bg-gray-100 shadow-lg h-10 w-10"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <GallerySection
+                images={galleryImages}
+                currentIndex={currentGalleryIndex}
+                onNext={nextGallerySlide}
+                onPrev={prevGallerySlide}
+              />
 
               {/* Phần: Vị trí */}
-              <Card
-                id="location"
-                className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
-              >
-                <CardHeader>
-                  <div className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-xl">Vị trí</CardTitle>
-                    {!isEditMode && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="hover:bg-green-50 hover:border-green-500 bg-transparent"
-                        onClick={() => {
-                          if (locationCoordinates) {
-                            window.open(`https://www.google.com/maps?q=${locationCoordinates[0]},${locationCoordinates[1]}`, '_blank');
-                          } else if (editableLocation) {
-                            window.open(`https://www.google.com/maps/search/${encodeURIComponent(editableLocation)}`, '_blank');
-                          }
-                        }}
-                      >
-                        <Navigation className="h-4 w-4 mr-2" />
-                        Chỉ đường
-                      </Button>
-                    )}
-                  </div>
-                  <hr className="my-2 border-gray-200 w-full" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {isEditMode && (
-                    <div className="space-y-2">
-                      <Label>Địa chỉ <span className="text-red-600">*</span></Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Nhập địa chỉ đầy đủ"
-                          value={editableLocation}
-                          onChange={(e) => setEditableLocation(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleSearchLocation();
-                            }
-                          }}
-                          className="flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleSearchLocation}
-                          disabled={!editableLocation.trim() || isSearching}
-                          className="px-4"
-                        >
-                          {isSearching ? (
-                            <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Search className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </div>
-                      {locationCoordinates && (
-                        <p className="text-xs text-muted-foreground">
-                          Tọa độ: {locationCoordinates[0].toFixed(6)}, {locationCoordinates[1].toFixed(6)}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  <div className="h-96 rounded-lg relative overflow-hidden border border-gray-200">
-                    <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
-                  </div>
-                </CardContent>
-              </Card>
+              <LocationSection
+                location={editableLocation}
+                locationCoordinates={locationCoordinates}
+                isEditMode={isEditMode}
+                isSearching={isSearching}
+                mapContainerRef={mapContainerRef}
+                onLocationChange={setEditableLocation}
+                onSearchLocation={handleSearchLocation}
+              />
             </div>
           </div>
 

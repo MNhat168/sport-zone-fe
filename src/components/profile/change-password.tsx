@@ -28,12 +28,23 @@ export default function ChangePassword() {
         newPassword: "",
         confirmPassword: "",
     })
+    const [isEditMode, setIsEditMode] = useState(false)
 
     // Handle success
     useEffect(() => {
         if (changePasswordSuccess) {
-            toast.success("Password changed successfully!")
-            handleReset()
+            toast.success("Đổi mật khẩu thành công!")
+            setIsEditMode(false)
+            setFormData({
+                oldPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            })
+            setValidationErrors({
+                oldPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            })
             dispatch(clearSuccessStates())
         }
     }, [changePasswordSuccess, dispatch])
@@ -41,7 +52,7 @@ export default function ChangePassword() {
     // Handle error
     useEffect(() => {
         if (changePasswordError) {
-            toast.error(changePasswordError.message || "Failed to change password")
+            toast.error(changePasswordError.message || "Đổi mật khẩu thất bại")
         }
     }, [changePasswordError])
 
@@ -63,23 +74,23 @@ export default function ChangePassword() {
         }
 
         if (!formData.oldPassword) {
-            errors.oldPassword = "Old password is required"
+            errors.oldPassword = "Vui lòng nhập mật khẩu cũ"
         }
 
         if (!formData.newPassword) {
-            errors.newPassword = "New password is required"
+            errors.newPassword = "Vui lòng nhập mật khẩu mới"
         } else if (formData.newPassword.length < 6) {
-            errors.newPassword = "New password must be at least 6 characters"
+            errors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự"
         }
 
         if (!formData.confirmPassword) {
-            errors.confirmPassword = "Confirm password is required"
+            errors.confirmPassword = "Vui lòng xác nhận mật khẩu"
         } else if (formData.newPassword !== formData.confirmPassword) {
-            errors.confirmPassword = "Passwords do not match"
+            errors.confirmPassword = "Mật khẩu không khớp"
         }
 
         if (formData.oldPassword === formData.newPassword && formData.oldPassword) {
-            errors.newPassword = "New password must be different from old password"
+            errors.newPassword = "Mật khẩu mới phải khác mật khẩu cũ"
         }
 
         setValidationErrors(errors)
@@ -103,18 +114,28 @@ export default function ChangePassword() {
         }
     }
 
-    // Handle reset form
-    const handleReset = () => {
-        setFormData({
-            oldPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-        })
-        setValidationErrors({
-            oldPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-        })
+    // Handle toggle edit mode
+    const handleToggleEdit = () => {
+        if (isEditMode) {
+            // Cancel edit mode - reset form
+            setFormData({
+                oldPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            })
+            setValidationErrors({
+                oldPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            })
+        }
+        setIsEditMode(!isEditMode)
+    }
+
+    // Handle deactivate account
+    const handleDeactivateAccount = () => {
+        // TODO: Implement deactivate account logic
+        toast.error("Chức năng vô hiệu hóa tài khoản chưa được triển khai")
     }
     return (
         <Card className="w-full bg-white rounded-[10px] shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)] border-0">
@@ -122,14 +143,15 @@ export default function ChangePassword() {
                 <div className="space-y-6">
                     <div className="space-y-2.5">
                         <Label className="text-base font-normal text-start">
-                            Old Password
+                            Mật khẩu cũ
                         </Label>
                         <Input
                             type="password"
                             value={formData.oldPassword}
                             onChange={(e) => handleInputChange('oldPassword', e.target.value)}
-                            placeholder="Enter Old Password"
-                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] ${
+                            placeholder="Nhập mật khẩu cũ"
+                            disabled={!isEditMode}
+                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${
                                 validationErrors.oldPassword ? 'border-red-500 border' : ''
                             }`}
                         />
@@ -140,14 +162,15 @@ export default function ChangePassword() {
                     
                     <div className="space-y-2.5">
                         <Label className="text-base font-normal text-start">
-                            New Password
+                            Mật khẩu mới
                         </Label>
                         <Input
                             type="password"
                             value={formData.newPassword}
                             onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                            placeholder="Enter New Password"
-                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] ${
+                            placeholder="Nhập mật khẩu mới"
+                            disabled={!isEditMode}
+                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${
                                 validationErrors.newPassword ? 'border-red-500 border' : ''
                             }`}
                         />
@@ -158,14 +181,15 @@ export default function ChangePassword() {
                     
                     <div className="space-y-2.5">
                         <Label className="text-base font-normal text-start">
-                            Confirm Password
+                            Xác nhận mật khẩu
                         </Label>
                         <Input
                             type="password"
                             value={formData.confirmPassword}
                             onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                            placeholder="Enter Confirm Password"
-                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] ${
+                            placeholder="Nhập lại mật khẩu mới"
+                            disabled={!isEditMode}
+                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${
                                 validationErrors.confirmPassword ? 'border-red-500 border' : ''
                             }`}
                         />
@@ -173,27 +197,45 @@ export default function ChangePassword() {
                             <p className="text-red-500 text-sm">{validationErrors.confirmPassword}</p>
                         )}
                     </div>
+
+                    {/* Deactivate Account Section */}
+                    <div className="space-y-2.5 pt-5 border-t border-gray-200">
+                        <Label className="text-base font-normal text-start">
+                            Vô hiệu hóa tài khoản
+                        </Label>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleDeactivateAccount}
+                            className="w-full h-14 bg-red-500 hover:bg-red-600 text-white rounded-[10px] text-base font-medium"
+                        >
+                            Vô hiệu hóa tài khoản
+                        </Button>
+                        <p className="text-sm font-normal text-[#6B7385]">
+                            Nhấn nút để vô hiệu hóa tài khoản
+                        </p>
+                    </div>
                     
                     <div className="flex justify-end gap-5 pt-5">
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={handleReset}
+                            onClick={handleToggleEdit}
                             disabled={changePasswordLoading}
                             className="min-w-24 px-8 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700 rounded-[10px] text-base font-medium"
                         >
-                            Reset
+                            {isEditMode ? "Hủy" : "Chỉnh sửa"}
                         </Button>
                         <Button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={changePasswordLoading}
-                            className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium"
+                            disabled={changePasswordLoading || !isEditMode}
+                            className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {changePasswordLoading ? (
                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             ) : null}
-                            Save Changes
+                            Lưu thay đổi
                         </Button>
                     </div>
                 </div>
