@@ -5,7 +5,6 @@ import { useAppSelector } from "@/store/hook"
 // Import all profile components
 import Profile from "@/components/profile/profile"
 import ChangePassword from "@/components/profile/change-password"
-import OtherSetting from "@/components/profile/other-setting"
 import FieldOwnerTab from "@/components/profile/field-owner-tab"
 import CoachProfileTab from "@/components/profile/coach-profile-tab"
 
@@ -28,11 +27,6 @@ const defaultTabs: ProfileTabConfig[] = [
         id: 'change-password',
         label: 'Change Password',
         component: ChangePassword,
-    },
-    {
-        id: 'other-settings',
-        label: 'Other Settings',
-        component: OtherSetting,
     },
 ]
 

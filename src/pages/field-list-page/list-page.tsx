@@ -1,5 +1,3 @@
-"use client"
-
 import { NavbarDarkComponent } from "../../components/header/navbar-dark-component"
 import PageHeader from "../../components/header-banner/page-header"
 import FieldCard from "./card-list/field-card-props"
@@ -108,6 +106,9 @@ const FieldBookingPage = () => {
         return () => clearTimeout(timeoutId)
     }, [dispatch, filters, isNearbyMode])
 
+    // Price formatting is now handled by backend (PriceFormatService)
+    // Backend returns formatted price in 'price' field (e.g., "200.000đ/giờ")
+
     // Transform field data to match FieldCard props (prefer nearby when in nearby mode)
     const transformedFields = ((isNearbyMode && nearbyFields.length > 0) ? nearbyFields : fields).map((field) => {
         // Normalize location to a string for rendering
@@ -127,6 +128,9 @@ const FieldBookingPage = () => {
             }
         }
 
+        // Backend provides formatted price in 'price' field (e.g., "200.000đ/giờ" or "N/A")
+        const formattedPrice = (field as any).price || 'N/A';
+
         return {
             id: (field as any).id,
             name: (field as any).name,
@@ -134,7 +138,7 @@ const FieldBookingPage = () => {
             description: (field as any).description || 'Mô tả không có sẵn',
             rating: (field as any).rating || 4.5,
             reviews: (field as any).reviews || (field as any).totalBookings || 0,
-            price: (field as any).price || `${(field as any).basePrice || 0}k/h`,
+            price: formattedPrice,
             nextAvailability: (field as any).isActive !== false ? 'Có sẵn' : 'Không có sẵn',
             sportType: (field as any).sportType || 'unknown',
             imageUrl: (field as any).imageUrl || (field as any).images?.[0] || '/placeholder-field.jpg',

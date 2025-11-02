@@ -1,5 +1,3 @@
-"use client"
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -174,7 +172,8 @@ export default function FieldOwnerDashboardPage() {
 
 
     // Dữ liệu hoạt động gần đây từ Redux API (lấy 5 booking gần nhất)
-    const recentActivity = bookingData
+    // Create a copy before sorting to avoid mutating readonly Redux state
+    const recentActivity = [...bookingData]
         .sort((a, b) => {
             // Sort by createdAt if available, otherwise by date
             const dateA = (a as any).createdAt || a.date;

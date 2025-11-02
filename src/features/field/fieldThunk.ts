@@ -52,6 +52,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         maxSlots: apiField?.maxSlots || 4,
         priceRanges: Array.isArray(apiField?.priceRanges) ? apiField.priceRanges : [],
         basePrice: Number(apiField?.basePrice ?? 0),
+        price: apiField?.price || undefined, // Formatted price from backend (e.g., "250.000đ/giờ")
         isActive: apiField?.isActive ?? true,
         maintenanceNote: apiField?.maintenanceNote,
         maintenanceUntil: apiField?.maintenanceUntil,

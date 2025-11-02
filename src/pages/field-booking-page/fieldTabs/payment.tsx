@@ -4,14 +4,14 @@ import { ArrowLeft, CreditCard, Shield, CheckCircle, Clock, AlertCircle, Loader2
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { Field } from "@/types/field-type";
 import { createFieldBooking } from "@/features/booking/bookingThunk";
 import { clearError } from "@/features/booking/bookingSlice";
 import type { CreateFieldBookingPayload, Booking } from "@/types/booking-type";
 import { PaymentMethod } from "@/types/payment-type";
 import type { Payment } from "@/types/payment-type";
-import { createVNPayUrl } from "@/features/payment/paymentThunk";
+import { createVNPayUrl } from "@/features/transactions/transactionsThunk";
 
 /**
  * Interface for booking form data
@@ -68,6 +68,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
     selectedAmenityIds = [],
 }) => {
     const location = useLocation();
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
     const user = useAppSelector((state) => state.user.user);
@@ -335,13 +336,14 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 
             // Handle different response structures
             let paymentUrl: string | null = null;
-            
-            if (result?.paymentUrl) {
-                paymentUrl = result.paymentUrl;
-            } else if (typeof result === 'string' && result.startsWith('http')) {
-                paymentUrl = result;
-            } else if (result?.data?.paymentUrl) {
-                paymentUrl = result.data.paymentUrl;
+                        
+            // use type assertion to safely access possible shapes returned by backend
+            if ((result as any)?.paymentUrl) {
+                paymentUrl = (result as any).paymentUrl;
+            } else if (typeof result === 'string' && (result as string).startsWith('http')) {
+                paymentUrl = result as string;
+            } else if ((result as any)?.data?.paymentUrl) {
+                paymentUrl = (result as any).data.paymentUrl;
             }
 
             if (!paymentUrl) {
@@ -370,6 +372,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
     };
 
     // Handle payment flow (no note, non-VNPay methods)
+    // Direct payment handling - no need for separate review page
     const handlePayment = async () => {
         // If VNPay is selected, use VNPay flow
         if (paymentMethod === 'vnpay') {
@@ -377,12 +380,16 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
             return;
         }
 
-        // Otherwise, use regular payment flow
+        // For other payment methods (cash, bank_transfer), create booking directly
         setPaymentStatus('processing');
         setPaymentError(null);
         dispatch(clearError());
         const created = await createBookingCore();
-        if (!created) { setPaymentStatus('error'); return; }
+        if (!created) { 
+            setPaymentStatus('error'); 
+            return; 
+        }
+        
         setPaymentStatus('success');
         clearBookingLocal();
         setTimeout(() => { onPaymentComplete?.(formData); }, 1500);
@@ -604,7 +611,11 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                             {/* Venue Info */}
                             <div className="border-b border-gray-100 pb-4">
                                 <h3 className="font-medium text-gray-900 mb-2">{venue.name}</h3>
-                                <p className="text-sm text-gray-600">{typeof (venue as any)?.location === 'string' ? (venue as any)?.location : (venue as any)?.location?.address}</p>
+                                <p className="text-sm text-gray-600">
+                                    {typeof (venue as any)?.location === 'string' 
+                                        ? (venue as any)?.location 
+                                        : (venue as any)?.location?.address || 'Location not specified'}
+                                </p>
                             </div>
 
                             {/* Booking Details */}

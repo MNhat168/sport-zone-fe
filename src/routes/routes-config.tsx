@@ -30,14 +30,14 @@ import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
 
-// Payment Pages
-import VNPayReturnPage from "../pages/payment/vnpay-return-page.tsx";
-import PaymentSuccessPage from "../pages/payment/payment-success-page";
-import PaymentErrorPage from "../pages/payment/payment-error-page";
+// Payment Pages (only VNPay related pages)
+import VNPayReturnPage from "../pages/transactions/vnpay-return-page.tsx";
+import VNPayQRPage from "../pages/transactions/vnpay-qr-page.tsx";
 
 // Field Owner Pages
 import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
 import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/field-owner-dashboard-page";
+import FieldHistoryBookingPage from "../pages/field-owner-dashboard-page/field-booking-list-page/field-booking-list-page";
 
 //Notification
 import NotificationsPage from "../pages/notifications/page";
@@ -70,15 +70,17 @@ export const publicRoutes: RouteObject[] = [
   { path: "/auth", element: <AuthenticationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
+  // Transactions Pages (Public) - VNPay pages
+  // IMPORTANT: These routes must come before generic routes to avoid conflicts
+  { path: "/transactions/vnpay-qr", element: <VNPayQRPage /> },
+  { path: "/transactions/vnpay/return", element: <VNPayReturnPage /> },
+  // Legacy routes for backward compatibility
+  { path: "/payment/vnpay-qr", element: <VNPayQRPage /> },
+  { path: "/payments/vnpay/return", element: <VNPayReturnPage /> },
+
   // Field Discovery & Booking (Public)
   { path: "/fields", element: <FieldBookingPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
-  
-  // Payment Pages (Public)
-  { path: "/payments/vnpay/return", element: <VNPayReturnPage /> },
-  { path: "/api/reservations/vnpay_return", element: <VNPayReturnPage /> },
-  { path: "/payment/success", element: <PaymentSuccessPage /> },
-  { path: "/payment/error", element: <PaymentErrorPage /> },
 
   // Coach Discovery (Public)
   { path: "/coaches", element: <Placeholder title="Danh sách HLV" /> },
@@ -433,6 +435,14 @@ export const fieldOwnerRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <Placeholder title="Quản lý đặt sân" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/booking-history",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <FieldHistoryBookingPage />
       </ProtectedRoute>
     ),
   },

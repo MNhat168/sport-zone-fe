@@ -22,6 +22,7 @@ export default function Profile() {
     })
     const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null)
     const [avatarPreview, setAvatarPreview] = useState<string>("")
+    const [isEditMode, setIsEditMode] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Fetch profile on component mount
@@ -54,13 +55,13 @@ export default function Profile() {
         if (file) {
             // Validate file type
             if (!file.type.startsWith('image/')) {
-                toast.error("Please select an image file")
+                toast.error("Vui lòng chọn file ảnh")
                 return
             }
             
             // Validate file size (e.g., max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                toast.error("File size must be less than 5MB")
+                toast.error("Kích thước file phải nhỏ hơn 5MB")
                 return
             }
 
@@ -73,7 +74,7 @@ export default function Profile() {
     // Handle form submit
     const handleSubmit = async () => {
         if (!authUser?._id) {
-            toast.error("User not authenticated")
+            toast.error("Người dùng chưa được xác thực")
             return
         }
 
@@ -88,24 +89,29 @@ export default function Profile() {
             // Refetch latest profile so UI updates without F5
             await dispatch(getUserProfile())
 
-            toast.success("Profile updated successfully!")
+            toast.success("Cập nhật hồ sơ thành công!")
             setSelectedAvatar(null)
+            setIsEditMode(false) // Exit edit mode after successful save
         } catch {
-            toast.error(updateError?.message || "Failed to update profile")
+            toast.error(updateError?.message || "Cập nhật hồ sơ thất bại")
         }
     }
 
-    // Handle reset form
-    const handleReset = () => {
-        if (user) {
-            setFormData({
-                fullName: user.fullName || "",
-                email: user.email || "",
-                phone: user.phone || "",
-            })
-            setAvatarPreview(user.avatarUrl || "")
-            setSelectedAvatar(null)
+    // Handle toggle edit mode
+    const handleToggleEdit = () => {
+        if (isEditMode) {
+            // Cancel edit mode - reset to original values
+            if (user) {
+                setFormData({
+                    fullName: user.fullName || "",
+                    email: user.email || "",
+                    phone: user.phone || "",
+                })
+                setAvatarPreview(user.avatarUrl || "")
+                setSelectedAvatar(null)
+            }
         }
+        setIsEditMode(!isEditMode)
     }
 
     if (loading) {
@@ -128,7 +134,7 @@ export default function Profile() {
                             {avatarPreview ? (
                                 <img 
                                     src={avatarPreview} 
-                                    alt="Avatar preview" 
+                                    alt="Xem trước ảnh đại diện" 
                                     className="w-full h-full object-cover rounded-[5px]"
                                 />
                             ) : (
@@ -137,7 +143,7 @@ export default function Profile() {
                                         <Upload className="w-8 h-8 text-gray-400" />
                                     </div>
                                     <Label className="text-sm font-normal text-[#6B7385] cursor-pointer">
-                                        Upload Photo
+                                        Tải ảnh lên
                                     </Label>
                                 </>
                             )}
@@ -146,19 +152,21 @@ export default function Profile() {
                                 type="file"
                                 accept="image/*"
                                 onChange={handleAvatarSelect}
+                                disabled={!isEditMode}
                                 className="hidden"
                             />
                             <Button
                                 size="sm"
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="absolute top-3 right-3 w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full p-0 text-white"
+                                disabled={!isEditMode}
+                                className="absolute top-3 right-3 w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full p-0 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 +
                             </Button>
                         </div>
                         <p className="text-sm font-normal text-[#6B7385]">
-                            Upload a photo with a minimum size of 150 * 150 pixels (JPG, PNG, SVG).
+                            Tải lên ảnh có kích thước tối thiểu 150 * 150 pixel (JPG, PNG, SVG).
                         </p>
                     </div>
 
@@ -166,13 +174,14 @@ export default function Profile() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2.5">
                             <Label className="text-base font-normal text-start">
-                                Name
+                                Tên
                             </Label>
                             <Input
                                 value={formData.fullName}
                                 onChange={(e) => handleInputChange('fullName', e.target.value)}
-                                placeholder="Enter Name"
-                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                placeholder="Nhập tên"
+                                disabled={!isEditMode}
+                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
 
@@ -184,7 +193,7 @@ export default function Profile() {
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => handleInputChange('email', e.target.value)}
-                                placeholder="Enter Email Address"
+                                placeholder="Nhập địa chỉ email"
                                 className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
                                 disabled
                             />
@@ -192,14 +201,15 @@ export default function Profile() {
 
                         <div className="space-y-2.5">
                             <Label className="text-base font-normal text-start">
-                                Phone Number
+                                Số điện thoại
                             </Label>
                             <Input
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                                placeholder="Enter Phone Number"
-                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                placeholder="Nhập số điện thoại"
+                                disabled={!isEditMode}
+                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
                     </div>
@@ -207,63 +217,67 @@ export default function Profile() {
                     {/* About Section */}
                     <div className="space-y-5 pb-5 border-b border-gray-200">
                         <Label className="text-base font-normal  text-start">
-                            Information about You
+                            Thông tin về bạn
                         </Label>
                         <Textarea
-                            placeholder="About"
-                            className="min-h-[100px] p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385] resize-none"
+                            placeholder="Giới thiệu"
+                            disabled={!isEditMode}
+                            className="min-h-[100px] p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385] resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                     </div>
 
                     {/* Address Section */}
                     <div className="space-y-6">
                         <h3 className="text-xl font-semibold  text-start">
-                            Address
+                            Địa chỉ
                         </h3>
 
                         <div className="space-y-2.5">
                             <Label className="text-base font-normal  text-start">
-                                Address
+                                Địa chỉ
                             </Label>
                             <Input
-                                placeholder="Enter Address"
-                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385]"
+                                placeholder="Nhập địa chỉ"
+                                disabled={!isEditMode}
+                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2.5">
                                 <Label className="text-base font-normal  text-start">
-                                    State
+                                    Tỉnh/Thành phố
                                 </Label>
                                 <Input
-                                    placeholder="Enter State"
-                                    className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385]"
+                                    placeholder="Nhập tỉnh/thành phố"
+                                    disabled={!isEditMode}
+                                    className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
 
                             <div className="space-y-2.5">
                                 <Label className="text-base font-normal  text-start">
-                                    City
+                                    Thành phố
                                 </Label>
                                 <Input
-                                    placeholder="Enter City"
-                                    className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385]"
+                                    placeholder="Nhập thành phố"
+                                    disabled={!isEditMode}
+                                    className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
 
                             <div className="space-y-2.5">
                                 <Label className="text-base font-normal  text-start">
-                                    Country
+                                    Quốc gia
                                 </Label>
-                                <Select>
-                                    <SelectTrigger className="h-14 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385]">
-                                        <SelectValue placeholder="Country" />
+                                <Select disabled={!isEditMode}>
+                                    <SelectTrigger className="h-14 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <SelectValue placeholder="Quốc gia" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="us">United States</SelectItem>
-                                        <SelectItem value="vn">Vietnam</SelectItem>
-                                        <SelectItem value="uk">United Kingdom</SelectItem>
+                                        <SelectItem value="us">Hoa Kỳ</SelectItem>
+                                        <SelectItem value="vn">Việt Nam</SelectItem>
+                                        <SelectItem value="uk">Vương quốc Anh</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -271,11 +285,12 @@ export default function Profile() {
 
                         <div className="w-full md:w-96 space-y-2.5">
                             <Label className="text-base font-normal  text-start">
-                                Zipcode
+                                Mã bưu điện
                             </Label>
                             <Input
-                                placeholder="Enter Zipcode"
-                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385]"
+                                placeholder="Nhập mã bưu điện"
+                                disabled={!isEditMode}
+                                className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
                     </div>
@@ -285,22 +300,22 @@ export default function Profile() {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={handleReset}
+                            onClick={handleToggleEdit}
                             disabled={updateLoading}
                             className="min-w-24 px-8 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700 rounded-[10px] text-base font-medium"
                         >
-                            Reset
+                            {isEditMode ? "Hủy" : "Chỉnh sửa"}
                         </Button>
                         <Button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={updateLoading}
-                            className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium"
+                            disabled={updateLoading || !isEditMode}
+                            className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {updateLoading ? (
                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             ) : null}
-                            Save Changes
+                            Lưu thay đổi
                         </Button>
                     </div>
                 </div>
