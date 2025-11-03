@@ -29,6 +29,7 @@ import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
+import FieldDetailPage from "../pages/field-detail-page/field-detail-page";
 
 // Payment Pages (only VNPay related pages)
 import VNPayReturnPage from "../pages/transactions/vnpay-return-page.tsx";
@@ -80,6 +81,7 @@ export const publicRoutes: RouteObject[] = [
 
   // Field Discovery & Booking (Public)
   { path: "/fields", element: <FieldBookingPage /> },
+  { path: "/fields/:id", element: <FieldDetailPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
 
   // Coach Discovery (Public)
