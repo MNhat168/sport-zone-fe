@@ -1,7 +1,7 @@
 // src/layouts/root-layout.tsx
 import { useEffect } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
-import { AuthWrapper } from '../routes/auth-wrapper';
+import { AuthWrapper } from '../../routes/auth-wrapper';
 export const RootLayout = () => {
   const { pathname } = useLocation();
 
