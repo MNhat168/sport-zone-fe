@@ -8,7 +8,7 @@ import {
   chatRoutes,
 } from "./routes-config";
 import { UnauthorizedPage } from "./protected-routes-config";
-import { RootLayout } from "../layouts/root-layout";
+import { RootLayout } from "../components/layouts/root-layout";
 
 /**
  * ===== MAIN ROUTER CONFIGURATION =====

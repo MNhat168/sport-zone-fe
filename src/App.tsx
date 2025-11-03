@@ -13,7 +13,7 @@
 // import CoachSchedulePage from "./pages/coach/schedule-page";
 // import SetHolidayPage from "./pages/coach/set-holiday-page";
 
-import { RootLayout } from "./layouts/root-layout";
+import { RootLayout } from "./components/layouts/root-layout";
 import { centerRoutes, coachRoutes, fieldOwnerRoutes, guestRoutes, userRoutes } from "./routes/routes-config";
 import { Provider } from "react-redux";
 import { store } from "./store/store";

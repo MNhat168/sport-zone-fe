@@ -33,7 +33,7 @@ export const NavbarDarkComponent = () => {
         <header
             className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b border-gray-200"
         >
-            <div className="container mx-auto max-w-screen-2xl flex h-16 items-center justify-between px-4">
+            <div className="container mx-auto max-w-screen-2xl flex h-20 items-center justify-between px-4">
                 {/* Logo */}
                 <Link
                     to="/"
@@ -102,7 +102,7 @@ export const NavbarDarkComponent = () => {
                                     <UserDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (
-                                    <CoachDropdownMenuItems userId={auth.user._id} />
+                                    <CoachDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "field_owner" && auth.user._id && (
                                     <FieldOwnerDropdownMenuItems 
