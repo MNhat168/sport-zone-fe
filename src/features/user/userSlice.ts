@@ -5,7 +5,7 @@ import {
     forgotPassword,
     resetPassword,
     changePassword,
-    setFavouriteFields,
+    setFavouriteSports,
 } from "./userThunk";
 import type { User, ErrorResponse } from "../../types/user-type";
 
@@ -99,8 +99,8 @@ const userSlice = createSlice({
                 state.updateError = action.payload || { message: "Failed to update profile", status: "500" };
             })
 
-            // Set favourite fields
-            .addCase(setFavouriteFields.fulfilled, (state, action) => {
+            // Set favourite sports
+            .addCase(setFavouriteSports.fulfilled, (state, action) => {
                 state.user = action.payload;
             })
 
