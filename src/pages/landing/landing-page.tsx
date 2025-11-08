@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { getUserProfile, setFavouriteFields } from "@/features/user/userThunk";
+import { getUserProfile, setFavouriteSports } from "@/features/user/userThunk";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -18,7 +18,7 @@ import { MapPin, Users, Search, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NavbarComponent } from "@/components/header/navbar-component";
 import { FooterComponent } from "@/components/footer/footer-component";
-import { FavoriteSportsModal } from "@/components/common/favorite-sports-modal";
+
 
 
 export default function LandingPage() {
@@ -54,46 +54,11 @@ export default function LandingPage() {
     dispatch(getUserProfile());
   }, [dispatch]);
 
-  // Show modal if user is logged in and has no favouriteField
-  useEffect(() => {
-    if (
-      isLoggedIn &&
-      !modalShownOnce &&
-      (!user?.favouriteField || user.favouriteField.length === 0)
-    ) {
-      setShowFavoriteSportsModal(true);
-      setModalShownOnce(true);
-    }
-  }, [isLoggedIn, user, modalShownOnce]);
-
-  // Debug log to inspect user.favouriteField value after login/profile fetch
-  useEffect(() => {
-    if (isLoggedIn) {
-      console.log('DEBUG user.favouriteField:', user?.favouriteField);
-    }
-  }, [isLoggedIn, user]);
-
-  const handleFavoriteSportsAccept = (selectedSports: string[]) => {
-    if (!user) return;
-    dispatch(setFavouriteFields({ favouriteFields: selectedSports }))
-      .unwrap()
-      .then(() => {
-        // Refetch profile to update Redux state
-        dispatch(getUserProfile());
-        setShowFavoriteSportsModal(false);
-      })
-      .catch(() => {
-        setShowFavoriteSportsModal(false);
-      });
-  };
+  
 
   return (
     <>
-      <FavoriteSportsModal
-        isOpen={showFavoriteSportsModal}
-        onClose={() => setShowFavoriteSportsModal(false)}
-        onAccept={handleFavoriteSportsAccept}
-      />
+      
       {/* Navbar */}
       <NavbarComponent />
       <div className="min-h-screen">

@@ -1,20 +1,20 @@
-import { SET_FAVOURITE_FIELDS_API } from "./userAPI";
-// Set favourite fields
-export interface SetFavouriteFieldsPayload {
-    favouriteFields: string[];
+import { SET_FAVOURITE_SPORTS_API } from "./userAPI";
+// Set favourite sports
+export interface SetFavouriteSportsPayload {
+    favouriteSports: string[];
 }
 
-export const setFavouriteFields = createAsyncThunk<
+export const setFavouriteSports = createAsyncThunk<
     User,
-    SetFavouriteFieldsPayload,
+    SetFavouriteSportsPayload,
     { rejectValue: ErrorResponse }
->("user/setFavouriteFields", async (payload, thunkAPI) => {
+>("user/setFavouriteSports", async (payload, thunkAPI) => {
     try {
-        const response = await axiosPrivate.post(SET_FAVOURITE_FIELDS_API, payload);
-    return response.data.data;
+        const response = await axiosPrivate.post(SET_FAVOURITE_SPORTS_API, payload);
+        return response.data.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
-            message: error.response?.data?.message || error.message || "Failed to set favourite fields",
+            message: error.response?.data?.message || error.message || "Failed to set favourite sports",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);
