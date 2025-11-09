@@ -34,6 +34,8 @@ import FieldDetailPage from "../pages/field-detail-page/field-detail-page";
 // Payment Pages (only VNPay related pages)
 import VNPayReturnPage from "../pages/transactions/vnpay-return-page.tsx";
 import VNPayQRPage from "../pages/transactions/vnpay-qr-page.tsx";
+import PayOSReturnPage from "../pages/transactions/payos-return-page.tsx";
+import PayOSCancelPage from "../pages/transactions/payos-cancel-page.tsx";
 
 // Field Owner Pages
 import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
@@ -78,6 +80,10 @@ export const publicRoutes: RouteObject[] = [
   // Legacy routes for backward compatibility
   { path: "/payment/vnpay-qr", element: <VNPayQRPage /> },
   { path: "/payments/vnpay/return", element: <VNPayReturnPage /> },
+
+  // PayOS Payment Pages
+  { path: "/transactions/payos/return", element: <PayOSReturnPage /> },
+  { path: "/transactions/payos/cancel", element: <PayOSCancelPage /> },
 
   // Field Discovery & Booking (Public)
   { path: "/fields", element: <FieldBookingPage /> },

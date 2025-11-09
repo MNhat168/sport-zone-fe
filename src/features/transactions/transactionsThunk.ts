@@ -5,6 +5,11 @@ import type {
     CreateVNPayUrlResponse,
     UpdatePaymentStatusPayload,
     ErrorResponse,
+    CreatePayOSPaymentPayload,
+    PayOSPaymentLinkResponse,
+    PayOSVerificationResult,
+    PayOSQueryResult,
+    CancelPayOSPaymentResponse,
 } from "../../types/payment-type";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
 import {
@@ -14,6 +19,10 @@ import {
     VERIFY_VNPAY_API,
     QUERY_VNPAY_TRANSACTION_API,
     VNPAY_REFUND_API,
+    CREATE_PAYOS_PAYMENT_API,
+    PAYOS_RETURN_API,
+    QUERY_PAYOS_TRANSACTION_API,
+    CANCEL_PAYOS_PAYMENT_API,
 } from "./transactionsAPI";
 
 /**
@@ -205,11 +214,6 @@ export const verifyVNPayPayment = createAsyncThunk<
                 console.log('[Transactions Thunk] ✅ Found verification data in response.data.data');
                 verificationResult = response.data.data;
             }
-            // Case 3: Wrapped in success response
-            else if (response.data?.success && response.data?.data) {
-                console.log('[Transactions Thunk] ✅ Found verification data in response.data.data (nested success)');
-                verificationResult = response.data.data;
-            }
             
             console.log('[Transactions Thunk] Final verification result:', {
                 success: verificationResult?.success,
@@ -288,6 +292,287 @@ export const processVNPayRefund = createAsyncThunk<
             message: error.response?.data?.message || "Failed to process refund",
             status: error.response?.status?.toString() || "500",
         });
+    }
+});
+
+// ============================================
+// PayOS Payment Thunks
+// ============================================
+
+/**
+ * Create PayOS payment link
+ * This creates a payment link and returns checkout URL for user to pay
+ */
+export const createPayOSPayment = createAsyncThunk<
+    PayOSPaymentLinkResponse,
+    CreatePayOSPaymentPayload,
+    { rejectValue: ErrorResponse }
+>("transactions/createPayOSPayment", async (payload, thunkAPI) => {
+    try {
+        console.log("[PayOS Thunk] Creating PayOS payment:", payload);
+        
+        const response = await axiosPrivate.post(CREATE_PAYOS_PAYMENT_API, payload);
+        const responseData = response.data;
+        
+        console.log("[PayOS Thunk] ✅ Raw payment link response:", responseData);
+
+        // Some backends wrap the payload in { success, data } or nested data objects.
+        // Normalize the response so the component layer always receives the expected shape.
+        let normalized: any = responseData;
+
+        if (responseData?.data?.checkoutUrl) {
+            normalized = responseData.data;
+        } else if (responseData?.success && responseData?.data) {
+            normalized = responseData.data;
+        }
+
+        if (!normalized?.checkoutUrl) {
+            console.error("[PayOS Thunk] ❌ Missing checkoutUrl in normalized payload");
+            throw new Error(
+                `Backend response does not contain checkoutUrl. Response: ${JSON.stringify(responseData)}`
+            );
+        }
+
+        // Ensure required fields exist per guide
+        const rawOrderCode = normalized.orderCode ?? responseData?.orderCode;
+        const parsedOrderCode = typeof rawOrderCode === "string" ? Number(rawOrderCode) : rawOrderCode;
+
+        const rawAmount = normalized.amount ?? responseData?.amount ?? payload.amount;
+        const parsedAmount = typeof rawAmount === "string" ? Number(rawAmount) : rawAmount;
+
+        const safeOrderCode =
+            typeof parsedOrderCode === "number" && Number.isFinite(parsedOrderCode)
+                ? parsedOrderCode
+                : 0;
+        const safeAmount =
+            typeof parsedAmount === "number" && Number.isFinite(parsedAmount)
+                ? parsedAmount
+                : payload.amount;
+
+        const normalizedPayload: PayOSPaymentLinkResponse = {
+            paymentLinkId: normalized.paymentLinkId ?? responseData?.paymentLinkId ?? "",
+            checkoutUrl: normalized.checkoutUrl,
+            qrCodeUrl: normalized.qrCodeUrl ?? responseData?.qrCodeUrl,
+            orderCode: safeOrderCode,
+            amount: safeAmount,
+            status: normalized.status ?? responseData?.status ?? "PENDING",
+        };
+
+        if (!normalizedPayload.paymentLinkId) {
+            console.warn("[PayOS Thunk] ⚠️ paymentLinkId missing from response payload");
+        }
+        if (!Number.isFinite(normalizedPayload.orderCode)) {
+            console.warn("[PayOS Thunk] ⚠️ orderCode missing or invalid in response payload");
+        }
+        if (!Number.isFinite(normalizedPayload.amount)) {
+            console.warn("[PayOS Thunk] ⚠️ amount missing or invalid in response payload");
+        }
+
+        console.log("[PayOS Thunk] ✅ Normalized PayOS payload:", normalizedPayload);
+
+        return normalizedPayload;
+    } catch (error: any) {
+        console.error("[PayOS Thunk] ❌ Error creating PayOS payment:", error);
+        console.error("[PayOS Thunk] Error response:", error.response?.data);
+        console.error("[PayOS Thunk] Error status:", error.response?.status);
+        
+        // Extract error message from various possible locations
+        let errorMessage = "Failed to create PayOS payment";
+        
+        if (error.response?.data) {
+            const responseData = error.response.data;
+            // Try multiple possible error message fields
+            errorMessage = responseData.message || 
+                          responseData.error || 
+                          responseData.desc ||
+                          (typeof responseData === 'string' ? responseData : errorMessage);
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        const errorResponse: ErrorResponse = {
+            message: errorMessage,
+            status: error.response?.status?.toString() || "500",
+        };
+        
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Verify PayOS payment after return from PayOS checkout
+ * Called when user is redirected back from PayOS payment page
+ */
+export const verifyPayOSPayment = createAsyncThunk<
+    PayOSVerificationResult,
+    string,
+    { rejectValue: ErrorResponse }
+>("transactions/verifyPayOSPayment", async (queryString, thunkAPI) => {
+    try {
+        console.log("[PayOS Thunk] Verifying PayOS payment with query:", queryString);
+        
+        // Send the complete query string to backend for verification
+        const response = await axiosPrivate.get(`${PAYOS_RETURN_API}${queryString}`);
+        const responseData = response.data;
+        
+        console.log("[PayOS Thunk] ✅ Raw verification response:", responseData);
+
+        let normalized: any = responseData;
+
+        if (responseData?.data?.paymentStatus) {
+            normalized = responseData.data;
+        } else if (responseData?.success !== undefined && responseData?.data) {
+            normalized = responseData.data;
+        }
+
+        if (!normalized || normalized.paymentStatus === undefined) {
+            console.error("[PayOS Thunk] ❌ Missing paymentStatus in verification payload");
+            throw new Error(
+                `Backend response does not contain paymentStatus. Response: ${JSON.stringify(responseData)}`
+            );
+        }
+
+        const normalizedPayload: PayOSVerificationResult = {
+            success: normalized.success ?? responseData?.success ?? false,
+            paymentStatus: normalized.paymentStatus,
+            bookingId: normalized.bookingId ?? responseData?.bookingId ?? "",
+            message: normalized.message ?? responseData?.message ?? "",
+            reason: normalized.reason ?? responseData?.reason,
+            orderCode: normalized.orderCode ?? responseData?.orderCode,
+            reference: normalized.reference ?? responseData?.reference,
+            amount: normalized.amount ?? responseData?.amount ?? 0,
+        };
+        
+        console.log("[PayOS Thunk] ✅ Normalized verification result:", normalizedPayload);
+        return normalizedPayload;
+    } catch (error: any) {
+        console.error("[PayOS Thunk] ❌ Error verifying PayOS payment:", error);
+        
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || 
+                     error.response?.data?.error || 
+                     error.message || 
+                     "Failed to verify PayOS payment",
+            status: error.response?.status?.toString() || "500",
+        };
+        
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Query PayOS transaction status by order code
+ * Used to check payment status after creation
+ */
+export const queryPayOSTransaction = createAsyncThunk<
+    PayOSQueryResult,
+    number,
+    { rejectValue: ErrorResponse }
+>("transactions/queryPayOSTransaction", async (orderCode, thunkAPI) => {
+    try {
+        console.log("[PayOS Thunk] Querying transaction for order code:", orderCode);
+        
+        const response = await axiosPrivate.get(QUERY_PAYOS_TRANSACTION_API(orderCode));
+        const responseData = response.data;
+        
+        console.log("[PayOS Thunk] ✅ Raw transaction status response:", responseData);
+
+        let normalized: any = responseData;
+
+        if (responseData?.data?.status) {
+            normalized = responseData.data;
+        } else if (responseData?.success && responseData?.data) {
+            normalized = responseData.data;
+        }
+
+        if (!normalized || normalized.status === undefined) {
+            console.error("[PayOS Thunk] ❌ Missing status in PayOS query response");
+            throw new Error(
+                `Backend response does not contain transaction status. Response: ${JSON.stringify(responseData)}`
+            );
+        }
+        
+        const normalizedPayload: PayOSQueryResult = {
+            orderCode: normalized.orderCode ?? responseData?.orderCode ?? orderCode,
+            amount: normalized.amount ?? responseData?.amount ?? 0,
+            description: normalized.description ?? responseData?.description ?? "",
+            status: normalized.status,
+            accountNumber: normalized.accountNumber ?? responseData?.accountNumber,
+            reference: normalized.reference ?? responseData?.reference,
+            transactionDateTime: normalized.transactionDateTime ?? responseData?.transactionDateTime,
+            createdAt: normalized.createdAt ?? responseData?.createdAt ?? Date.now(),
+            cancelledAt: normalized.cancelledAt ?? responseData?.cancelledAt,
+        };
+        
+        console.log("[PayOS Thunk] ✅ Normalized transaction status:", normalizedPayload);
+        return normalizedPayload;
+    } catch (error: any) {
+        console.error("[PayOS Thunk] ❌ Error querying transaction:", error);
+        
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || 
+                     error.response?.data?.error || 
+                     error.message || 
+                     "Failed to query PayOS transaction",
+            status: error.response?.status?.toString() || "500",
+        };
+        
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Cancel PayOS payment by order code
+ * Used when user wants to cancel pending payment
+ */
+export const cancelPayOSPayment = createAsyncThunk<
+    CancelPayOSPaymentResponse,
+    { orderCode: number; cancellationReason?: string },
+    { rejectValue: ErrorResponse }
+>("transactions/cancelPayOSPayment", async ({ orderCode, cancellationReason }, thunkAPI) => {
+    try {
+        console.log("[PayOS Thunk] Cancelling payment for order code:", orderCode);
+        
+        const response = await axiosPrivate.post(
+            CANCEL_PAYOS_PAYMENT_API(orderCode),
+            { cancellationReason }
+        );
+        const responseData = response.data;
+        
+        console.log("[PayOS Thunk] ✅ Raw cancel response:", responseData);
+
+        let normalized: any = responseData;
+
+        if (responseData?.data?.status) {
+            normalized = responseData.data;
+        } else if (responseData?.success && responseData?.data) {
+            normalized = responseData.data;
+        }
+
+        if (!normalized || normalized.status !== 'CANCELLED') {
+            console.warn("[PayOS Thunk] ⚠️ Unexpected cancel response payload:", normalized);
+        }
+
+        const normalizedPayload: CancelPayOSPaymentResponse = {
+            orderCode: normalized.orderCode ?? responseData?.orderCode ?? orderCode,
+            status: normalized.status ?? 'CANCELLED',
+            message: normalized.message ?? responseData?.message ?? 'Transaction cancelled',
+        };
+        
+        console.log("[PayOS Thunk] ✅ Normalized cancel response:", normalizedPayload);
+        return normalizedPayload;
+    } catch (error: any) {
+        console.error("[PayOS Thunk] ❌ Error cancelling payment:", error);
+        
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || 
+                     error.response?.data?.error || 
+                     error.message || 
+                     "Failed to cancel PayOS payment",
+            status: error.response?.status?.toString() || "500",
+        };
+        
+        return thunkAPI.rejectWithValue(errorResponse);
     }
 });
 
