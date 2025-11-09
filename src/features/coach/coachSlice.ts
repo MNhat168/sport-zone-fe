@@ -4,6 +4,7 @@ import {
     getCoaches,
     getCoachById,
     getAllCoaches,
+    getCoachIdByUserId,
 } from "./coachThunk";
 
 interface CoachState {
@@ -11,28 +12,36 @@ interface CoachState {
     coaches: Coach[];
     allCoaches: LegacyCoach[];
     currentCoach: CoachDetail | null;
+    resolvedCoachId: string | null;
+    resolvedCoachRaw: any | null;
     
     // Loading states
     loading: boolean;
     detailLoading: boolean;
     allCoachesLoading: boolean;
+    resolveCoachIdLoading: boolean;
     
     // Error states
     error: ErrorResponse | null;
     detailError: ErrorResponse | null;
     allCoachesError: ErrorResponse | null;
+    resolveCoachIdError: ErrorResponse | null;
 }
 
 const initialState: CoachState = {
     coaches: [],
     allCoaches: [],
     currentCoach: null,
+    resolvedCoachId: null,
+    resolvedCoachRaw: null,
     loading: false,
     detailLoading: false,
     allCoachesLoading: false,
+    resolveCoachIdLoading: false,
     error: null,
     detailError: null,
     allCoachesError: null,
+    resolveCoachIdError: null,
 };
 
 const coachSlice = createSlice({
@@ -46,6 +55,7 @@ const coachSlice = createSlice({
             state.error = null;
             state.detailError = null;
             state.allCoachesError = null;
+            state.resolveCoachIdError = null;
         },
         resetCoachState: () => initialState,
     },
@@ -106,6 +116,22 @@ const coachSlice = createSlice({
             .addCase(getAllCoaches.rejected, (state, action) => {
                 state.allCoachesLoading = false;
                 state.allCoachesError = action.payload || { message: "Unknown error", status: "500" };
+            })
+            
+            // Resolve coach id by user id
+            .addCase(getCoachIdByUserId.pending, (state) => {
+                state.resolveCoachIdLoading = true;
+                state.resolveCoachIdError = null;
+            })
+            .addCase(getCoachIdByUserId.fulfilled, (state, action) => {
+                state.resolveCoachIdLoading = false;
+                state.resolvedCoachId = action.payload.coachId ?? null;
+                state.resolvedCoachRaw = action.payload.data ?? null;
+                state.resolveCoachIdError = null;
+            })
+            .addCase(getCoachIdByUserId.rejected, (state, action) => {
+                state.resolveCoachIdLoading = false;
+                state.resolveCoachIdError = action.payload || { message: "Unknown error", status: "500" };
             });
     },
 });

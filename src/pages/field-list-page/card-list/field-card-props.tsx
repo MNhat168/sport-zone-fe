@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/store/hook";
@@ -40,7 +40,7 @@ const FieldCard: React.FC<FieldCardProps> = ({
         try {
             await dispatch(getFieldById(id));
         } finally {
-            navigate("/field-booking", { state: { fieldId: id } });
+            navigate(`/fields/${id}`);
         }
     };
     return (
@@ -61,7 +61,7 @@ const FieldCard: React.FC<FieldCardProps> = ({
                         {sportType}
                     </div>
                 </div>
-                
+
                 {/* Content section */}
                 <CardContent className="p-4 flex-1">
                     <div className="flex items-start justify-between mb-2">
@@ -75,12 +75,12 @@ const FieldCard: React.FC<FieldCardProps> = ({
                             )}
                         </div>
                         <div className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
-                            From {price}
+                            {price}
                         </div>
                     </div>
-                    
+
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2">{description}</p>
-                    
+
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
                             <span className="text-yellow-500 text-lg">★ {rating}</span>
@@ -91,12 +91,14 @@ const FieldCard: React.FC<FieldCardProps> = ({
                                 <span className="text-green-600 ml-1">{nextAvailability}</span>
                             </div>
                         </div>
-                        <Button 
-                            onClick={handleBooking}
-                            className="bg-green-600 text-white hover:bg-green-700"
-                        >
-                            Book Field
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={handleBooking}
+                                className="bg-green-600 text-white hover:bg-green-700"
+                            >
+                                Book Now
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </div>

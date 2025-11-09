@@ -1,0 +1,47 @@
+Hướng dẫn tích hợp VNPay cho FE
+Mục tiêu: Khi người dùng chọn VNPay, FE chuyển hướng sang trang thanh toán VNPay; sau khi thanh toán xong, quay về FE và hiển thị kết quả dựa trên trạng thái thanh toán mà BE đã cập nhật qua IPN.
+Các endpoint BE bạn dùng:
+Tạo URL VNPay: GET /transactions/create-vnpay-url?amount={VND}&orderId={paymentId}
+IPN: GET /transactions/vnpay-ipn (VNPay gọi server-to-server, FE không gọi)
+Kiểm tra trạng thái: dùng API booking có populate payment (ví dụ GET /bookings/my-bookings hoặc endpoint chi tiết booking nếu bạn đã có)
+Quy trình FE
+1) Tạo booking và nhận paymentId
+Gọi API tạo booking như hiện tại (đặt paymentMethod = vnpay ở payload nếu có).
+BE sẽ tạo Payment với status pending và gắn vào booking.
+FE cần lấy ra:
+bookingId
+paymentId (ưu tiên dùng làm orderId)
+amount (tổng tiền VND, số nguyên)
+2) Yêu cầu URL thanh toán VNPay và redirect
+FE gọi:
+GET /transactions/create-vnpay-url?amount={amountVND}&orderId={paymentId}
+Lưu ý: amount là số tiền VND (ví dụ 200000), BE tự nhân 100 cho VNPay, FE không cần nhân.
+Nhận về { paymentUrl }. Gọi window.location.href = paymentUrl để chuyển đến VNPay.
+3) Xử lý return về FE
+Sau khi thanh toán, VNPay sẽ:
+Gọi IPN đến BE: BE xác thực chữ ký, cập nhật Payment SUCCEEDED hoặc FAILED, phát event cho notifications.
+Redirect người dùng về vnp_ReturnUrl (cấu hình trong .env).
+Tại trang FE vnp_ReturnUrl:
+Hiển thị “Đang xử lý…” rồi poll trạng thái thanh toán 2-3s/lần trong ~60s:
+Gọi endpoint có trả về booking kèm payment (ví dụ GET /bookings/my-bookings rồi lọc theo bookingId, hoặc endpoint chi tiết booking nếu bạn có).
+Dừng poll khi payment.status là succeeded hoặc failed.
+Nếu thành công: hiển thị “Thanh toán thành công” + thông tin giao dịch (tùy hiển thị FE).
+Nếu thất bại/timeout: hiển thị thất bại và cho phép người dùng thanh toán lại.
+4) Gợi ý UI/UX
+Nút “Thanh toán VNPay” → tạo URL → redirect.
+Trang kết quả (khớp vnp_ReturnUrl):
+Loading, poll backend.
+Kết quả: success/fail + nút quay lại booking / thanh toán lại.
+Ví dụ code FE (TypeScript, pseudo)
+Tạo URL và redirect:
+async function payWithVNPay({ paymentId, amountVND }: { paymentId: string; amountVND: number }) {  const res = await fetch(`/transactions/create-vnpay-url?amount=${amountVND}&orderId=${paymentId}`, {    method: 'GET',    credentials: 'include', // nếu BE đọc cookie cho auth  });  const data = await res.json();  window.location.href = data.paymentUrl;}
+Trang return (poll trạng thái):
+async function pollPaymentStatus(bookingId: string, { intervalMs = 2500, timeoutMs = 60000 } = {}) {  const started = Date.now();  while (Date.now() - started < timeoutMs) {    const res = await fetch('/bookings/my-bookings', { credentials: 'include' });    const data = await res.json(); // data.bookings[]    const booking = data.bookings.find((b: any) => b.id === bookingId);    const status = booking?.payment?.status; // 'pending' | 'succeeded' | 'failed'    if (status === 'succeeded') return { ok: true, booking };    if (status === 'failed') return { ok: false, booking };    await new Promise(r => setTimeout(r, intervalMs));  }  return { ok: false, reason: 'timeout' };}
+Gọi flow:
+// Sau khi tạo booking xongawait payWithVNPay({ paymentId, amountVND });// Ở trang returnconst { ok } = await pollPaymentStatus(bookingId);if (ok) showSuccess();else showFail();
+Lưu ý kỹ thuật
+orderId nên là paymentId để IPN map chính xác về Payment. Nếu hiện đang truyền bookingId, BE vẫn xử lý được (đã fallback), nhưng khuyến nghị chuyển sang paymentId.
+FE không cần gọi IPN. IPN là VNPay gọi vào BE; FE chỉ cần poll trạng thái từ BE sau khi trở lại.
+vnp_ReturnUrl trong .env phải trỏ đến route FE bạn dùng để hiển thị kết quả (ví dụ /transactions/vnpay/return).
+Xử lý idempotency: nếu người dùng refresh/trở về nhiều lần, BE đã có cơ chế không cập nhật trùng.
+Notifications: người dùng sẽ nhận thông báo “Thanh toán thành công/thất bại” nhờ events BE; FE có thể hiển thị bell/notification riêng nếu có tích hợp.

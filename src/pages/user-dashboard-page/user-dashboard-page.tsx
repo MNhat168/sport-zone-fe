@@ -10,7 +10,7 @@ import {
     MoreHorizontal,
     X,
 } from "lucide-react"
-import { UserDashboardTabs } from "@/components/ui/user-dashboard-tabs"
+import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"

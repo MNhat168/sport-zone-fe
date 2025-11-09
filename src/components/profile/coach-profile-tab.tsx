@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { toast } from "sonner"
-import { Loader2, Trophy, Star, Users, Award } from "lucide-react"
+import { Trophy, Star } from "lucide-react"
 
 export default function CoachProfileTab() {
     const dispatch = useAppDispatch()

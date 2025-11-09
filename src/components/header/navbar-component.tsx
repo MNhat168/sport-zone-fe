@@ -63,7 +63,7 @@ export const NavbarComponent = () => {
                 : "bg-transparent"
                 }`}
         >
-            <div className="container mx-auto max-w-screen-2xl flex h-16 items-center justify-between px-4">
+            <div className="container mx-auto max-w-screen-2xl flex h-18 items-center justify-between px-4">
                 {/* Logo */}
                 <Link
                     to="/"
@@ -80,7 +80,7 @@ export const NavbarComponent = () => {
                     <Link to="/fields" className={linkClass}>
                         Sân thể thao
                     </Link>
-                    <Link to="/booking" className={linkClass}>
+                    <Link to="/coach/booking" className={linkClass}>
                         Huấn luyện viên
                     </Link>
                     <Link to="/reviews" className={linkClass}>
@@ -132,7 +132,7 @@ export const NavbarComponent = () => {
                                     <UserDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (
-                                    <CoachDropdownMenuItems userId={auth.user._id} />
+                                    <CoachDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "field_owner" && auth.user._id && (
                                     <FieldOwnerDropdownMenuItems 

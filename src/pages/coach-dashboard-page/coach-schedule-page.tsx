@@ -12,7 +12,7 @@ import {
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Booking } from "@/types/booking-type"
-import { CoachDashboardTabs } from "@/components/ui/coach-dashboard-tabs"
+import { CoachDashboardTabs } from "@/components/tabs/coach-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
 import DatePicker from "react-datepicker"

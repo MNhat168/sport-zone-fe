@@ -5,6 +5,7 @@ import type {
     LegacyCoachesResponse,
     CoachFilters,
     ErrorResponse,
+    CoachProfileResponse,
 } from "../../types/coach-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
 import {
@@ -12,6 +13,7 @@ import {
     COACH_BY_ID_API,
     ALL_COACHES_API,
 } from "./coachAPI";
+import { COACH_ID_BY_USER_ID_API } from "./coachAPI";
 
 // Map API Coach shape (coachesAPI.md) to app Coach type used in UI
 const mapApiCoachToAppCoach = (apiCoach: any): import("../../types/coach-type").Coach => {
@@ -46,25 +48,35 @@ const mapApiLegacyCoachToAppLegacyCoach = (apiCoach: any): import("../../types/c
 
 // Map API Coach Detail shape to app CoachDetail type
 const mapApiCoachDetailToAppCoachDetail = (apiCoach: any): import("../../types/coach-type").CoachDetail => {
+    const name = apiCoach?.name || apiCoach?.user?.fullName || "";
+    const description = apiCoach?.description || apiCoach?.bio || "";
+    const price = Number(apiCoach?.price ?? apiCoach?.hourlyRate ?? 0);
+    const reviewCount = Number(apiCoach?.reviewCount ?? apiCoach?.totalReviews ?? 0);
+    const avatar = apiCoach?.avatar || apiCoach?.user?.avatarUrl || "";
+    const level = apiCoach?.level || apiCoach?.rank || "";
+    const memberSince = apiCoach?.memberSince || apiCoach?.createdAt || "";
+    const experience = apiCoach?.coachingDetails?.experience || apiCoach?.experience || "";
+    const certification = apiCoach?.coachingDetails?.certification || apiCoach?.certification || "";
+
     return {
-        id: apiCoach?.id || "",
-        name: apiCoach?.name || "",
+        id: apiCoach?.id || apiCoach?._id || "",
+        name,
         profileImage: apiCoach?.profileImage || "",
-        avatar: apiCoach?.avatar || "",
-        description: apiCoach?.description || "",
+        avatar,
+        description,
         rating: Number(apiCoach?.rating ?? 0),
-        reviewCount: Number(apiCoach?.reviewCount ?? 0),
-        location: apiCoach?.location || "",
-        level: apiCoach?.level || "",
+        reviewCount,
+        location: apiCoach?.location || apiCoach?.user?.location || "",
+        level,
         completedSessions: Number(apiCoach?.completedSessions ?? 0),
         createdAt: apiCoach?.createdAt || "",
-        memberSince: apiCoach?.memberSince || "",
+        memberSince,
         availableSlots: Array.isArray(apiCoach?.availableSlots) ? apiCoach.availableSlots : [],
         lessonTypes: Array.isArray(apiCoach?.lessonTypes) ? apiCoach.lessonTypes : [],
-        price: Number(apiCoach?.price ?? 0),
+        price,
         coachingDetails: {
-            experience: apiCoach?.coachingDetails?.experience || "",
-            certification: apiCoach?.coachingDetails?.certification || "",
+            experience,
+            certification,
         },
     };
 };
@@ -126,7 +138,10 @@ export const getCoachById = createAsyncThunk<
         });
 
         const raw = response.data;
-        const apiCoach = raw?.data ?? raw;
+        // Unwrap common API envelope variations
+        const apiCoachContainer = (raw && typeof raw === 'object') ? raw : {};
+        const apiCoachRaw = (apiCoachContainer as any)?.data ?? apiCoachContainer;
+        const apiCoach = (apiCoachRaw as any)?.coach ?? apiCoachRaw;
         const mapped = mapApiCoachDetailToAppCoachDetail(apiCoach);
         
         console.log("🔄 [COACH THUNK] Coach data mapped successfully:", {
@@ -183,6 +198,32 @@ export const getAllCoaches = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch all coaches",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Resolve coach profile by userId -> returns raw coach object (including _id)
+export const getCoachIdByUserId = createAsyncThunk<
+    { success: boolean; coachId: string | null; data: import("../../types/coach-type").CoachProfile; message?: string },
+    string,
+    { rejectValue: ErrorResponse }
+>("coach/getCoachIdByUserId", async (userId, thunkAPI) => {
+    try {
+        const response = await axiosPublic.get(COACH_ID_BY_USER_ID_API(userId));
+        console.log("🔄 [COACH THUNK] Coach ID by user ID response:", {
+            response: response.data,
+        });
+        const raw: CoachProfileResponse = response?.data as CoachProfileResponse;
+        const coach = (raw?.data ?? (raw as any)) as import("../../types/coach-type").CoachProfile;
+        const coachId = coach?._id ?? null;
+        return { success: true, coachId, data: coach, message: raw?.message };
+        
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to resolve coach by userId",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };

@@ -19,7 +19,8 @@ import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 // Coach Pages
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
 import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page";
-import CoachProfilePage from "../pages/coach-dashboard-page/coach-profile-page";
+// Coach profile self-page for coaches only
+import CoachSelfDetailPage from "../pages/coach-profile-page/coach-profile-page";
 
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
@@ -28,10 +29,18 @@ import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
+import FieldDetailPage from "../pages/field-detail-page/field-detail-page";
+
+// Payment Pages (only VNPay related pages)
+import VNPayReturnPage from "../pages/transactions/vnpay-return-page.tsx";
+import VNPayQRPage from "../pages/transactions/vnpay-qr-page.tsx";
+import PayOSReturnPage from "../pages/transactions/payos-return-page.tsx";
+import PayOSCancelPage from "../pages/transactions/payos-cancel-page.tsx";
 
 // Field Owner Pages
 import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
 import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/field-owner-dashboard-page";
+import FieldHistoryBookingPage from "../pages/field-owner-dashboard-page/field-booking-list-page/field-booking-list-page";
 
 //Notification
 import NotificationsPage from "../pages/notifications/page";
@@ -59,13 +68,26 @@ export const publicRoutes: RouteObject[] = [
   { path: "/verify-email", element: <VerifyTokenPage /> },
   { path: "/auth/verify-token", element: <VerifyTokenPage /> },
   { path: "/verify-email/success", element: <VerifyTokenPage /> },
-  { path: "/booking", element: <BookingPage /> },
+  { path: "/coach/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
+  // Transactions Pages (Public) - VNPay pages
+  // IMPORTANT: These routes must come before generic routes to avoid conflicts
+  { path: "/transactions/vnpay-qr", element: <VNPayQRPage /> },
+  { path: "/transactions/vnpay/return", element: <VNPayReturnPage /> },
+  // Legacy routes for backward compatibility
+  { path: "/payment/vnpay-qr", element: <VNPayQRPage /> },
+  { path: "/payments/vnpay/return", element: <VNPayReturnPage /> },
+
+  // PayOS Payment Pages
+  { path: "/transactions/payos/return", element: <PayOSReturnPage /> },
+  { path: "/transactions/payos/cancel", element: <PayOSCancelPage /> },
+
   // Field Discovery & Booking (Public)
   { path: "/fields", element: <FieldBookingPage /> },
+  { path: "/fields/:id", element: <FieldDetailPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
 
   // Coach Discovery (Public)
@@ -74,7 +96,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/coach/:id", element: <CoachDetailPage /> },
 
   // General Booking (Public)
-  { path: "/booking", element: <BookingPage /> },
+  { path: "/coach/booking", element: <BookingPage /> },
 
   // About & Contact (Public)
   { path: "/about", element: <Placeholder title="Về chúng tôi" /> },
@@ -192,6 +214,14 @@ export const coachRoutes: RouteObject[] = [
     ),
   },
   {
+    path: "/coach/profile",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachSelfDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/coach/schedule",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
@@ -199,24 +229,7 @@ export const coachRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  {
-    path: "/coach/coach-profile",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <CoachProfilePage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/coach/profile",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <UserProfilePage />
-      </ProtectedRoute>
-    ),
-  },
 
-  // Coach Class & Booking Management
   {
     path: "/coach/classes",
     element: (
@@ -230,14 +243,6 @@ export const coachRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <BookingPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/coach/schedule",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <Placeholder title="Lịch dạy" />
       </ProtectedRoute>
     ),
   },
@@ -438,6 +443,14 @@ export const fieldOwnerRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <Placeholder title="Quản lý đặt sân" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/booking-history",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <FieldHistoryBookingPage />
       </ProtectedRoute>
     ),
   },

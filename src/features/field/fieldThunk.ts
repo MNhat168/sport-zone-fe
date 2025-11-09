@@ -52,6 +52,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         maxSlots: apiField?.maxSlots || 4,
         priceRanges: Array.isArray(apiField?.priceRanges) ? apiField.priceRanges : [],
         basePrice: Number(apiField?.basePrice ?? 0),
+        price: apiField?.price || undefined, // Formatted price from backend (e.g., "250.000đ/giờ")
         isActive: apiField?.isActive ?? true,
         maintenanceNote: apiField?.maintenanceNote,
         maintenanceUntil: apiField?.maintenanceUntil,
@@ -83,6 +84,8 @@ export const getAllFields = createAsyncThunk<
         if (params.name) queryParams.append("name", params.name);
         if (params.location) queryParams.append("location", params.location);
         if (params.sportType) queryParams.append("sportType", params.sportType);
+        if ((params as any).sortBy) queryParams.append("sortBy", (params as any).sortBy);
+        if ((params as any).sortOrder) queryParams.append("sortOrder", (params as any).sortOrder);
 
         const url = queryParams.toString() ? `${FIELDS_API}?${queryParams}` : FIELDS_API;
         const response = await axiosPublic.get(url);
@@ -130,8 +133,8 @@ export const getMyFields = createAsyncThunk<
         // Handle API response format: { success: true, data: { fields: [...], pagination: {...} } }
         const apiList = raw?.data?.fields || (Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []);
         const mapped = apiList.map(mapApiFieldToAppField);
-        return { 
-            success: true, 
+        return {
+            success: true,
             data: mapped,
             pagination: raw?.data?.pagination || null
         } as unknown as FieldsResponse;
@@ -157,7 +160,7 @@ export const getFieldById = createAsyncThunk<
             apiUrl: FIELD_BY_ID_API(id),
             timestamp: new Date().toISOString()
         });
-        
+
         const response = await axiosPublic.get(FIELD_BY_ID_API(id));
 
         console.log("📥 [FIELD THUNK] Raw API response received:", {
@@ -170,7 +173,7 @@ export const getFieldById = createAsyncThunk<
         const raw = response.data;
         const apiField = raw?.data ?? raw;
         const mapped = mapApiFieldToAppField(apiField);
-        
+
         console.log("🔄 [FIELD THUNK] Field data mapped successfully:", {
             fieldId: id,
             originalApiField: apiField,
@@ -184,7 +187,7 @@ export const getFieldById = createAsyncThunk<
             },
             timestamp: new Date().toISOString()
         });
-        
+
         return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
     } catch (error: any) {
         console.error("❌ [FIELD THUNK] Error fetching field by ID:", {
@@ -194,7 +197,7 @@ export const getFieldById = createAsyncThunk<
             responseData: error.response?.data,
             timestamp: new Date().toISOString()
         });
-        
+
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch field",
             status: error.response?.status?.toString() || "500",
@@ -224,10 +227,10 @@ export const checkFieldAvailability = createAsyncThunk<
 
         const raw = response.data;
         const availabilityData = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
-        
-        return { 
-            success: true, 
-            data: availabilityData 
+
+        return {
+            success: true,
+            data: availabilityData
         } as FieldAvailabilityResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -248,7 +251,7 @@ export const createField = createAsyncThunk<
     try {
         // Ensure location is in the correct format
         let requestPayload = { ...payload };
-        
+
         // If location is a string, convert it to the required object format
         if (typeof requestPayload.location === 'string') {
             requestPayload = {
@@ -262,7 +265,7 @@ export const createField = createAsyncThunk<
                 } as any
             };
         }
-        
+
         const response = await axiosPrivate.post(CREATE_FIELD_API, requestPayload);
 
         console.log("-----------------------------------------------------");
@@ -291,12 +294,12 @@ export const createFieldWithImages = createAsyncThunk<
 >("field/createFieldWithImages", async ({ payload, images, locationData }, thunkAPI) => {
     try {
         const formData = new FormData();
-        
+
         // Add basic field data
         formData.append("name", payload.name);
         formData.append("sportType", payload.sportType);
         formData.append("description", payload.description);
-        
+
         // Location must be a JSON string with address and geo.coordinates
         // Use locationData if provided, otherwise construct from payload.location
         let locationObject;
@@ -315,28 +318,28 @@ export const createFieldWithImages = createAsyncThunk<
             };
         }
         formData.append("location", JSON.stringify(locationObject));
-        
+
         // Add operating hours as JSON string
         formData.append("operatingHours", JSON.stringify(payload.operatingHours));
-        
+
         // Add slot configuration as strings (required for multipart/form-data)
         formData.append("slotDuration", payload.slotDuration.toString());
         formData.append("minSlots", payload.minSlots.toString());
         formData.append("maxSlots", payload.maxSlots.toString());
-        
+
         // Add base price as string (required for multipart/form-data)
         formData.append("basePrice", payload.basePrice.toString());
-        
+
         // Add price ranges as JSON string (OPTIONAL)
         if (payload.priceRanges && payload.priceRanges.length > 0) {
             formData.append("priceRanges", JSON.stringify(payload.priceRanges));
         }
-        
+
         // Add amenities as JSON string (OPTIONAL)
         if (payload.amenities && payload.amenities.length > 0) {
             formData.append("amenities", JSON.stringify(payload.amenities));
         }
-        
+
         // Add image files (OPTIONAL)
         if (images && images.length > 0) {
             images.forEach((image) => {
@@ -492,7 +495,7 @@ export const getScheduledPriceUpdates = createAsyncThunk<
 
         const raw = response.data;
         const scheduledUpdates = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
-        
+
         return {
             success: true,
             data: scheduledUpdates
@@ -577,7 +580,7 @@ export const getMyFieldsBookings = createAsyncThunk<
 >("field/getMyFieldsBookings", async (params = {}, thunkAPI) => {
     try {
         const queryParams = new URLSearchParams();
-        
+
         if (params.fieldName) queryParams.append('fieldName', params.fieldName);
         if (params.status) queryParams.append('status', params.status);
         if (params.date) queryParams.append('date', params.date);
@@ -586,7 +589,7 @@ export const getMyFieldsBookings = createAsyncThunk<
         if (params.page) queryParams.append('page', params.page.toString());
         if (params.limit) queryParams.append('limit', params.limit.toString());
 
-        const url = queryParams.toString() 
+        const url = queryParams.toString()
             ? `${GET_MY_FIELDS_BOOKINGS_API}?${queryParams.toString()}`
             : GET_MY_FIELDS_BOOKINGS_API;
 

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, User, LogOut } from "lucide-react";
@@ -16,9 +17,17 @@ import UserDropdownMenuItems from "./user-dropdown-menu";
 import FieldOwnerDropdownMenuItems from "./field-owner-dropdown-menu";
 
 export const NavbarDarkComponent = () => {
+    const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const auth = useAppSelector((state: RootState) => state.auth);
+
+    useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 50);
+        handleScroll();
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     const handleLogout = () => {
         clearUserAuth();
@@ -31,9 +40,11 @@ export const NavbarDarkComponent = () => {
 
     return (
         <header
-            className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b border-gray-200"
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+                isScrolled ? "bg-white/95 shadow-md border-b border-gray-200" : "bg-transparent"
+            }`}
         >
-            <div className="container mx-auto max-w-screen-2xl flex h-16 items-center justify-between px-4">
+            <div className="container mx-auto max-w-screen-2xl flex h-20 items-center justify-between px-4">
                 {/* Logo */}
                 <Link
                     to="/"
@@ -50,7 +61,7 @@ export const NavbarDarkComponent = () => {
                     <Link to="/fields" className={linkClass}>
                         Sân thể thao
                     </Link>
-                    <Link to="/booking" className={linkClass}>
+                    <Link to="/coach/booking" className={linkClass}>
                         Huấn luyện viên
                     </Link>
                     <Link to="/reviews" className={linkClass}>
@@ -102,7 +113,7 @@ export const NavbarDarkComponent = () => {
                                     <UserDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "coach" && auth.user._id && (
-                                    <CoachDropdownMenuItems userId={auth.user._id} />
+                                    <CoachDropdownMenuItems />
                                 )}
                                 {auth.user?.role === "field_owner" && auth.user._id && (
                                     <FieldOwnerDropdownMenuItems 

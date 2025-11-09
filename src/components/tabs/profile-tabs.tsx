@@ -5,7 +5,6 @@ import { useAppSelector } from "@/store/hook"
 // Import all profile components
 import Profile from "@/components/profile/profile"
 import ChangePassword from "@/components/profile/change-password"
-import OtherSetting from "@/components/profile/other-setting"
 import FieldOwnerTab from "@/components/profile/field-owner-tab"
 import CoachProfileTab from "@/components/profile/coach-profile-tab"
 
@@ -28,11 +27,6 @@ const defaultTabs: ProfileTabConfig[] = [
         id: 'change-password',
         label: 'Change Password',
         component: ChangePassword,
-    },
-    {
-        id: 'other-settings',
-        label: 'Other Settings',
-        component: OtherSetting,
     },
 ]
 
@@ -115,7 +109,7 @@ export default function ProfileTabs({
                         variant={activeTab === tab.id ? 'default' : 'outline'}
                         onClick={() => handleTabChange(tab.id)}
                         className={activeTab === tab.id 
-                            ? "px-7 py-4 bg-gray-800 hover:bg-gray-700 rounded-[5px] text-white text-base font-normal"
+                            ? `px-7 py-4 bg-gray-800 hover:bg-gray-700 rounded-[5px] text-white text-base font-normal ${index > 0 ? 'ml-5' : ''}`
                             : `px-7 py-4 bg-white hover:bg-gray-50 rounded-[5px] text-[#6B7385] text-base font-normal border-gray-200 ${
                                 index > 0 ? 'ml-5' : ''
                             }`

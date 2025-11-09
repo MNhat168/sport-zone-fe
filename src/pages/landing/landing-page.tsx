@@ -14,12 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  MapPin,
-  Users,
-  Search,
-  Award,
-} from "lucide-react";
+import { MapPin, Users, Search, Award } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { NavbarComponent } from "@/components/header/navbar-component";
 import { FooterComponent } from "@/components/footer/footer-component";
 
@@ -28,8 +24,8 @@ import { FooterComponent } from "@/components/footer/footer-component";
 export default function LandingPage() {
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
+  // selectedWeekday values: '' | 'any' | 'mon'..'sun'
+  const [selectedWeekday, setSelectedWeekday] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showFavoriteSportsModal, setShowFavoriteSportsModal] = useState(false);
   const [modalShownOnce, setModalShownOnce] = useState(false);
@@ -37,6 +33,7 @@ export default function LandingPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user.user);
   const isLoggedIn = !!user;
+  const navigate = useNavigate();
 
   const slideImages = [
     "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757854021/banner-tennis_koajhu.jpg",
@@ -72,9 +69,8 @@ export default function LandingPage() {
             {slideImages.map((image, index) => (
               <div
                 key={index}
-                className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${
-                  index === currentSlide ? "opacity-100" : "opacity-0"
-                }`}
+                className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"
+                  }`}
                 style={{
                   backgroundImage: `url(${image})`,
                 }}
@@ -113,188 +109,94 @@ export default function LandingPage() {
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide
-                    ? "bg-white scale-125"
-                    : "bg-white/50 hover:bg-white/75"
-                }`}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide
+                  ? "bg-white scale-125"
+                  : "bg-white/50 hover:bg-white/75"
+                  }`}
               />
             ))}
           </div>
         </section>
 
-        {/* Find Your Field Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 animate-fade-in-up">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Tìm Sân Của Bạn
-              </h2>
-              <p className="text-gray-600 text-lg">
-                Đặt sân thể thao hoàn hảo của bạn
-              </p>
+
+
+        {/* Search Section (name, sport, date, time, location) */}
+        <section className="py-12 bg-gray-50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Tìm Sân Của Bạn</h2>
+              <p className="text-gray-600">Tìm theo tên sân, loại thể thao, ngày/giờ và địa điểm</p>
             </div>
 
-            <Card className="max-w-4xl mx-auto animate-scale-in">
-              <CardContent className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Loại Thể Thao
-                    </label>
-                    <Select
-                      value={selectedSport}
-                      onValueChange={setSelectedSport}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn môn thể thao" />
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div className="flex flex-col items-center md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Tên Sân</label>
+                  <Input
+                    className="w-full text-left"
+                    placeholder="Nhập tên sân (tùy chọn)"
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Thể Loại</label>
+                  <div className="w-full">
+                    <Select value={selectedSport} onValueChange={setSelectedSport}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn môn" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="all">Tất cả</SelectItem>
+                        <SelectItem value="football">Bóng đá</SelectItem>
                         <SelectItem value="tennis">Quần vợt</SelectItem>
                         <SelectItem value="badminton">Cầu lông</SelectItem>
-                        <SelectItem value="squash">Squash</SelectItem>
-                        <SelectItem value="padel">Padel</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Địa Điểm
-                    </label>
-                    <Select
-                      value={selectedLocation}
-                      onValueChange={setSelectedLocation}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Vị trí của bạn" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="downtown">
-                          Trung tâm thành phố
-                        </SelectItem>
-                        <SelectItem value="north">Quận Bắc</SelectItem>
-                        <SelectItem value="south">Quận Nam</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ngày
-                    </label>
-                    <Input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      placeholder="mm/dd/yyyy"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Thời Gian
-                    </label>
-                    <Select
-                      value={selectedTime}
-                      onValueChange={setSelectedTime}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn thời gian" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="morning">Sáng</SelectItem>
-                        <SelectItem value="afternoon">Chiều</SelectItem>
-                        <SelectItem value="evening">Tối</SelectItem>
+                        <SelectItem value="basketball">Bóng rổ</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="text-center">
+                <div className="flex flex-col items-center">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Ngày trong tuần</label>
+                  <div className="w-full">
+                    <Select value={selectedWeekday} onValueChange={setSelectedWeekday}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn ngày" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="any">Bất kỳ</SelectItem>
+                        <SelectItem value="mon">Thứ 2</SelectItem>
+                        <SelectItem value="tue">Thứ 3</SelectItem>
+                        <SelectItem value="wed">Thứ 4</SelectItem>
+                        <SelectItem value="thu">Thứ 5</SelectItem>
+                        <SelectItem value="fri">Thứ 6</SelectItem>
+                        <SelectItem value="sat">Thứ 7</SelectItem>
+                        <SelectItem value="sun">Chủ nhật</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end md:col-span-1">
                   <Button
-                    size="lg"
-                    className="px-8 py-3 text-white font-semibold hover:scale-105 transition-transform"
-                    style={{ backgroundColor: "#00775C" }}
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      if (selectedLocation) params.set("name", selectedLocation);
+                      // don't send 'all' value
+                      if (selectedSport && selectedSport !== 'all') params.set("type", selectedSport);
+                      // send weekday instead of raw date (align with field filters)
+                      if (selectedWeekday && selectedWeekday !== 'any') params.set("weekday", selectedWeekday);
+                      const qp = params.toString()
+                      navigate(`/fields${qp ? `?${qp}` : ''}`);
+                    }}
+                    className="px-6 py-3 bg-green-600 text-white hover:bg-green-700"
                   >
-                    <Search className="mr-2 h-5 w-5" />
-                    Tìm Sân
+                    <Search className="mr-2 h-4 w-4" /> Tìm Sân
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Featured Fields */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 animate-fade-in-up">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Sân Nổi Bật
-              </h2>
-              <p className="text-gray-600 text-lg">
-                Các địa điểm phổ biến với ưu đãi tuyệt vời
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  title: "Sân Bóng Đá Cao Cấp",
-                  subtitle: "Câu Lạc Bộ Thể Thao Trung Tâm",
-                  price: "1.200.000đ/giờ",
-                  rating: "MỚI",
-                  image: "/soccer-field.png",
-                },
-                {
-                  title: "Sân Quần Vợt Chuyên Nghiệp",
-                 
-                  price: "650.000đ/giờ",
-                  rating: "PHỔ BIẾN",
-                  image: "/badminton-court.png",
-                },
-              ].map((field, index) => (
-                <Card
-                  key={index}
-                  className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-slide-in-up group"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="relative">
-                    <img
-                      src={field.image || "/placeholder.svg"}
-                      alt={field.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <Badge
-                      className="absolute top-4 left-4 text-white font-semibold"
-                      style={{ backgroundColor: "#F2A922" }}
-                    >
-                      {field.rating}
-                    </Badge>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {field.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4">{field.subtitle}</p>
-                    <div className="flex justify-between items-center">
-                      <span
-                        className="text-2xl font-bold"
-                        style={{ color: "#00775C" }}
-                      >
-                        {field.price}
-                      </span>
-                      <Button
-                        className="text-white hover:scale-105 transition-transform"
-                        style={{ backgroundColor: "#00775C" }}
-                      >
-                        Đặt Ngay
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              </div>
             </div>
           </div>
         </section>

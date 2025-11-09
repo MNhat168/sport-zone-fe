@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { NavbarDarkComponent } from '@/components/header/navbar-dark-component';
 import PageWrapper from '@/components/layouts/page-wrapper';
-import PageHeader from '@/components/header-banner/page-header';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { createField, createFieldWithImages } from '@/features/field/fieldThunk';
 import { clearErrors } from '@/features/field/fieldSlice';
@@ -11,7 +10,7 @@ import { getAmenitiesBySportType } from '@/features/amenities';
 import type { CreateFieldPayload, PriceRange, FieldLocation } from '@/types/field-type';
 import type { AmenityWithPrice } from '@/types/amenity-with-price';
 import { CustomFailedToast, CustomSuccessToast } from '@/components/toast/notificiation-toast';
-import { FieldOwnerDashboardTabs } from '@/components/ui/field-owner-dashboard-tabs';
+import { FieldOwnerDashboardTabs } from '@/components/tabs/field-owner-dashboard-tabs';
 import {
     BasicInfoCard,
     PriceCard,
@@ -27,10 +26,10 @@ import { FieldOwnerDashboardHeader } from '@/components/header/field-owner-dashb
 export default function FieldCreatePage() {
     const dispatch = useAppDispatch();
     const { createLoading, createWithImagesLoading, createError, createWithImagesError } = useAppSelector((state) => state.field);
-    
+
     // Tab management
     const [activeTab, setActiveTab] = useState('basic');
-    
+
     // Form state
     const [formData, setFormData] = useState<CreateFieldPayload>({
         name: '',
@@ -45,7 +44,7 @@ export default function FieldCreatePage() {
         priceRanges: [],
         basePrice: ''
     });
-    
+
     // Location coordinates state
     const [locationData, setLocationData] = useState<FieldLocation>({
         address: '',
@@ -54,7 +53,7 @@ export default function FieldCreatePage() {
             coordinates: [0, 0]
         }
     });
-    
+
     // UI state
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -111,7 +110,7 @@ export default function FieldCreatePage() {
         setFormData(prev => {
             const existingIndex = prev.operatingHours.findIndex(oh => oh.day === day);
             const updatedHours = [...prev.operatingHours];
-            
+
             if (existingIndex >= 0) {
                 updatedHours[existingIndex] = {
                     ...updatedHours[existingIndex],
@@ -125,7 +124,7 @@ export default function FieldCreatePage() {
                     duration: field === 'duration' ? value as number : 60
                 });
             }
-            
+
             return {
                 ...prev,
                 operatingHours: updatedHours
@@ -136,7 +135,7 @@ export default function FieldCreatePage() {
     const handlePriceRangeChange = (index: number, field: keyof PriceRange, value: any) => {
         setFormData(prev => ({
             ...prev,
-            priceRanges: prev.priceRanges.map((range, i) => 
+            priceRanges: prev.priceRanges.map((range, i) =>
                 i === index ? { ...range, [field]: value } : range
             )
         }));
@@ -263,17 +262,17 @@ export default function FieldCreatePage() {
         try {
             dispatch(clearErrors());
             //CustomSuccessToast('Đang gửi yêu cầu tạo sân...');
-            
+
             // Convert basePrice to number before sending
             // Filter operating hours and price ranges to only include selected and available days
-            const filteredOperatingHours = formData.operatingHours.filter(oh => 
+            const filteredOperatingHours = formData.operatingHours.filter(oh =>
                 selectedDays.includes(oh.day) && dayAvailability[oh.day] === true
             );
-            
-            const filteredPriceRanges = formData.priceRanges.filter(pr => 
+
+            const filteredPriceRanges = formData.priceRanges.filter(pr =>
                 selectedDays.includes(pr.day) && dayAvailability[pr.day] === true
             );
-            
+
             // Convert selected amenities to API format
             const amenitiesForAPI = [
                 ...selectedIncludes, // Already in AmenityWithPrice format
@@ -287,10 +286,10 @@ export default function FieldCreatePage() {
                 priceRanges: filteredPriceRanges,
                 amenities: amenitiesForAPI
             };
-            
+
             // Debug: log payload prior to submit
             console.log('[CreateField] submitData (JSON):', submitData);
-            
+
             if (avatarFile || galleryFiles.length > 0) {
                 // Prepare files with suffixes for backend identification
                 const filesToUpload: File[] = [];
@@ -308,9 +307,17 @@ export default function FieldCreatePage() {
                 // Debug: log which API will be called and files list
                 console.log('[CreateField] Using multipart upload (CREATE_FIELD_WITH_IMAGES_API). Files:', filesToUpload.map(f => f.name));
                 console.log('[CreateField] Location data:', locationData);
+                // Extra debug: confirm files being sent (count, name, size, type)
+                console.log('[CreateField] Total files to send:', filesToUpload.length);
+                try {
+                    console.table(filesToUpload.map(f => ({ name: f.name, size: f.size, type: f.type })));
+                } catch (_) {
+                    // Fallback if console.table not available
+                    filesToUpload.forEach((f, idx) => console.log(`[CreateField] File[${idx}]`, { name: f.name, size: f.size, type: f.type }));
+                }
 
-                const resWithImages = await dispatch(createFieldWithImages({ 
-                    payload: submitData, 
+                const resWithImages = await dispatch(createFieldWithImages({
+                    payload: submitData,
                     images: filesToUpload,
                     locationData: locationData
                 })).unwrap();
@@ -329,7 +336,7 @@ export default function FieldCreatePage() {
                 console.log('[CreateField] API response (no images):', resNoImages);
                 CustomSuccessToast('Tạo sân thành công!');
             }
-            
+
             // Reset form
             setFormData({
                 name: '',
@@ -353,7 +360,7 @@ export default function FieldCreatePage() {
             setSelectedIncludes([]);
             setSelectedAmenities([]);
             setActiveTab('basic');
-            
+
         } catch (error) {
             console.error('Error creating field:', error);
             CustomFailedToast('Gửi yêu cầu tạo sân thất bại. Vui lòng thử lại.');
@@ -372,7 +379,7 @@ export default function FieldCreatePage() {
     const [selectedDays, setSelectedDays] = useState<string[]>([])
     const [dayAvailability, setDayAvailability] = useState<Record<string, boolean>>({})
     const [editingDay, setEditingDay] = useState<string | null>(null)
-    
+
     // Available days and multipliers for user selection
     const availableDays = [
         { value: 'monday', label: 'Thứ Hai' },
@@ -383,7 +390,7 @@ export default function FieldCreatePage() {
         { value: 'saturday', label: 'Thứ Bảy' },
         { value: 'sunday', label: 'Chủ Nhật' }
     ];
-    
+
     const availableMultipliers = [
         { value: 0.5, label: '0.5x (Giảm 50%)' },
         { value: 0.8, label: '0.8x (Giảm 20%)' },
@@ -458,7 +465,7 @@ export default function FieldCreatePage() {
     }
 
     const fillSampleData = () => {
-        const allDays = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+        const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         const defaultHours = allDays.map(day => ({ day, start: '06:00', end: '22:00', duration: 60 }));
         setFormData(prev => ({
             ...prev,
@@ -497,12 +504,12 @@ export default function FieldCreatePage() {
 
     return (
         <>
-        <FieldOwnerDashboardHeader />
-        <FieldOwnerDashboardTabs />
-            <NavbarDarkComponent />
             <PageWrapper>
-                <PageHeader title="Tạo sân" breadcrumbs={[{ label: "Trang chủ", href: "/" }, { label: "Tạo sân" }]} />
-                <div className="min-h-screen bg-gray-50 p-6">
+                <FieldOwnerDashboardHeader />
+                <FieldOwnerDashboardTabs />
+                <NavbarDarkComponent />
+
+                <div className="min-h-screen bg-gray-50">
                     <div className="max-w-7xl mx-auto space-y-12">
                         {/* Tab Navigation */}
                         <Card className="shadow-md border-0">
@@ -513,11 +520,10 @@ export default function FieldCreatePage() {
                                             key={tab.id}
                                             variant={activeTab === tab.id ? 'default' : 'outline'}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`h-12 border-0 shadow-sm transition-colors ${
-                                                activeTab === tab.id 
-                                                    ? 'bg-black text-white hover: hover:!text-white' 
+                                            className={`h-12 border-0 shadow-sm transition-colors ${activeTab === tab.id
+                                                    ? 'bg-black text-white hover: hover:!text-white'
                                                     : 'bg-white text-gray-700 hover:bg-black hover:text-white'
-                                            }`}
+                                                }`}
                                         >
                                             {tab.label}
                                         </Button>
@@ -527,13 +533,13 @@ export default function FieldCreatePage() {
                         </Card>
 
                         {/* Basic Info Section */}
-                        <BasicInfoCard 
+                        <BasicInfoCard
                             formData={formData}
                             onInputChange={handleInputChange}
                         />
 
                         {/* Basic Price Section */}
-                        <PriceCard 
+                        <PriceCard
                             formData={formData}
                             onInputChange={handleInputChange}
                             onApplyDefaultHours={(start: string, end: string) => {
@@ -634,13 +640,13 @@ export default function FieldCreatePage() {
                             onSaveAvailability={handleSaveAvailability}
                         />
                         {/* Venue Overview Section */}
-                        <OverviewCard 
+                        <OverviewCard
                             formData={formData}
                             onInputChange={handleInputChange}
                         />
 
                         {/* Includes Section */}
-                        <IncludesCard 
+                        <IncludesCard
                             selectedIncludes={selectedIncludes}
                             onIncludesChange={handleIncludesChange}
                             sportType={formData.sportType}
@@ -650,14 +656,14 @@ export default function FieldCreatePage() {
                         <RulesCard />
 
                         {/* Amenities Section */}
-                        <AmenitiesCard 
+                        <AmenitiesCard
                             selectedAmenities={selectedAmenities}
                             onAmenitiesChange={handleAmenitiesChange}
                             sportType={formData.sportType}
                         />
 
                         {/* Gallery Section */}
-                        <GalleryCard 
+                        <GalleryCard
                             avatarPreview={avatarPreview}
                             onAvatarUpload={handleAvatarUpload}
                             onRemoveAvatar={removeAvatar}
@@ -667,7 +673,7 @@ export default function FieldCreatePage() {
                         />
 
                         {/* Location Section */}
-                        <LocationCard 
+                        <LocationCard
                             formData={formData}
                             onInputChange={handleInputChange}
                             onLocationChange={handleLocationChange}
@@ -675,15 +681,15 @@ export default function FieldCreatePage() {
 
                         {/* Actions */}
                         <div className="flex justify-center gap-3">
-                            <Button 
+                            <Button
                                 variant="outline"
                                 onClick={fillSampleData}
                                 disabled={createLoading || createWithImagesLoading}
                             >
                                 Điền dữ liệu mẫu
                             </Button>
-                            <Button 
-                                size="lg" 
+                            <Button
+                                size="lg"
                                 className="px-8"
                                 onClick={handleSubmit}
                                 disabled={createLoading || createWithImagesLoading}

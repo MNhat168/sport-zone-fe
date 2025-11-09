@@ -3,12 +3,12 @@ import { Settings} from "lucide-react"
 import { DropdownMenuItem, DropdownMenuSeparator } from "../ui/dropdown-menu"
 
 
-const CoachDropdownMenuItems = ({ userId }: { userId: string }) => {
+const CoachDropdownMenuItems = () => {
 
     return (
         <>
             <DropdownMenuItem asChild className="text-black hover:text-primary-800 cursor-pointer flex-col items-start p-3">
-                <Link to={`/coach/coach-profile`} className="flex flex-col">
+                <Link to={`/coach/profile`} className="flex flex-col">
                     <span className="text-sm text-gray-500 ml-6">Go to Coach Profile</span>
                 </Link>
             </DropdownMenuItem>
