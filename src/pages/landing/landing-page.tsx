@@ -14,12 +14,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, Search, Award } from "lucide-react";
+import { MapPin, Users, Search, Award, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NavbarComponent } from "@/components/header/navbar-component";
 import { FooterComponent } from "@/components/footer/footer-component";
-
-
 
 export default function LandingPage() {
   const [selectedSport, setSelectedSport] = useState("");
@@ -53,8 +51,6 @@ export default function LandingPage() {
   useEffect(() => {
     dispatch(getUserProfile());
   }, [dispatch]);
-
-  
 
   return (
     <>
@@ -117,8 +113,6 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
-
-
 
         {/* Search Section (name, sport, date, time, location) */}
         <section className="py-12 bg-gray-50">
@@ -201,6 +195,112 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Tournament Creation Section */}
+        <section className="py-16 bg-gradient-to-r from-green-50 to-blue-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12 animate-fade-in-up">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Tổ Chức Giải Đấu Của Riêng Bạn
+              </h2>
+              <p className="text-gray-600 text-lg">
+                Dễ dàng tạo và quản lý giải đấu thể thao với SportZone
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="animate-slide-in-left">
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  Tạo Giải Đấu Chuyên Nghiệp
+                </h3>
+                <ul className="space-y-4 text-gray-700 mb-8">
+                  <li className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span>Thiết lập thông tin giải đấu nhanh chóng</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span>Chọn sân thi đấu phù hợp</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span>Quản lý người tham gia dễ dàng</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span>Tính toán chi phí tự động</span>
+                  </li>
+                </ul>
+                
+                <Button
+                  onClick={() => navigate('/tournaments/create')}
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg"
+                >
+                  <Trophy className="mr-2 h-5 w-5" />
+                  Tạo Giải Đấu Ngay
+                </Button>
+              </div>
+
+              <div className="animate-slide-in-right">
+                <Card className="p-6 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="text-center mb-6">
+                      <Trophy className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                      <h4 className="text-xl font-bold text-gray-900 mb-2">
+                        Bắt Đầu Tổ Chức
+                      </h4>
+                      <p className="text-gray-600">
+                        Tạo giải đấu đầu tiên của bạn trong vài phút
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-green-600 font-bold">1</span>
+                        </div>
+                        <span className="text-sm">Điền thông tin cơ bản</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-green-600 font-bold">2</span>
+                        </div>
+                        <span className="text-sm">Chọn sân thi đấu</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-green-600 font-bold">3</span>
+                        </div>
+                        <span className="text-sm">Xác nhận và công bố</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 text-center">
+                      <Button
+                        onClick={() => navigate('/tournaments')}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Trophy className="mr-2 h-4 w-4" />
+                        Khám Phá Giải Đấu
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Alternating Fields Grid */}
         <section className="py-0">
           <div className="max-w-full">
@@ -243,7 +343,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Why Choose Pickerball */}
+        {/* Why Choose SportZone */}
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12 animate-fade-in-up">

@@ -42,6 +42,9 @@ import FieldHistoryBookingPage from "../pages/field-owner-dashboard-page/field-b
 
 //Notification
 import NotificationsPage from "../pages/notifications/page";
+import TournamentListPage from "@/pages/list-tournament/TournamentListPage.tsx";
+import CreateTournamentPage from "@/pages/create-tournament/CreateTournamentPage.tsx";
+import TournamentDetailPage from "@/pages/tournament-detail-page/tournament-detail-page.tsx";
 
 /**
  * Placeholder component for pages under development
@@ -188,6 +191,30 @@ export const userRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <Placeholder title="User Dashboard" />
+      </ProtectedRoute>
+    ),
+  },
+    {
+    path: "/tournaments",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <TournamentListPage  />
+      </ProtectedRoute>
+    ),
+  },
+    {
+    path: "/tournaments/create",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <CreateTournamentPage  />
+      </ProtectedRoute>
+    ),
+  },
+    {
+    path: "/tournaments/:id",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <TournamentDetailPage  />
       </ProtectedRoute>
     ),
   },
