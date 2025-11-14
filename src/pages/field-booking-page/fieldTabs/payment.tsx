@@ -11,7 +11,8 @@ import { clearError } from "@/features/booking/bookingSlice";
 import type { CreateFieldBookingPayload, Booking } from "@/types/booking-type";
 import { PaymentMethod } from "@/types/payment-type";
 import type { Payment } from "@/types/payment-type";
-import { createVNPayUrl } from "@/features/transactions/transactionsThunk";
+import { createVNPayUrl, createPayOSPayment } from "@/features/transactions/transactionsThunk";
+import type { CreatePayOSPaymentPayload, PaymentItem } from "@/types/payment-type";
 
 /**
  * Interface for booking form data
@@ -76,7 +77,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
     const bookingError = useAppSelector((state) => state.booking.error);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
     
-    const [paymentMethod, setPaymentMethod] = useState<'vnpay' | 'credit_card' | 'bank_transfer' | 'cash'>('vnpay');
+    const [paymentMethod, setPaymentMethod] = useState<'vnpay' | 'payos' | 'credit_card' | 'bank_transfer' | 'cash'>('vnpay');
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [paymentError, setPaymentError] = useState<string | null>(null);
     const [bookingId, setBookingId] = useState<string | null>(null);
@@ -155,6 +156,58 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         }
     };
 
+    // Helper to create short description for PayOS (max 25 characters)
+    // PayOS API requirement: description must be max 25 characters
+    const createPayOSDescription = (venueName?: string, date?: string, startTime?: string, endTime?: string): string => {
+        const maxLength = 25;
+        const baseText = 'Dat san'; // 8 characters
+        
+        // Try to include essential info: "Dat san" + date + time
+        if (date && startTime && endTime) {
+            try {
+                // Format date as DD/MM (5 characters: "15/11")
+                const dateObj = new Date(date);
+                if (!isNaN(dateObj.getTime())) {
+                    const day = dateObj.getDate().toString().padStart(2, '0');
+                    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                    const shortDate = `${day}/${month}`;
+                    
+                    // Format time as HH-HH (e.g., "14-16", 5 characters)
+                    const startHour = startTime.split(':')[0];
+                    const endHour = endTime.split(':')[0];
+                    const shortTime = `${startHour}-${endHour}`;
+                    
+                    // Build description: "Dat san DD/MM HH-HH" (8 + 1 + 5 + 1 + 5 = 20 characters)
+                    let desc = `${baseText} ${shortDate} ${shortTime}`;
+                    
+                    // Ensure it doesn't exceed maxLength
+                    if (desc.length <= maxLength) {
+                        return desc;
+                    }
+                    
+                    // If too long, try without date: "Dat san HH-HH" (8 + 1 + 5 = 14 characters)
+                    desc = `${baseText} ${shortTime}`;
+                    if (desc.length <= maxLength) {
+                        return desc;
+                    }
+                }
+            } catch (error) {
+                console.warn('[PayOS] Error formatting description:', error);
+            }
+        }
+        
+        // Fallback: try with venue name if available
+        if (venueName && venueName.trim()) {
+            const availableLength = maxLength - baseText.length - 1; // -1 for space
+            const shortVenueName = venueName.substring(0, availableLength);
+            const desc = `${baseText} ${shortVenueName}`;
+            return desc.substring(0, maxLength);
+        }
+        
+        // Final fallback: just "Dat san"
+        return baseText;
+    };
+
     const calculateAmenitiesTotal = useCallback((): number => {
         if (!amenities || !selectedAmenityIds?.length) return 0;
         try {
@@ -215,6 +268,8 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         switch (paymentMethod) {
             case 'vnpay':
                 return PaymentMethod.VNPAY;
+            case 'payos':
+                return PaymentMethod.PAYOS;
             case 'credit_card':
                 return PaymentMethod.CREDIT_CARD;
             case 'bank_transfer':
@@ -244,7 +299,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                 endTime: formData.endTime,
                 selectedAmenities: selectedAmenityIds,
                 paymentMethod: getPaymentMethodEnum(),
-                paymentNote: paymentMethod === 'vnpay' ? 'VNPay online payment' : undefined,
+                paymentNote: paymentMethod === 'vnpay' ? 'VNPay online payment' : paymentMethod === 'payos' ? 'PayOS online payment' : undefined,
             };
             const result = await dispatch(createFieldBooking(bookingPayload));
             if (result.meta.requestStatus === 'fulfilled') {
@@ -262,6 +317,216 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                 bookingError?.message || error.message || 'Payment failed. Please try again.'
             );
             return null;
+        }
+    };
+
+    // Handle PayOS payment flow
+    const handlePayOSPayment = async () => {
+        setPaymentStatus('processing');
+        setPaymentError(null);
+        dispatch(clearError());
+        
+        // Step 1: Create booking with PayOS payment method
+        const created = await createBookingCore();
+        if (!created) { 
+            setPaymentStatus('error'); 
+            return; 
+        }
+
+        // Step 2: Derive paymentId and amount robustly
+        const paymentObj = typeof created?.payment === 'object' ? created.payment as Payment : null;
+        const paymentIdRaw = typeof created?.payment === 'string'
+            ? created.payment
+            : (paymentObj?._id || (created as any)?._id);
+
+        // Compute amount fallbacks
+        const durationHours = (() => {
+            try {
+                const start = new Date(`1970-01-01T${(created as any)?.startTime}:00`);
+                const end = new Date(`1970-01-01T${(created as any)?.endTime}:00`);
+                return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+            } catch { return 0; }
+        })();
+
+        const beTotal = Number((created as any)?.totalPrice);
+        const feTotal = calculateTotal();
+        const snapshotBase = Number(created?.pricingSnapshot?.basePrice) || 0;
+        const snapshotCalc = snapshotBase > 0 && durationHours > 0 ? Math.round(snapshotBase * durationHours) : 0;
+        const amount = Math.round(
+            Number.isFinite(beTotal) && beTotal > 0 ? beTotal :
+            (feTotal > 0 ? feTotal : snapshotCalc)
+        );
+
+        const paymentId = paymentIdRaw ? String(paymentIdRaw) : '';
+
+        console.log('[PayOS] Creating payment link for:', {
+            paymentId,
+            bookingId: (created as any)?._id,
+            beTotal,
+            feTotal,
+            snapshotBase,
+            durationHours,
+            amount
+        });
+
+        // Step 3: Call backend API to create PayOS payment link
+        if (!paymentId || !Number.isFinite(amount) || amount <= 0) {
+            setPaymentError('Thiếu thông tin thanh toán (paymentId hoặc amount)');
+            setPaymentStatus('error');
+            return;
+        }
+
+        try {
+            // Validate amount according to guide (min: 1000)
+            if (amount < 1000) {
+                setPaymentError('Số tiền thanh toán phải tối thiểu 1,000 VND');
+                setPaymentStatus('error');
+                return;
+            }
+
+            // Prepare items array according to guide
+            const items: PaymentItem[] = [
+                {
+                    name: `Đặt sân ${venue?.name || 'sân bóng đá'}`,
+                    quantity: 1,
+                    price: amount,
+                },
+            ];
+
+            // Validate amount = sum of items (according to guide)
+            const calculatedAmount = items.reduce(
+                (sum, item) => sum + (item.quantity * item.price), 
+                0
+            );
+
+            if (calculatedAmount !== amount) {
+                console.error('[PayOS] Amount mismatch:', { amount, calculatedAmount });
+                setPaymentError('Lỗi tính toán số tiền. Vui lòng thử lại.');
+                setPaymentStatus('error');
+                return;
+            }
+
+            // Validate required fields according to guide
+            if (!paymentId || !paymentId.trim()) {
+                setPaymentError('Thiếu mã đơn hàng. Vui lòng thử lại.');
+                setPaymentStatus('error');
+                return;
+            }
+
+            // Create short description for PayOS (max 25 characters as per PayOS requirement)
+            const description = createPayOSDescription(
+                venue?.name,
+                formData.date,
+                formData.startTime,
+                formData.endTime
+            );
+            
+            if (!description.trim()) {
+                setPaymentError('Thiếu mô tả thanh toán. Vui lòng thử lại.');
+                setPaymentStatus('error');
+                return;
+            }
+            
+            // Validate description length (PayOS requirement: max 25 characters)
+            // Note: createPayOSDescription already ensures max 25 chars, but double-check for safety
+            if (description.length > 25) {
+                console.error('[PayOS] ❌ Description exceeds 25 characters despite helper function:', description);
+                setPaymentError('Mô tả thanh toán quá dài. Vui lòng thử lại.');
+                setPaymentStatus('error');
+                return;
+            }
+            
+            console.log('[PayOS] Description created:', { description, length: description.length });
+
+            // Validate items array
+            if (!items || items.length === 0) {
+                setPaymentError('Thiếu thông tin sản phẩm. Vui lòng thử lại.');
+                setPaymentStatus('error');
+                return;
+            }
+
+            // Validate each item has required fields
+            for (const item of items) {
+                if (!item.name || !item.name.trim()) {
+                    setPaymentError('Tên sản phẩm không được để trống.');
+                    setPaymentStatus('error');
+                    return;
+                }
+                if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+                    setPaymentError('Số lượng sản phẩm không hợp lệ.');
+                    setPaymentStatus('error');
+                    return;
+                }
+                if (!Number.isFinite(item.price) || item.price < 1000) {
+                    setPaymentError('Giá sản phẩm phải tối thiểu 1,000 VND.');
+                    setPaymentStatus('error');
+                    return;
+                }
+            }
+
+            const payOSPayload: CreatePayOSPaymentPayload = {
+                orderId: paymentId, // string (required)
+                amount: amount, // number >= 1000 (required)
+                description: description, // string (required)
+                items: items, // array with at least 1 item (required)
+                buyerName: formData.name || user?.fullName || undefined, // optional
+                buyerEmail: formData.email || user?.email || undefined, // optional
+                buyerPhone: formData.phone || user?.phone || undefined, // optional
+                returnUrl: `${window.location.origin}/transactions/payos/return`, // optional
+                cancelUrl: `${window.location.origin}/transactions/payos/cancel`, // optional
+                expiredAt: 15, // optional (5-60 minutes)
+            };
+
+            console.log('[PayOS] Calling createPayOSPayment API with:', payOSPayload);
+            console.log('[PayOS] Validation passed:', {
+                orderId: !!payOSPayload.orderId,
+                amount: payOSPayload.amount >= 1000,
+                description: !!payOSPayload.description,
+                itemsCount: payOSPayload.items.length,
+                amountMatch: calculatedAmount === amount,
+            });
+            
+            const result = await dispatch(createPayOSPayment(payOSPayload)).unwrap();
+
+            console.log('[PayOS] API Response:', result);
+
+            // Extract checkout URL from response
+            let checkoutUrl: string | null = null;
+            
+            if ((result as any)?.checkoutUrl) {
+                checkoutUrl = (result as any).checkoutUrl;
+            } else if ((result as any)?.data?.checkoutUrl) {
+                checkoutUrl = (result as any).data.checkoutUrl;
+            }
+
+            if (!checkoutUrl) {
+                console.error('[PayOS] ❌ Cannot extract checkoutUrl from response');
+                console.error('[PayOS] Full response:', JSON.stringify(result, null, 2));
+                throw new Error(`Backend did not return checkoutUrl. Response: ${JSON.stringify(result)}`);
+            }
+
+            // Store booking ID for return page
+            try { 
+                localStorage.setItem('payosBookingId', (created as any)?._id); 
+                if ((result as any)?.orderCode) {
+                    localStorage.setItem('payosOrderCode', String((result as any).orderCode));
+                }
+            } catch { /* ignore */ }
+
+            console.log('[PayOS] ✅ Checkout URL extracted:', checkoutUrl);
+            console.log('[PayOS] Redirecting to PayOS checkout');
+            
+            // Redirect to PayOS checkout page
+            window.location.href = checkoutUrl;
+            return;
+        } catch (error: any) {
+            console.error('[PayOS] Error creating payment link:', error);
+            const errorMessage = error?.payload?.message || 
+                               error?.message || 
+                               error?.response?.data?.message ||
+                               'Không thể tạo liên kết thanh toán PayOS. Vui lòng thử lại.';
+            setPaymentError(errorMessage);
+            setPaymentStatus('error');
         }
     };
 
@@ -361,12 +626,15 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
             console.log('[VNPay] Redirecting to VNPay gateway');
             
             // Redirect to VNPay payment gateway
-            // VNPay will redirect back to VNPAY_RETURN_URL with all query params (vnp_TxnRef, vnp_ResponseCode, vnp_SecureHash, etc.)
             window.location.href = paymentUrl;
             return;
         } catch (error: any) {
             console.error('[VNPay] Error creating payment URL:', error);
-            setPaymentError(error?.message || 'Không thể tạo liên kết thanh toán VNPay. Vui lòng thử lại.');
+            const errorMessage = error?.payload?.message || 
+                               error?.message || 
+                               error?.response?.data?.message ||
+                               'Không thể tạo liên kết thanh toán VNPay. Vui lòng thử lại.';
+            setPaymentError(errorMessage);
             setPaymentStatus('error');
         }
     };
@@ -377,6 +645,12 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         // If VNPay is selected, use VNPay flow
         if (paymentMethod === 'vnpay') {
             await handleVNPayPayment();
+            return;
+        }
+        
+        // If PayOS is selected, use PayOS flow
+        if (paymentMethod === 'payos') {
+            await handlePayOSPayment();
             return;
         }
 
@@ -518,6 +792,26 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                                     <Badge className="bg-emerald-100 text-emerald-700 text-xs">Khuyến nghị</Badge>
                                                 </div>
                                                 <p className="text-sm text-gray-600">Thanh toán trực tuyến an toàn, nhanh chóng</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* PayOS */}
+                                    <div 
+                                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                            paymentMethod === 'payos' 
+                                                ? 'border-emerald-500 bg-emerald-50' 
+                                                : 'border-gray-200 hover:border-gray-300'
+                                        }`}
+                                        onClick={() => setPaymentMethod('payos')}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Wallet className="w-5 h-5 text-blue-600" />
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-medium">PayOS</p>
+                                                </div>
+                                                <p className="text-sm text-gray-600">Thanh toán qua PayOS (QR Code, Banking)</p>
                                             </div>
                                         </div>
                                     </div>

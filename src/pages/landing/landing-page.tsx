@@ -114,6 +114,8 @@ export default function LandingPage() {
           </div>
         </section>
 
+
+
         {/* Search Section (name, sport, date, time, location) */}
         <section className="py-12 bg-gray-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,6 +124,24 @@ export default function LandingPage() {
               <p className="text-gray-600">Tìm theo tên sân, loại thể thao, ngày/giờ và địa điểm</p>
             </div>
 
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div className="flex flex-col items-center md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Tên Sân</label>
+                  <Input
+                    className="w-full text-left"
+                    placeholder="Nhập tên sân (tùy chọn)"
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Thể Loại</label>
+                  <div className="w-full">
+                    <Select value={selectedSport} onValueChange={setSelectedSport}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn môn" />
             <div className="bg-white rounded-lg shadow p-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                 <div className="flex flex-col items-center md:col-span-1">

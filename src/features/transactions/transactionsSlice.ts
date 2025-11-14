@@ -4,13 +4,22 @@ import {
     createVNPayUrl,
     getTransactionByBooking,
     updateTransactionStatus,
+    verifyVNPayPayment,
+    createPayOSPayment,
+    verifyPayOSPayment,
+    queryPayOSTransaction,
+    cancelPayOSPayment,
 } from "./transactionsThunk";
-import { verifyVNPayPayment } from "./transactionsThunk";
 
 const initialState: PaymentState = {
     currentPayment: null,
     loading: false,
     error: null,
+    // PayOS specific states
+    payosPaymentLink: null,
+    payosOrderCode: null,
+    payosVerificationResult: null,
+    payosQueryResult: null,
 };
 
 const transactionsSlice = createSlice({
@@ -77,6 +86,69 @@ const transactionsSlice = createSlice({
         builder.addCase(verifyVNPayPayment.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload || { message: "Verification failed", status: "500" };
+        });
+
+        // ============================================
+        // PayOS Thunks
+        // ============================================
+        
+        // Create PayOS Payment
+        builder.addCase(createPayOSPayment.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+            state.payosPaymentLink = null;
+        });
+        builder.addCase(createPayOSPayment.fulfilled, (state, action) => {
+            state.loading = false;
+            state.payosPaymentLink = action.payload;
+            state.payosOrderCode = action.payload.orderCode;
+        });
+        builder.addCase(createPayOSPayment.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || { message: "Failed to create PayOS payment", status: "500" };
+        });
+
+        // Verify PayOS Payment
+        builder.addCase(verifyPayOSPayment.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(verifyPayOSPayment.fulfilled, (state, action) => {
+            state.loading = false;
+            state.payosVerificationResult = action.payload;
+        });
+        builder.addCase(verifyPayOSPayment.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || { message: "PayOS verification failed", status: "500" };
+        });
+
+        // Query PayOS Transaction
+        builder.addCase(queryPayOSTransaction.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(queryPayOSTransaction.fulfilled, (state, action) => {
+            state.loading = false;
+            state.payosQueryResult = action.payload;
+        });
+        builder.addCase(queryPayOSTransaction.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || { message: "Failed to query PayOS transaction", status: "500" };
+        });
+
+        // Cancel PayOS Payment
+        builder.addCase(cancelPayOSPayment.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(cancelPayOSPayment.fulfilled, (state) => {
+            state.loading = false;
+            state.payosPaymentLink = null;
+            state.payosOrderCode = null;
+        });
+        builder.addCase(cancelPayOSPayment.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || { message: "Failed to cancel PayOS payment", status: "500" };
         });
     },
 });
