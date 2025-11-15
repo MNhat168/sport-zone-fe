@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getMyFields } from "../../features/field/fieldThunk"
 import { Filter } from "lucide-react"
 import { SportType } from "@/components/enums/ENUMS"
+import { PageWrapper } from "../../components/layouts/page-wrapper"
 
 const OwnerFieldListPage = () => {
     const fieldsListRef = useRef<HTMLDivElement>(null)
@@ -201,12 +202,11 @@ const OwnerFieldListPage = () => {
                 }
             `}</style>
             <NavbarDarkComponent />
-            <div className="pt-16">
+            <PageWrapper>
                 <PageHeader title="Quản lý sân thể thao" breadcrumbs={breadcrumbs} />
-            </div>
 
-            {/* Main container with flexbox layout */}
-            <div className="px-4 min-h-screen">
+                {/* Main container with flexbox layout */}
+                <div className="px-4 min-h-screen">
                 <div className="flex gap-6 items-start">
                     {/* Left Panel - Fields List */}
                     <div className="flex-[6] bg-white flex flex-col h-screen">
@@ -359,7 +359,8 @@ const OwnerFieldListPage = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
+            </PageWrapper>
 
             {/* Footer để đảm bảo có thể scroll */}
             <FooterComponent />

@@ -19,6 +19,7 @@ import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 // Coach Pages
 import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
 import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page";
+import CoachWalletPage from "../pages/coach-dashboard-page/coach-wallet-page";
 // Coach profile self-page for coaches only
 import CoachSelfDetailPage from "../pages/coach-profile-page/coach-profile-page";
 
@@ -40,6 +41,7 @@ import PayOSCancelPage from "../pages/transactions/payos-cancel-page.tsx";
 // Field Owner Pages
 import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-list-page";
 import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/field-owner-dashboard-page";
+import FieldOwnerWalletPage from "../pages/field-owner-dashboard-page/field-owner-wallet-page";
 import FieldHistoryBookingPage from "../pages/field-owner-dashboard-page/field-booking-list-page/field-booking-list-page";
 
 //Notification
@@ -265,6 +267,14 @@ export const coachRoutes: RouteObject[] = [
     ),
   },
   {
+    path: "/coach-wallet",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachWalletPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/coach/analytics",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
@@ -468,7 +478,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner/customers",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <Placeholder title="Quản lý khách hàng" />
+        <FieldOwnerWalletPage />
       </ProtectedRoute>
     ),
   },

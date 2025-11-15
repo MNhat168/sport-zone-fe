@@ -18,6 +18,7 @@ import { MapPin, Users, Search, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NavbarComponent } from "@/components/header/navbar-component";
 import { FooterComponent } from "@/components/footer/footer-component";
+import { PageWrapper } from "@/components/layouts/page-wrapper";
 
 
 
@@ -61,7 +62,7 @@ export default function LandingPage() {
       
       {/* Navbar */}
       <NavbarComponent />
-      <div className="min-h-screen">
+      <PageWrapper>
         {/* Hero Section */}
         <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
           {/* Slide Images */}
@@ -457,7 +458,7 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-      </div>
+      </PageWrapper>
       {/* Footer */}
       <FooterComponent />
     </>

@@ -18,6 +18,7 @@ export default function PayOSReturnPage() {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [error, setError] = useState<string | null>(null);
   const [orderCode, setOrderCode] = useState<string | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   const [amount, setAmount] = useState<number>(0);
 
   /**
@@ -92,19 +93,17 @@ export default function PayOSReturnPage() {
           console.log('[PayOS Return] ✅ PayOS payment successful!');
           
           setAmount(result.amount);
+          setBookingId(result.bookingId || null);
           setStatus('success');
           
-          // Redirect to booking details after 2 seconds
+          // Redirect to user booking history page after 2 seconds
           setTimeout(() => {
-            if (result.bookingId) {
-              navigate(`/my-bookings/${result.bookingId}`, {
-                state: { message: 'Thanh toán thành công!' }
-              });
-            } else {
-              navigate('/my-bookings', {
-                state: { message: 'Thanh toán thành công!' }
-              });
-            }
+            navigate('/user-booking-history', {
+              state: { 
+                message: 'Thanh toán thành công!',
+                bookingId: result.bookingId 
+              }
+            });
           }, 2000);
         } else {
           // Payment failed
@@ -117,13 +116,14 @@ export default function PayOSReturnPage() {
           setError(errorMessage);
           setStatus('error');
           
-          // Redirect after 3 seconds
+          // Redirect to user booking history after 3 seconds
           setTimeout(() => {
-            if (result.bookingId) {
-              navigate(`/bookings/${result.bookingId}?payment=failed`);
-            } else {
-              navigate('/my-bookings');
-            }
+            navigate('/user-booking-history', {
+              state: { 
+                message: 'Thanh toán thất bại',
+                error: errorMessage 
+              }
+            });
           }, 3000);
         }
       } catch (error: any) {
@@ -131,9 +131,13 @@ export default function PayOSReturnPage() {
         setError(error.message || 'Có lỗi xảy ra khi xác thực thanh toán');
         setStatus('error');
         
-        // Redirect to bookings after 3 seconds
+        // Redirect to user booking history after 3 seconds
         setTimeout(() => {
-          navigate('/my-bookings');
+          navigate('/user-booking-history', {
+            state: { 
+              message: 'Có lỗi xảy ra khi xác thực thanh toán'
+            }
+          });
         }, 3000);
       }
     };
@@ -181,9 +185,20 @@ export default function PayOSReturnPage() {
                   </p>
                 )}
               </div>
-              <p className="text-gray-600 mt-4">
+              <p className="text-gray-600 mt-4 mb-4">
                 Đang chuyển hướng...
               </p>
+              <Button
+                onClick={() => navigate('/user-booking-history', {
+                  state: { 
+                    message: 'Thanh toán thành công!',
+                    bookingId: bookingId 
+                  }
+                })}
+                className="mt-2"
+              >
+                Xem danh sách đặt sân
+              </Button>
             </div>
           )}
 
@@ -210,11 +225,11 @@ export default function PayOSReturnPage() {
                 Đang chuyển hướng...
               </p>
               <Button
-                onClick={() => navigate('/my-bookings')}
+                onClick={() => navigate('/user-booking-history')}
                 variant="outline"
                 className="mt-2"
               >
-                Quay lại trang đặt sân
+                Quay lại danh sách đặt sân
               </Button>
             </div>
           )}
