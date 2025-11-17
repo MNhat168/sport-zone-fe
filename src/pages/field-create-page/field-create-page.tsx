@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { NavbarDarkComponent } from '@/components/header/navbar-dark-component';
-import PageWrapper from '@/components/layouts/page-wrapper';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { createField, createFieldWithImages } from '@/features/field/fieldThunk';
 import { clearErrors } from '@/features/field/fieldSlice';
@@ -10,7 +7,7 @@ import { getAmenitiesBySportType } from '@/features/amenities';
 import type { CreateFieldPayload, PriceRange, FieldLocation } from '@/types/field-type';
 import type { AmenityWithPrice } from '@/types/amenity-with-price';
 import { CustomFailedToast, CustomSuccessToast } from '@/components/toast/notificiation-toast';
-import { FieldOwnerDashboardTabs } from '@/components/tabs/field-owner-dashboard-tabs';
+import { FieldOwnerDashboardLayout } from '@/components/layouts/field-owner-dashboard-layout';
 import {
     BasicInfoCard,
     PriceCard,
@@ -22,13 +19,10 @@ import {
     GalleryCard,
     LocationCard
 } from '@/pages/field-create-page/component/field-create';
-import { FieldOwnerDashboardHeader } from '@/components/header/field-owner-dashboard-header';
 export default function FieldCreatePage() {
     const dispatch = useAppDispatch();
     const { createLoading, createWithImagesLoading, createError, createWithImagesError } = useAppSelector((state) => state.field);
 
-    // Tab management
-    const [activeTab, setActiveTab] = useState('basic');
 
     // Form state
     const [formData, setFormData] = useState<CreateFieldPayload>({
@@ -79,17 +73,6 @@ export default function FieldCreatePage() {
         }));
     }, []);
 
-    const tabs = [
-        { id: 'basic', label: 'Thông tin cơ bản' },
-        { id: 'price', label: 'Giá sân' },
-        { id: 'availability', label: 'Lịch trống' },
-        { id: 'overview', label: 'Tổng quan' },
-        { id: 'includes', label: 'Bao gồm' },
-        { id: 'rules', label: 'Quy định' },
-        { id: 'amenities', label: 'Tiện ích' },
-        { id: 'gallery', label: 'Thư viện ảnh' },
-        { id: 'locations', label: 'Vị trí' }
-    ];
 
     // Fetch amenities when sportType changes
     useEffect(() => {
@@ -230,7 +213,10 @@ export default function FieldCreatePage() {
             CustomFailedToast('Vui lòng nhập mô tả sân');
             return false;
         }
-        if (!formData.location.trim()) {
+        const locationString = typeof formData.location === 'string' 
+            ? formData.location 
+            : formData.location?.address || '';
+        if (!locationString.trim()) {
             CustomFailedToast('Vui lòng nhập địa chỉ sân');
             return false;
         }
@@ -311,7 +297,7 @@ export default function FieldCreatePage() {
                 console.log('[CreateField] Total files to send:', filesToUpload.length);
                 try {
                     console.table(filesToUpload.map(f => ({ name: f.name, size: f.size, type: f.type })));
-                } catch (_) {
+                } catch {
                     // Fallback if console.table not available
                     filesToUpload.forEach((f, idx) => console.log(`[CreateField] File[${idx}]`, { name: f.name, size: f.size, type: f.type }));
                 }
@@ -359,7 +345,6 @@ export default function FieldCreatePage() {
             setGalleryPreviews([]);
             setSelectedIncludes([]);
             setSelectedAmenities([]);
-            setActiveTab('basic');
 
         } catch (error) {
             console.error('Error creating field:', error);
@@ -503,45 +488,22 @@ export default function FieldCreatePage() {
     };
 
     return (
-        <>
-            <PageWrapper>
-                <FieldOwnerDashboardHeader />
-                <FieldOwnerDashboardTabs />
-                <NavbarDarkComponent />
-
-                <div className="min-h-screen bg-gray-50">
+        <FieldOwnerDashboardLayout>
+            <div className="min-h-screen bg-background-secondary py-8">
                     <div className="max-w-7xl mx-auto space-y-12">
-                        {/* Tab Navigation */}
-                        <Card className="shadow-md border-0">
-                            <CardContent className="pt-5">
-                                <div className="flex flex-wrap gap-3.5 justify-center">
-                                    {tabs.map(tab => (
-                                        <Button
-                                            key={tab.id}
-                                            variant={activeTab === tab.id ? 'default' : 'outline'}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            className={`h-12 border-0 shadow-sm transition-colors ${activeTab === tab.id
-                                                    ? 'bg-black text-white hover: hover:!text-white'
-                                                    : 'bg-white text-gray-700 hover:bg-black hover:text-white'
-                                                }`}
-                                        >
-                                            {tab.label}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-
                         {/* Basic Info Section */}
-                        <BasicInfoCard
-                            formData={formData}
-                            onInputChange={handleInputChange}
-                        />
+                        <div id="section-basic">
+                            <BasicInfoCard
+                                formData={formData}
+                                onInputChange={handleInputChange}
+                            />
+                        </div>
 
                         {/* Basic Price Section */}
-                        <PriceCard
-                            formData={formData}
-                            onInputChange={handleInputChange}
+                        <div id="section-price">
+                            <PriceCard
+                                formData={formData}
+                                onInputChange={handleInputChange}
                             onApplyDefaultHours={(start: string, end: string) => {
                                 // Always apply to all available days
                                 const targetDays = availableDays.map(d => d.value);
@@ -568,11 +530,12 @@ export default function FieldCreatePage() {
                                     return copy;
                                 });
                             }}
-                        />
-
+                            />
+                        </div>
 
                         {/* Availability Section */}
-                        <AvailabilityCard
+                        <div id="section-availability">
+                            <AvailabilityCard
                             selectedDays={selectedDays}
                             dayAvailability={dayAvailability}
                             editingDay={editingDay}
@@ -639,45 +602,59 @@ export default function FieldCreatePage() {
                             onResetAvailability={handleResetAvailability}
                             onSaveAvailability={handleSaveAvailability}
                         />
+                        </div>
+                        
                         {/* Venue Overview Section */}
-                        <OverviewCard
-                            formData={formData}
-                            onInputChange={handleInputChange}
-                        />
+                        <div id="section-overview">
+                            <OverviewCard
+                                formData={formData}
+                                onInputChange={handleInputChange}
+                            />
+                        </div>
 
                         {/* Includes Section */}
-                        <IncludesCard
-                            selectedIncludes={selectedIncludes}
-                            onIncludesChange={handleIncludesChange}
-                            sportType={formData.sportType}
-                        />
+                        <div id="section-includes">
+                            <IncludesCard
+                                selectedIncludes={selectedIncludes}
+                                onIncludesChange={handleIncludesChange}
+                                sportType={formData.sportType}
+                            />
+                        </div>
 
                         {/* Venue Rules Section */}
-                        <RulesCard />
+                        <div id="section-rules">
+                            <RulesCard />
+                        </div>
 
                         {/* Amenities Section */}
-                        <AmenitiesCard
-                            selectedAmenities={selectedAmenities}
-                            onAmenitiesChange={handleAmenitiesChange}
-                            sportType={formData.sportType}
-                        />
+                        <div id="section-amenities">
+                            <AmenitiesCard
+                                selectedAmenities={selectedAmenities}
+                                onAmenitiesChange={handleAmenitiesChange}
+                                sportType={formData.sportType}
+                            />
+                        </div>
 
                         {/* Gallery Section */}
-                        <GalleryCard
-                            avatarPreview={avatarPreview}
-                            onAvatarUpload={handleAvatarUpload}
-                            onRemoveAvatar={removeAvatar}
-                            galleryPreviews={galleryPreviews}
-                            onGalleryUpload={handleGalleryUpload}
-                            onRemoveGalleryImage={removeGalleryImage}
-                        />
+                        <div id="section-gallery">
+                            <GalleryCard
+                                avatarPreview={avatarPreview}
+                                onAvatarUpload={handleAvatarUpload}
+                                onRemoveAvatar={removeAvatar}
+                                galleryPreviews={galleryPreviews}
+                                onGalleryUpload={handleGalleryUpload}
+                                onRemoveGalleryImage={removeGalleryImage}
+                            />
+                        </div>
 
                         {/* Location Section */}
-                        <LocationCard
-                            formData={formData}
-                            onInputChange={handleInputChange}
-                            onLocationChange={handleLocationChange}
-                        />
+                        <div id="section-locations">
+                            <LocationCard
+                                formData={formData}
+                                onInputChange={handleInputChange}
+                                onLocationChange={handleLocationChange}
+                            />
+                        </div>
 
                         {/* Actions */}
                         <div className="flex justify-center gap-3">
@@ -700,7 +677,6 @@ export default function FieldCreatePage() {
 
                     </div>
                 </div>
-            </PageWrapper>
-        </>
+        </FieldOwnerDashboardLayout>
     );
 }

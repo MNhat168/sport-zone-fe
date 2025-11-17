@@ -47,8 +47,8 @@ export const NavbarComponent = () => {
 
     // Gom style theo trạng thái scroll
     const linkClass = isScrolled
-        ? "text-sm font-medium text-gray-900 hover:text-green-600"
-        : "text-sm font-medium text-white";
+        ? "text-base font-medium text-gray-900 hover:text-green-600"
+        : "text-base font-medium text-white";
     const iconClass = isScrolled
         ? "h-5 w-5 text-gray-900 hover:text-green-600"
         : "h-5 w-5 text-white";
@@ -63,7 +63,7 @@ export const NavbarComponent = () => {
                 : "bg-transparent"
                 }`}
         >
-            <div className="container mx-auto max-w-screen-2xl flex h-18 items-center justify-between px-4">
+            <div className="container mx-auto max-w-screen-2xl flex h-20 items-center justify-between px-4">
                 {/* Logo */}
                 <Link
                     to="/"
@@ -126,7 +126,7 @@ export const NavbarComponent = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 align="end"
-                                className="w-48 bg-white shadow-md border border-gray-200 rounded-md"
+                                className="w-56 bg-white shadow-md border border-gray-200 rounded-md"
                             >
                                 {auth.user?.role === "user" && (
                                     <UserDropdownMenuItems />
@@ -145,8 +145,8 @@ export const NavbarComponent = () => {
                                     className="w-full justify-start bg-white text-green-600 hover:bg-white-50 hover:text-green-700"
                                     onClick={handleLogout}
                                 >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Đăng xuất</span>
+                                    <LogOut className="mr-2 h-5 w-5" />
+                                    <span className="text-base">Đăng xuất</span>
                                 </Button>
                             </DropdownMenuContent>
 

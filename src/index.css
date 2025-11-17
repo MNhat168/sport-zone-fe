@@ -28,7 +28,7 @@ body {
   --color-foreground: #192335; /* heavy blue */
   --color-border: #e0e0e0; /* light gray */
   --color-ring: #667eea; /* blue */
-
+  --color-background-secondary: #F9F9F6;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
 
@@ -53,7 +53,7 @@ body {
   --popover: var(--color-background);
   --popover-foreground: var(--color-foreground);
   --primary: var(--color-primary);
-  --primary-foreground: var(--color-foreground);
+  --primary-foreground: var(--color-background);
   --secondary: var(--color-secondary);
   --secondary-foreground: var(--color-foreground);
   --muted: var(--color-background);
@@ -82,7 +82,7 @@ body {
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

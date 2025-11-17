@@ -1,0 +1,370 @@
+"use client";
+
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout";
+import { BookingFilters } from "./components/booking-filter";
+import { BookingTable } from "./components/booking-table";
+import { BookingPagination } from "./components/field-history-booking-page";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Loader2 } from "lucide-react";
+import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
+import { getMyFieldsBookings } from "@/features/field/fieldThunk";
+import type { FieldOwnerBooking } from "@/types/field-type";
+import { formatCurrency } from "@/utils/format-currency";
+import { format, parseISO } from "date-fns";
+import { vi } from "date-fns/locale";
+import { TransactionStatus } from "@/components/enums/ENUMS";
+
+// Helper function to format date from YYYY-MM-DD to Vietnamese format
+const formatDate = (dateStr: string): string => {
+    try {
+        const date = parseISO(dateStr);
+        return format(date, "EEEE, d 'Tháng' M", { locale: vi });
+    } catch {
+        return dateStr;
+    }
+};
+
+// Helper function to format time from HH:mm to 12-hour format
+const formatTime = (time24h: string): string => {
+    try {
+        const [hours, minutes] = time24h.split(":");
+        const hour = parseInt(hours, 10);
+        const period = hour >= 12 ? "PM" : "AM";
+        const hour12 = hour % 12 || 12;
+        return `${hour12.toString().padStart(2, "0")}:${minutes} ${period}`;
+    } catch {
+        return time24h;
+    }
+};
+
+// Helper function to map API booking to UI format
+const mapBookingToUI = (booking: FieldOwnerBooking) => {
+    const startTime12h = formatTime(booking.startTime);
+    const endTime12h = formatTime(booking.endTime);
+    
+    // Map transaction status from API to UI format (prefer transactionStatus over status)
+    const transactionStatus = booking.transactionStatus || booking.status;
+    let status: "awaiting" | "accepted" | "rejected" = "awaiting";
+    let statusText = "Chờ Xác Nhận";
+    
+    switch (transactionStatus) {
+        case TransactionStatus.PENDING:
+            status = "awaiting";
+            statusText = "Đang Chờ";
+            break;
+        case TransactionStatus.PROCESSING:
+            status = "awaiting";
+            statusText = "Đang Xử Lý";
+            break;
+        case TransactionStatus.SUCCEEDED:
+            status = "accepted";
+            statusText = "Thành Công";
+            break;
+        case TransactionStatus.FAILED:
+            status = "rejected";
+            statusText = "Thất Bại";
+            break;
+        case TransactionStatus.CANCELLED:
+            status = "rejected";
+            statusText = "Đã Hủy";
+            break;
+        case TransactionStatus.REFUNDED:
+            status = "rejected";
+            statusText = "Đã Hoàn Tiền";
+            break;
+        default:
+            // Fallback to booking status for backward compatibility
+            switch (booking.status) {
+                case "pending":
+                    status = "awaiting";
+                    statusText = "Chờ Xác Nhận";
+                    break;
+                case "confirmed":
+                    status = "accepted";
+                    statusText = "Đã Chấp Nhận";
+                    break;
+                case "cancelled":
+                    status = "rejected";
+                    statusText = "Đã Hủy";
+                    break;
+                case "completed":
+                    status = "accepted";
+                    statusText = "Đã Hoàn Thành";
+                    break;
+            }
+    }
+
+    return {
+        id: booking.bookingId,
+        academyName: booking.fieldName,
+        courtName: booking.fieldName, // Using fieldName as courtName
+        academyImage: "/images/academies/default.jpg", // Default image
+        date: formatDate(booking.date),
+        time: `${startTime12h} - ${endTime12h}`,
+        payment: formatCurrency(booking.totalPrice, "VND"),
+        status,
+        statusText,
+        // Store original booking data for details modal
+        originalBooking: booking,
+    };
+};
+
+// Helper function to map tab to TransactionStatus
+const mapTabToTransactionStatus = (tab: string): TransactionStatus | undefined => {
+    switch (tab) {
+        case TransactionStatus.PENDING:
+            return TransactionStatus.PENDING;
+        case TransactionStatus.PROCESSING:
+            return TransactionStatus.PROCESSING;
+        case TransactionStatus.SUCCEEDED:
+            return TransactionStatus.SUCCEEDED;
+        case TransactionStatus.FAILED:
+            return TransactionStatus.FAILED;
+        case TransactionStatus.CANCELLED:
+            return TransactionStatus.CANCELLED;
+        case TransactionStatus.REFUNDED:
+            return TransactionStatus.REFUNDED;
+        default:
+            return undefined;
+    }
+};
+
+// Helper function to get date range from time filter
+const getDateRangeFromTimeFilter = (timeFilter: string): { startDate?: string; endDate?: string } => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    switch (timeFilter) {
+        case "this-week": {
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            return {
+                startDate: format(startOfWeek, "yyyy-MM-dd"),
+                endDate: format(endOfWeek, "yyyy-MM-dd"),
+            };
+        }
+        case "this-month": {
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            return {
+                startDate: format(startOfMonth, "yyyy-MM-dd"),
+                endDate: format(endOfMonth, "yyyy-MM-dd"),
+            };
+        }
+        case "last-month": {
+            const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+            return {
+                startDate: format(startOfLastMonth, "yyyy-MM-dd"),
+                endDate: format(endOfLastMonth, "yyyy-MM-dd"),
+            };
+        }
+        case "all":
+        default:
+            return {};
+    }
+};
+
+export default function FieldHistoryBookingPage() {
+    const dispatch = useAppDispatch();
+    const { fieldOwnerBookings, fieldOwnerBookingsPagination, fieldOwnerBookingsLoading, fieldOwnerBookingsError } = useAppSelector((state) => state.field);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState<any>();
+    const [activeTab, setActiveTab] = useState<TransactionStatus>(TransactionStatus.PENDING);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [timeFilter, setTimeFilter] = useState("all");
+
+    // Listen for tab changes from sidebar
+    useEffect(() => {
+        const handleTabChange = (event: CustomEvent<{ tab: string }>) => {
+            const tab = event.detail.tab as TransactionStatus;
+            if (Object.values(TransactionStatus).includes(tab)) {
+                setActiveTab(tab);
+                setCurrentPage(1); // Reset to first page when tab changes
+            }
+        };
+
+        window.addEventListener('booking-history-tab-change', handleTabChange as EventListener);
+        return () => {
+            window.removeEventListener('booking-history-tab-change', handleTabChange as EventListener);
+        };
+    }, []);
+
+    // Fetch bookings when filters change
+    const fetchBookings = useCallback(() => {
+        const transactionStatus = mapTabToTransactionStatus(activeTab);
+        const dateRange = getDateRangeFromTimeFilter(timeFilter);
+        
+        dispatch(getMyFieldsBookings({
+            fieldName: searchQuery || undefined,
+            transactionStatus,
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate,
+            page: currentPage,
+            limit: itemsPerPage,
+        }));
+    }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage]);
+
+    // Fetch bookings on mount and when filters change
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
+
+    const handleViewDetails = (bookingId: string) => {
+        const booking = fieldOwnerBookings?.find(b => b.bookingId === bookingId);
+        if (booking) {
+            // Map booking data to modal format
+            const startTime12h = formatTime(booking.startTime);
+            const endTime12h = formatTime(booking.endTime);
+            const bookingDate = formatDate(booking.date);
+            
+            setSelectedBooking({
+                academy: booking.fieldName,
+                court: booking.fieldName,
+                bookedOn: bookingDate,
+                bookingDate: bookingDate,
+                bookingTime: `${startTime12h} - ${endTime12h}`,
+                totalAmountPaid: formatCurrency(booking.totalPrice, "VND"),
+                customer: booking.customer,
+                amenities: booking.selectedAmenities,
+                amenitiesFee: booking.amenitiesFee ? formatCurrency(booking.amenitiesFee, "VND") : "0 đ",
+                originalBooking: booking,
+            });
+            setIsDetailsOpen(true);
+        }
+    };
+
+    const handleChat = (bookingId: string) => {
+        // Handle chat functionality
+        console.log("Open chat for booking:", bookingId);
+    };
+
+    const handleSearch = (value: string) => {
+        setSearchQuery(value);
+        setCurrentPage(1); // Reset to first page when searching
+    };
+
+    const handleTimeFilterChange = (value: string) => {
+        setTimeFilter(value);
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
+
+    const handleSortChange = (value: string) => {
+        // Note: Backend doesn't support sort yet, so we'll handle it client-side if needed
+        console.log("Sort:", value);
+    };
+
+    const handleTabChangeFromFilter = (value: string) => {
+        // This is for the courts/coaches tab in the filter, not the status tab
+        console.log("Tab:", value);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (items: number) => {
+        setItemsPerPage(items);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
+    // Map bookings from API to UI format
+    const mappedBookings = useMemo(() => {
+        if (!fieldOwnerBookings) return [];
+        return fieldOwnerBookings.map(mapBookingToUI);
+    }, [fieldOwnerBookings]);
+
+    // Get pagination info
+    const pagination = fieldOwnerBookingsPagination;
+    const totalPages = pagination?.totalPages || 1;
+
+    return (
+        <FieldOwnerDashboardLayout>
+            <div className="space-y-6">
+                {/* Main Content Card */}
+                <Card className="bg-white shadow-md rounded-none border-0 gap-0">
+                    <CardHeader className="border-b">
+                        <CardTitle className="text-xl font-semibold text-start">
+                            Đặt Chỗ Của Tôi
+                        </CardTitle>
+                        <p className="text-gray-600 text-base mt-1.5 text-start">
+                            Quản lý và theo dõi tất cả các đặt chỗ sân sắp tới của bạn.
+                        </p>
+                        <div className="mt-4">
+                            <BookingFilters
+                                onSearch={handleSearch}
+                                onTimeFilterChange={handleTimeFilterChange}
+                                onSortChange={handleSortChange}
+                                onTabChange={handleTabChangeFromFilter}
+                            />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {/* Error State */}
+                        {fieldOwnerBookingsError && (
+                            <Alert variant="destructive" className="mb-4">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                    {fieldOwnerBookingsError.message || "Có lỗi xảy ra khi tải dữ liệu đặt chỗ"}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        {/* Loading State */}
+                        {fieldOwnerBookingsLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                            <>
+                                {/* Empty State */}
+                                {mappedBookings.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-gray-500 text-lg">Không có đặt chỗ nào</p>
+                                        <p className="text-gray-400 text-sm mt-2">
+                                            {searchQuery || timeFilter !== "all" || activeTab !== TransactionStatus.PENDING
+                                                ? "Thử thay đổi bộ lọc để xem thêm kết quả"
+                                                : "Bạn chưa có đặt chỗ nào"}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <BookingTable
+                                        bookings={mappedBookings}
+                                        onViewDetails={handleViewDetails}
+                                        onChat={handleChat}
+                                    />
+                                )}
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Pagination */}
+                {!fieldOwnerBookingsLoading && mappedBookings.length > 0 && (
+                    <BookingPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                    />
+                )}
+            </div>
+
+            {/* Booking Details Modal */}
+            <CourtBookingDetails
+                isOpen={isDetailsOpen}
+                onClose={() => setIsDetailsOpen(false)}
+                bookingData={selectedBooking}
+            />
+        </FieldOwnerDashboardLayout>
+    );
+}

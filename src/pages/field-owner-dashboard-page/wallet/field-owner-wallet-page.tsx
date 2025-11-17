@@ -6,10 +6,7 @@ import { vi } from "date-fns/locale"
 import { Building2, RefreshCcw } from "lucide-react"
 import { toast } from "sonner"
 
-import { FieldOwnerDashboardHeader } from "@/components/header/field-owner-dashboard-header"
-import { FieldOwnerDashboardTabs } from "@/components/tabs/field-owner-dashboard-tabs"
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
-import { PageWrapper } from "@/components/layouts/page-wrapper"
+import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -73,13 +70,8 @@ export default function FieldOwnerWalletPage() {
   }
 
   return (
-    <>
-      <NavbarDarkComponent />
-      <PageWrapper className="bg-gray-50">
-        <FieldOwnerDashboardHeader />
-        <FieldOwnerDashboardTabs />
-
-        <div className="container mx-auto px-6 pb-16">
+    <FieldOwnerDashboardLayout>
+      <div className="container mx-auto px-6 pb-16">
           <div className="grid gap-6 lg:grid-cols-3">
             <WalletSummaryCard
               title="Doanh thu đang chờ chuyển khoản"
@@ -219,8 +211,7 @@ export default function FieldOwnerWalletPage() {
             />
           </div>
         </div>
-      </PageWrapper>
-    </>
+    </FieldOwnerDashboardLayout>
   )
 }
 

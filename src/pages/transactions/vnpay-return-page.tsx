@@ -11,7 +11,7 @@ import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
  */
 interface PaymentVerificationResult {
   success: boolean;
-  paymentStatus: 'succeeded' | 'failed' | 'pending' | 'completed' | string;
+  paymentStatus: 'succeeded' | 'failed' | 'pending' | string;
   bookingId: string;
   message: string;
   reason?: string;

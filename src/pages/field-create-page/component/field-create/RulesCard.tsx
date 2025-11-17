@@ -12,7 +12,7 @@ export default function RulesCard() {
     };
 
     return (
-        <Card className="shadow-md border-0">
+        <Card className="bg-white shadow-md border-0">
             <CardHeader 
                 onClick={toggleExpanded}
                 className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"

@@ -69,7 +69,7 @@ export default function AvailabilityCard({
     // console.log('AvailabilityCard - selectedDays:', selectedDays);
 
     return (
-        <Card className="shadow-lg border-0">
+        <Card className="bg-white shadow-lg border-0">
             <CardHeader
                 onClick={toggleExpanded}
                 className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
