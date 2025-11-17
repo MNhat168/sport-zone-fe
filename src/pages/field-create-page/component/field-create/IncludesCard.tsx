@@ -83,7 +83,7 @@ export default function IncludesCard({ selectedIncludes, onIncludesChange, sport
 
     return (
         // type FACILITY và COACH in includes
-        <Card className="shadow-md border-0">
+        <Card className="bg-white shadow-md border-0">
             <CardHeader
                 onClick={toggleExpanded}
                 className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"

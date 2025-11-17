@@ -1,7 +1,6 @@
 "use client"
 
 import { NavbarDarkComponent } from "../../components/header/navbar-dark-component"
-
 import FieldCard from "./card-list/field-card-props"
 import { useRef, useEffect, useState } from "react"
 import { FooterComponent } from "../../components/footer/footer-component"
@@ -15,133 +14,85 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
+import { FilterSidebar } from "./filter-sidebar"
 
 const FieldBookingPage = () => {
     const fieldsListRef = useRef<HTMLDivElement>(null)
     const dispatch = useAppDispatch()
-    
-    // Redux state
     const { fields, loading, error, pagination } = useAppSelector((state) => state.field)
     
-    // Filter states
-    const [filters, setFilters] = useState({
-        location: "",
-        type: "",
-        page: 1,
-        limit: 10
-    })
-
-    // Geolocation states
-    const {
-        loading: geolocationLoading,
-        supported: geolocationSupported,
-        getCoordinates
-    } = useGeolocation()
-
+    const [filters, setFilters] = useState({ location: "", type: "", page: 1, limit: 10 })
+    const { loading: geolocationLoading, supported: geolocationSupported, getCoordinates } = useGeolocation()
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
     const [nearbyFields, setNearbyFields] = useState<any[]>([])
     const [isLoadingNearby, setIsLoadingNearby] = useState(false)
     const [isNearbyMode, setIsNearbyMode] = useState(false)
-
-    // Filter UI state
     const [nameFilter, setNameFilter] = useState('')
     const [sportFilter, setSportFilter] = useState('all')
     const [timeFilter, setTimeFilter] = useState('any')
     const [locationFilter, setLocationFilter] = useState('')
     const [priceSort, setPriceSort] = useState<string>('')
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const skipNextDebounceRef = useRef(false)
-
-    // Leaflet map refs
+    const nameInputRef = useRef<HTMLInputElement>(null)
+    const locationInputRef = useRef<HTMLInputElement>(null)
     const mapContainerId = 'fields-map-container'
     const mapRef = useRef<any>(null)
     const markersRef = useRef<any[]>([])
 
-    // Geolocation functions
     const handleGetLocation = async () => {
         try {
-            console.log('📍 [FIELD LIST] Getting user location...')
             const coordinates = await getCoordinates()
-            
-            if (coordinates && coordinates.lat && coordinates.lng) {
+            if (coordinates?.lat && coordinates?.lng) {
                 setUserLocation(coordinates as { lat: number; lng: number })
-                console.log('✅ [FIELD LIST] Location obtained:', coordinates)
-                
-                // Get nearby fields
                 await getNearbyFields(coordinates.lat, coordinates.lng)
-            } else {
-                console.log('❌ [FIELD LIST] Failed to get coordinates')
             }
         } catch (error) {
-            console.error('❌ [FIELD LIST] Error getting location:', error)
+            console.error('Error getting location:', error)
         }
     }
 
     const getNearbyFields = async (lat: number, lng: number) => {
         setIsLoadingNearby(true)
         try {
-            console.log('🔍 [FIELD LIST] Getting nearby fields for:', { lat, lng })
-            
-            const result = await locationAPIService.getNearbyFields({
-                latitude: lat,
-                longitude: lng,
-                radius: 10, // 10km radius
-                limit: 20
-            })
-
-      if (result.success && result.data) {
-        setNearbyFields(result.data);
-        setIsNearbyMode(true);
-        console.log(
-          "✅ [FIELD LIST] Nearby fields loaded:",
-          result.data.length
-        );
-      } else {
-        console.error(
-          "❌ [FIELD LIST] Failed to get nearby fields:",
-          result.error
-        );
-        setNearbyFields([]);
-        setIsNearbyMode(false);
-      }
-    } catch (error) {
-      console.error("❌ [FIELD LIST] Error getting nearby fields:", error);
-      setNearbyFields([]);
-      setIsNearbyMode(false);
-    } finally {
-      setIsLoadingNearby(false);
+            const result = await locationAPIService.getNearbyFields({ latitude: lat, longitude: lng, radius: 10, limit: 20 })
+            if (result.success && result.data) {
+                setNearbyFields(result.data)
+                setIsNearbyMode(true)
+            } else {
+                setNearbyFields([])
+                setIsNearbyMode(false)
+            }
+        } catch {
+            setNearbyFields([])
+            setIsNearbyMode(false)
+        } finally {
+            setIsLoadingNearby(false)
+        }
     }
-  };
 
-    // Debounced fetch for all fields unless nearby mode is active
     useEffect(() => {
+        if (skipNextDebounceRef.current) {
+            skipNextDebounceRef.current = false
+            return
+        }
         const timeoutId = setTimeout(() => {
-            if (isNearbyMode) return
-            dispatch(getAllFields(filters))
-        }, 500) // 500ms delay for debouncing
-
+            if (!isNearbyMode) dispatch(getAllFields(filters))
+        }, 500)
         return () => clearTimeout(timeoutId)
     }, [dispatch, filters, isNearbyMode])
 
-    // Price formatting is now handled by backend (PriceFormatService)
-    // Backend returns formatted price in 'price' field (e.g., "200.000đ/giờ")
-
-    // When priceSort changes, auto-apply by updating `filters` so the debounced fetch runs.
     useEffect(() => {
-        // Update filters state so UI and URL sync continue to work
         setFilters((prev) => {
             const prevAny: any = prev
-            const sameSort = (
-                (!!prevAny.sortBy && prevAny.sortBy === 'price') === !!priceSort &&
+            const sameSort = (!!prevAny.sortBy && prevAny.sortBy === 'price') === !!priceSort &&
                 (priceSort ? prevAny.sortOrder === priceSort : !prevAny.sortOrder)
-            )
-            // If nothing changes and we're already on page 1, avoid unnecessary state churn
             if (sameSort && prev.page === 1) return prev
 
             const copy: any = { ...prevAny }
-            // remove existing sort keys
             delete copy.sortBy
             delete copy.sortOrder
-            if (priceSort) {
+            if (priceSort && priceSort !== 'none') {
                 copy.sortBy = 'price'
                 copy.sortOrder = priceSort
             }
@@ -149,134 +100,141 @@ const FieldBookingPage = () => {
             return copy
         })
 
-        // Immediately send the new sort to the server (unless we're in nearby mode)
-        // This bypasses the 500ms debounce so the list refreshes right away when sorting changes.
         if (isNearbyMode) return
 
-        try {
-            const base: any = {}
-            // Build payload from current local filters (not from `filters` to avoid re-run loops)
-            if (nameFilter && nameFilter.trim()) base.name = nameFilter.trim()
-            if (sportFilter && sportFilter !== 'all') base.sportType = sportFilter
-            if (timeFilter && timeFilter !== 'any') base.weekday = timeFilter
-            if (locationFilter && locationFilter.trim()) base.location = locationFilter.trim()
-            if (priceSort) {
-                base.sortBy = 'price'
-                base.sortOrder = priceSort
-            }
-            base.page = 1
-            base.limit = 10
-            // mark to skip the next debounced fetch
-            skipNextDebounceRef.current = true
-            dispatch(getAllFields(base))
-        } catch (error) {
-            console.error('❌ [FIELD LIST] Error sorting fields:', error)
+        const base: any = {}
+        if (nameFilter?.trim()) base.name = nameFilter.trim()
+        if (sportFilter !== 'all') base.sportType = sportFilter
+        if (timeFilter !== 'any') base.weekday = timeFilter
+        if (locationFilter?.trim()) base.location = locationFilter.trim()
+        if (priceSort && priceSort !== 'none') {
+            base.sortBy = 'price'
+            base.sortOrder = priceSort
         }
-    }, [priceSort, isNearbyMode, dispatch, nameFilter, sportFilter, timeFilter, locationFilter])
+        base.page = 1
+        base.limit = 10
+        skipNextDebounceRef.current = true
+        dispatch(getAllFields(base))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [priceSort, isNearbyMode])
 
-    // Read query params and update filters when location changes
     const location = useLocation()
     const navigate = useNavigate()
     useEffect(() => {
         try {
             const params = new URLSearchParams(location.search)
             const qType = params.get('type') || ''
-            // location should come from explicit location/loc param only — do NOT fallback to `name`
             const qLocation = params.get('location') || params.get('loc') || ''
             const qName = params.get('name') || ''
-            // weekday param from landing is 'weekday'
             const qWeekday = params.get('weekday') || params.get('time') || ''
 
-            // Update the filters used by the backend fetch
             setFilters((prev) => ({ ...prev, type: qType, sportType: qType, location: qLocation, page: 1 }))
-
-            // Also update the local UI filter controls so the page shows the selected values
-            // name input
             setNameFilter(qName)
-            // sport select: default to 'all' when missing to keep Select UI consistent
             setSportFilter(qType || 'all')
-            // weekday/time select: default to 'any' when missing
             setTimeFilter(qWeekday || 'any')
-            // location input
             setLocationFilter(qLocation)
         } catch (error: any) {
-            console.error('❌ [FIELD LIST] Error reading query params:', error)
+            console.error('Error reading query params:', error)
         }
     }, [location.search])
 
-    // Auto-sync local UI filters to `filters` so changes immediately trigger the debounced fetch.
-    // This makes name, sport (type), weekday (timeFilter) and location auto-apply without needing to click "Áp dụng lọc".
     useEffect(() => {
         setFilters((prev) => {
             const copy: any = { ...prev }
-
-            // name filter
-            if (nameFilter && nameFilter.trim()) {
+            if (nameFilter?.trim()) {
                 copy.name = nameFilter.trim()
             } else {
                 delete copy.name
             }
-
-            // sport/type filter: treat 'all' as empty
-            if (sportFilter && sportFilter !== 'all') {
+            if (sportFilter !== 'all') {
                 copy.type = sportFilter
-                copy.sportType = sportFilter // backend expects sportType
+                copy.sportType = sportFilter
             } else {
                 delete copy.type
                 delete copy.sportType
             }
-
-            // weekday/time filter: treat 'any' as empty
-            if (timeFilter && timeFilter !== 'any') {
+            if (timeFilter !== 'any') {
                 copy.weekday = timeFilter
             } else {
                 delete copy.weekday
             }
-
-            // location filter
-            if (locationFilter && locationFilter.trim()) {
+            if (locationFilter?.trim()) {
                 copy.location = locationFilter.trim()
             } else {
                 delete copy.location
             }
-
-            // always reset to first page when filters change
             copy.page = 1
-
             return copy
         })
     }, [nameFilter, sportFilter, timeFilter, locationFilter])
 
-    // Compute hasActiveFilters for reset button visibility
-    const hasActiveFilters = !!(
-        nameFilter ||
-        (sportFilter && sportFilter !== 'all') ||
-        (timeFilter && timeFilter !== 'any') ||
-        locationFilter ||
-        priceSort
-    )
+    const hasActiveFilters = !!(nameFilter || (sportFilter !== 'all') || (timeFilter !== 'any') || locationFilter || (priceSort && priceSort !== 'none') || isNearbyMode)
 
-    // Transform field data to match FieldCard props (prefer nearby when in nearby mode)
+    const forceSyncFilters = () => {
+        const currentNameValue = nameInputRef.current?.value.trim() || ''
+        const currentLocationValue = locationInputRef.current?.value.trim() || ''
+        
+        if (currentNameValue !== nameFilter) setNameFilter(currentNameValue)
+        if (currentLocationValue !== locationFilter) setLocationFilter(currentLocationValue)
+        
+        setFilters((prev) => {
+            const copy: any = { ...prev }
+            if (currentNameValue) copy.name = currentNameValue
+            else delete copy.name
+            if (currentLocationValue) copy.location = currentLocationValue.trim()
+            else delete copy.location
+            if (sportFilter !== 'all') {
+                copy.type = sportFilter
+                copy.sportType = sportFilter
+            } else {
+                delete copy.type
+                delete copy.sportType
+            }
+            if (timeFilter !== 'any') copy.weekday = timeFilter
+            else delete copy.weekday
+            copy.page = 1
+            return copy
+        })
+        
+        if (!isNearbyMode) {
+            const base: any = {}
+            if (currentNameValue) base.name = currentNameValue
+            if (currentLocationValue) base.location = currentLocationValue.trim()
+            if (sportFilter !== 'all') base.sportType = sportFilter
+            if (timeFilter !== 'any') base.weekday = timeFilter
+            if (priceSort && priceSort !== 'none') {
+                base.sortBy = 'price'
+                base.sortOrder = priceSort
+            }
+            base.page = 1
+            base.limit = 10
+            skipNextDebounceRef.current = true
+            dispatch(getAllFields(base))
+        }
+    }
+
     const transformedFields = ((isNearbyMode && nearbyFields.length > 0) ? nearbyFields : fields).map((field) => {
-        // Normalize location to a string for rendering
-        const rawLocation: any = (field as any).location ?? (field as any).address;
-        let locationText = 'Địa chỉ không xác định';
+        const rawLocation: any = (field as any).location ?? (field as any).address
+        let locationText = 'Địa chỉ không xác định'
         if (typeof rawLocation === 'string' && rawLocation.trim()) {
-            locationText = rawLocation;
+            locationText = rawLocation
         } else if (rawLocation && typeof rawLocation === 'object') {
-            const address = (rawLocation as any).address;
-            const geo = (rawLocation as any).geo;
-            const lat = geo?.latitude ?? geo?.lat;
-            const lng = geo?.longitude ?? geo?.lng;
+            const address = (rawLocation as any).address
+            const geo = (rawLocation as any).geo
+            const lat = geo?.latitude ?? geo?.lat
+            const lng = geo?.longitude ?? geo?.lng
             if (typeof address === 'string' && address.trim()) {
-                locationText = address;
+                locationText = address
             } else if (lat != null && lng != null) {
-                locationText = `${lat}, ${lng}`;
+                locationText = `${lat}, ${lng}`
             }
         }
 
-        // Backend provides formatted price in 'price' field (e.g., "200.000đ/giờ" or "N/A")
-        const formattedPrice = (field as any).price || 'N/A';
+        const fieldImages = (field as any).images
+        const hasValidImages = Array.isArray(fieldImages) && fieldImages.length > 0
+        const imageUrl = !hasValidImages 
+            ? '/general-img-portrait.png'
+            : ((field as any).imageUrl || fieldImages[0] || '/general-img-portrait.png')
 
         return {
             id: (field as any).id,
@@ -285,41 +243,32 @@ const FieldBookingPage = () => {
             description: (field as any).description || 'Mô tả không có sẵn',
             rating: (field as any).rating || 4.5,
             reviews: (field as any).reviews || (field as any).totalBookings || 0,
-            price: formattedPrice,
+            price: (field as any).price || 'N/A',
             nextAvailability: (field as any).isActive !== false ? 'Có sẵn' : 'Không có sẵn',
             sportType: (field as any).sportType || 'unknown',
-            imageUrl: (field as any).imageUrl || (field as any).images?.[0] || '/placeholder-field.jpg',
+            imageUrl,
             distance: (field as any).distance ? `${(field as any).distance.toFixed(1)} km` : undefined,
             latitude: (field as any).latitude ?? (field as any).lat ?? (field as any)?.geo?.lat ?? (field as any)?.geo?.latitude,
             longitude: (field as any).longitude ?? (field as any).lng ?? (field as any)?.geo?.lng ?? (field as any)?.geo?.longitude,
-        };
+        }
     })
 
-    // Apply simple client-side filters from URL query params (name, type, location)
     const urlParams = new URLSearchParams(location.search)
     const qName = (urlParams.get('name') || '').toLowerCase()
     const qType = (urlParams.get('type') || '').toLowerCase()
     const qLocation = (urlParams.get('location') || urlParams.get('loc') || '').toLowerCase()
 
-    // Apply URL filters
     const filteredTransformedFields = transformedFields.filter((f) => {
         if (qName) {
             const inName = (f.name || '').toLowerCase().includes(qName)
             const inLocation = (f.location || '').toLowerCase().includes(qName)
             if (!inName && !inLocation) return false
         }
-        if (qType) {
-            const sport = (f.sportType || '').toLowerCase()
-            if (sport && !sport.includes(qType)) return false
-        }
-        if (qLocation) {
-            const loc = (f.location || '').toLowerCase()
-            if (loc && !loc.includes(qLocation)) return false
-        }
+        if (qType && !(f.sportType || '').toLowerCase().includes(qType)) return false
+        if (qLocation && !(f.location || '').toLowerCase().includes(qLocation)) return false
         return true
     })
 
-    // Initialize map once
     useEffect(() => {
         ;(async () => {
             try {
@@ -353,44 +302,38 @@ const FieldBookingPage = () => {
                 if (!mapRef.current) {
                     const container = document.getElementById(mapContainerId)
                     if (!container) return
-                    mapRef.current = L.map(mapContainerId).setView([16.0471, 108.2062], 12) // default center Da Nang
+                    mapRef.current = L.map(mapContainerId).setView([16.0471, 108.2062], 12)
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         maxZoom: 19,
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(mapRef.current)
                 }
             } catch (error: any) {
-                console.error('❌ [FIELD LIST] Failed to initialize map', error)
+                console.error('Failed to initialize map', error)
             }
         })()
-        // no cleanup to preserve map instance
     }, [])
 
-  // Update markers when data changes
-  useEffect(() => {
-    const L: any = (window as any).L;
-    if (!L || !mapRef.current) return;
+    useEffect(() => {
+        const L: any = (window as any).L
+        if (!L || !mapRef.current) return
 
-    // Clear old markers
-    markersRef.current.forEach((m) => m.remove && m.remove());
-    markersRef.current = [];
+        markersRef.current.forEach((m) => m.remove && m.remove())
+        markersRef.current = []
+        const bounds = L.latLngBounds([])
 
-    const bounds = L.latLngBounds([]);
+        if (userLocation?.lat && userLocation?.lng) {
+            const userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
+                radius: 6,
+                color: "#2563eb",
+                fillColor: "#3b82f6",
+                fillOpacity: 0.9,
+            }).addTo(mapRef.current)
+            userMarker.bindPopup("Vị trí của bạn")
+            markersRef.current.push(userMarker)
+            bounds.extend([userLocation.lat, userLocation.lng])
+        }
 
-    // User location marker
-    if (userLocation && userLocation.lat && userLocation.lng) {
-      const userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
-        radius: 6,
-        color: "#2563eb",
-        fillColor: "#3b82f6",
-        fillOpacity: 0.9,
-      }).addTo(mapRef.current);
-      userMarker.bindPopup("Vị trí của bạn");
-      markersRef.current.push(userMarker);
-      bounds.extend([userLocation.lat, userLocation.lng]);
-    }
-
-        // Field markers
         filteredTransformedFields.forEach((f) => {
             if (f.latitude != null && f.longitude != null) {
                 const marker = L.marker([f.latitude, f.longitude]).addTo(mapRef.current)
@@ -400,12 +343,12 @@ const FieldBookingPage = () => {
                         <div style="font-size:12px;color:#4b5563;">${f.location}</div>
                         ${f.price ? `<div style="font-size:12px;margin-top:4px;color:#065f46">Giá: ${f.price}</div>` : ''}
                     </div>
-                `;
-        marker.bindPopup(popupHtml);
-        markersRef.current.push(marker);
-        bounds.extend([f.latitude, f.longitude]);
-      }
-    });
+                `
+                marker.bindPopup(popupHtml)
+                markersRef.current.push(marker)
+                bounds.extend([f.latitude, f.longitude])
+            }
+        })
 
         if (bounds.isValid()) {
             mapRef.current.fitBounds(bounds.pad(0.2))
@@ -415,99 +358,47 @@ const FieldBookingPage = () => {
     return (
         <div className="min-h-screen">
             <style>{`
-                /* Custom scrollbar styles */
                 .scrollbar-hide {
                     -ms-overflow-style: none;
                     scrollbar-width: none;
                 }
-
                 .scrollbar-hide::-webkit-scrollbar {
                     display: none;
                 }
-
-                /* Smooth scroll snap behavior */
                 .scroll-snap-start {
                     scroll-snap-align: start;
                 }
-
-                /* Custom scroll container */
                 .custom-scroll-container {
                     scroll-behavior: smooth;
                     overflow-y: auto;
                 }
-
-                /* Map container specific styles */
                 .map-container {
                     position: sticky;
-                    top: 80px; /* 80px = navbar height (h-20) */
-                    height: calc(100vh); /* Full viewport height minus navbar */
+                    top: 80px;
+                    height: calc(100vh);
                     overflow: hidden;
-                    z-index: 10; /* Lower than navbar (z-50) */
+                    z-index: 10;
                 }
             `}</style>
             <NavbarDarkComponent />
             <PageWrapper>
-                {/* Main container with flexbox layout */}
                 <div className="flex flex-row">
-                    <div className="w-full flex-[6]">
+                    <div className="w-full flex-6">
                         <div className="items-start">
-                            {/* Left Panel - Fields List */}
-                            <div className="bg-white flex flex-col h-screen p-4">
-                                {/* Filters */}
+                            <div className="bg-background-secondary flex flex-col h-screen p-4">
                                 <div className="p-4 border-b border-gray-200">
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex-1 flex items-center gap-3 flex-wrap">
-                                            <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                                <Filter className="w-4 h-4" /> Lọc sân
-                                            </h3>
-
-                                            <Input className="min-w-[180px]" placeholder="Tên sân" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} />
-                                            <Input className="min-w-[180px]" placeholder="Địa điểm" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} />
-
-                                            <Select value={sportFilter} onValueChange={setSportFilter}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Thể loại" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">Tất cả</SelectItem>
-                                                    <SelectItem value="football">Bóng đá</SelectItem>
-                                                    <SelectItem value="tennis">Quần vợt</SelectItem>
-                                                    <SelectItem value="badminton">Cầu lông</SelectItem>
-                                                    <SelectItem value="basketball">Bóng rổ</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-
-                                            <Select value={timeFilter} onValueChange={setTimeFilter}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Ngày trong tuần" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="any">Bất kỳ</SelectItem>
-                                                    <SelectItem value="mon">Thứ 2</SelectItem>
-                                                    <SelectItem value="tue">Thứ 3</SelectItem>
-                                                    <SelectItem value="wed">Thứ 4</SelectItem>
-                                                    <SelectItem value="thu">Thứ 5</SelectItem>
-                                                    <SelectItem value="fri">Thứ 6</SelectItem>
-                                                    <SelectItem value="sat">Thứ 7</SelectItem>
-                                                    <SelectItem value="sun">Chủ nhật</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            {/* Price sort control: None / Low->High / High->Low */}
-                                            <div className="ml-2">
-                                                <Select value={priceSort} onValueChange={(v) => setPriceSort(v)}>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Giá" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="asc">Giá: thấp → cao</SelectItem>
-                                                        <SelectItem value="desc">Giá: cao → thấp</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            {geolocationSupported ? (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setIsSidebarOpen(true)}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Filter className="w-4 h-4" />
+                                                Thêm bộ lọc
+                                            </Button>
+                                            {geolocationSupported && (
                                                 <button
                                                     onClick={handleGetLocation}
                                                     disabled={geolocationLoading || isLoadingNearby}
@@ -524,12 +415,53 @@ const FieldBookingPage = () => {
                                                         </>
                                                     )}
                                                 </button>
-                                            ) : (
+                                            )}
+                                            <Input 
+                                                ref={nameInputRef}
+                                                className="w-[140px]" 
+                                                placeholder="Tên sân" 
+                                                value={nameFilter} 
+                                                onChange={(e) => setNameFilter(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        setNameFilter((e.target as HTMLInputElement).value.trim())
+                                                    }
+                                                }}
+                                            />
+                                            <Input 
+                                                ref={locationInputRef}
+                                                className="w-[140px]" 
+                                                placeholder="Địa điểm" 
+                                                value={locationFilter} 
+                                                onChange={(e) => setLocationFilter(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        setLocationFilter((e.target as HTMLInputElement).value.trim())
+                                                    }
+                                                }}
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-gray-600 whitespace-nowrap">Thể loại:</span>
+                                                <Select value={sportFilter} onValueChange={setSportFilter}>
+                                                    <SelectTrigger className="w-[140px]">
+                                                        <SelectValue placeholder="Loại thể thao" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="all">Tất cả</SelectItem>
+                                                        <SelectItem value="football">Bóng đá</SelectItem>
+                                                        <SelectItem value="tennis">Quần vợt</SelectItem>
+                                                        <SelectItem value="badminton">Cầu lông</SelectItem>
+                                                        <SelectItem value="basketball">Bóng rổ</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            {!geolocationSupported && (
                                                 <div className="flex items-center gap-2 text-sm text-gray-500">
                                                     <AlertCircle className="w-4 h-4" /> <span>Trình duyệt không hỗ trợ định vị</span>
                                                 </div>
                                             )}
-
                                             {hasActiveFilters && (
                                                 <Button
                                                     onClick={() => {
@@ -547,29 +479,57 @@ const FieldBookingPage = () => {
                                                         setIsNearbyMode(false)
                                                         setNearbyFields([])
                                                         setUserLocation(null)
-                                                        // Clear query params so the effect that reads location.search
-                                                        // doesn't immediately re-apply landing filters.
                                                         try {
                                                             navigate(location.pathname, { replace: true })
                                                         } catch (error: any) {
-                                                            console.error('❌ [FIELD LIST] Error navigating:', error)
+                                                            console.error('Error navigating:', error)
                                                         }
                                                     }}
-                                                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                                                    variant="outline"
+                                                    className="px-3 py-2"
                                                 >
                                                     Đặt lại
                                                 </Button>
                                             )}
                                         </div>
-
                                     </div>
-
                                     {isNearbyMode && nearbyFields.length > 0 && (
                                         <div className="mt-3 flex items-center gap-2">
                                             <span className="text-sm text-gray-600">Đã tìm thấy {nearbyFields.length} sân gần vị trí của bạn</span>
                                         </div>
                                     )}
                                 </div>
+
+                                <FilterSidebar
+                                    isOpen={isSidebarOpen}
+                                    onOpenChange={setIsSidebarOpen}
+                                    timeFilter={timeFilter}
+                                    onTimeFilterChange={setTimeFilter}
+                                    priceSort={priceSort}
+                                    onPriceSortChange={setPriceSort}
+                                    hasActiveFilters={hasActiveFilters}
+                                    onResetFilters={() => {
+                                        setNameFilter('')
+                                        setSportFilter('all')
+                                        setTimeFilter('any')
+                                        setLocationFilter('')
+                                        setPriceSort('')
+                                        setFilters((prev) => {
+                                            const copy: any = { ...prev }
+                                            delete copy.sortBy
+                                            delete copy.sortOrder
+                                            return { ...copy, type: '', sportType: '', location: '', page: 1 }
+                                        })
+                                        setIsNearbyMode(false)
+                                        setNearbyFields([])
+                                        setUserLocation(null)
+                                        try {
+                                            navigate(location.pathname, { replace: true })
+                                        } catch (error: any) {
+                                            console.error('Error navigating:', error)
+                                        }
+                                    }}
+                                />
 
                                 <div
                                     ref={fieldsListRef}
@@ -625,6 +585,7 @@ const FieldBookingPage = () => {
                                                         sportType={field.sportType}
                                                         imageUrl={field.imageUrl}
                                                         distance={field.distance}
+                                                        onBookNow={forceSyncFilters}
                                                     />
                                                 </div>
                                             ))}

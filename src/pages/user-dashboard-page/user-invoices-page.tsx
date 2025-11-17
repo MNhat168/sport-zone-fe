@@ -11,6 +11,7 @@ import { Search, Download, ChevronLeft, ChevronRight } from "lucide-react"
 import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
+import { PageWrapper } from "@/components/layouts/page-wrapper"
 
 const invoiceData = [
   {
@@ -106,7 +107,7 @@ export default function UserInvoicesPage() {
   return (
     <>
       <NavbarDarkComponent />
-      <div className="min-h-screen">
+      <PageWrapper>
         {/* Header Section */}
         <UserDashboardHeader />
 
@@ -318,7 +319,7 @@ export default function UserInvoicesPage() {
               </Card>
           </div>
         </div>
-      </div>
+      </PageWrapper>
     </>
   )
 }

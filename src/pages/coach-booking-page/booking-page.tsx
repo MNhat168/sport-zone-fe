@@ -8,6 +8,7 @@ import axios from "axios"
 import { FooterComponent } from "../../components/footer/footer-component"
 import { useGeolocation } from "../../hooks/useGeolocation"
 import { Navigation, MapPin, AlertCircle } from "lucide-react"
+import { PageWrapper } from "../../components/layouts/page-wrapper"
 
 const BookingPage = () => {
     const coachesListRef = useRef<HTMLDivElement>(null)
@@ -242,12 +243,11 @@ const BookingPage = () => {
                 }
             `}</style>
             <NavbarDarkComponent />
-            <div className="pt-16">
+            <PageWrapper>
                 <PageHeader title="Đặt huấn luyện viên" breadcrumbs={breadcrumbs} />
-            </div>
 
-            {/* Main container with flexbox layout */}
-            <div className="px-4 min-h-screen">
+                {/* Main container with flexbox layout */}
+                <div className="px-4 min-h-screen">
                 <div className="flex gap-6 items-start">
                     {/* Left Panel - Coaches List */}
                     <div className="flex-[6] bg-white flex flex-col h-screen">
@@ -345,7 +345,8 @@ const BookingPage = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
+            </PageWrapper>
 
             {/* Footer để đảm bảo có thể scroll */}
             <FooterComponent />

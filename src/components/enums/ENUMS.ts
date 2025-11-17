@@ -20,3 +20,14 @@ export const SportType = {
 } as const;
 
 export type SportType = typeof SportType[keyof typeof SportType];
+
+export const TransactionStatus = {
+    PENDING: 'pending',
+    PROCESSING: 'processing',
+    SUCCEEDED: 'succeeded',
+    FAILED: 'failed',
+    CANCELLED: 'cancelled',
+    REFUNDED: 'refunded',
+} as const;
+
+export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];

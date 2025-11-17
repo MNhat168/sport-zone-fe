@@ -35,7 +35,7 @@ export const NavbarDarkComponent = () => {
         navigate("/");
     };
 
-    const linkClass = "text-sm font-medium text-gray-900 hover:text-green-600";
+    const linkClass = "text-base font-medium text-gray-900 hover:text-green-600";
     const iconClass = "h-5 w-5 text-gray-900 hover:text-green-600";
 
     return (
@@ -107,7 +107,7 @@ export const NavbarDarkComponent = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 align="end"
-                                className="w-48 bg-white shadow-md border border-gray-200 rounded-md"
+                                className="w-56 bg-white shadow-md border border-gray-200 rounded-md"
                             >
                                 {auth.user?.role === "user" && (
                                     <UserDropdownMenuItems />
@@ -126,8 +126,8 @@ export const NavbarDarkComponent = () => {
                                     className="w-full justify-start bg-white text-green-600 hover:bg-white-50 hover:text-green-700"
                                     onClick={handleLogout}
                                 >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Đăng xuất</span>
+                                    <LogOut className="mr-2 h-5 w-5" />
+                                    <span className="text-base">Đăng xuất</span>
                                 </Button>
                             </DropdownMenuContent>
                         </DropdownMenu>

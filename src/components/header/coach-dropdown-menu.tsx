@@ -9,7 +9,7 @@ const CoachDropdownMenuItems = () => {
         <>
             <DropdownMenuItem asChild className="text-black hover:text-primary-800 cursor-pointer flex-col items-start p-3">
                 <Link to={`/coach/profile`} className="flex flex-col">
-                    <span className="text-sm text-gray-500 ml-6">Go to Coach Profile</span>
+                    <span className="text-base text-gray-500 ml-6">Go to Coach Profile</span>
                 </Link>
             </DropdownMenuItem>
 
@@ -17,8 +17,8 @@ const CoachDropdownMenuItems = () => {
 
             <DropdownMenuItem asChild className="text-black hover:text-primary-800 cursor-pointer">
                 <Link to="/coach/dashboard" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
+                    <Settings className="mr-2 h-5 w-5" />
+                    <span className="text-base">Dashboard</span>
                 </Link>
             </DropdownMenuItem>
         </>

@@ -62,11 +62,11 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     <div className="flex flex-col gap-0">
                         <div className="flex items-center gap-3">
                             <h2 className="text-2xl font-semibold text-[#1A3353] font-['Outfit']">
-                                Court Booking Details
+                                Chi Tiết Đặt Sân
                             </h2>
                             <div className="px-[5px] py-[5px] bg-violet-600/20 rounded-sm">
                                 <span className="text-sm font-normal text-violet-600 font-['Outfit']">
-                                    Upcoming
+                                    Sắp Tới
                                 </span>
                             </div>
                         </div>
@@ -85,7 +85,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     <div className="p-3.5 bg-[#F8F8F8] rounded-[10px]">
                         <div className="pb-5">
                             <h3 className="text-lg font-semibold text-[#1A3353] font-['Outfit']">
-                                Court Information
+                                Thông Tin Sân
                             </h3>
                         </div>
                         <div className="grid grid-cols-4 gap-4">
@@ -93,7 +93,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                 <div className="w-11 h-11 rounded-[10px] overflow-hidden flex-shrink-0">
                                     <img
                                         src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAUFBQUFBQUGBgUICAcICAsKCQkKCxEMDQwNDBEaEBMQEBMQGhcbFhUWGxcpIBwcICkvJyUnLzkzMzlHREddXX0BBQUFBQUFBQYGBQgIBwgICwoJCQoLEQwNDA0MERoQExAQExAaFxsWFRYbFykgHBwgKS8nJScvOTMzOUdER11dff/CABEIASwBLAMBIgACEQEDEQH/xAA2AAAABwEBAQAAAAAAAAAAAAAAAQIDBAUGBwgJAQADAQEBAQEAAAAAAAAAAAAAAQIDBAUGB//aAAwDAQACEAMQAAAAmP1q/A/"
-                                        alt="Booking"
+                                        alt="Đặt sân"
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
@@ -109,7 +109,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                             <div className="flex flex-col gap-[5px]">
                                 <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                    Booked On
+                                    Đặt Vào
                                 </h4>
                                 <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                     {bookedOn}
@@ -118,7 +118,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                             <div className="flex flex-col gap-[5px]">
                                 <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                    Price Per Guest
+                                    Giá Mỗi Khách
                                 </h4>
                                 <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                     {pricePerGuest}
@@ -127,7 +127,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                             <div className="flex flex-col gap-[5px]">
                                 <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                    Maximum Number of Guests
+                                    Số Lượng Khách Tối Đa
                                 </h4>
                                 <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                     {maxGuests}
@@ -140,14 +140,14 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     <div className="p-3.5 bg-[#F8F8F8] rounded-[10px]">
                         <div className="pb-5">
                             <h3 className="text-lg font-semibold text-[#1A3353] font-['Outfit']">
-                                Appointment Information
+                                Thông Tin Lịch Hẹn
                             </h3>
                         </div>
                         <div className="px-4 pt-3.5 pb-4 border border-[#EDEDED]">
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="flex flex-col gap-[5px]">
                                     <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                        Booked On
+                                        Đặt Vào
                                     </h4>
                                     <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                         {bookingDate}
@@ -156,7 +156,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                 <div className="flex flex-col gap-[5px]">
                                     <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                        Date & Time
+                                        Ngày & Giờ
                                     </h4>
                                     <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                         {bookingDate}
@@ -168,7 +168,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                 <div className="flex flex-col gap-[5px]">
                                     <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                        Total Number of Hours
+                                        Tổng Số Giờ
                                     </h4>
                                     <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                         {totalHours}
@@ -182,7 +182,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     <div className="p-3.5 bg-[#F8F8F8] rounded-[10px]">
                         <div className="pb-5">
                             <h3 className="text-lg font-semibold text-[#1A3353] font-['Outfit']">
-                                Payment Details
+                                Chi Tiết Thanh Toán
                             </h3>
                         </div>
 
@@ -191,7 +191,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                 <div className="grid grid-cols-4 gap-4">
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Court Booking Amount
+                                            Số Tiền Đặt Sân
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {courtBookingAmount}
@@ -200,7 +200,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Additional Guests
+                                            Khách Thêm
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {additionalGuests}
@@ -209,7 +209,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Amount Additional Guests
+                                            Số Tiền Khách Thêm
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {additionalGuestsAmount}
@@ -218,7 +218,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Service Charge
+                                            Phí Dịch Vụ
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {serviceCharge}
@@ -231,7 +231,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                 <div className="grid grid-cols-4 gap-4">
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Total Amount Paid
+                                            Tổng Số Tiền Đã Thanh Toán
                                         </h4>
                                         <p className="text-sm font-normal text-[#26A65B] font-['Outfit']">
                                             {totalAmountPaid}
@@ -240,7 +240,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Paid On
+                                            Thanh Toán Vào
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {paidOn}
@@ -249,7 +249,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Transaction ID
+                                            Mã Giao Dịch
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {transactionId}
@@ -258,7 +258,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Payment type
+                                            Loại Thanh Toán
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {paymentType}
@@ -276,7 +276,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                         onClick={onClose}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-[10px] font-medium font-['Outfit']"
                     >
-                        Cancel
+                        Đóng
                     </Button>
                 </div>
             </DialogContent>
