@@ -42,14 +42,23 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
 
     if (!formData.name) newErrors.name = "Tên giải đấu là bắt buộc"
     if (!formData.sportType) newErrors.sportType = "Vui lòng chọn môn thể thao"
-    if (!formData.startDate) newErrors.startDate = "Ngày bắt đầu là bắt buộc"
-    if (!formData.endDate) newErrors.endDate = "Ngày kết thúc là bắt buộc"
+    if (!formData.tournamentDate) newErrors.tournamentDate = "Ngày diễn ra giải đấu là bắt buộc"
+    if (!formData.registrationStart) newErrors.registrationStart = "Ngày bắt đầu đăng ký là bắt buộc"
+    if (!formData.registrationEnd) newErrors.registrationEnd = "Ngày kết thúc đăng ký là bắt buộc"
     if (!formData.startTime) newErrors.startTime = "Giờ bắt đầu là bắt buộc"
     if (!formData.endTime) newErrors.endTime = "Giờ kết thúc là bắt buộc"
 
-    if (formData.startDate && formData.endDate) {
-      if (new Date(formData.startDate) > new Date(formData.endDate)) {
-        newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu"
+    // Validate registration period
+    if (formData.registrationStart && formData.registrationEnd) {
+      if (new Date(formData.registrationStart) > new Date(formData.registrationEnd)) {
+        newErrors.registrationEnd = "Ngày kết thúc đăng ký phải sau ngày bắt đầu"
+      }
+    }
+
+    // Validate that registration ends before tournament date
+    if (formData.registrationEnd && formData.tournamentDate) {
+      if (new Date(formData.registrationEnd) >= new Date(formData.tournamentDate)) {
+        newErrors.registrationEnd = "Đăng ký phải kết thúc trước ngày diễn ra giải đấu"
       }
     }
 
@@ -114,6 +123,19 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   <div className="flex items-center gap-3 bg-white bg-opacity-10 p-3 rounded-lg">
                     <Target className="h-5 w-5" />
                     <span className="text-white font-semibold capitalize">{formData.sportType}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Date Preview */}
+              {formData.tournamentDate && (
+                <div className="mb-6 space-y-3">
+                  <p className="text-green-100 text-sm font-medium">Tournament Date</p>
+                  <div className="flex items-center gap-3 bg-white bg-opacity-10 p-3 rounded-lg">
+                    <Calendar className="h-5 w-5" />
+                    <span className="text-white font-semibold">
+                      {new Date(formData.tournamentDate).toLocaleDateString('vi-VN')}
+                    </span>
                   </div>
                 </div>
               )}
@@ -209,41 +231,63 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   )}
                 </div>
 
-                {/* Date and Time */}
+                {/* Tournament Date */}
+                <div>
+                  <Label
+                    htmlFor="tournamentDate"
+                    className="text-gray-700 font-semibold mb-2 block flex items-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Ngày Diễn Ra Giải Đấu *
+                  </Label>
+                  <Input
+                    id="tournamentDate"
+                    type="date"
+                    value={formData.tournamentDate || ""}
+                    onChange={(e) => handleChange("tournamentDate", e.target.value)}
+                    className={`border-2 ${errors.tournamentDate ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
+                  />
+                  {errors.tournamentDate && <p className="text-red-500 text-sm mt-2">{errors.tournamentDate}</p>}
+                </div>
+
+                {/* Registration Period */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label
-                      htmlFor="startDate"
-                      className="text-gray-700 font-semibold mb-2 block flex items-center gap-2"
+                      htmlFor="registrationStart"
+                      className="text-gray-700 font-semibold mb-2 block"
                     >
-                      <Calendar className="h-4 w-4" />
-                      Ngày Bắt Đầu *
+                      Ngày Bắt Đầu Đăng Ký *
                     </Label>
                     <Input
-                      id="startDate"
+                      id="registrationStart"
                       type="date"
-                      value={formData.startDate || ""}
-                      onChange={(e) => handleChange("startDate", e.target.value)}
-                      className={`border-2 ${errors.startDate ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
+                      value={formData.registrationStart || ""}
+                      onChange={(e) => handleChange("registrationStart", e.target.value)}
+                      className={`border-2 ${errors.registrationStart ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
                     />
-                    {errors.startDate && <p className="text-red-500 text-sm mt-2">{errors.startDate}</p>}
+                    {errors.registrationStart && <p className="text-red-500 text-sm mt-2">{errors.registrationStart}</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="endDate" className="text-gray-700 font-semibold mb-2 block">
-                      Ngày Kết Thúc *
+                    <Label
+                      htmlFor="registrationEnd"
+                      className="text-gray-700 font-semibold mb-2 block"
+                    >
+                      Ngày Kết Thúc Đăng Ký *
                     </Label>
                     <Input
-                      id="endDate"
+                      id="registrationEnd"
                       type="date"
-                      value={formData.endDate || ""}
-                      onChange={(e) => handleChange("endDate", e.target.value)}
-                      className={`border-2 ${errors.endDate ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
+                      value={formData.registrationEnd || ""}
+                      onChange={(e) => handleChange("registrationEnd", e.target.value)}
+                      className={`border-2 ${errors.registrationEnd ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
                     />
-                    {errors.endDate && <p className="text-red-500 text-sm mt-2">{errors.endDate}</p>}
+                    {errors.registrationEnd && <p className="text-red-500 text-sm mt-2">{errors.registrationEnd}</p>}
                   </div>
                 </div>
 
+                {/* Time Slot */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label

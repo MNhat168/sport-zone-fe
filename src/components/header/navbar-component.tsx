@@ -83,6 +83,9 @@ export const NavbarComponent = () => {
                     <Link to="/coach/booking" className={linkClass}>
                         Huấn luyện viên
                     </Link>
+                    <Link to="/tournaments" className={linkClass}>
+                        Giải đấu
+                    </Link>
                     <Link to="/reviews" className={linkClass}>
                         Đánh giá
                     </Link>

@@ -21,8 +21,9 @@ export default function CreateTournamentPage() {
     name: "",
     sportType: "",
     location: "",
-    startDate: "",
-    endDate: "",
+    tournamentDate: "", // Single tournament date
+    registrationStart: "", // Registration period start
+    registrationEnd: "", // Registration period end
     startTime: "",
     endTime: "",
     maxParticipants: 20,

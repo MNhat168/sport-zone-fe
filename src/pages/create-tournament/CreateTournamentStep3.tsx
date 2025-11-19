@@ -43,8 +43,8 @@ export default function CreateTournamentStep3({ formData, onBack }: Step3Props) 
   };
 
   const calculateDeadline = () => {
-    const startDate = new Date(formData.startDate);
-    const deadline = new Date(startDate.getTime() - 48 * 60 * 60 * 1000);
+    const tournamentDate = new Date(formData.tournamentDate);
+    const deadline = new Date(tournamentDate.getTime() - 48 * 60 * 60 * 1000);
     return deadline.toLocaleDateString('vi-VN', {
       weekday: 'long',
       year: 'numeric',
@@ -126,30 +126,34 @@ export default function CreateTournamentStep3({ formData, onBack }: Step3Props) 
               <p className="font-semibold">{formData.location}</p>
             </div>
 
+            {/* Tournament Date */}
+            <div>
+              <Label className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Ngày Diễn Ra Giải Đấu
+              </Label>
+              <p className="font-semibold">{formatDate(formData.tournamentDate)}</p>
+            </div>
+
+            {/* Registration Period */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Ngày Bắt Đầu
-                </Label>
-                <p className="font-semibold">{formatDate(formData.startDate)}</p>
+                <Label>Thời Gian Đăng Ký</Label>
+                <p className="font-semibold">
+                  {formatDate(formData.registrationStart)} - {formatDate(formData.registrationEnd)}
+                </p>
               </div>
               
               <div>
-                <Label>Ngày Kết Thúc</Label>
-                <p className="font-semibold">{formatDate(formData.endDate)}</p>
+                <Label className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Thời Gian Thi Đấu
+                </Label>
+                <p className="font-semibold">{formData.startTime} - {formData.endTime}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Thời Gian
-                </Label>
-                <p className="font-semibold">{formData.startTime} - {formData.endTime}</p>
-              </div>
-              
               <div>
                 <Label className="flex items-center gap-2">
                   <Users className="h-4 w-4" />

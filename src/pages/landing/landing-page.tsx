@@ -142,24 +142,6 @@ export default function LandingPage() {
                     <Select value={selectedSport} onValueChange={setSelectedSport}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Chọn môn" />
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                <div className="flex flex-col items-center md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Tên Sân</label>
-                  <Input
-                    className="w-full text-left"
-                    placeholder="Nhập tên sân (tùy chọn)"
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex flex-col items-center">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Thể Loại</label>
-                  <div className="w-full">
-                    <Select value={selectedSport} onValueChange={setSelectedSport}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Chọn môn" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Tất cả</SelectItem>

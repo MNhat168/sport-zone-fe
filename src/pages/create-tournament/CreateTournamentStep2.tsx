@@ -1,4 +1,3 @@
-// In CreateTournamentStep2.tsx - update the component
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -19,13 +18,12 @@ interface Step2Props {
     onBack: () => void;
 }
 
-// Define the Field interface based on your API response
 interface Field {
     _id: string;
     name: string;
     sportType: string;
     description: string;
-    location: any; // Adjust based on your actual location structure
+    location: any;
     basePrice?: number;
     images?: string[];
     isActive?: boolean;
@@ -40,21 +38,20 @@ export default function CreateTournamentStep2({ formData, onNext, onUpdate, onBa
     const sportRules = SPORT_RULES_MAP[formData.sportType as SportType];
 
     useEffect(() => {
-        if (formData.sportType && formData.location && formData.startDate) {
+        if (formData.sportType && formData.location && formData.tournamentDate) {
             console.log('Dispatching fetchAvailableFields with:', {
                 sportType: formData.sportType,
                 location: formData.location,
-                date: formData.startDate,
+                date: formData.tournamentDate, // Changed from startDate to tournamentDate
             });
             dispatch(fetchAvailableFields({
                 sportType: formData.sportType,
                 location: formData.location,
-                date: formData.startDate,
+                date: formData.tournamentDate,
             }));
         }
-    }, [dispatch, formData.sportType, formData.location, formData.startDate]);
+    }, [dispatch, formData.sportType, formData.location, formData.tournamentDate]);
 
-    // Debug: Log the available fields whenever they change
     useEffect(() => {
         console.log('Available fields in component:', availableFields);
         console.log('Selected fields:', selectedFields);
@@ -63,7 +60,6 @@ export default function CreateTournamentStep2({ formData, onNext, onUpdate, onBa
     const handleChange = (field: string, value: any) => {
         onUpdate({ ...formData, [field]: value });
         
-        // Clear error when user starts typing
         if (errors[field]) {
             setErrors({ ...errors, [field]: '' });
         }
@@ -105,7 +101,6 @@ export default function CreateTournamentStep2({ formData, onNext, onUpdate, onBa
     const validate = () => {
         const newErrors: Record<string, string> = {};
 
-        // ADDED location validation in Step 2
         if (!formData.location) newErrors.location = 'Địa điểm là bắt buộc';
 
         if (!formData.fieldsNeeded || formData.fieldsNeeded < sportRules.minFieldsRequired) {
@@ -139,7 +134,6 @@ export default function CreateTournamentStep2({ formData, onNext, onUpdate, onBa
         }
     };
 
-    // Calculate hours for display
     const hours = calculateHours(formData.startTime, formData.endTime);
 
     return (
@@ -156,9 +150,10 @@ export default function CreateTournamentStep2({ formData, onNext, onUpdate, onBa
                     <div className="bg-yellow-50 p-3 rounded-md text-sm">
                         <p>Debug: Found {safeAvailableFields.length} fields</p>
                         <p>Selected: {selectedFields.length}/{formData.fieldsNeeded}</p>
+                        <p>Tournament Date: {formData.tournamentDate}</p>
                     </div>
 
-                    {/* ADDED Location field in Step 2 */}
+                    {/* Location field */}
                     <div>
                         <Label htmlFor="location" className="flex items-center gap-2">
                             <MapPin className="h-4 w-4" />

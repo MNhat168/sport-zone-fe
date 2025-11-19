@@ -8,8 +8,9 @@ export interface Tournament {
   name: string;
   sportType: string;
   location: string;
-  startDate: string;
-  endDate: string;
+  tournamentDate: string; // Changed from startDate/endDate
+  registrationStart: string; // New field
+  registrationEnd: string; // New field
   startTime: string;
   endTime: string;
   maxParticipants: number;

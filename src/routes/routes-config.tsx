@@ -21,8 +21,6 @@ import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-pa
 import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page";
 // Coach profile self-page for coaches only
 import CoachSelfDetailPage from "../pages/coach-profile-page/coach-profile-page";
-// Coach profile self-page for coaches only
-import CoachSelfDetailPage from "../pages/coach-profile-page/coach-profile-page";
 
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";

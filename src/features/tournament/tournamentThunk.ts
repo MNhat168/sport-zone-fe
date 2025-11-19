@@ -20,7 +20,6 @@ import {
   updateTournament,
 } from './tournamentSlice';
 
-
 const mapApiTournamentToAppTournament = (apiTournament: any): import("./tournamentSlice").Tournament => {
   console.log('Mapping tournament:', apiTournament); // Debug log
   
@@ -29,8 +28,9 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
     name: apiTournament?.name || "",
     sportType: apiTournament?.sportType || "",
     location: apiTournament?.location || "",
-    startDate: apiTournament?.startDate ? new Date(apiTournament.startDate).toISOString().split('T')[0] : "",
-    endDate: apiTournament?.endDate ? new Date(apiTournament.endDate).toISOString().split('T')[0] : "",
+    tournamentDate: apiTournament?.tournamentDate ? new Date(apiTournament.tournamentDate).toISOString().split('T')[0] : "",
+    registrationStart: apiTournament?.registrationStart ? new Date(apiTournament.registrationStart).toISOString().split('T')[0] : "",
+    registrationEnd: apiTournament?.registrationEnd ? new Date(apiTournament.registrationEnd).toISOString().split('T')[0] : "",
     startTime: apiTournament?.startTime || "",
     endTime: apiTournament?.endTime || "",
     maxParticipants: apiTournament?.maxParticipants || 0,
@@ -54,7 +54,6 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
     prizePool: apiTournament?.prizePool || 0
   };
 };
-
 
 export const fetchTournaments = createAsyncThunk(
   'tournament/fetchTournaments',
