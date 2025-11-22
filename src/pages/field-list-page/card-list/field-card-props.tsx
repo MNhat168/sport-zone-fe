@@ -17,6 +17,7 @@ interface FieldCardProps {
     sportType: string;
     imageUrl: string;
     distance?: string;
+    onBookNow?: () => void; // Callback to sync filters before navigation
 }
 
 const FieldCard: React.FC<FieldCardProps> = ({
@@ -31,12 +32,19 @@ const FieldCard: React.FC<FieldCardProps> = ({
     sportType,
     imageUrl,
     distance,
+    onBookNow,
 }) => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     const handleBooking = async () => {
         if (!id) return;
+        
+        // Call onBookNow callback to sync filters before navigation
+        if (onBookNow) {
+            onBookNow();
+        }
+        
         try {
             await dispatch(getFieldById(id));
         } finally {
@@ -54,7 +62,7 @@ const FieldCard: React.FC<FieldCardProps> = ({
                         className="w-full h-full object-cover"
                         onError={(e) => {
                             // Fallback image nếu không load được
-                            (e.target as HTMLImageElement).src = "/placeholder-field.jpg";
+                            (e.target as HTMLImageElement).src = "/general-img-portrait.png";
                         }}
                     />
                     <div className="absolute top-2 left-2 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded-full">

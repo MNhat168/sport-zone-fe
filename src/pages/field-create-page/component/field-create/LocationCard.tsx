@@ -6,12 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import type { CreateFieldPayload } from '@/types/field-type';
 
 // Types
 interface LocationCardProps {
-    formData: {
-        location: string;
-    };
+    formData: CreateFieldPayload;
     onInputChange: (field: string, value: any) => void;
     onCoordinatesChange?: (lat: number, lng: number) => void;
     onLocationChange?: (location: { 
@@ -134,7 +133,10 @@ export default function LocationCard({
 
     // Keep latest address
     useEffect(() => {
-        addressRef.current = formData.location || '';
+        const locationString = typeof formData.location === 'string' 
+            ? formData.location 
+            : formData.location?.address || '';
+        addressRef.current = locationString;
     }, [formData.location]);
 
     // Map initialization
@@ -251,7 +253,10 @@ export default function LocationCard({
 
     // Handle search for location
     const handleSearchLocation = useCallback(async () => {
-        const query = formData.location.trim();
+        const locationString = typeof formData.location === 'string' 
+            ? formData.location 
+            : formData.location?.address || '';
+        const query = locationString.trim();
         if (!query || !mapRef.current || !markerRef.current) return;
 
         setIsSearching(true);
@@ -299,12 +304,16 @@ export default function LocationCard({
     }, [onInputChange]);
 
     // Render helpers
-    const renderSearchButton = () => (
+    const renderSearchButton = () => {
+        const locationString = typeof formData.location === 'string' 
+            ? formData.location 
+            : formData.location?.address || '';
+        return (
         <Button
             type="button"
             variant="outline"
             onClick={handleSearchLocation}
-            disabled={!formData.location.trim() || isSearching}
+            disabled={!locationString.trim() || isSearching}
             className="px-4"
         >
             {isSearching ? (
@@ -313,13 +322,14 @@ export default function LocationCard({
                 <Search className="w-4 h-4" />
             )}
         </Button>
-    );
+        );
+    };
 
     const renderMapOverlay = () => (
         <div className="absolute top-2 left-2 bg-white/95 backdrop-blur p-3 rounded shadow-lg max-w-xs">
             <h4 className="font-medium text-sm">Vị trí sân</h4>
             <p className="text-xs text-gray-600 mt-1.5">
-                {locationData.address || formData.location || 'Chưa nhập địa chỉ'}
+                {locationData.address || (typeof formData.location === 'string' ? formData.location : formData.location?.address) || 'Chưa nhập địa chỉ'}
             </p>
             <div className="flex items-center gap-1 mt-2">
                 <MapPin className="w-4 h-4 text-blue-600" />
@@ -334,7 +344,7 @@ export default function LocationCard({
     );
 
     return (
-        <Card className="shadow-md border-0">
+        <Card className="bg-white shadow-md border-0">
             <CardHeader
                 onClick={toggleExpanded}
                 className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
@@ -360,7 +370,7 @@ export default function LocationCard({
                             <div className="flex gap-2">
                                 <Input
                                     placeholder="Nhập địa chỉ đầy đủ của sân"
-                                    value={formData.location}
+                                    value={typeof formData.location === 'string' ? formData.location : formData.location?.address || ''}
                                     onChange={handleInputChange}
                                     onKeyPress={handleKeyPress}
                                     className="flex-1"

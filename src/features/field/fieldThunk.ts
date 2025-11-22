@@ -583,6 +583,7 @@ export const getMyFieldsBookings = createAsyncThunk<
 
         if (params.fieldName) queryParams.append('fieldName', params.fieldName);
         if (params.status) queryParams.append('status', params.status);
+        if (params.transactionStatus) queryParams.append('transactionStatus', params.transactionStatus);
         if (params.date) queryParams.append('date', params.date);
         if (params.startDate) queryParams.append('startDate', params.startDate);
         if (params.endDate) queryParams.append('endDate', params.endDate);
@@ -594,7 +595,26 @@ export const getMyFieldsBookings = createAsyncThunk<
             : GET_MY_FIELDS_BOOKINGS_API;
 
         const response = await axiosPrivate.get(url);
-        return response.data;
+        const raw = response.data;
+        
+        // Handle different response formats
+        // Format 1: { success: true, data: { bookings: [...], pagination: {...} } }
+        // Format 2: { bookings: [...], pagination: {...} }
+        if (raw?.success && raw?.data) {
+            return raw as FieldOwnerBookingsResponse;
+        } else if (raw?.bookings && raw?.pagination) {
+            // Wrap in expected format
+            return {
+                success: true,
+                data: {
+                    bookings: raw.bookings,
+                    pagination: raw.pagination
+                }
+            } as FieldOwnerBookingsResponse;
+        }
+        
+        // Fallback: return as is
+        return raw as FieldOwnerBookingsResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch field owner bookings",

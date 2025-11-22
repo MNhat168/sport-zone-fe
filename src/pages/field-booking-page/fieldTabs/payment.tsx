@@ -217,6 +217,21 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         } catch { return 0; }
     }, [amenities, selectedAmenityIds]);
 
+    const calculateSystemFee = useCallback((): number => {
+        if (!venue || !formData.startTime || !formData.endTime) return 0;
+        
+        const start = new Date(`1970-01-01T${formData.startTime}:00`);
+        const end = new Date(`1970-01-01T${formData.endTime}:00`);
+        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+        
+        const base = venue.basePrice * hours;
+        const extras = calculateAmenitiesTotal();
+        const baseAmount = base + extras;
+        const systemFeeRate = 0.05; // 5% system fee
+        const systemFee = Math.round(baseAmount * systemFeeRate);
+        return systemFee > 0 ? systemFee : 0;
+    }, [venue, formData.startTime, formData.endTime, calculateAmenitiesTotal]);
+
     const calculateTotal = useCallback((): number => {
         if (!venue || !formData.startTime || !formData.endTime) return 0;
         
@@ -226,9 +241,11 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
         
         const base = venue.basePrice * hours;
         const extras = calculateAmenitiesTotal();
-        const total = base + extras;
+        const baseAmount = base + extras;
+        const systemFee = calculateSystemFee();
+        const total = baseAmount + systemFee;
         return total > 0 ? total : 0;
-    }, [venue, formData.startTime, formData.endTime, calculateAmenitiesTotal]);
+    }, [venue, formData.startTime, formData.endTime, calculateAmenitiesTotal, calculateSystemFee]);
 
     const calculateDuration = useCallback((): number => {
         if (!formData.startTime || !formData.endTime) return 0;
@@ -686,9 +703,9 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
             <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
                 <Card className="border border-gray-200">
                     <CardContent className="p-6">
-                        <p className="text-base text-[#6b7280]">No field selected. Please select a field to book.</p>
+                        <p className="text-base text-[#6b7280]">Chưa chọn sân. Vui lòng chọn sân để đặt.</p>
                         <div className="pt-4">
-                            <Button variant="outline" onClick={onBack}>Back</Button>
+                            <Button variant="outline" onClick={onBack}>Quay lại</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -744,13 +761,13 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                 <CardContent className="p-8 text-center">
                                     <CheckCircle className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
                                     <h2 className="text-2xl font-semibold text-emerald-800 mb-2">
-                                        Payment Successful!
+                                        Thanh toán thành công!
                                     </h2>
                                     <p className="text-emerald-700 mb-4">
-                                        Your booking has been confirmed. You will receive a confirmation email shortly.
+                                        Đặt sân của bạn đã được xác nhận. Bạn sẽ nhận được email xác nhận trong thời gian ngắn.
                                     </p>
                                     <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
-                                        Booking ID: #{bookingId || Math.random().toString(36).substr(2, 9).toUpperCase()}
+                                        Mã đặt sân: #{bookingId || Math.random().toString(36).substr(2, 9).toUpperCase()}
                                     </Badge>
                                 </CardContent>
                             </Card>
@@ -873,7 +890,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                     <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
                                         <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
                                         <p className="text-red-700">
-                                            {paymentError || bookingError?.message || 'An error occurred'}
+                                            {paymentError || bookingError?.message || 'Đã xảy ra lỗi'}
                                         </p>
                                     </div>
                                 )}
@@ -882,7 +899,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Shield className="w-4 h-4 text-emerald-600" />
-                                        <span className="text-sm font-medium text-gray-900">Secure Payment</span>
+                                        <span className="text-sm font-medium text-gray-900">Thanh toán an toàn</span>
                                     </div>
                                         <p className="text-sm text-gray-600">
                                         Thông tin thanh toán của bạn được mã hóa và an toàn. Chúng tôi không lưu trữ chi tiết thanh toán của bạn.
@@ -921,24 +938,24 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                     </span>
                                 </div> */}
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Date:</span>
+                                    <span className="text-sm text-gray-600">Ngày:</span>
                                     <span className="text-sm font-medium">{formatDate(formData.date)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Time:</span>
+                                    <span className="text-sm text-gray-600">Giờ:</span>
                                     <span className="text-sm font-medium">
                                         {formatTime(formData.startTime)} - {formatTime(formData.endTime)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">Duration:</span>
-                                    <span className="text-sm font-medium">{calculateDuration()} hours</span>
+                                    <span className="text-sm text-gray-600">Thời lượng:</span>
+                                    <span className="text-sm font-medium">{calculateDuration()} giờ</span>
                                 </div>
                             </div>
 
                             {/* Customer Info */}
                             <div className="space-y-3 border-b border-gray-100 pb-4">
-                                <h4 className="font-medium text-gray-900">Customer Details</h4>
+                                <h4 className="font-medium text-gray-900">Thông tin khách hàng</h4>
                                 <div className="space-y-1">
                                     <p className="text-sm text-gray-600">{formData.name}</p>
                                     <p className="text-sm text-gray-600">{formData.email}</p>
@@ -948,20 +965,38 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 
                             {/* Pricing */}
                             <div className="space-y-3">
-                                {selectedAmenityIds?.length ? (
+                                <h4 className="font-medium text-gray-900 mb-2">Chi tiết thanh toán</h4>
+                                
+                                {/* Base price */}
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-600">
+                                        Giá sân: {formatVND(venue.basePrice)}/giờ × {calculateDuration()} giờ
+                                    </span>
+                                    <span className="text-sm font-medium">{formatVND(calculateTotal() - calculateAmenitiesTotal() - calculateSystemFee())}</span>
+                                </div>
+                                
+                                {/* Amenities fee */}
+                                {selectedAmenityIds?.length && calculateAmenitiesTotal() > 0 ? (
                                     <div className="flex justify-between">
                                         <span className="text-sm text-gray-600">Phí tiện ích</span>
                                         <span className="text-sm font-medium">{formatVND(calculateAmenitiesTotal())}</span>
                                     </div>
                                 ) : null}
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-gray-600">
-                                        {formatVND(venue.basePrice)}/giờ × {calculateDuration()} giờ
-                                    </span>
-                                    <span className="text-sm font-medium">{formatVND(calculateTotal() - calculateAmenitiesTotal())}</span>
-                                </div>
-                                <div className="flex justify-between text-lg font-semibold text-emerald-600 pt-2 border-t">
-                                    <span>Tổng:</span>
+                                
+                                {/* System fee - highlighted */}
+                                {calculateSystemFee() > 0 && (
+                                    <div className="flex justify-between items-center bg-blue-50 p-2 rounded-md border border-blue-200">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium text-blue-900">Phí hệ thống</span>
+                                            <span className="text-xs text-blue-700">(5% phí dịch vụ)</span>
+                                        </div>
+                                        <span className="text-sm font-semibold text-blue-900">{formatVND(calculateSystemFee())}</span>
+                                    </div>
+                                )}
+                                
+                                {/* Total */}
+                                <div className="flex justify-between text-lg font-semibold text-emerald-600 pt-2 border-t-2 border-emerald-200">
+                                    <span>Tổng thanh toán:</span>
                                     <span>{formatVND(calculateTotal())}</span>
                                 </div>
                             </div>
@@ -1010,7 +1045,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
                                 </>
                             ) : (
                                 <>
-                                        Hoàn tất thanh toán - {formatVND(calculateTotal())}
+                                        Hoàn tất thanh toán
                                 </>
                             )}
                         </Button>

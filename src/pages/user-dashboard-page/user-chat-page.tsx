@@ -1,13 +1,14 @@
 import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
+import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function UserChatPage() {
   return (
     <>
       <NavbarDarkComponent />
-      <div className="min-h-screen">
+      <PageWrapper>
         {/* Header Section */}
         <UserDashboardHeader />
 
@@ -26,7 +27,7 @@ export default function UserChatPage() {
             </Card>
           </div>
         </div>
-      </div>
+      </PageWrapper>
     </>
   )
 }

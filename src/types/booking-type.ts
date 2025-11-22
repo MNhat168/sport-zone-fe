@@ -54,7 +54,11 @@ export interface Booking {
     type: 'field' | 'coach';
     coachStatus?: CoachStatus;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-    totalPrice: number;
+    // New price structure
+    bookingAmount?: number; // Court fee + amenities (base amount before platform fee)
+    platformFee?: number; // System/platform fee (5% of bookingAmount)
+    // @deprecated Use bookingAmount + platformFee instead. Kept for backward compatibility
+    totalPrice?: number;
     selectedAmenities?: string[];
     amenitiesFee?: number;
     payment?: string | Payment; // Payment ObjectId reference or populated Payment

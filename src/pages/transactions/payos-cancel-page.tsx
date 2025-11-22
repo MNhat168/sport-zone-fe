@@ -55,10 +55,10 @@ export default function PayOSCancelPage() {
                 Đặt sân lại
               </Button>
               <Button
-                onClick={() => navigate('/my-bookings')}
+                onClick={() => navigate('/user-booking-history')}
                 variant="outline"
               >
-                Xem đơn đặt của tôi
+                Xem danh sách đặt sân
               </Button>
             </div>
           </div>

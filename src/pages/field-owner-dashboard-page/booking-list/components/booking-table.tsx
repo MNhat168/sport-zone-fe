@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, MoreVertical } from "lucide-react";
 import {
     DropdownMenu,
@@ -48,78 +47,90 @@ const getStatusBadgeStyles = (status: Booking["status"]) => {
     }
 };
 
+const convertTo24Hour = (time12h: string): string => {
+    // Format: "03:00 PM - 05:00 PM" -> "15:00 - 17:00"
+    const parts = time12h.split(" - ");
+    if (parts.length !== 2) return time12h;
+
+    const convertSingleTime = (timeStr: string): string => {
+        const trimmed = timeStr.trim();
+        const timeMatch = trimmed.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!timeMatch) return trimmed;
+
+        let hours = parseInt(timeMatch[1], 10);
+        const minutes = timeMatch[2];
+        const period = timeMatch[3].toUpperCase();
+
+        if (period === "PM" && hours !== 12) {
+            hours += 12;
+        } else if (period === "AM" && hours === 12) {
+            hours = 0;
+        }
+
+        return `${hours.toString().padStart(2, "0")}:${minutes}`;
+    };
+
+    return `${convertSingleTime(parts[0])} - ${convertSingleTime(parts[1])}`;
+};
+
 export function BookingTable({
     bookings,
     onViewDetails,
     onChat
 }: BookingTableProps) {
     return (
-        <div className="w-full bg-white rounded-lg shadow-sm">
+        <div className="w-full bg-white">
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-gray-50 border-b">
-                            <TableHead className="w-80 font-semibold text-gray-900">
+                            <TableHead className="w-80 font-semibold text-gray-900 text-left py-4">
                                 Tên Sân
                             </TableHead>
-                            <TableHead className="w-96 font-semibold text-gray-900">
+                            <TableHead className="w-96 font-semibold text-gray-900 text-left py-4">
                                 Ngày & Giờ
                             </TableHead>
-                            <TableHead className="w-32 text-right font-semibold text-gray-900">
+                            <TableHead className="w-32 text-left font-semibold text-gray-900 py-4">
                                 Thanh Toán
                             </TableHead>
-                            <TableHead className="w-32 font-semibold text-gray-900">
+                            <TableHead className="w-32 font-semibold text-gray-900 text-left py-4">
                                 Trạng Thái
                             </TableHead>
-                            <TableHead className="w-36 font-semibold text-gray-900">
+                            <TableHead className="w-36 font-semibold text-gray-900 text-left py-4">
                                 Chi Tiết
                             </TableHead>
-                            <TableHead className="w-24 font-semibold text-gray-900">
+                            <TableHead className="w-24 font-semibold text-gray-900 text-left py-4">
                                 Chat
                             </TableHead>
-                            <TableHead className="w-16"></TableHead>
+                            <TableHead className="w-16 py-4"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {bookings.map((booking) => (
                             <TableRow key={booking.id} className="border-b hover:bg-gray-50">
-                                <TableCell className="py-2">
-                                    <div className="flex items-start gap-3">
-                                        <Avatar className="h-12 w-12 rounded-lg">
-                                            <AvatarImage
-                                                src={booking.academyImage}
-                                                alt={booking.academyName}
-                                            />
-                                            <AvatarFallback className="rounded-lg">
-                                                {booking.academyName.charAt(0)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex flex-col gap-1.5">
-                                            <span className="text-base font-medium text-gray-900">
-                                                {booking.academyName}
-                                            </span>
-                                            <span className="text-sm text-green-600">
-                                                {booking.courtName}
-                                            </span>
-                                        </div>
+                                <TableCell className="py-2 text-left">
+                                    <div className="flex flex-col gap-1.5 text-left">
+                                        <span className="text-base font-medium text-gray-900 text-left">
+                                            {booking.academyName}
+                                        </span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="py-3.5">
+                                <TableCell className="py-3.5 text-left">
                                     <div className="flex flex-col gap-0.5">
-                                        <span className="text-sm text-gray-900">
+                                        <span className="text-sm text-gray-900 text-left">
                                             {booking.date}
                                         </span>
-                                        <span className="text-sm text-gray-900 pt-1">
-                                            {booking.time}
+                                        <span className="text-sm text-gray-900 pt-1 text-left">
+                                            {convertTo24Hour(booking.time)}
                                         </span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="py-5 text-right">
+                                <TableCell className="py-5 text-left">
                                     <span className="text-base font-medium text-gray-900">
                                         {booking.payment}
                                     </span>
                                 </TableCell>
-                                <TableCell className="py-5">
+                                <TableCell className="py-5 text-left">
                                     <Badge
                                         variant="secondary"
                                         className={`${getStatusBadgeStyles(booking.status)} rounded-sm`}
@@ -127,7 +138,7 @@ export function BookingTable({
                                         {booking.statusText}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="py-6">
+                                <TableCell className="py-6 text-left">
                                     <Button
                                         variant="ghost"
                                         className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 p-0 h-auto font-normal"
@@ -136,7 +147,7 @@ export function BookingTable({
                                         Xem Chi Tiết
                                     </Button>
                                 </TableCell>
-                                <TableCell className="py-6">
+                                <TableCell className="py-6 text-left">
                                     <Button
                                         variant="ghost"
                                         className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal gap-2"

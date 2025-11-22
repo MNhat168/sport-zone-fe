@@ -11,7 +11,7 @@ import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
  */
 interface PaymentVerificationResult {
   success: boolean;
-  paymentStatus: 'succeeded' | 'failed' | 'pending' | 'completed' | string;
+  paymentStatus: 'succeeded' | 'failed' | 'pending' | string;
   bookingId: string;
   message: string;
   reason?: string;
@@ -153,24 +153,16 @@ export default function VNPayReturnPage() {
           
           console.log('[VNPay Return] Booking ID:', bookingIdStr);
           
-          if (bookingIdStr && bookingIdStr.length > 0) {
-            // Hiển thị màn hình thành công và redirect sau 2 giây
-            setStatus('success');
-            setTimeout(() => {
-              navigate(`/my-bookings/${bookingIdStr}`, {
-                state: { message: 'Thanh toán thành công!' }
-              });
-            }, 2000);
-          } else {
-            // Không có bookingId nhưng thanh toán thành công - redirect về my-bookings
-            console.warn('[VNPay Return] ⚠️ Không tìm thấy bookingId, redirect về danh sách booking');
-            setStatus('success');
-            setTimeout(() => {
-              navigate('/my-bookings', {
-                state: { message: 'Thanh toán thành công!' }
-              });
-            }, 2000);
-          }
+          // Hiển thị màn hình thành công và redirect sau 2 giây
+          setStatus('success');
+          setTimeout(() => {
+            navigate('/user-booking-history', {
+              state: { 
+                message: 'Thanh toán thành công!',
+                bookingId: bookingIdStr 
+              }
+            });
+          }, 2000);
         } else {
           // Payment failed - VNPay response code không phải '00'
           const errorCode = queryParams.get('vnp_ResponseCode');
@@ -259,10 +251,12 @@ export default function VNPayReturnPage() {
                 </p>
               </div>
               <Button
-                onClick={() => navigate('/my-bookings')}
+                onClick={() => navigate('/user-booking-history', {
+                  state: { message: 'Thanh toán thành công!' }
+                })}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
               >
-                Xem đặt sân của tôi
+                Xem danh sách đặt sân
               </Button>
             </div>
           </CardContent>
@@ -296,17 +290,19 @@ export default function VNPayReturnPage() {
             </div>
             <div className="w-full space-y-2">
               <Button
-                onClick={() => navigate('/venues')}
+                onClick={() => navigate('/fields')}
                 className="w-full bg-red-600 hover:bg-red-700 text-white"
               >
                 Quay lại danh sách sân
               </Button>
               <Button
-                onClick={() => navigate('/my-bookings')}
+                onClick={() => navigate('/user-booking-history', {
+                  state: { message: 'Thanh toán thất bại' }
+                })}
                 variant="outline"
                 className="w-full"
               >
-                Xem đặt sân của tôi
+                Xem danh sách đặt sân
               </Button>
             </div>
           </div>

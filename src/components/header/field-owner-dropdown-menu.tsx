@@ -36,7 +36,7 @@ const FieldOwnerDropdownMenuItems = ({
             {/* Profile Section */}
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer flex-col items-start p-3">
                 <Link to="/field-owner/profile" className="flex flex-col">
-                    <span className="text-sm text-gray-500 ml-6">
+                    <span className="text-base text-gray-500 ml-6">
                         {businessName ? `Go to ${businessName} Profile` : 'Go to Profile'}
                     </span>
                 </Link>
@@ -47,22 +47,22 @@ const FieldOwnerDropdownMenuItems = ({
             {/* Field Management Section */}
             <DropdownMenuItem asChild className="text-black hover:text-green-800 cursor-pointer">
                 <Link to="/field/create" className="flex items-center">
-                    <Plus className="mr-2 h-4 w-4" />
-                    <span>Tạo sân mới</span>
+                    <Plus className="mr-2 h-5 w-5" />
+                    <span className="text-base">Tạo sân mới</span>
                 </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild className="text-black hover:text-green-800 cursor-pointer">
                 <Link to="/field-owner/fields" className="flex items-center">
-                    <List className="mr-2 h-4 w-4" />
-                    <span>Danh sách sân</span>
+                    <List className="mr-2 h-5 w-5" />
+                    <span className="text-base">Danh sách sân</span>
                 </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer">
                 <Link to="/field-owner/bookings" className="flex items-center">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    <span>Đặt sân</span>
+                    <Calendar className="mr-2 h-5 w-5" />
+                    <span className="text-base">Đặt sân</span>
                 </Link>
             </DropdownMenuItem>
 
@@ -71,15 +71,15 @@ const FieldOwnerDropdownMenuItems = ({
             {/* Analytics & Reports Section */}
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer">
                 <Link to="/field-owner/analytics" className="flex items-center">
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    <span>Thống kê & Báo cáo</span>
+                    <BarChart3 className="mr-2 h-5 w-5" />
+                    <span className="text-base">Thống kê & Báo cáo</span>
                 </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer">
                 <Link to="/field-owner/revenue" className="flex items-center">
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    <span>Doanh thu</span>
+                    <DollarSign className="mr-2 h-5 w-5" />
+                    <span className="text-base">Doanh thu</span>
                 </Link>
             </DropdownMenuItem>
 
@@ -88,15 +88,15 @@ const FieldOwnerDropdownMenuItems = ({
             {/* Settings & Management Section */}
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer">
                 <Link to="/field-owner/locations" className="flex items-center">
-                    <MapPin className="mr-2 h-4 w-4" />
-                    <span>Quản lý địa điểm</span>
+                    <MapPin className="mr-2 h-5 w-5" />
+                    <span className="text-base">Quản lý địa điểm</span>
                 </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer">
                 <Link to="/field-owner/customers" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Khách hàng</span>
+                    <User className="mr-2 h-5 w-5" />
+                    <span className="text-base">Khách hàng</span>
                 </Link>
             </DropdownMenuItem>
 
@@ -105,8 +105,8 @@ const FieldOwnerDropdownMenuItems = ({
             {/* Settings */}
             <DropdownMenuItem asChild className="text-black hover:!text-green-800 cursor-pointer">
                 <Link to="/field-owner/settings" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Cài đặt</span>
+                    <Settings className="mr-2 h-5 w-5" />
+                    <span className="text-base">Cài đặt</span>
                 </Link>
             </DropdownMenuItem>
         </>

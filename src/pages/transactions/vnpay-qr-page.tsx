@@ -132,8 +132,11 @@ export default function VNPayQRPage() {
         stopPolling();
         
         setTimeout(() => {
-          navigate(`/my-bookings/${bookingId}`, {
-            state: { message: 'Thanh toán thành công!' }
+          navigate('/user-booking-history', {
+            state: { 
+              message: 'Thanh toán thành công!',
+              bookingId: bookingId 
+            }
           });
         }, 2000);
       } else if (data.status === 'failed') {
@@ -512,9 +515,23 @@ export default function VNPayQRPage() {
             <p className="text-gray-600 mb-4">
               Đơn đặt sân của bạn đã được xác nhận
             </p>
-            <Badge variant="default" className="bg-green-500 text-white">
+            <Badge variant="default" className="bg-green-500 text-white mb-4">
               Mã đặt sân: #{bookingId?.slice(-8).toUpperCase()}
             </Badge>
+            <p className="text-gray-600 mb-4 text-sm">
+              Đang chuyển hướng...
+            </p>
+            <Button
+              onClick={() => navigate('/user-booking-history', {
+                state: { 
+                  message: 'Thanh toán thành công!',
+                  bookingId: bookingId 
+                }
+              })}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Xem danh sách đặt sân
+            </Button>
           </div>
         );
 

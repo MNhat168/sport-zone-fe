@@ -83,7 +83,7 @@ export default function AmenitiesCard({ selectedAmenities, onAmenitiesChange, sp
 
     return (
         // type OTHER in amenities
-        <Card className="shadow-md border-0">
+        <Card className="bg-white shadow-md border-0">
             <CardHeader
                 onClick={toggleExpanded}
                 className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"

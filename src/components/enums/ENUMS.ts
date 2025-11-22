@@ -132,3 +132,14 @@ export function getSportRules(sportType: string): SportRules | null {
 }
 
 export type SportType = typeof SportType[keyof typeof SportType];
+
+export const TransactionStatus = {
+    PENDING: 'pending',
+    PROCESSING: 'processing',
+    SUCCEEDED: 'succeeded',
+    FAILED: 'failed',
+    CANCELLED: 'cancelled',
+    REFUNDED: 'refunded',
+} as const;
+
+export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];

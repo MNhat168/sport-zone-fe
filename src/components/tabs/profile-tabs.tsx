@@ -5,7 +5,6 @@ import { useAppSelector } from "@/store/hook"
 // Import all profile components
 import Profile from "@/components/profile/profile"
 import ChangePassword from "@/components/profile/change-password"
-import FieldOwnerTab from "@/components/profile/field-owner-tab"
 import CoachProfileTab from "@/components/profile/coach-profile-tab"
 
 export interface ProfileTabConfig {
@@ -32,12 +31,6 @@ const defaultTabs: ProfileTabConfig[] = [
 
 // Role-specific tabs
 const roleSpecificTabs: ProfileTabConfig[] = [
-    {
-        id: 'field-owner',
-        label: 'Field Owner',
-        component: FieldOwnerTab,
-        requiredRole: 'field_owner',
-    },
     {
         id: 'coach-profile',
         label: 'Coach Profile',

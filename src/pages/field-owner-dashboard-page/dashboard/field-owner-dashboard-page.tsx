@@ -2,14 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Clock, DollarSign, Building2, TrendingUp, Calendar } from "lucide-react"
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
-import { FieldOwnerDashboardHeader } from "@/components/header/field-owner-dashboard-header"
+import { DollarSign, Building2, TrendingUp, Calendar } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
-import { PageWrapper } from '@/components/layouts/page-wrapper'
 import { getMyFields, getMyFieldsBookings } from "@/features/field/fieldThunk"
-import { FieldOwnerDashboardTabs } from "@/components/tabs/field-owner-dashboard-tabs"
+import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
 
 export default function FieldOwnerDashboardPage() {
     const dispatch = useAppDispatch();
@@ -34,8 +31,8 @@ export default function FieldOwnerDashboardPage() {
     }) => {
         dispatch(getMyFieldsBookings({
             ...filters,
-            page: filters?.page || currentPage,
-            limit: filters?.limit || ITEMS_PER_PAGE
+            page: filters?.page || 1,
+            limit: 50 // Luôn lấy đủ data để tính toán thống kê
         }));
     };
 
@@ -69,13 +66,6 @@ export default function FieldOwnerDashboardPage() {
         const date = new Date(dateStr);
         date.setHours(0, 0, 0, 0);
         return date.getTime() === today.getTime();
-    };
-
-    const isFuture = (dateStr: string | undefined) => {
-        if (!dateStr) return false;
-        const date = new Date(dateStr);
-        date.setHours(0, 0, 0, 0);
-        return date.getTime() > today.getTime();
     };
 
     // Sử dụng dữ liệu từ Redux store
@@ -126,21 +116,32 @@ export default function FieldOwnerDashboardPage() {
         }
     }, [filteredBookings.length, currentPage]);
 
+    // Lọc booking hôm nay - chỉ lấy những booking có transaction succeeded
     const ongoingTodayBookings = bookingData.filter(
-        (b) => b.status === "confirmed" && isToday(b.date)
-    );
-
-    const upcomingFutureBookings = bookingData.filter(
-        (b) => b.status === "confirmed" && isFuture(b.date)
+        (b) => b.transactionStatus === 'succeeded' && isToday(b.date)
     );
 
     // Tính toán các chỉ số
     const totalFields = fields?.length || 0;
     const totalBookings = bookingData.length;
     const confirmedBookings = bookingData.filter(b => b.status === "confirmed").length;
+    
+    // Tính doanh thu từ các booking có transaction status SUCCEEDED
+    // Use bookingAmount directly (owner revenue = bookingAmount, platform keeps platformFee)
     const totalRevenue = bookingData
-        .filter(b => b.status === "confirmed")
-        .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+        .filter(b => b.transactionStatus === 'succeeded')
+        .reduce((sum, b) => {
+            // Use bookingAmount if available (new structure), otherwise calculate from totalPrice (backward compatibility)
+            if (b.bookingAmount !== undefined && b.bookingAmount !== null) {
+                return sum + b.bookingAmount;
+            } else {
+                // Backward compatibility: calculate from totalPrice
+                const totalPrice = b.totalPrice || 0;
+                const platformFeeRate = 0.05;
+                const ownerRevenue = totalPrice * (1 - platformFeeRate);
+                return sum + ownerRevenue;
+            }
+        }, 0);
 
     // Dữ liệu cho phần thống kê
     const metrics = [
@@ -224,13 +225,8 @@ export default function FieldOwnerDashboardPage() {
         });
 
     return (
-        <>
-            <NavbarDarkComponent />
-            <PageWrapper>
-                <div className="min-h-screen">
-                    <FieldOwnerDashboardHeader />
-                    <FieldOwnerDashboardTabs />
-                    <div className="max-w-[1320px] mx-auto py-8 space-y-8">
+        <FieldOwnerDashboardLayout>
+            <div className="w-full container mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
                         <div className="grid grid-cols-1 gap-8">
                             {/* Phần thống kê */}
                             <div>
@@ -632,7 +628,7 @@ export default function FieldOwnerDashboardPage() {
                                 </Card>
 
                                 {/* Lịch đặt sắp tới */}
-                                <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
+                                {/* <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
                                     <CardHeader className="flex flex-row items-center justify-between">
                                         <div className="flex flex-col space-y-2">
                                             <CardTitle className="text-start">Lịch đặt sắp tới</CardTitle>
@@ -697,14 +693,11 @@ export default function FieldOwnerDashboardPage() {
                                             )}
                                         </div>
                                     </CardContent>
-                                </Card>
+                                </Card> */}
                             </div>
                         </div>
 
-                        
-                    </div>
-                </div>
-            </PageWrapper>
-        </>
+            </div>
+        </FieldOwnerDashboardLayout>
     )
 }

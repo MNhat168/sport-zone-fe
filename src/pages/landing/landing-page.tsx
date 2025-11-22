@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { getUserProfile, setFavouriteSports } from "@/features/user/userThunk";
+import { useAppDispatch } from "@/store/hook";
+import { getUserProfile } from "@/features/user/userThunk";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -25,12 +25,8 @@ export default function LandingPage() {
   // selectedWeekday values: '' | 'any' | 'mon'..'sun'
   const [selectedWeekday, setSelectedWeekday] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [showFavoriteSportsModal, setShowFavoriteSportsModal] = useState(false);
-  const [modalShownOnce, setModalShownOnce] = useState(false);
 
   const dispatch = useAppDispatch();
-  const user = useAppSelector((state) => state.user.user);
-  const isLoggedIn = !!user;
   const navigate = useNavigate();
 
   const slideImages = [
@@ -57,7 +53,7 @@ export default function LandingPage() {
       
       {/* Navbar */}
       <NavbarComponent />
-      <div className="min-h-screen">
+  
         {/* Hero Section */}
         <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
           {/* Slide Images */}
@@ -559,7 +555,7 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-      </div>
+
       {/* Footer */}
       <FooterComponent />
     </>

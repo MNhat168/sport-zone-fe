@@ -320,6 +320,7 @@ export interface FieldOwnerBooking {
     startTime: string; // HH:mm format
     endTime: string; // HH:mm format
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    transactionStatus?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'refunded';
     totalPrice: number;
     customer: {
         fullName: string;
@@ -334,6 +335,7 @@ export interface FieldOwnerBooking {
 export interface FieldOwnerBookingsParams {
     fieldName?: string;
     status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    transactionStatus?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'refunded';
     date?: string; // YYYY-MM-DD format
     startDate?: string; // YYYY-MM-DD format
     endDate?: string; // YYYY-MM-DD format
