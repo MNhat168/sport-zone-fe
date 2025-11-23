@@ -21,6 +21,8 @@ import {
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
+  Building2,
+  FileCheck,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -28,7 +30,6 @@ import { type SidebarData } from '../types'
 export const sidebarData: SidebarData = {
   user: {
     name: 'satnaing',
-    email: 'satnaingdev@gmail.com',
     avatar: '/avatars/shadcn.jpg',
   },
   teams: [
@@ -77,6 +78,21 @@ export const sidebarData: SidebarData = {
           title: 'Users',
           url: '/users',
           icon: Users,
+        },
+        {
+          title: 'Field Owners',
+          icon: Building2,
+          items: [
+            {
+              title: 'All Field Owners',
+              url: '/field-owners',
+            },
+            {
+              title: 'Registration Requests',
+              url: '/field-owners/requests',
+              icon: FileCheck,
+            },
+          ],
         },
         {
           title: 'Secured by Clerk',

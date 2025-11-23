@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { LongText } from '@/components/long-text'
-import { callTypes, roles } from '../data/data'
+import { roleOptions, statusStyles } from '../data/data'
 import { type User } from '../data/schema'
 import { DataTableRowActions } from './data-table-row-actions'
 
@@ -37,12 +37,12 @@ export const usersColumns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'username',
+    accessorKey: 'fullName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Username' />
+      <DataTableColumnHeader column={column} title='Name' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36 ps-3'>{row.getValue('username')}</LongText>
+      <LongText className='max-w-48 ps-3'>{row.getValue('fullName')}</LongText>
     ),
     meta: {
       className: cn(
@@ -51,18 +51,6 @@ export const usersColumns: ColumnDef<User>[] = [
       ),
     },
     enableHiding: false,
-  },
-  {
-    id: 'fullName',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
-    ),
-    cell: ({ row }) => {
-      const { firstName, lastName } = row.original
-      const fullName = `${firstName} ${lastName}`
-      return <LongText className='max-w-36'>{fullName}</LongText>
-    },
-    meta: { className: 'w-36' },
   },
   {
     accessorKey: 'email',
@@ -74,25 +62,17 @@ export const usersColumns: ColumnDef<User>[] = [
     ),
   },
   {
-    accessorKey: 'phoneNumber',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Phone Number' />
-    ),
-    cell: ({ row }) => <div>{row.getValue('phoneNumber')}</div>,
-    enableSorting: false,
-  },
-  {
     accessorKey: 'status',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Status' />
     ),
     cell: ({ row }) => {
       const { status } = row.original
-      const badgeColor = callTypes.get(status)
+      const badgeColor = statusStyles.get(status)
       return (
         <div className='flex space-x-2'>
           <Badge variant='outline' className={cn('capitalize', badgeColor)}>
-            {row.getValue('status')}
+            {status}
           </Badge>
         </div>
       )
@@ -110,7 +90,7 @@ export const usersColumns: ColumnDef<User>[] = [
     ),
     cell: ({ row }) => {
       const { role } = row.original
-      const userType = roles.find(({ value }) => value === role)
+      const userType = roleOptions.find(({ value }) => value === role)
 
       if (!userType) {
         return null
@@ -130,6 +110,44 @@ export const usersColumns: ColumnDef<User>[] = [
     },
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    accessorKey: 'isVerified',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Verified' />
+    ),
+    cell: ({ row }) => {
+      const isVerified = row.getValue<boolean>('isVerified')
+      return (
+        <Badge
+          variant={isVerified ? 'outline' : 'secondary'}
+          className={cn(
+            'capitalize',
+            isVerified
+              ? 'bg-emerald-100/40 text-emerald-900 dark:text-emerald-200 border-emerald-300'
+              : 'bg-slate-200/50 text-slate-700 dark:text-slate-200 border-slate-300'
+          )}
+        >
+          {isVerified ? 'Yes' : 'No'}
+        </Badge>
+      )
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: 'createdAt',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Created' />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue<string>('createdAt')
+      const date = value ? new Date(value) : null
+      return (
+        <span className='text-sm text-muted-foreground'>
+          {date ? date.toLocaleDateString() : '—'}
+        </span>
+      )
+    },
   },
   {
     id: 'actions',

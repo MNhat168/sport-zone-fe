@@ -17,14 +17,14 @@ type AuthenticatedLayoutProps = {
 
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const dispatch = useAppDispatch()
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated)
+  const user = useAppSelector((state) => state.auth.user)
   const [validateSession] = useLazyValidateSessionQuery()
 
   // Validate session khi layout mount
   useEffect(() => {
-    const checkSession = async () => {
-      if (!isAuthenticated) return
+    if (user) return
 
+    const checkSession = async () => {
       try {
         const result = await validateSession().unwrap()
         // Cập nhật user info từ API
@@ -36,7 +36,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
     }
 
     checkSession()
-  }, [isAuthenticated, validateSession, dispatch])
+  }, [user, validateSession, dispatch])
   
   const defaultOpen = getCookie('sidebar_state') !== 'false'
   return (

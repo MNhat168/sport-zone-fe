@@ -15,6 +15,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Analytics } from './components/analytics'
+import { BookingStats } from './components/booking-stats'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
 
@@ -48,6 +49,7 @@ export function Dashboard() {
           <div className='w-full overflow-x-auto pb-2'>
             <TabsList>
               <TabsTrigger value='overview'>Overview</TabsTrigger>
+              <TabsTrigger value='bookings'>Bookings</TabsTrigger>
               <TabsTrigger value='analytics'>Analytics</TabsTrigger>
               <TabsTrigger value='reports' disabled>
                 Reports
@@ -182,6 +184,9 @@ export function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+          <TabsContent value='bookings' className='space-y-4'>
+            <BookingStats />
           </TabsContent>
           <TabsContent value='analytics' className='space-y-4'>
             <Analytics />

@@ -8,12 +8,22 @@ import {
 } from '@/components/ui/sidebar'
 // import { AppTitle } from './app-title'
 import { sidebarData } from './data/sidebar-data'
+import { useAppSelector } from '@/store/hooks'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
 import { TeamSwitcher } from './team-switcher'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
+  const authUser = useAppSelector((state) => state.auth.user)
+
+  const user = authUser
+    ? {
+        name: authUser.fullName || authUser.email || sidebarData.user.name,
+        avatar: authUser.avatarUrl ?? sidebarData.user.avatar,
+      }
+    : sidebarData.user
+
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
@@ -29,7 +39,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

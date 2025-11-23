@@ -5,17 +5,34 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useGetUsersQuery } from '@/store/services/usersApi'
 import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider } from './components/users-provider'
 import { UsersTable } from './components/users-table'
-import { users } from './data/users'
 
 const route = getRouteApi('/_authenticated/users/')
 
 export function Users() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
+
+  const { data, isFetching } = useGetUsersQuery({
+    search: search.search || undefined,
+    role: search.role && search.role.length > 0 ? search.role : undefined,
+    status: search.status && search.status.length > 0 ? search.status : undefined,
+    page: search.page,
+    limit: search.limit,
+    sortBy: search.sortBy,
+    sortOrder: search.sortOrder,
+  })
+
+  const tableData = data?.data ?? []
+  const meta = {
+    total: data?.total ?? 0,
+    page: data?.page ?? (search.page ?? 1),
+    limit: data?.limit ?? (search.limit ?? 10),
+  }
 
   return (
     <UsersProvider>
@@ -38,7 +55,14 @@ export function Users() {
           </div>
           <UsersPrimaryButtons />
         </div>
-        <UsersTable data={users} search={search} navigate={navigate} />
+        <UsersTable
+          data={tableData}
+          total={meta.total}
+          limit={meta.limit}
+          isLoading={isFetching}
+          search={search}
+          navigate={navigate}
+        />
       </Main>
 
       <UsersDialogs />

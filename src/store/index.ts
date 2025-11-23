@@ -12,6 +12,9 @@ import {
 } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import { authApi } from './services/authApi'
+import { dashboardApi } from './services/dashboardApi'
+import { fieldOwnersApi } from './services/fieldOwnersApi'
+import { usersApi } from './services/usersApi'
 import authReducer from './slices/authSlice'
 
 // Persist config
@@ -26,6 +29,9 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   [authApi.reducerPath]: authApi.reducer,
+  [dashboardApi.reducerPath]: dashboardApi.reducer,
+  [fieldOwnersApi.reducerPath]: fieldOwnersApi.reducer,
+  [usersApi.reducerPath]: usersApi.reducer,
 })
 
 // Persisted reducer
@@ -39,7 +45,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authApi.middleware),
+    }).concat(authApi.middleware, dashboardApi.middleware, fieldOwnersApi.middleware, usersApi.middleware),
 })
 
 // Setup listeners for RTK Query

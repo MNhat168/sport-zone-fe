@@ -22,54 +22,42 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import { roleOptions } from '../data/data'
-import { type User } from '../data/schema'
+import { type FieldOwnerProfileApi } from '../data/schema'
+import { fieldOwnersColumns as columns } from './field-owners-columns'
 import { DataTableBulkActions } from './data-table-bulk-actions'
-import { usersColumns as columns } from './users-columns'
+import { registrationStatuses } from '../data/data'
 
 type DataTableProps = {
-  data: User[]
-  total: number
-  limit: number
-  isLoading: boolean
+  data: FieldOwnerProfileApi[]
   search: Record<string, unknown>
   navigate: NavigateFn
+  isLoading?: boolean
 }
 
-export function UsersTable({
+export function FieldOwnersTable({
   data,
-  total,
-  limit,
-  isLoading,
   search,
   navigate,
+  isLoading = false,
 }: DataTableProps) {
-  // Local UI-only states
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [sorting, setSorting] = useState<SortingState>([])
 
-  // Local state management for table (uncomment to use local-only state, not synced with URL)
-  // const [columnFilters, onColumnFiltersChange] = useState<ColumnFiltersState>([])
-  // const [pagination, onPaginationChange] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
-
-  // Synced with URL states (keys/defaults mirror users route search schema)
   const {
     columnFilters,
     onColumnFiltersChange,
     pagination,
     onPaginationChange,
     ensurePageInRange,
-    globalFilter,
-    onGlobalFilterChange,
   } = useTableUrlState({
     search,
     navigate,
-    pagination: { defaultPage: 1, defaultPageSize: 10, pageKey: 'page', pageSizeKey: 'limit' },
-    globalFilter: { enabled: true, key: 'search' },
+    pagination: { defaultPage: 1, defaultPageSize: 10 },
+    globalFilter: { enabled: false },
     columnFilters: [
-      { columnId: 'status', searchKey: 'status', type: 'array' },
-      { columnId: 'role', searchKey: 'role', type: 'array' },
+      { columnId: 'userFullName', searchKey: 'search', type: 'string' },
+      { columnId: 'isVerified', searchKey: 'isVerified', type: 'array' },
     ],
   })
 
@@ -82,12 +70,10 @@ export function UsersTable({
       rowSelection,
       columnFilters,
       columnVisibility,
-      globalFilter,
     },
     enableRowSelection: true,
     onPaginationChange,
     onColumnFiltersChange,
-    onGlobalFilterChange,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
@@ -97,9 +83,6 @@ export function UsersTable({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    manualPagination: true,
-    pageCount: Math.max(1, Math.ceil(total / (limit || 10))),
-    getRowId: (row) => row._id,
   })
 
   useEffect(() => {
@@ -109,26 +92,22 @@ export function UsersTable({
   return (
     <div
       className={cn(
-        'max-sm:has-[div[role="toolbar"]]:mb-16', // Add margin bottom to the table on mobile when the toolbar is visible
+        'max-sm:has-[div[role="toolbar"]]:mb-16',
         'flex flex-1 flex-col gap-4'
       )}
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Search users...'
+        searchPlaceholder='Filter field owners...'
+        searchKey='userFullName'
         filters={[
           {
-            columnId: 'status',
-            title: 'Status',
+            columnId: 'isVerified',
+            title: 'Verification Status',
             options: [
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' },
+              { label: 'Verified', value: 'verified' },
+              { label: 'Pending', value: 'pending' },
             ],
-          },
-          {
-            columnId: 'role',
-            title: 'Role',
-            options: roleOptions.map((role) => ({ label: role.label, value: role.value })),
           },
         ]}
       />
@@ -163,8 +142,11 @@ export function UsersTable({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  Loading users...
+                <TableCell
+                  colSpan={columns.length}
+                  className='h-24 text-center'
+                >
+                  Loading...
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -209,3 +191,4 @@ export function UsersTable({
     </div>
   )
 }
+

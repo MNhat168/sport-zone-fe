@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
-import { roles } from '../data/data'
+import { roleOptions } from '../data/data'
 import { type User } from '../data/schema'
 
 const formSchema = z
@@ -105,11 +105,21 @@ export function UsersActionDialog({
   onOpenChange,
 }: UserActionDialogProps) {
   const isEdit = !!currentRow
+  const [firstName = '', ...restName] = (currentRow?.fullName ?? '').split(' ')
+  const lastNameFromFullName = restName.join(' ')
+  const deriveUsername = () =>
+    currentRow?.email ? currentRow.email.split('@')[0] : ''
+
   const form = useForm<UserForm>({
     resolver: zodResolver(formSchema),
     defaultValues: isEdit
       ? {
-          ...currentRow,
+          firstName,
+          lastName: lastNameFromFullName,
+          username: deriveUsername(),
+          email: currentRow?.email ?? '',
+          role: currentRow?.role ?? '',
+          phoneNumber: currentRow?.phone ?? '',
           password: '',
           confirmPassword: '',
           isEdit,
@@ -264,7 +274,7 @@ export function UsersActionDialog({
                       onValueChange={field.onChange}
                       placeholder='Select a role'
                       className='col-span-4'
-                      items={roles.map(({ label, value }) => ({
+                  items={roleOptions.map(({ label, value }) => ({
                         label,
                         value,
                       }))}
