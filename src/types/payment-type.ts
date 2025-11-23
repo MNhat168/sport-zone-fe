@@ -55,3 +55,10 @@ export interface ErrorResponse {
     status: string;
 }
 
+export interface PaymentDto {
+    _id: string;
+    amount: number;
+    type: string;
+    status: string;
+    createdAt: Date;
+}

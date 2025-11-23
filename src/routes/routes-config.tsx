@@ -40,6 +40,9 @@ import OwnerFieldListPage from "../pages/field-owner-dashboard-page/owner-field-
 import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/field-owner-dashboard-page";
 import FieldHistoryBookingPage from "../pages/field-owner-dashboard-page/field-booking-list-page/field-booking-list-page";
 
+//Admin
+import AdminDashboardPage from "../pages/admin/admin-dashboard.tsx";
+
 //Notification
 import NotificationsPage from "../pages/notifications/page";
 
@@ -288,7 +291,7 @@ export const adminRoutes: RouteObject[] = [
     path: "/admin/dashboard",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.MANAGER]}>
-        <Placeholder title="Admin Dashboard" />
+        <AdminDashboardPage />
       </ProtectedRoute>
     ),
   },
