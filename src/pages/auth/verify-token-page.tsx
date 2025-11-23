@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle, XCircle } from "lucide-react";
 import { BASE_URL } from "../../utils/constant-value/constant";
@@ -13,30 +13,52 @@ export default function VerifyTokenPage() {
   const [verifyMessage, setVerifyMessage] = useState("");
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");
+  const email = searchParams.get("email");
 
-  const verifyEmailToken = async (token: string) => {
+  const verifyEmailToken = useCallback(async (token: string, email?: string | null) => {
     setIsVerify(null);
     try {
-      const response = await axios.get(
-        `${BASE_URL}/users/verify-email?token=${token}`
-      );
+      // Backend endpoint is /auth/verify-email
+      // Support both with email and without email
+      let url = `${BASE_URL}/auth/verify-email?token=${encodeURIComponent(token)}`;
+      if (email) {
+        url += `&email=${encodeURIComponent(email)}`;
+      }
+      const response = await axios.get(url);
       // Nếu backend trả về message thành công
       setIsVerify(true);
       setVerifyMessage(response.data.message || "Xác thực email thành công!");
       CustomSuccessToast("Xác thực email thành công!");
     } catch (error: any) {
       setIsVerify(false);
-      setVerifyMessage(
-        error?.response?.data?.message || "Token không hợp lệ hoặc đã hết hạn"
-      );
+      const errorMessage = error?.response?.data?.message || 
+                          (error?.message?.includes('expired') || error?.message?.includes('hết hạn') 
+                            ? "Token đã hết hạn. Vui lòng đăng ký lại." 
+                            : "Token không hợp lệ hoặc đã hết hạn");
+      setVerifyMessage(errorMessage);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (token) {
-      verifyEmailToken(token);
+    const path = location.pathname;
+    
+    // Handle redirect from backend (success/failed pages)
+    if (path === '/verify-email/success') {
+      setIsVerify(true);
+      setVerifyMessage("Tài khoản của bạn đã được xác thực thành công!");
+      CustomSuccessToast("Xác thực email thành công!");
+      return;
+    } else if (path === '/verify-email/failed') {
+      setIsVerify(false);
+      setVerifyMessage("Xác thực thất bại. Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng ký lại.");
+      return;
     }
-  }, [token]);
+    
+    // Handle direct token verification (from email link)
+    if (token && path === '/verify-email') {
+      verifyEmailToken(token, email);
+    }
+  }, [token, email, location.pathname, verifyEmailToken]);
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-primary-200 via-primary-500 to-primary-700">

@@ -75,6 +75,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/verify-email", element: <VerifyTokenPage /> },
   { path: "/auth/verify-token", element: <VerifyTokenPage /> },
   { path: "/verify-email/success", element: <VerifyTokenPage /> },
+  { path: "/verify-email/failed", element: <VerifyTokenPage /> },
   { path: "/coach/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },

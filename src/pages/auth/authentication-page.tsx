@@ -215,12 +215,26 @@ export default function AuthenticationPage() {
         ).unwrap();
 
         if (result) {
-          CustomSuccessToast("Đăng ký thành công! Vui lòng đăng nhập.");
+          CustomSuccessToast("Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản. Link xác thực có hiệu lực trong 5 phút.");
           setIsLogin(true);
         }
       }
     } catch (error: any) {
-      CustomFailedToast(error.message || "Có lỗi xảy ra");
+      // Extract error message from thunk error response
+      let errorMessage = "Có lỗi xảy ra";
+      
+      if (error?.message) {
+        // Error from thunk (already extracted from backend)
+        errorMessage = error.message;
+      } else if (error?.response?.data?.message) {
+        // Direct axios error
+        errorMessage = error.response.data.message;
+      } else if (error?.payload?.message) {
+        // Error from rejected thunk action
+        errorMessage = error.payload.message;
+      }
+      
+      CustomFailedToast(errorMessage);
     } finally {
       setIsLoading(false);
     }
