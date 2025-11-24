@@ -612,7 +612,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                     Trải nghiệm huấn luyện cá nhân hóa phù hợp với nhu cầu của bạn.
                     Dù là 1 kèm 1 hay nhóm nhỏ, hãy phát huy tối đa tiềm năng của bạn.
                   </p>
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
                     <div className="p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300">
                       <h4 className="font-semibold mb-2 text-left">Phát triển kỹ năng kỹ thuật</h4>
                       <p className="text-sm text-muted-foreground text-left">Nắm vững kỹ thuật cơ bản như di chuyển, vung vợt và di chuyển vị trí.</p>
@@ -625,7 +625,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                       <h4 className="font-semibold mb-2 text-left">Rèn luyện tâm lý thi đấu</h4>
                       <p className="text-sm text-muted-foreground text-left">Xây dựng sự tự tin, tập trung và bản lĩnh để thi đấu dưới áp lực.</p>
                     </div>
-                  </div>
+                  </div> */}
                 </CardContent>
               </Card>
 
@@ -912,10 +912,10 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                     </div>
                   </div>
 
-                  <Button className="w-full bg-[#1a2332] hover:bg-[#1a2332]/90 text-white h-14 text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300">
+                  {/* <Button className="w-full bg-[#1a2332] hover:bg-[#1a2332]/90 text-white h-14 text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300">
                     <Calendar className="mr-2 h-5 w-5" />
                     Đặt ngay
-                  </Button>
+                  </Button> */}
                 </CardHeader>
               </Card>
 
@@ -1240,10 +1240,10 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                 onClick={() => setSelectedLesson(null)}
                 className="flex-1 hover:bg-muted bg-transparent"
               >Đóng</Button>
-              <Button className="flex-1 bg-[#1a2332] hover:bg-[#1a2332]/90 text-white">
+              {/* <Button className="flex-1 bg-[#1a2332] hover:bg-[#1a2332]/90 text-white">
                 <Calendar className="h-4 w-4 mr-2" />
                 Đặt buổi học này
-              </Button>
+              </Button> */}
             </div>
           </div>
         </DialogContent>
