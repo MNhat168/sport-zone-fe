@@ -83,6 +83,17 @@ export const fieldOwnerRequestSchema = z.object({
   submittedAt: z.coerce.date(),
   reviewedAt: z.coerce.date().optional(),
   reviewedBy: z.string().optional(),
+  // Facility information
+  facilityName: z.string().optional(),
+  facilityLocation: z.string().optional(),
+  description: z.string().optional(),
+  contactPhone: z.string().optional(),
+  website: z.string().optional(),
+  businessHours: z.string().optional(),
+  supportedSports: z.array(z.string()).optional(),
+  amenities: z.array(z.string()).optional(),
+  // Field images
+  fieldImages: z.array(z.string().url()).optional(),
 })
 
 export type FieldOwnerRequest = z.infer<typeof fieldOwnerRequestSchema>

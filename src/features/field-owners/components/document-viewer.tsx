@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Download, ZoomIn, ZoomOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +26,13 @@ export function DocumentViewer({
 }: DocumentViewerProps) {
   const [selectedIndex, setSelectedIndex] = useState(currentIndex)
   const [zoom, setZoom] = useState(100)
+
+  // Update selected index when currentIndex prop changes
+  useEffect(() => {
+    if (isOpen && currentIndex >= 0 && currentIndex < images.length) {
+      setSelectedIndex(currentIndex)
+    }
+  }, [isOpen, currentIndex, images.length])
 
   const currentImage = images[selectedIndex]
 

@@ -1,7 +1,7 @@
 import z from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
 import { FieldOwnerRequests } from '@/features/field-owners/requests'
-import { ownerTypes, registrationStatuses } from '@/features/field-owners/data/data'
+import { ownerTypes } from '@/features/field-owners/data/data'
 
 const fieldOwnerRequestsSearchSchema = z.object({
   page: z.number().optional().catch(1),
