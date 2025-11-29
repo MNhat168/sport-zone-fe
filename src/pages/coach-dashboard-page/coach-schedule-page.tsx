@@ -22,8 +22,8 @@ import { PageWrapper } from '@/components/layouts/page-wrapper'
 export default function CoachSchedulePage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [userId, setUserId] = useState<string | null>(null)
-  const [coachId, setCoachId] = useState<string | null>(null)
+  const [_userId, setUserId] = useState<string | null>(null)
+  const [_coachId, setCoachId] = useState<string | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
 
   const hourHeight = 45

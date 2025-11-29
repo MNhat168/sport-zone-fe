@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
@@ -8,7 +7,7 @@ import { getFieldById } from "@/features/field/fieldThunk"
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
 import { FieldSelectionPlaceholder } from "./components/field-selection-placeholder"
 import { ChevronLeft, ChevronRight, MapPin, Edit } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuickNavPills } from "@/pages/field-detail-page/components/QuickNavPills"
 import { OverviewCard } from "@/pages/field-detail-page/components/OverviewCard"
@@ -356,7 +355,7 @@ export default function FieldViewPage() {
                                     <OverviewCard 
                                         refObj={overviewRef} 
                                         id="overview" 
-                                        description={currentField.description || mockDescription} 
+                                        description={currentField?.description || mockDescription} 
                                     />
 
                                     <RulesCard 
@@ -375,7 +374,7 @@ export default function FieldViewPage() {
                                     <GalleryCard 
                                         refObj={galleryRef} 
                                         id="gallery" 
-                                        images={(currentField.images as string[]) || []} 
+                                        images={(currentField?.images as string[]) || []} 
                                         fallback={mockImages} 
                                     />
 

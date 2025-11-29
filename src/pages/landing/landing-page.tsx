@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAppDispatch } from "@/store/hook";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { getUserProfile } from "@/features/user/userThunk";
 import { Button } from "@/components/ui/button";
 import { Card} from "@/components/ui/card";
@@ -30,6 +30,7 @@ export default function LandingPage() {
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const authUser = useAppSelector((state) => state.auth.user);
 
   const slideImages = [
     "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757854021/banner-tennis_koajhu.jpg",
@@ -413,20 +414,26 @@ export default function LandingPage() {
                   title: "Đăng Ký Làm Người Dùng",
                   description:
                     "Đặt sân thể thao yêu thích của bạn và tận hưởng chơi cùng bạn bè hoặc hệ thống đặt sân.",
+                  link: "/auth",
+                  show: true,
                 },
                 {
                   icon: Award,
                   title: "Đăng Ký Làm Huấn Luyện Viên",
                   description:
                     "Tiếp cận huấn luyện chuyên nghiệp cho mọi trình độ kỹ năng và môn thể thao.",
+                  link: "/auth",
+                  show: true,
                 },
                 {
                   icon: MapPin,
                   title: "Đăng Ký Làm Chủ Sân",
                   description:
                     "Liệt kê sân thể thao của bạn, quản lý đặt sân và phát triển kinh doanh với nền tảng của chúng tôi.",
+                  link: "/become-field-owner",
+                  show: !authUser || authUser.role === 'user', // Chỉ hiển thị cho user chưa phải field owner
                 },
-              ].map((signup, index) => (
+              ].filter(signup => signup.show).map((signup, index) => (
                 <Card
                   key={index}
                   className="text-center p-8 hover:shadow-lg transition-all duration-300 animate-scale-in group"
@@ -445,6 +452,7 @@ export default function LandingPage() {
                   <Button
                     className="text-white hover:scale-105 transition-transform"
                     style={{ backgroundColor: "#00775C" }}
+                    onClick={() => signup.link ? navigate(signup.link) : navigate('/auth')}
                   >
                     Đăng Ký Ngay
                   </Button>

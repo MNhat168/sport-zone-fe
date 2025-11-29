@@ -49,6 +49,11 @@ import FieldOwnerProfilePage from "../pages/field-owner-dashboard-page/profile/f
 import FieldEditPage from "../pages/field-owner-dashboard-page/fields/field-edit-page";
 import FieldViewPage from "../pages/field-owner-dashboard-page/fields/field-view-page";
 
+// Field Owner Registration Pages
+import FieldOwnerRegistrationPage from "../pages/field-owner-registration-page/field-owner-registration-page";
+import FieldOwnerRegistrationStatusPage from "../pages/field-owner-registration-status-page/field-owner-registration-status-page";
+import FieldOwnerBankAccountPage from "../pages/field-owner-bank-account-page/field-owner-bank-account-page";
+
 //Notification
 import NotificationsPage from "../pages/notifications/page";
 
@@ -193,6 +198,23 @@ export const userRoutes: RouteObject[] = [
         ]}
       >
         <NotificationsPage />
+      </ProtectedRoute>
+    ),
+  },
+  // Field Owner Registration (for regular users)
+  {
+    path: "/become-field-owner",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <FieldOwnerRegistrationPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner-registration-status",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.FIELD_OWNER]}>
+        <FieldOwnerRegistrationStatusPage />
       </ProtectedRoute>
     ),
   },
@@ -475,6 +497,16 @@ export const fieldOwnerRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <Placeholder title="Lịch đặt sân" />
+      </ProtectedRoute>
+    ),
+  },
+
+  // Bank Account Management
+  {
+    path: "/field-owner/bank-accounts",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <FieldOwnerBankAccountPage />
       </ProtectedRoute>
     ),
   },

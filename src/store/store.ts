@@ -8,6 +8,8 @@ import transactionsReducer from "../features/transactions/transactionsSlice";
 import { amenitiesReducer } from "../features/amenities";
 import { ownerProfileReducer } from "../features/field-owner-profile";
 import { walletReducer } from "../features/wallet";
+import { registrationReducer } from "../features/field-owner-registration";
+import { bankAccountReducer } from "../features/bank-account";
 
 export const store = configureStore({
     reducer: {
@@ -20,6 +22,8 @@ export const store = configureStore({
         amenities: amenitiesReducer,
         ownerProfile: ownerProfileReducer,
         wallet: walletReducer,
+        registration: registrationReducer,
+        bankAccount: bankAccountReducer,
     },
 });
 

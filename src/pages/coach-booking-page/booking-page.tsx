@@ -101,7 +101,7 @@ const BookingPage = () => {
                 setLoading(true);
                 setError(null);
                 const response = await axios.get(
-                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/coaches/all`
+                    `${import.meta.env.VITE_API_URL}/coaches/all`
                 );
                 setCoaches(
                   Array.isArray(response.data)
