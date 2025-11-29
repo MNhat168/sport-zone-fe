@@ -5,7 +5,6 @@ import {
   GET_FIELD_OWNER_WALLET_API,
   GET_ADMIN_WALLET_API,
   WITHDRAW_REFUND_API,
-  PROCESS_REFUND_API,
 } from "./walletAPI";
 import type {
   UserWalletResponse,

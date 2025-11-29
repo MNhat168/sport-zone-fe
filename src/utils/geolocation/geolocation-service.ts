@@ -219,16 +219,16 @@ class GeolocationService {
    * Check if geolocation permission is granted
    * @returns Promise with permission status
    */
-  async checkPermission(): Promise<PermissionState> {
+  async checkPermission(): Promise<PermissionState | 'unknown'> {
     if (!('permissions' in navigator)) {
-      return 'unknown';
+      return 'unknown' as PermissionState;
     }
 
     try {
       const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
       return permission.state;
     } catch (error) {
-      return 'unknown';
+      return 'unknown' as PermissionState;
     }
   }
 

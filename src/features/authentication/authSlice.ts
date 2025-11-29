@@ -174,7 +174,7 @@ const authSlice = createSlice({
                     target.setItem("user", JSON.stringify(user));
                 }
             })
-            .addCase(validateSession.rejected, (state, action) => {
+            .addCase(validateSession.rejected, (state) => {
                 state.loading = false;
                 state.user = null;
                 state.token = null;

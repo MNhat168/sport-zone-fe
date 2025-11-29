@@ -21,9 +21,9 @@ export function sleep(ms: number = 1000) {
  * - In middle: [1, '...', 4, 5, 6, '...', 10]
  * - Near end: [1, '...', 7, 8, 9, 10]
  */
-export function getPageNumbers(currentPage: number, totalPages: number) {
+export function getPageNumbers(currentPage: number, totalPages: number): (number | string)[] {
   const maxVisiblePages = 5 // Maximum number of page buttons to show
-  const rangeWithDots = []
+  const rangeWithDots: (number | string)[] = []
 
   if (totalPages <= maxVisiblePages) {
     // If total pages is 5 or less, show all pages

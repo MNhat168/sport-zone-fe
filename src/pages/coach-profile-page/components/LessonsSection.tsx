@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { User, Users } from "lucide-react";
+import { User } from "lucide-react";
 
 interface LessonType {
   id: string;

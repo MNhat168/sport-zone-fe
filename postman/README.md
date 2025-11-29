@@ -2,14 +2,14 @@ Create Field - Postman Guide
 
 1) JSON only (no images)
 - Method: POST
-- URL: {{VITE_API_URL}}/fields
+- URL: {{VITE_API_URL}}/field-owner/fields
 - Headers: Content-Type: application/json
 - Body (raw JSON): use create-field.raw.json
 - Auth: Cookie-based (access_token, refresh_token) + Anti-forgery header if backend requires
 
 2) Multipart (with images)
 - Method: POST
-- URL: {{VITE_API_URL}}/fields/with-images
+- URL: {{VITE_API_URL}}/field-owner/fields/with-images
 - Body (form-data):
   - name: string
   - sportType: string

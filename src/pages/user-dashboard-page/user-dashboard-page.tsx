@@ -9,6 +9,9 @@ import {
     ChevronRight,
     MoreHorizontal,
     X,
+    Building2,
+    ArrowRight,
+    FileText,
 } from "lucide-react"
 import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
@@ -16,13 +19,16 @@ import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { mockFavorites, mockInvoices } from "@/components/mock-data/mock-data"
 import { useState, useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
 import { getMyBookings, cancelFieldBooking } from "../../features/booking/bookingThunk"
 import type { Booking } from "../../types/booking-type"
 
 export default function UserDashboardPage() {
+    const navigate = useNavigate()
     const dispatch = useAppDispatch()
     const bookingState = useAppSelector((state) => state?.booking)
+    const authUser = useAppSelector((state) => state.auth.user)
     const bookings = bookingState?.bookings || []
     const pagination = bookingState?.pagination || null
     const loading = bookingState?.loading || false
@@ -69,7 +75,6 @@ export default function UserDashboardPage() {
     // Helper function to format booking data for display
     const formatBookingData = (booking: Booking) => {
         const field = typeof booking.field === 'object' ? booking.field : null
-        const user = typeof booking.user === 'object' ? booking.user : null
         
         // Format date - handle both ISO string and date string formats
         const bookingDate = new Date(booking.date)
@@ -84,7 +89,7 @@ export default function UserDashboardPage() {
         const formattedPrice = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
-        }).format(booking.totalPrice)
+        }).format(booking.totalPrice || 0)
         
         return {
             id: booking._id,
@@ -206,7 +211,7 @@ export default function UserDashboardPage() {
                                                 {new Intl.NumberFormat('vi-VN', {
                                                     style: 'currency',
                                                     currency: 'VND'
-                                                }).format(bookings.reduce((total, booking) => total + booking.totalPrice, 0))}
+                                                }).format(bookings.reduce((total, booking) => total + (booking.totalPrice || 0), 0))}
                                             </p>
                                             <p className="text-sm text-muted-foreground text-start">Tổng thanh toán</p>
                                         </div>
@@ -218,6 +223,59 @@ export default function UserDashboardPage() {
                             </Card>
                         </div>
                     </div>
+
+                    {/* Become Field Owner Promotion Card */}
+                    {authUser?.role === 'user' && (
+                        <Card className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 shadow-lg border-0 text-white">
+                            <CardContent className="p-0">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <Building2 className="w-8 h-8" />
+                                            <h3 className="text-2xl font-bold">Trở thành chủ sân</h3>
+                                        </div>
+                                        <p className="text-green-50 mb-4 text-lg">
+                                            Đăng ký làm chủ sân và bắt đầu kiếm tiền từ sân thể thao của bạn!
+                                        </p>
+                                        <ul className="space-y-2 mb-4 text-green-50">
+                                            <li className="flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-white rounded-full"></span>
+                                                Quản lý sân bóng dễ dàng
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-white rounded-full"></span>
+                                                Nhận thanh toán tự động
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-white rounded-full"></span>
+                                                Hỗ trợ 24/7 từ đội ngũ chuyên nghiệp
+                                            </li>
+                                        </ul>
+                                        <div className="flex gap-3">
+                                        <Button
+                                            onClick={() => navigate('/become-field-owner')}
+                                            className="bg-white text-green-600 hover:bg-green-50 font-semibold"
+                                        >
+                                            Đăng ký ngay
+                                            <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Button>
+                                            <Button
+                                                onClick={() => navigate('/field-owner-registration-status')}
+                                                variant="outline"
+                                                className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold"
+                                            >
+                                                <FileText className="mr-2 h-4 w-4" />
+                                                Xem trạng thái
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="hidden md:block ml-8">
+                                        <Building2 className="w-32 h-32 opacity-20" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Today's Appointment Section */}
                     <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
