@@ -8,8 +8,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { FieldOwnersRequestsTable } from './components/field-owners-requests-table'
 import { FieldOwnersProvider } from './components/field-owners-provider'
 import { FieldOwnersDialogs } from './components/field-owners-dialogs'
-// TODO: This hook was removed. Need to add back if requests page functionality is needed
-// import { useGetFieldOwnerRequestsQuery } from '@/store/services/fieldOwnersApi'
+import { useGetRegistrationRequestsQuery } from '@/store/services/fieldOwnersApi'
 
 const route = getRouteApi('/_authenticated/field-owners/requests')
 
@@ -17,16 +16,11 @@ export function FieldOwnerRequests() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
 
-  // TODO: API was removed. Need to add back if requests page functionality is needed
-  // const { data, isLoading } = useGetFieldOwnerRequestsQuery({
-  //   page: search.page || 1,
-  //   limit: search.pageSize || 10,
-  //   status: search.status as string | undefined,
-  //   ownerType: search.ownerType as string | undefined,
-  //   search: search.search as string | undefined,
-  // })
-  const data = { data: [] }
-  const isLoading = false
+  const { data, isLoading, isFetching } = useGetRegistrationRequestsQuery({
+    page: search.page || 1,
+    limit: search.pageSize || 10,
+  })
+  const requests = data?.data?.data ?? []
 
   return (
     <FieldOwnersProvider>
@@ -51,10 +45,10 @@ export function FieldOwnerRequests() {
           </div>
         </div>
         <FieldOwnersRequestsTable
-          data={data?.data || []}
+          data={requests}
           search={search}
           navigate={navigate}
-          isLoading={isLoading}
+          isLoading={isLoading || isFetching}
         />
       </Main>
 

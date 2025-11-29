@@ -26,10 +26,11 @@ const personalInfoSchema = z.object({
 })
 
 // Documents schema
+// @deprecated idFront and idBack are deprecated - use eKYC instead
 const documentsSchema = z.object({
-  idFront: z.string().url(),
-  idBack: z.string().url(),
-  businessLicense: z.string().url().optional(),
+  idFront: z.string().url().optional(), // @deprecated - replaced by eKYC
+  idBack: z.string().url().optional(), // @deprecated - replaced by eKYC
+  businessLicense: z.string().url().optional(), // Still used for business/household owner types
 })
 
 // GPS coordinates schema
@@ -65,16 +66,18 @@ const bankAccountSchema = z.object({
   verifiedBy: z.string().optional(),
 })
 
-// Field Owner Registration Request schema
+// Field Owner Registration Request schema (matches backend FieldOwnerRegistrationResponseDto)
 export const fieldOwnerRequestSchema = z.object({
   id: z.string(),
   userId: z.string(),
-  userInfo: userInfoSchema,
   ownerType: ownerTypeSchema,
   personalInfo: personalInfoSchema,
-  documents: documentsSchema,
-  fieldInfo: fieldInfoSchema,
-  bankAccount: bankAccountSchema.optional(),
+  documents: documentsSchema.optional(), // @deprecated - idFront/idBack replaced by eKYC
+  // eKYC fields
+  ekycSessionId: z.string().optional(),
+  ekycStatus: z.enum(['pending', 'verified', 'failed']).optional(),
+  ekycVerifiedAt: z.coerce.date().optional(),
+  ekycData: personalInfoSchema.optional(),
   status: registrationStatusSchema,
   rejectionReason: z.string().optional(),
   submittedAt: z.coerce.date(),
@@ -125,7 +128,7 @@ export type VerifyBankAccountRequest = z.infer<typeof verifyBankAccountSchema>
 export const fieldOwnerRequestListSchema = z.array(fieldOwnerRequestSchema)
 export const fieldOwnerProfileListSchema = z.array(fieldOwnerProfileSchema)
 
-// Field Owner Profile API schema (from GET /fields/admin/owner-profiles)
+// Field Owner Profile API schema (from GET /field-owner/admin/profiles)
 export const fieldOwnerProfileApiSchema = z.object({
   id: z.string(),
   user: z.string(),

@@ -25,7 +25,19 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { setOpen, setCurrentRow } = useFieldOwners()
   const navigate = useNavigate()
 
+  const isRequestRow =
+    'status' in row.original &&
+    'documents' in row.original &&
+    'personalInfo' in row.original &&
+    'submittedAt' in row.original
+
   const handleView = () => {
+    if (isRequestRow) {
+      setCurrentRow(row.original)
+      setOpen('view')
+      return
+    }
+
     navigate({
       to: '/field-owners/$id',
       params: { id: row.original.id },

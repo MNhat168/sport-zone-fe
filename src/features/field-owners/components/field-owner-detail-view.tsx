@@ -61,13 +61,29 @@ export function FieldOwnerDetailView() {
   const handleViewDocuments = (type: 'id' | 'business' | 'bank') => {
     if (!fieldOwner) return
 
+    // Note: ID documents (idFront/idBack) are deprecated - use eKYC instead
+    // This is kept for backward compatibility with legacy data
     if (type === 'id') {
-      setDocumentViewerImages([
-        fieldOwner.documents.idFront,
-        fieldOwner.documents.idBack,
-      ])
-      setDocumentViewerTitle('Identity Documents (CCCD)')
-    } else if (type === 'business' && fieldOwner.documents.businessLicense) {
+      // Check if eKYC is available (new method)
+      if (fieldOwner.ekycSessionId) {
+        // eKYC verification - show status instead of documents
+        toast.info('Identity verified via didit eKYC', {
+          description: `Status: ${fieldOwner.ekycStatus || 'pending'}`,
+        })
+        return
+      }
+      // Legacy: fallback to CCCD documents if available
+      if (fieldOwner.documents?.idFront && fieldOwner.documents?.idBack) {
+        setDocumentViewerImages([
+          fieldOwner.documents.idFront,
+          fieldOwner.documents.idBack,
+        ])
+        setDocumentViewerTitle('Identity Documents (CCCD) - Legacy')
+      } else {
+        toast.warning('No identity documents available')
+        return
+      }
+    } else if (type === 'business' && fieldOwner.documents?.businessLicense) {
       setDocumentViewerImages([fieldOwner.documents.businessLicense])
       setDocumentViewerTitle('Business License')
     } else if (

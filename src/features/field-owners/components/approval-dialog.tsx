@@ -22,11 +22,10 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import { useFieldOwners } from './field-owners-provider'
-// TODO: These hooks were removed. Need to add back if approval/reject functionality is needed
-// import {
-//   useApproveFieldOwnerMutation,
-//   useRejectFieldOwnerMutation,
-// } from '@/store/services/fieldOwnersApi'
+import {
+  useApproveFieldOwnerRegistrationMutation,
+  useRejectFieldOwnerRegistrationMutation,
+} from '@/store/services/fieldOwnersApi'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -44,13 +43,10 @@ type RejectFormValues = z.infer<typeof rejectFormSchema>
 export function ApprovalDialog() {
   const { open, setOpen, currentRow } = useFieldOwners()
   const navigate = useNavigate()
-  // TODO: These hooks were removed. Need to add back if approval/reject functionality is needed
-  // const [approveFieldOwner, { isLoading: isApproving }] =
-  //   useApproveFieldOwnerMutation()
-  // const [rejectFieldOwner, { isLoading: isRejecting }] =
-  //   useRejectFieldOwnerMutation()
-  const isApproving = false
-  const isRejecting = false
+  const [approveFieldOwner, { isLoading: isApproving }] =
+    useApproveFieldOwnerRegistrationMutation()
+  const [rejectFieldOwner, { isLoading: isRejecting }] =
+    useRejectFieldOwnerRegistrationMutation()
 
   const isApproveOpen = open === 'approve'
   const isRejectOpen = open === 'reject'
@@ -72,39 +68,35 @@ export function ApprovalDialog() {
   const handleApprove = async (data: ApproveFormValues) => {
     if (!currentRow || !('id' in currentRow)) return
 
-    // TODO: API was removed. Need to add back if approval functionality is needed
-    toast.error('Approve functionality is currently unavailable')
-    // try {
-    //   await approveFieldOwner({
-    //     id: currentRow.id,
-    //     data,
-    //   }).unwrap()
-    //   toast.success('Field owner registration approved successfully')
-    //   setOpen(null)
-    //   approveForm.reset()
-    //   navigate({ to: '/field-owners/requests' })
-    // } catch (error: any) {
-    //   toast.error(error?.data?.message || 'Failed to approve registration')
-    // }
+    try {
+      await approveFieldOwner({
+        id: currentRow.id,
+        data,
+      }).unwrap()
+      toast.success('Field owner registration approved successfully')
+      setOpen(null)
+      approveForm.reset()
+      navigate({ to: '/field-owners/requests' })
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to approve registration')
+    }
   }
 
   const handleReject = async (data: RejectFormValues) => {
     if (!currentRow || !('id' in currentRow)) return
 
-    // TODO: API was removed. Need to add back if reject functionality is needed
-    toast.error('Reject functionality is currently unavailable')
-    // try {
-    //   await rejectFieldOwner({
-    //     id: currentRow.id,
-    //     data,
-    //   }).unwrap()
-    //   toast.success('Field owner registration rejected')
-    //   setOpen(null)
-    //   rejectForm.reset()
-    //   navigate({ to: '/field-owners/requests' })
-    // } catch (error: any) {
-    //   toast.error(error?.data?.message || 'Failed to reject registration')
-    // }
+    try {
+      await rejectFieldOwner({
+        id: currentRow.id,
+        data,
+      }).unwrap()
+      toast.success('Field owner registration rejected')
+      setOpen(null)
+      rejectForm.reset()
+      navigate({ to: '/field-owners/requests' })
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to reject registration')
+    }
   }
 
   if (!currentRow) return null

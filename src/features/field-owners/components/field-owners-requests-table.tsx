@@ -56,7 +56,7 @@ export function FieldOwnersRequestsTable({
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: false },
     columnFilters: [
-      { columnId: 'userInfo.fullName', searchKey: 'search', type: 'string' },
+      { columnId: 'applicantName', searchKey: 'search', type: 'string' },
       { columnId: 'status', searchKey: 'status', type: 'array' },
       { columnId: 'ownerType', searchKey: 'ownerType', type: 'array' },
     ],
@@ -100,7 +100,7 @@ export function FieldOwnersRequestsTable({
       <DataTableToolbar
         table={table}
         searchPlaceholder='Filter requests...'
-        searchKey='userInfo.fullName'
+        searchKey='applicantName'
         filters={[
           {
             columnId: 'status',

@@ -1,11 +1,11 @@
 import { ApprovalDialog } from './approval-dialog'
-import { useFieldOwners } from './field-owners-provider'
+import { RequestDetailDialog } from './request-detail-dialog'
 
 export function FieldOwnersDialogs() {
-  const { open } = useFieldOwners()
   return (
     <>
       <ApprovalDialog />
+      <RequestDetailDialog />
     </>
   )
 }

@@ -69,10 +69,11 @@ export function UserAuthForm({
       const targetPath = redirectTo || '/'
       navigate({ to: targetPath, replace: true })
     } catch (error: unknown) {
-      let errorMessage = 'Login failed. Please check your credentials.'
+      let errorMessage = 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.'
       
       if (error && typeof error === 'object' && 'data' in error) {
         const err = error as { data?: { message?: string } }
+        // Use the specific error message from backend
         errorMessage = err.data?.message || errorMessage
       } else if (error instanceof Error) {
         errorMessage = error.message

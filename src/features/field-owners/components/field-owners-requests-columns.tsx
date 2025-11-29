@@ -37,13 +37,14 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'userInfo.fullName',
+    id: 'applicantName',
+    accessorFn: (row) => row.personalInfo.fullName,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Owner Name' />
+      <DataTableColumnHeader column={column} title='Applicant Name' />
     ),
     cell: ({ row }) => (
       <LongText className='max-w-36 ps-3'>
-        {row.original.userInfo.fullName}
+        {row.original.personalInfo.fullName}
       </LongText>
     ),
     meta: {
@@ -55,32 +56,26 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'fieldInfo.name',
+    id: 'applicantIdNumber',
+    accessorFn: (row) => row.personalInfo.idNumber,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Facility Name' />
-    ),
-    cell: ({ row }) => (
-      <LongText className='max-w-36'>{row.original.fieldInfo.name}</LongText>
-    ),
-    meta: { className: 'w-36' },
-  },
-  {
-    accessorKey: 'userInfo.email',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Email' />
+      <DataTableColumnHeader column={column} title='ID Number' />
     ),
     cell: ({ row }) => (
       <div className='w-fit ps-2 text-nowrap'>
-        {row.original.userInfo.email}
+        {row.original.personalInfo.idNumber}
       </div>
     ),
   },
   {
-    accessorKey: 'userInfo.phone',
+    id: 'applicantAddress',
+    accessorFn: (row) => row.personalInfo.address,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Phone' />
+      <DataTableColumnHeader column={column} title='Address' />
     ),
-    cell: ({ row }) => <div>{row.original.userInfo.phone}</div>,
+    cell: ({ row }) => (
+      <LongText className='max-w-52'>{row.original.personalInfo.address}</LongText>
+    ),
     enableSorting: false,
   },
   {
@@ -98,9 +93,8 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
         </div>
       )
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
+    filterFn: (row, id, value) =>
+      Array.isArray(value) ? value.includes(row.getValue(id)) : true,
     enableSorting: false,
   },
   {
@@ -117,9 +111,8 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
         </Badge>
       )
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
+    filterFn: (row, id, value) =>
+      Array.isArray(value) ? value.includes(row.getValue(id)) : true,
     enableHiding: false,
     enableSorting: false,
   },
@@ -129,21 +122,30 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
       <DataTableColumnHeader column={column} title='Submitted' />
     ),
     cell: ({ row }) => {
-      const date = row.getValue('submittedAt') as Date
+      const rawDate = row.getValue('submittedAt') as
+        | Date
+        | string
+        | number
+        | null
+      const date =
+        rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null
+
       return (
         <div className='text-sm'>
-          {date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          })}
+          {date
+            ? date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })
+            : '—'}
         </div>
       )
     },
   },
   {
     id: 'actions',
-    cell: DataTableRowActions,
+    cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ]
 
