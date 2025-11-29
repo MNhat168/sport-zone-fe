@@ -22,7 +22,19 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
   const businessLicenseInputRef = useRef<HTMLInputElement>(null)
   const fieldImagesInputRef = useRef<HTMLInputElement>(null)
 
-  const [fieldImages, setFieldImages] = useState<File[]>([])
+  // Restore field images from formData if available
+  const documents = formData.documents as any
+  const savedFieldImagesFiles: File[] = documents?.fieldImagesFiles || []
+  const [fieldImages, setFieldImages] = useState<File[]>(savedFieldImagesFiles)
+
+  // Sync fieldImages with formData when component mounts or formData changes
+  useEffect(() => {
+    const currentFiles = documents?.fieldImagesFiles || []
+    if (currentFiles.length > 0 && currentFiles.length !== fieldImages.length) {
+      setFieldImages(currentFiles)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.documents])
 
   const getFileType = (file: File | null): 'image' | 'pdf' | null => {
     if (file) {
@@ -102,18 +114,31 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
     const nextImages = [...fieldImages, ...validFiles].slice(0, 10) // limit max 10 images
     setFieldImages(nextImages)
 
+    // Store File objects in a separate field for upload later
+    // Keep preview URLs for display
+    const documents = formData.documents as any || {}
     onFormDataChange({
       ...formData,
-      fieldImages: nextImages.map((f) => URL.createObjectURL(f)), // temporary preview URLs, BE will get real URLs after upload in create-field flow
+      documents: {
+        ...documents,
+        fieldImagesFiles: nextImages, // Store File objects for upload
+      },
+      fieldImages: nextImages.map((f) => URL.createObjectURL(f)), // Preview URLs for display
     })
   }
 
   const handleRemoveFieldImage = (index: number) => {
     const nextImages = fieldImages.filter((_, i) => i !== index)
     setFieldImages(nextImages)
+    
+    const documents = formData.documents as any || {}
     onFormDataChange({
       ...formData,
-      fieldImages: nextImages.map((f) => URL.createObjectURL(f)),
+      documents: {
+        ...documents,
+        fieldImagesFiles: nextImages, // Update File objects
+      },
+      fieldImages: nextImages.map((f) => URL.createObjectURL(f)), // Update preview URLs
     })
   }
 

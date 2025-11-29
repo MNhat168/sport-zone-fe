@@ -10,16 +10,28 @@ import { CustomSuccessToast, CustomFailedToast } from "@/components/toast/notifi
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import PageHeader from "@/components/header-banner/page-header"
-import { User, FileText, CreditCard, CheckCircle } from "lucide-react"
+import { User, Building2, FileText, CreditCard, CheckCircle, AlertTriangle } from "lucide-react"
 import { StepIndicator } from "./StepIndicator"
 import { PersonalInfoStep } from "./PersonalInfoStep"
+import { FacilityInfoStep } from "./FacilityInfoStep"
 import { DocumentsStep } from "./DocumentsStep"
 import { BankAccountStep } from "./BankAccountStep"
 import { ConfirmationStep } from "./ConfirmationStep"
 import { StepNavigation } from "./StepNavigation"
 import { ImportantNotes } from "./ImportantNotes"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 
-type RegistrationStep = 1 | 2 | 3 | 4
+type RegistrationStep = 1 | 2 | 3 | 4 | 5
 
 export default function FieldOwnerRegistrationPage() {
   const navigate = useNavigate()
@@ -28,6 +40,7 @@ export default function FieldOwnerRegistrationPage() {
   const authUser = useAppSelector((state) => state.auth.user)
 
   const [currentStep, setCurrentStep] = useState<RegistrationStep>(1)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [formData, setFormData] = useState<Partial<CreateRegistrationRequestPayload>>({
     personalInfo: {
       fullName: authUser?.fullName || "",
@@ -44,9 +57,10 @@ export default function FieldOwnerRegistrationPage() {
 
   const steps = [
     { number: 1, title: "Thông tin cá nhân & eKYC", icon: User },
-    { number: 2, title: "Ảnh sân & Giấy ĐKKD (tuỳ chọn)", icon: FileText },
-    { number: 3, title: "Tài khoản ngân hàng", icon: CreditCard },
-    { number: 4, title: "Xác nhận", icon: CheckCircle },
+    { number: 2, title: "Thông tin cơ sở vật chất", icon: Building2 },
+    { number: 3, title: "Ảnh sân & Giấy ĐKKD (tuỳ chọn)", icon: FileText },
+    { number: 4, title: "Tài khoản ngân hàng", icon: CreditCard },
+    { number: 5, title: "Xác nhận", icon: CheckCircle },
   ]
 
   const handleFormDataChange = (data: Partial<CreateRegistrationRequestPayload>) => {
@@ -54,7 +68,7 @@ export default function FieldOwnerRegistrationPage() {
   }
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((prev) => (prev + 1) as RegistrationStep)
     }
   }
@@ -65,23 +79,66 @@ export default function FieldOwnerRegistrationPage() {
     }
   }
 
+  const handleSubmitClick = () => {
+    // Validate before showing confirmation dialog
+    if (!formData.ekycSessionId || !formData.ekycData) {
+      CustomFailedToast("Vui lòng hoàn thành xác thực danh tính bằng didit eKYC ở bước 1")
+      return
+    }
+
+    if (!formData.personalInfo?.fullName || !formData.personalInfo?.idNumber || !formData.personalInfo?.address) {
+      CustomFailedToast("Vui lòng điền đầy đủ thông tin cá nhân")
+      return
+    }
+
+    if (!formData.facilityName || !formData.facilityLocation || !formData.description || !formData.contactPhone) {
+      CustomFailedToast("Vui lòng điền đầy đủ thông tin cơ sở vật chất")
+      return
+    }
+
+    const documents = formData.documents as any
+    const fieldImagesFiles: File[] = documents?.fieldImagesFiles || []
+    if (fieldImagesFiles.length < 5) {
+      CustomFailedToast("Vui lòng upload ít nhất 5 ảnh sân")
+      return
+    }
+
+    // Show confirmation dialog
+    setShowConfirmDialog(true)
+  }
+
   const handleSubmit = async () => {
+    setShowConfirmDialog(false)
+    
     try {
-      // Validate eKYC completion (required for identity verification)
-      if (!formData.ekycSessionId || !formData.ekycData) {
-        CustomFailedToast("Vui lòng hoàn thành xác thực danh tính bằng didit eKYC ở bước 1")
+      // Validate field images (required >= 5)
+      const documents = formData.documents as any
+      const fieldImagesFiles: File[] = documents?.fieldImagesFiles || []
+      if (fieldImagesFiles.length < 5) {
+        CustomFailedToast("Vui lòng upload ít nhất 5 ảnh sân")
         return
       }
 
-      // Validate personal info
-      if (!formData.personalInfo?.fullName || !formData.personalInfo?.idNumber || !formData.personalInfo?.address) {
-        CustomFailedToast("Vui lòng điền đầy đủ thông tin cá nhân")
+      // Upload field images first
+      let uploadedFieldImageUrls: string[] = []
+      try {
+        CustomSuccessToast("Đang tải lên ảnh sân...")
+        const uploadPromises = fieldImagesFiles.map((file: File) =>
+          dispatch(uploadRegistrationDocument(file)).unwrap()
+        )
+        uploadedFieldImageUrls = await Promise.all(uploadPromises)
+        
+        // Validate all URLs
+        if (uploadedFieldImageUrls.some(url => !url || typeof url !== 'string' || url.trim() === '')) {
+          throw new Error('Một số ảnh upload không thành công')
+        }
+      } catch (error: any) {
+        CustomFailedToast(`Lỗi khi tải lên ảnh sân: ${error.message || 'Upload thất bại'}`)
         return
       }
 
       // Handle business license upload (optional)
       let businessLicenseUrl: string | undefined = undefined
-      const documents = formData.documents as any
       
       if (documents) {
         const businessLicenseFile = documents.businessLicense_file
@@ -104,7 +161,15 @@ export default function FieldOwnerRegistrationPage() {
       // Create payload
       const payload: CreateRegistrationRequestPayload = {
         personalInfo: formData.personalInfo!,
-        fieldImages: formData.fieldImages || [],
+        // Facility information
+        facilityName: formData.facilityName,
+        facilityLocation: formData.facilityLocation,
+        supportedSports: formData.supportedSports,
+        description: formData.description,
+        contactPhone: formData.contactPhone,
+        businessHours: formData.businessHours,
+        website: formData.website,
+        fieldImages: uploadedFieldImageUrls, // Use uploaded URLs instead of blob URLs
         // Only include business license in documents (optional)
         documents: businessLicenseUrl
           ? {
@@ -130,10 +195,12 @@ export default function FieldOwnerRegistrationPage() {
       case 1:
         return <PersonalInfoStep formData={formData} onFormDataChange={handleFormDataChange} />
       case 2:
-        return <DocumentsStep formData={formData} onFormDataChange={handleFormDataChange} />
+        return <FacilityInfoStep formData={formData} onFormDataChange={handleFormDataChange} />
       case 3:
-        return <BankAccountStep formData={formData} onFormDataChange={handleFormDataChange} />
+        return <DocumentsStep formData={formData} onFormDataChange={handleFormDataChange} />
       case 4:
+        return <BankAccountStep formData={formData} onFormDataChange={handleFormDataChange} />
+      case 5:
         return <ConfirmationStep formData={formData} />
       default:
         return null
@@ -172,7 +239,7 @@ export default function FieldOwnerRegistrationPage() {
                 submitting={submitting}
                 onBack={handleBack}
                 onNext={handleNext}
-                onSubmit={handleSubmit}
+                onSubmit={handleSubmitClick}
               />
             </CardContent>
           </Card>
@@ -180,6 +247,51 @@ export default function FieldOwnerRegistrationPage() {
           <ImportantNotes />
         </div>
       </PageWrapper>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-amber-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <AlertDialogTitle className="text-xl font-semibold">
+                Xác nhận đăng ký
+              </AlertDialogTitle>
+            </div>
+            <div className="text-gray-600 space-y-2">
+              <AlertDialogDescription>
+                Bạn có chắc chắn muốn gửi đơn đăng ký làm chủ sân không?
+              </AlertDialogDescription>
+              <div className="bg-gray-50 p-3 rounded-lg mt-3">
+                <p className="text-sm font-medium text-gray-700 mb-1">Lưu ý:</p>
+                <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                  <li>Ảnh sân sẽ được tải lên server khi bạn xác nhận</li>
+                  <li>Đơn đăng ký sẽ được xem xét trong vòng 1-3 ngày làm việc</li>
+                  <li>Bạn sẽ nhận được email thông báo khi có kết quả</li>
+                </ul>
+              </div>
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel asChild>
+              <Button variant="outline" className="w-full sm:w-auto">
+                Hủy
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button
+                onClick={handleSubmit}
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                disabled={submitting}
+              >
+                {submitting ? "Đang xử lý..." : "Xác nhận và gửi đơn"}
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

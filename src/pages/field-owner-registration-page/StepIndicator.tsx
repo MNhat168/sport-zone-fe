@@ -1,6 +1,6 @@
-import { User, FileText, CreditCard, CheckCircle } from "lucide-react"
+import { User, Building2, FileText, CreditCard, CheckCircle } from "lucide-react"
 
-type RegistrationStep = 1 | 2 | 3 | 4
+type RegistrationStep = 1 | 2 | 3 | 4 | 5
 
 interface StepIndicatorProps {
   currentStep: RegistrationStep
@@ -8,9 +8,10 @@ interface StepIndicatorProps {
 
 const steps = [
   { number: 1, title: "Thông tin cá nhân", icon: User },
-  { number: 2, title: "Giấy tờ pháp lý", icon: FileText },
-  { number: 3, title: "Tài khoản ngân hàng", icon: CreditCard },
-  { number: 4, title: "Xác nhận", icon: CheckCircle },
+  { number: 2, title: "Thông tin cơ sở", icon: Building2 },
+  { number: 3, title: "Giấy tờ pháp lý", icon: FileText },
+  { number: 4, title: "Tài khoản ngân hàng", icon: CreditCard },
+  { number: 5, title: "Xác nhận", icon: CheckCircle },
 ]
 
 export function StepIndicator({ currentStep }: StepIndicatorProps) {

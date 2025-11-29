@@ -6,6 +6,7 @@ export { clearError, clearValidationResult } from "./bankAccountSlice";
 // Explicitly re-export types for better module resolution
 export type {
     CreateBankAccountPayload,
+    UpdateBankAccountPayload,
     ValidateBankAccountPayload,
     BankAccountResponse,
     BankAccountValidationResponse,

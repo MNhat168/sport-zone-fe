@@ -13,6 +13,14 @@ export type CreateRegistrationRequestPayload = {
         idNumber: string;
         address: string;
     };
+    // Facility information
+    facilityName?: string;
+    facilityLocation?: string;
+    supportedSports?: string[];
+    description?: string;
+    contactPhone?: string;
+    businessHours?: string;
+    website?: string;
     // Field images (required >= 5 URLs when submitting)
     fieldImages: string[];
     // Documents: only business license (optional)
@@ -33,13 +41,12 @@ export type CreateRegistrationRequestPayload = {
         bankCode?: string;
         bankName?: string;
     };
-    // Owner type (individual or business)
-    ownerType?: 'individual' | 'business';
 };
 
 export type RegistrationRequestResponse = {
     id: string;
     userId: string;
+    ownerType?: 'individual' | 'business' | 'household';
     personalInfo: {
         fullName: string;
         idNumber: string;
@@ -48,13 +55,35 @@ export type RegistrationRequestResponse = {
     documents?: {
         businessLicense?: string;
     };
-    fieldImages: string[];
+    // eKYC fields
+    ekycSessionId?: string;
+    ekycStatus?: 'pending' | 'verified' | 'failed';
+    ekycVerifiedAt?: string;
+    ekycData?: {
+        fullName: string;
+        idNumber: string;
+        address: string;
+    };
+    // Facility information
+    facilityName?: string;
+    facilityLocation?: string;
+    supportedSports?: string[];
+    description?: string;
+    amenities?: string[];
+    verificationDocument?: string;
+    businessHours?: string;
+    contactPhone?: string;
+    website?: string;
+    fieldImages?: string[];
+    // Status
     status: 'pending' | 'approved' | 'rejected';
     rejectionReason?: string;
+    // Timestamps
     submittedAt: string;
+    processedAt?: string;
+    processedBy?: string;
     reviewedAt?: string;
     reviewedBy?: string;
-    ownerType?: 'individual' | 'business';
 };
 
 export type ErrorResponse = {

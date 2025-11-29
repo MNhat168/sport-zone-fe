@@ -17,12 +17,11 @@ const GET_EKYC_STATUS_API = (sessionId: string) =>
  * Create didit eKYC session for current user.
  * Frontend will use redirectUrl to open didit widget (popup or redirect).
  */
-export const createEkycSession = async (
-  redirectUrlAfterEkyc?: string,
-): Promise<{ sessionId: string; redirectUrl: string }> => {
-  const response = await axiosPrivate.post(CREATE_EKYC_SESSION_API, {
-    redirectUrlAfterEkyc,
-  });
+export const createEkycSession = async (): Promise<{
+  sessionId: string;
+  redirectUrl: string;
+}> => {
+  const response = await axiosPrivate.post(CREATE_EKYC_SESSION_API);
 
   const data = response.data?.data ?? response.data;
   return {

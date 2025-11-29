@@ -53,9 +53,7 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
     try {
       setIsCreatingSession(true)
 
-      const currentUrl = window.location.origin + window.location.pathname
-
-      const { sessionId, redirectUrl } = await createEkycSession(currentUrl)
+      const { sessionId, redirectUrl } = await createEkycSession()
 
       onFormDataChange({
         ...formData,
@@ -169,18 +167,6 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Loại hình sở hữu</Label>
-        <select
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-          value={formData.ownerType}
-          onChange={(e) => onFormDataChange({ ...formData, ownerType: e.target.value as any })}
-        >
-          <option value="individual">Cá nhân</option>
-          <option value="household">Hộ kinh doanh</option>
-          <option value="business">Doanh nghiệp</option>
-        </select>
-      </div>
       <div className="space-y-2">
           <Label className="text-sm font-medium">
             Họ tên đầy đủ
