@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import type { FieldOwnerProfile } from "../../types/field-owner-profile-type";
 import type { ErrorResponse } from "../../types/user-type";
 import {

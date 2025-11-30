@@ -39,16 +39,17 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
       console.log('📍 [LOCATION BUTTON] Getting user location...');
       const coordinates = await getCoordinates();
       
-      if (coordinates && coordinates.lat && coordinates.lng) {
-        setUserLocation(coordinates);
-        console.log('✅ [LOCATION BUTTON] Location obtained:', coordinates);
+      if (coordinates && coordinates.lat !== undefined && coordinates.lng !== undefined) {
+        const location = { lat: coordinates.lat, lng: coordinates.lng };
+        setUserLocation(location);
+        console.log('✅ [LOCATION BUTTON] Location obtained:', location);
         
         // Call callback if provided
-        onLocationObtained?.(coordinates.lat, coordinates.lng);
+        onLocationObtained?.(location.lat, location.lng);
         
         // Send to backend if enabled
         if (autoSendToBackend) {
-          await sendLocationToBackend(coordinates.lat, coordinates.lng);
+          await sendLocationToBackend(location.lat, location.lng);
         }
       } else {
         console.log('❌ [LOCATION BUTTON] Failed to get coordinates');

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Settings } from "lucide-react"
+import { Settings, Building2, FileText } from "lucide-react"
 import { DropdownMenuItem, DropdownMenuSeparator } from "../ui/dropdown-menu"
 
 
@@ -20,6 +20,22 @@ const UserDropdownMenuItems = () => {
                 <Link to="/user-dashboard" className="flex items-center">
                     <Settings className="mr-2 h-5 w-5" />
                     <span className="text-base">Settings</span>
+                </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-gray-200 m-1" />
+
+            <DropdownMenuItem asChild className="text-black hover:text-green-600 cursor-pointer bg-green-50">
+                <Link to="/become-field-owner" className="flex items-center">
+                    <Building2 className="mr-2 h-5 w-5 text-green-600" />
+                    <span className="text-base font-semibold text-green-600">Trở thành chủ sân</span>
+                </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild className="text-black hover:text-blue-600 cursor-pointer">
+                <Link to="/field-owner-registration-status" className="flex items-center">
+                    <FileText className="mr-2 h-5 w-5 text-blue-600" />
+                    <span className="text-base text-blue-600">Xem trạng thái đăng ký</span>
                 </Link>
             </DropdownMenuItem>
         </>

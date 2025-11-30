@@ -53,9 +53,9 @@ export default function FieldEditPage() {
     });
 
     // UI state
-    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [_avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    const [_galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
     const [selectedIncludes, setSelectedIncludes] = useState<AmenityWithPrice[]>([]);
     const [selectedAmenities, setSelectedAmenities] = useState<AmenityWithPrice[]>([]);
@@ -121,7 +121,6 @@ export default function FieldEditPage() {
 
             // Extract amenities
             const amenities = currentField.amenities || [];
-            const includes: AmenityWithPrice[] = [];
             const amenityList: AmenityWithPrice[] = [];
             
             amenities.forEach((amenity: any) => {

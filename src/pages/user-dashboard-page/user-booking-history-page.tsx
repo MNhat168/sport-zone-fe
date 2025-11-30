@@ -119,7 +119,7 @@ export default function UserBookingsPage() {
     const formattedPrice = new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
-    }).format(booking.totalPrice)
+    }).format(booking.totalPrice || 0)
     
     return {
       id: booking._id,

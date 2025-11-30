@@ -10,10 +10,10 @@ import {
   getAmenitiesByType,
   getAmenitiesByTypeAndSport,
 } from "./amenitiesThunk";
-import type { Amenity, AmenitiesResponse, ErrorResponse } from "../../types/amenities-type";
+import type { Amenity, ErrorResponse, AmenitiesResponse } from "../../types/amenities-type";
 
 interface AmenitiesState {
-  amenities: Amenity[] | { code: number; message: string; data: Amenity[] };
+  amenities: Amenity[];
   currentAmenity: Amenity | null;
   total: number;
   page: number;
@@ -58,10 +58,11 @@ const amenitiesSlice = createSlice({
       // Get amenities
       .addCase(getAmenities.fulfilled, (state, action) => {
         state.loading = false;
-        state.amenities = action.payload.data;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
-        state.limit = action.payload.limit;
+        const payload = action.payload as AmenitiesResponse;
+        state.amenities = Array.isArray(payload) ? payload : (payload.data || []);
+        state.total = Array.isArray(payload) ? payload.length : (payload.total || 0);
+        state.page = Array.isArray(payload) ? 1 : (payload.page || 1);
+        state.limit = Array.isArray(payload) ? payload.length : (payload.limit || 10);
       })
       
       // Get amenity by ID
@@ -133,7 +134,7 @@ const amenitiesSlice = createSlice({
       // Handle error states
       .addMatcher(
         (action) => action.type.endsWith("/rejected"),
-        (state, action) => {
+        (state, action: { payload?: ErrorResponse }) => {
           state.loading = false;
           state.error = action.payload || { statusCode: 500, message: "Unknown error", error: "Internal Server Error" };
         }
