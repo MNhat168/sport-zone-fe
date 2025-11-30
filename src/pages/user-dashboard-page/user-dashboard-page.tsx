@@ -14,10 +14,11 @@ import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
-import { mockFavorites, mockInvoices } from "@/components/mock-data/mock-data"
+import { mockFavorites /* keep mockFavorites for now */ } from "@/components/mock-data/mock-data"
+import axiosPrivate from '@/utils/axios/axiosPrivate'
 import { useState, useEffect, useRef } from "react"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
-import { getMyBookings, cancelFieldBooking } from "../../features/booking/bookingThunk"
+import { getMyBookings, cancelFieldBooking, getMyInvoices, getUpcomingBooking } from "../../features/booking/bookingThunk"
 import type { Booking } from "../../types/booking-type"
 
 export default function UserDashboardPage() {
@@ -29,6 +30,10 @@ export default function UserDashboardPage() {
     const error = bookingState?.error || null
     
     const [selectedTab, setSelectedTab] = useState<'court' | 'coaching'>('court')
+    // Local pagination state for invoices; data is loaded into Redux via `getMyInvoices`
+    const [invoicesPage, setInvoicesPage] = useState<number>(1)
+    const [invoicesLimit, setInvoicesLimit] = useState<number>(5)
+    // Upcoming booking is loaded via Redux thunk `getUpcomingBooking`
     const [openDropdown, setOpenDropdown] = useState<string | null>(null)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -51,6 +56,16 @@ export default function UserDashboardPage() {
     useEffect(() => {
         dispatch(getMyBookings({ type: selectedTab === 'court' ? 'field' : 'coach' }))
     }, [dispatch, selectedTab])
+
+    // Fetch invoices via Redux thunk when pagination changes
+    useEffect(() => {
+        dispatch(getMyInvoices({ page: invoicesPage, limit: invoicesLimit }))
+    }, [dispatch, invoicesPage, invoicesLimit])
+
+    // Fetch upcoming booking via Redux thunk on mount
+    useEffect(() => {
+        dispatch(getUpcomingBooking())
+    }, [dispatch])
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -84,7 +99,7 @@ export default function UserDashboardPage() {
         const formattedPrice = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
-        }).format(booking.totalPrice)
+        }).format(booking.totalPrice ?? 0)
         
         return {
             id: booking._id,
@@ -206,7 +221,7 @@ export default function UserDashboardPage() {
                                                 {new Intl.NumberFormat('vi-VN', {
                                                     style: 'currency',
                                                     currency: 'VND'
-                                                }).format(bookings.reduce((total, booking) => total + booking.totalPrice, 0))}
+                                                }).format(bookings.reduce((total, booking) => total + (booking.totalPrice ?? 0), 0))}
                                             </p>
                                             <p className="text-sm text-muted-foreground text-start">Tổng thanh toán</p>
                                         </div>
@@ -441,22 +456,41 @@ export default function UserDashboardPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="border-t border-gray-100 pt-4">
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg flex items-center justify-center">
-                                                <span className="text-white font-semibold text-xs">LS</span>
+                                        {bookingState.loading ? (
+                                            <div className="flex items-center justify-center py-6">
+                                                <div className="text-muted-foreground">Đang tải lịch hẹn...</div>
                                             </div>
-                                            <div className="flex-1 text-start">
-                                                <p className="font-medium text-sm">Học viện thể thao Leap</p>
-                                                <p className="text-xs text-muted-foreground">Sân 1</p>
-                                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    <span>18:00 đến 20:00</span>
-                                                </div>
+                                        ) : bookingState.error ? (
+                                            <div className="flex items-center justify-center py-6">
+                                                <div className="text-red-600">Lỗi tải lịch hẹn</div>
                                             </div>
-                                            <Button variant="ghost" size="sm">
-                                                <MoreHorizontal className="w-4 h-4" />
-                                            </Button>
-                                        </div>
+                                        ) : bookingState.upcomingBooking ? (
+                                            (() => {
+                                                const ub = bookingState.upcomingBooking as any
+                                                return (
+                                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg flex items-center justify-center">
+                                                            <span className="text-white font-semibold text-xs">{(ub.fieldName || 'Sân').split(' ').map((w:string)=>w[0]).slice(0,2).join('')}</span>
+                                                        </div>
+                                                        <div className="flex-1 text-start">
+                                                            <p className="font-medium text-sm">{ub.academyName}</p>
+                                                            <p className="text-xs text-muted-foreground">{ub.fieldName}</p>
+                                                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                                                <Clock className="w-3 h-3" />
+                                                                <span>{ub.time}</span>
+                                                            </div>
+                                                        </div>
+                                                        <Button variant="ghost" size="sm">
+                                                            <MoreHorizontal className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                )
+                                            })()
+                                        ) : (
+                                            <div className="flex items-center justify-center py-8">
+                                                <div className="text-muted-foreground">Không có lịch hẹn sắp tới</div>
+                                            </div>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -533,45 +567,94 @@ export default function UserDashboardPage() {
                                         <div className="text-start">Đã thanh toán</div>
                                         <div className="text-start">Trạng thái</div>
                                     </div>
-                                    {mockInvoices.map((invoice, index) => (
-                                        <div key={invoice.id}>
-                                            <div className="grid grid-cols-5 gap-4 items-center py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div
-                                                        className={`w-8 h-8 bg-gradient-to-br ${invoice.color} rounded-lg flex items-center justify-center`}
-                                                    >
-                                                        <span className="text-white font-semibold text-xs">
-                                                            {invoice.name
-                                                                .split(" ")
-                                                                .map((w) => w[0])
-                                                                .join("")}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-start">
-                                                        <p className="font-medium text-sm">{invoice.name}</p>
-                                                        <p className="text-xs text-muted-foreground">{invoice.court}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-start">
-                                                    <p className="text-sm">{invoice.date}</p>
-                                                    <p className="text-xs text-muted-foreground">{invoice.time}</p>
-                                                </div>
-                                                <div className="font-semibold text-start">{invoice.payment}</div>
-                                                <div className="text-sm text-muted-foreground text-start">{invoice.paidOn}</div>
-                                                <div className="text-start">
-                                                    <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                                        Đã thanh toán
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                            {index < mockInvoices.length - 1 && (
-                                                <div className="border-t border-gray-100" />
-                                            )}
+                                    {bookingState.loading ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <div className="text-muted-foreground">Đang tải hóa đơn...</div>
                                         </div>
+                                    ) : bookingState.error ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <div className="text-red-600">Lỗi tải hóa đơn</div>
+                                        </div>
+                                    ) : ( (bookingState.invoices || []).length === 0 ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <div className="text-muted-foreground">Không có hóa đơn gần đây</div>
+                                        </div>
+                                    ) : (
+                                        (bookingState.invoices || []).map((invoice: any, index: number) => {
+                                            const paidOnDate = invoice.paidOn ? new Date(invoice.paidOn).toLocaleDateString('vi-VN') : ''
+                                            const paidOnTime = invoice.paidOn ? new Date(invoice.paidOn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''
+                                            const mapped = {
+                                                id: invoice.bookingId || invoice._id || invoice.bookingId,
+                                                name: invoice.name || invoice.fieldName || 'Unknown Field',
+                                                court: invoice.court || '',
+                                                date: invoice.date || '',
+                                                time: invoice.time || '',
+                                                payment: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.payment ?? 0),
+                                                paidOnDate,
+                                                paidOnTime,
+                                                paid: !!invoice.paidOn,
+                                                color: invoice.paidOn ? 'from-green-500 to-green-600' : 'from-yellow-500 to-yellow-600'
+                                            }
+                                            return (
+                                                <div key={mapped.id}>
+                                                    <div className="grid grid-cols-5 gap-4 items-center py-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div
+                                                                className={`w-8 h-8 bg-gradient-to-br ${mapped.color} rounded-lg flex items-center justify-center`}
+                                                            >
+                                                                <span className="text-white font-semibold text-xs">
+                                                                    {mapped.name
+                                                                        .split(" ")
+                                                                        .map((w: string) => w[0])
+                                                                        .join("")}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-start">
+                                                                <p className="font-medium text-sm">{mapped.name}</p>
+                                                                <p className="text-xs text-muted-foreground">{mapped.court}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-start">
+                                                            <p className="text-sm">{mapped.date}</p>
+                                                            <p className="text-xs text-muted-foreground">{mapped.time}</p>
+                                                        </div>
+                                                        <div className="font-semibold text-start">{mapped.payment}</div>
+                                                        <div className="text-start">
+                                                            <p className="text-sm">{mapped.paidOnDate || ''}</p>
+                                                            <p className="text-xs text-muted-foreground">{mapped.paidOnTime || ''}</p>
+                                                        </div>
+                                                        <div className="text-start">
+                                                            <Badge variant="secondary" className={mapped.paid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}>
+                                                                {mapped.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                    {index < (bookingState.invoices || []).length - 1 && (
+                                                        <div className="border-t border-gray-100" />
+                                                    )}
+                                                </div>
+                                            )
+                                        })
                                     ))}
                                 </div>
                             </div>
                         </CardContent>
+
+                        {/* Pagination controls for invoices */}
+                        {bookingState.invoicesPagination && (
+                            <div className="flex items-center justify-end gap-2 mt-3">
+                                <select value={invoicesLimit} onChange={(e) => { setInvoicesLimit(Number(e.target.value)); setInvoicesPage(1); }} className="border rounded px-2 py-1">
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                </select>
+                                <Button onClick={() => setInvoicesPage(1)} disabled={invoicesPage === 1}>First</Button>
+                                <Button onClick={() => setInvoicesPage(prev => Math.max(1, prev - 1))} disabled={!bookingState.invoicesPagination?.hasPrevPage}>Prev</Button>
+                                <div className="px-2">{invoicesPage} / {bookingState.invoicesPagination.totalPages}</div>
+                                <Button onClick={() => setInvoicesPage(prev => Math.min((bookingState.invoicesPagination?.totalPages || 1), prev + 1))} disabled={!bookingState.invoicesPagination?.hasNextPage}>Next</Button>
+                                <Button onClick={() => setInvoicesPage(bookingState.invoicesPagination?.totalPages || 1)} disabled={invoicesPage === (bookingState.invoicesPagination?.totalPages || 1)}>Last</Button>
+                            </div>
+                        )}
                     </Card>
                 </div>
             </PageWrapper>
