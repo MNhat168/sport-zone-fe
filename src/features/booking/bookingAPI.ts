@@ -7,6 +7,9 @@ export const CREATE_SESSION_BOOKING_API = `${BASE_URL}/bookings/session`;
 export const CANCEL_SESSION_BOOKING_API = `${BASE_URL}/bookings/session/cancel`;
 export const GET_COACH_BOOKINGS_API = (coachId: string) => `${BASE_URL}/bookings/coach/${coachId}`;
 export const GET_MY_BOOKINGS_API = `${BASE_URL}/bookings/my-bookings`;
+export const GET_MY_INVOICES_API = `${BASE_URL}/bookings/my-invoices`;
+export const GET_UPCOMING_BOOKING_API = `${BASE_URL}/bookings/upcoming`;
+
 
 // Schedule API endpoints  
 export const GET_COACH_SCHEDULE_API = (coachId: string) => `${BASE_URL}/schedules/coach/${coachId}`;
