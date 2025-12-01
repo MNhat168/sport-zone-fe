@@ -11,6 +11,7 @@ export interface CreateFieldBookingPayload {
     selectedAmenities?: string[];
     paymentMethod?: number; // PaymentMethod enum (1-9)
     paymentNote?: string;
+    note?: string; // User note to owner (max 200 chars)
 }
 
 export interface CreateSessionBookingPayload {

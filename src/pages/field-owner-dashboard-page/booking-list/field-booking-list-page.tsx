@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout";
 import { BookingFilters } from "./components/booking-filter";
 import { BookingTable } from "./components/booking-table";
@@ -10,12 +10,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { getMyFieldsBookings } from "@/features/field/fieldThunk";
+import { ownerAcceptNote, ownerDenyNote, ownerGetBookingDetail, getMyFieldsBookings } from "@/features/field/fieldThunk";
 import type { FieldOwnerBooking } from "@/types/field-type";
 import { formatCurrency } from "@/utils/format-currency";
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import { TransactionStatus } from "@/components/enums/ENUMS";
+// Removed notes-only endpoint usage to restore general bookings list
 
 // Helper function to format date from YYYY-MM-DD to Vietnamese format
 const formatDate = (dateStr: string): string => {
@@ -44,12 +45,12 @@ const formatTime = (time24h: string): string => {
 const mapBookingToUI = (booking: FieldOwnerBooking) => {
     const startTime12h = formatTime(booking.startTime);
     const endTime12h = formatTime(booking.endTime);
-    
+
     // Map transaction status from API to UI format (prefer transactionStatus over status)
     const transactionStatus = booking.transactionStatus || booking.status;
     let status: "awaiting" | "accepted" | "rejected" = "awaiting";
     let statusText = "Chờ Xác Nhận";
-    
+
     switch (transactionStatus) {
         case TransactionStatus.PENDING:
             status = "awaiting";
@@ -136,7 +137,7 @@ const mapTabToTransactionStatus = (tab: string): TransactionStatus | undefined =
 const getDateRangeFromTimeFilter = (timeFilter: string): { startDate?: string; endDate?: string } => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     switch (timeFilter) {
         case "this-week": {
             const startOfWeek = new Date(today);
@@ -172,7 +173,12 @@ const getDateRangeFromTimeFilter = (timeFilter: string): { startDate?: string; e
 
 export default function FieldHistoryBookingPage() {
     const dispatch = useAppDispatch();
-    const { fieldOwnerBookings, fieldOwnerBookingsPagination, fieldOwnerBookingsLoading, fieldOwnerBookingsError } = useAppSelector((state) => state.field);
+    const {
+        fieldOwnerBookings,
+        fieldOwnerBookingsLoading,
+        fieldOwnerBookingsError,
+        fieldOwnerBookingsPagination,
+    } = useAppSelector((state) => state.field);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -181,6 +187,25 @@ export default function FieldHistoryBookingPage() {
     const [activeTab, setActiveTab] = useState<TransactionStatus>(TransactionStatus.PENDING);
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
+    const [hiddenIds, setHiddenIds] = useState<string[]>([]);
+
+    // Load hidden IDs from localStorage so acted items stay hidden after refresh
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('ownerHiddenBookingIds');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) setHiddenIds(parsed);
+            }
+        } catch { }
+    }, []);
+
+    // Persist hidden IDs whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem('ownerHiddenBookingIds', JSON.stringify(hiddenIds));
+        } catch { }
+    }, [hiddenIds]);
 
     // Listen for tab changes from sidebar
     useEffect(() => {
@@ -198,47 +223,92 @@ export default function FieldHistoryBookingPage() {
         };
     }, []);
 
-    // Fetch bookings when filters change
-    const fetchBookings = useCallback(() => {
-        const transactionStatus = mapTabToTransactionStatus(activeTab);
-        const dateRange = getDateRangeFromTimeFilter(timeFilter);
-        
-        dispatch(getMyFieldsBookings({
-            fieldName: searchQuery || undefined,
-            transactionStatus,
-            startDate: dateRange.startDate,
-            endDate: dateRange.endDate,
-            page: currentPage,
-            limit: itemsPerPage,
-        }));
+    // Fetch bookings on mount and whenever filters/pagination change
+    useEffect(() => {
+        const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
+        dispatch(
+            getMyFieldsBookings({
+                fieldName: searchQuery || undefined,
+                transactionStatus: activeTab,
+                startDate,
+                endDate,
+                page: currentPage,
+                limit: itemsPerPage,
+            })
+        );
     }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage]);
 
-    // Fetch bookings on mount and when filters change
-    useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
-
-    const handleViewDetails = (bookingId: string) => {
+    const handleViewDetails = async (bookingId: string) => {
         const booking = fieldOwnerBookings?.find(b => b.bookingId === bookingId);
-        if (booking) {
-            // Map booking data to modal format
-            const startTime12h = formatTime(booking.startTime);
-            const endTime12h = formatTime(booking.endTime);
-            const bookingDate = formatDate(booking.date);
-            
-            setSelectedBooking({
-                academy: booking.fieldName,
-                court: booking.fieldName,
-                bookedOn: bookingDate,
-                bookingDate: bookingDate,
-                bookingTime: `${startTime12h} - ${endTime12h}`,
-                totalAmountPaid: formatCurrency(booking.totalPrice, "VND"),
-                customer: booking.customer,
-                amenities: booking.selectedAmenities,
-                amenitiesFee: booking.amenitiesFee ? formatCurrency(booking.amenitiesFee, "VND") : "0 đ",
-                originalBooking: booking,
-            });
-            setIsDetailsOpen(true);
+        if (!booking) return;
+        // Try to fetch owner booking detail to get user note if exists
+        let note: string | undefined;
+        try {
+            const res: any = await dispatch(ownerGetBookingDetail(bookingId)).unwrap();
+            note = res?.note;
+        } catch {
+            // ignore detail fetch error; proceed with list data
+        }
+
+        const startTime12h = formatTime(booking.startTime);
+        const endTime12h = formatTime(booking.endTime);
+        const bookingDate = formatDate(booking.date);
+
+        setSelectedBooking({
+            academy: booking.fieldName,
+            court: booking.fieldName,
+            bookedOn: bookingDate,
+            bookingDate: bookingDate,
+            bookingTime: `${startTime12h} - ${endTime12h}`,
+            totalAmountPaid: formatCurrency(booking.totalPrice, "VND"),
+            customer: booking.customer,
+            amenities: booking.selectedAmenities,
+            amenitiesFee: booking.amenitiesFee ? formatCurrency(booking.amenitiesFee, "VND") : "0 đ",
+            originalBooking: booking,
+            note,
+        });
+        setIsDetailsOpen(true);
+    };
+
+    const handleAccept = async (bookingId: string) => {
+        try {
+            await dispatch(ownerAcceptNote(bookingId)).unwrap();
+            // Hide the acted booking immediately and refresh in background
+            setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
+            const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
+            dispatch(
+                getMyFieldsBookings({
+                    fieldName: searchQuery || undefined,
+                    transactionStatus: activeTab,
+                    startDate,
+                    endDate,
+                    page: currentPage,
+                    limit: itemsPerPage,
+                })
+            );
+        } catch (e) {
+            console.error("Accept note failed", e);
+        }
+    };
+
+    const handleDeny = async (bookingId: string) => {
+        try {
+            await dispatch(ownerDenyNote({ bookingId })).unwrap();
+            // Hide the acted booking immediately and refresh in background
+            setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
+            const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
+            dispatch(
+                getMyFieldsBookings({
+                    fieldName: searchQuery || undefined,
+                    transactionStatus: activeTab,
+                    startDate,
+                    endDate,
+                    page: currentPage,
+                    limit: itemsPerPage,
+                })
+            );
+        } catch (e) {
+            console.error("Deny note failed", e);
         }
     };
 
@@ -278,13 +348,13 @@ export default function FieldHistoryBookingPage() {
 
     // Map bookings from API to UI format
     const mappedBookings = useMemo(() => {
-        if (!fieldOwnerBookings) return [];
-        return fieldOwnerBookings.map(mapBookingToUI);
-    }, [fieldOwnerBookings]);
+        const rows: FieldOwnerBooking[] = fieldOwnerBookings || [];
+        const mapped = rows.map(mapBookingToUI);
+        return mapped.filter((b) => !hiddenIds.includes(b.id));
+    }, [fieldOwnerBookings, hiddenIds]);
 
     // Get pagination info
-    const pagination = fieldOwnerBookingsPagination;
-    const totalPages = pagination?.totalPages || 1;
+    const totalPages = fieldOwnerBookingsPagination?.totalPages || 1;
 
     return (
         <FieldOwnerDashboardLayout>
@@ -313,7 +383,7 @@ export default function FieldHistoryBookingPage() {
                             <Alert variant="destructive" className="mb-4">
                                 <AlertCircle className="h-4 w-4" />
                                 <AlertDescription>
-                                    {fieldOwnerBookingsError.message || "Có lỗi xảy ra khi tải dữ liệu đặt chỗ"}
+                                    {fieldOwnerBookingsError?.message || "Có lỗi xảy ra khi tải dữ liệu đặt chỗ"}
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -340,6 +410,8 @@ export default function FieldHistoryBookingPage() {
                                         bookings={mappedBookings}
                                         onViewDetails={handleViewDetails}
                                         onChat={handleChat}
+                                        onAccept={handleAccept}
+                                        onDeny={handleDeny}
                                     />
                                 )}
                             </>
@@ -351,7 +423,7 @@ export default function FieldHistoryBookingPage() {
                 {!fieldOwnerBookingsLoading && mappedBookings.length > 0 && (
                     <BookingPagination
                         currentPage={currentPage}
-                        totalPages={totalPages}
+                        totalPages={fieldOwnerBookingsPagination?.totalPages || 1}
                         itemsPerPage={itemsPerPage}
                         onPageChange={handlePageChange}
                         onItemsPerPageChange={handleItemsPerPageChange}

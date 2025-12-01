@@ -23,6 +23,7 @@ interface BookingData {
     paidOn?: string;
     transactionId?: string;
     paymentType?: string;
+    note?: string;
 }
 
 interface CourtBookingDetailsProps {
@@ -49,11 +50,12 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
         paidOn = 'Mon, Jul 14',
         transactionId = '#5464164445676781641',
         paymentType = 'Wallet',
+        note = ''
     } = bookingData || {};
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent 
+            <DialogContent
                 showCloseButton={false}
                 className="max-w-[1400px] sm:max-w-[1400px] w-[95vw] p-0 gap-0 bg-white rounded-lg border border-black/20"
             >
@@ -81,6 +83,17 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                 {/* Content */}
                 <div className="px-6 py-6 space-y-6 max-h-[600px] overflow-y-auto">
+                    {/* User Note (if any) */}
+                    {note && (
+                        <div className="p-3.5 bg-[#FFFBEA] rounded-[10px] border border-yellow-200">
+                            <div className="pb-2">
+                                <h3 className="text-lg font-semibold text-[#8A6D3B] font-['Outfit']">
+                                    Ghi chú của khách hàng
+                                </h3>
+                            </div>
+                            <p className="text-sm text-[#8A6D3B] whitespace-pre-wrap">{note}</p>
+                        </div>
+                    )}
                     {/* Court Information */}
                     <div className="p-3.5 bg-[#F8F8F8] rounded-[10px]">
                         <div className="pb-5">
@@ -175,6 +188,16 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                     </p>
                                 </div>
                             </div>
+                            {note && note.trim() && (
+                                <div className="mt-4">
+                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit'] mb-1">
+                                        Ghi Chú Của Khách Hàng
+                                    </h4>
+                                    <p className="text-sm text-[#6B7280] whitespace-pre-wrap">
+                                        {note}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
