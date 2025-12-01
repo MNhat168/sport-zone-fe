@@ -330,6 +330,7 @@ export interface FieldOwnerBooking {
     };
     selectedAmenities: string[];
     amenitiesFee?: number;
+    note?: string; // Optional user note if provided during booking
     createdAt?: string; // ISO date string
 }
 
