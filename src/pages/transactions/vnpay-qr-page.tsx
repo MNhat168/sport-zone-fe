@@ -577,7 +577,7 @@ export default function VNPayQRPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
           <Button variant="ghost" onClick={handleCancel} className="mb-4">

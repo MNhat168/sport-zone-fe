@@ -114,7 +114,7 @@ export function FavoriteSportsModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-0 shadow-2xl">
-        <div className="bg-gradient-to-br from-primary via-primary to-accent p-6 text-center">
+        <div className="bg-primary p-6 text-center">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-primary-foreground mb-1">
               Favorite Sports?
@@ -177,7 +177,7 @@ export function FavoriteSportsModal({
                   </div>
 
                   {isSelected && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 animate-in fade-in duration-300" />
+                    <div className="absolute inset-0 bg-primary/5 animate-in fade-in duration-300" />
                   )}
                 </button>
               );
@@ -195,7 +195,7 @@ export function FavoriteSportsModal({
             </Button>
             <Button
               onClick={handleAccept}
-              className="px-6 font-semibold bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg text-sm"
+              className="px-6 font-semibold bg-primary hover:bg-primary/90 transition-colors shadow-lg text-sm"
               disabled={selectedSports.length === 0}
               size="sm"
             >

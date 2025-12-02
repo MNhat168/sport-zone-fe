@@ -596,7 +596,7 @@ export const getMyFieldsBookings = createAsyncThunk<
 
         const response = await axiosPrivate.get(url);
         const raw = response.data;
-        
+
         // Handle different response formats
         // Format 1: { success: true, data: { bookings: [...], pagination: {...} } }
         // Format 2: { bookings: [...], pagination: {...} }
@@ -612,7 +612,7 @@ export const getMyFieldsBookings = createAsyncThunk<
                 }
             } as FieldOwnerBookingsResponse;
         }
-        
+
         // Fallback: return as is
         return raw as FieldOwnerBookingsResponse;
     } catch (error: any) {
@@ -620,6 +620,64 @@ export const getMyFieldsBookings = createAsyncThunk<
             message: error.response?.data?.message || error.message || "Failed to fetch field owner bookings",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Owner: get booking detail (with note)
+export const ownerGetBookingDetail = createAsyncThunk<
+    any,
+    string,
+    { rejectValue: ErrorResponse }
+>("field/ownerGetBookingDetail", async (bookingId, thunkAPI) => {
+    try {
+        const { OWNER_BOOKING_DETAIL_API } = await import("./fieldAPI");
+        const response = await axiosPrivate.get(OWNER_BOOKING_DETAIL_API(bookingId));
+        // Backend wraps responses as { success: true, data: {...} }
+        return response.data?.data ?? response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get booking detail",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Owner: accept user's note (send payment link if online)
+export const ownerAcceptNote = createAsyncThunk<
+    any,
+    string,
+    { rejectValue: ErrorResponse }
+>("field/ownerAcceptNote", async (bookingId, thunkAPI) => {
+    try {
+        const { OWNER_ACCEPT_NOTE_API } = await import("./fieldAPI");
+        const response = await axiosPrivate.patch(OWNER_ACCEPT_NOTE_API(bookingId));
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to accept booking note",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Owner: deny user's note
+export const ownerDenyNote = createAsyncThunk<
+    any,
+    { bookingId: string; reason?: string },
+    { rejectValue: ErrorResponse }
+>("field/ownerDenyNote", async ({ bookingId, reason }, thunkAPI) => {
+    try {
+        const { OWNER_DENY_NOTE_API } = await import("./fieldAPI");
+        const response = await axiosPrivate.patch(OWNER_DENY_NOTE_API(bookingId), reason ? { reason } : undefined);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to deny booking note",
+            status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }

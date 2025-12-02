@@ -49,6 +49,11 @@ import FieldOwnerProfilePage from "../pages/field-owner-dashboard-page/profile/f
 import FieldEditPage from "../pages/field-owner-dashboard-page/fields/field-edit-page";
 import FieldViewPage from "../pages/field-owner-dashboard-page/fields/field-view-page";
 
+// Field Owner Registration Pages
+import FieldOwnerRegistrationPage from "../pages/field-owner-registration-page/field-owner-registration-page";
+import FieldOwnerRegistrationStatusPage from "../pages/field-owner-registration-status-page/field-owner-registration-status-page";
+import EkycCallbackPage from "../pages/field-owner-registration-page/EkycCallbackPage";
+
 //Notification
 import NotificationsPage from "../pages/notifications/page";
 import TournamentListPage from "@/pages/list-tournament/TournamentListPage.tsx";
@@ -79,6 +84,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/verify-email", element: <VerifyTokenPage /> },
   { path: "/auth/verify-token", element: <VerifyTokenPage /> },
   { path: "/verify-email/success", element: <VerifyTokenPage /> },
+  { path: "/verify-email/failed", element: <VerifyTokenPage /> },
   { path: "/coach/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
@@ -196,6 +202,31 @@ export const userRoutes: RouteObject[] = [
         ]}
       >
         <NotificationsPage />
+      </ProtectedRoute>
+    ),
+  },
+  // Field Owner Registration (for regular users)
+  {
+    path: "/become-field-owner",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <FieldOwnerRegistrationPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner-registration-status",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.FIELD_OWNER]}>
+        <FieldOwnerRegistrationStatusPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/ekyc/callback",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.FIELD_OWNER]}>
+        <EkycCallbackPage />
       </ProtectedRoute>
     ),
   },
@@ -508,7 +539,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
 
   // Customer Management
   {
-    path: "/field-owner/customers",
+    path: "/field-owner/wallet",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <FieldOwnerWalletPage />

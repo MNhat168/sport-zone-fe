@@ -246,7 +246,7 @@ const axiosInstance = axios.create({
 2. Set location trên map (hoặc search)
 3. Upload avatar + gallery images
 4. Click "Lưu sân"
-5. Verify: POST /fields/with-images
+5. Verify: POST /field-owner/fields/with-images
 6. Check: Cookie được gửi đi
 7. Check: Location có coordinates đúng
 ```
@@ -257,7 +257,7 @@ const axiosInstance = axios.create({
 2. Set location trên map
 3. Không upload ảnh
 4. Click "Lưu sân"
-5. Verify: POST /fields
+5. Verify: POST /field-owner/fields
 6. Check: Location format đúng
 ```
 
@@ -340,7 +340,7 @@ await dispatch(createFieldWithImages({
 ## References
 
 - 📄 API Docs: `src/features/field/fieldAPI.md`
-- 🔧 Backend endpoint: `POST /fields/with-images`
+- 🔧 Backend endpoint: `POST /field-owner/fields/with-images`
 - 🍪 Cookie config: `src/utils/axios/axiosPrivate.tsx`
 - 🗺️ Location component: `src/pages/field-create-page/component/field-create/LocationCard.tsx`
 

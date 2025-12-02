@@ -322,6 +322,7 @@ export interface FieldOwnerBooking {
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     transactionStatus?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'refunded';
     totalPrice: number;
+    bookingAmount?: number; // Amount that goes to field owner (after platform fee)
     customer: {
         fullName: string;
         phone: string;
@@ -329,6 +330,7 @@ export interface FieldOwnerBooking {
     };
     selectedAmenities: string[];
     amenitiesFee?: number;
+    note?: string; // Optional user note if provided during booking
     createdAt?: string; // ISO date string
 }
 

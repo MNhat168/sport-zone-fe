@@ -11,6 +11,8 @@ import type {
     GetCoachScheduleParams,
     GetMyBookingsParams,
     MyBookingsResponse,
+    MyInvoicesResponse,
+    UpcomingBooking,
     ErrorResponse,
 } from "../../types/booking-type";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
@@ -22,9 +24,65 @@ import {
     CANCEL_SESSION_BOOKING_API,
     GET_COACH_BOOKINGS_API,
     GET_MY_BOOKINGS_API,
+    GET_MY_INVOICES_API,
+    GET_UPCOMING_BOOKING_API,
     GET_COACH_SCHEDULE_API,
     SET_COACH_HOLIDAY_API,
 } from "./bookingAPI";
+
+/**
+ * Get my invoices
+ */
+export const getMyInvoices = createAsyncThunk<
+    MyInvoicesResponse,
+    { page?: number; limit?: number; status?: string; type?: string },
+    { rejectValue: ErrorResponse }
+>("booking/getMyInvoices", async (params, thunkAPI) => {
+    try {
+        console.log("Getting my invoices with params:", params);
+
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.limit) queryParams.append('limit', params.limit.toString());
+        if (params?.status) queryParams.append('status', params.status);
+        if (params?.type) queryParams.append('type', params.type);
+
+        const url = queryParams.toString() ? `${GET_MY_INVOICES_API}?${queryParams.toString()}` : GET_MY_INVOICES_API;
+        const response = await axiosPrivate.get(url);
+
+        console.log("My invoices response:", response.data);
+
+        const responseData = response.data;
+        // Support envelope: { success: true, data: { invoices, pagination } }
+        if (responseData?.success && responseData?.data && responseData.data.invoices) {
+            return {
+                invoices: responseData.data.invoices,
+                pagination: responseData.data.pagination || null,
+            };
+        }
+
+        // Support direct response: { invoices, pagination }
+        if (responseData?.invoices && Array.isArray(responseData.invoices)) {
+            return {
+                invoices: responseData.invoices,
+                pagination: responseData.pagination || null,
+            };
+        }
+
+        // Fallback: empty
+        return {
+            invoices: [],
+            pagination: null,
+        };
+    } catch (error: any) {
+        console.error("Error getting my invoices:", error);
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get my invoices",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
 
 /**
  * Create field booking
@@ -262,6 +320,38 @@ export const setCoachHoliday = createAsyncThunk<
         console.error("Error setting coach holiday:", error);
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to set coach holiday",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Get upcoming booking for current user
+ */
+export const getUpcomingBooking = createAsyncThunk<
+    UpcomingBooking | null,
+    void,
+    { rejectValue: ErrorResponse }
+>("booking/getUpcomingBooking", async (_, thunkAPI) => {
+    try {
+        console.log("Getting upcoming booking for current user");
+        const response = await axiosPrivate.get(GET_UPCOMING_BOOKING_API);
+        const responseData = response.data;
+
+        if (responseData?.success && responseData?.data) {
+            return responseData.data as UpcomingBooking;
+        }
+
+        if (responseData) {
+            return responseData as UpcomingBooking;
+        }
+
+        return null;
+    } catch (error: any) {
+        console.error("Error getting upcoming booking:", error);
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get upcoming booking",
             status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

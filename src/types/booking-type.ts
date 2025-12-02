@@ -11,6 +11,7 @@ export interface CreateFieldBookingPayload {
     selectedAmenities?: string[];
     paymentMethod?: number; // PaymentMethod enum (1-9)
     paymentNote?: string;
+    note?: string; // User note to owner (max 200 chars)
 }
 
 export interface CreateSessionBookingPayload {
@@ -110,6 +111,29 @@ export interface PaginationInfo {
     hasPrevPage: boolean;
 }
 
+export interface Invoice {
+    bookingId: string;
+    name: string;
+    court?: string;
+    date: string; // YYYY-MM-DD
+    time: string; // e.g. "08:00 - 09:00"
+    payment: number;
+    paidOn?: string | null; // ISO date string
+    status?: string;
+}
+
+export interface MyInvoicesResponse {
+    invoices: Invoice[];
+    pagination: PaginationInfo | null;
+}
+export interface UpcomingBooking {
+    bookingId: string;
+    academyName?: string;
+    fieldName?: string;
+    date?: string; // YYYY-MM-DD
+    time?: string; // e.g. "08:00 - 09:00"
+}
+
 export interface MyBookingsResponse {
     bookings: Booking[];
     pagination: PaginationInfo;
@@ -121,6 +145,9 @@ export interface BookingState {
     sessionBooking: SessionBookingResponse | null;
     coachSchedules: CoachSchedule[];
     pagination: PaginationInfo | null;
+    invoices: Invoice[];
+    invoicesPagination: PaginationInfo | null;
+    upcomingBooking?: UpcomingBooking | null;
     loading: boolean;
     error: ErrorResponse | null;
 }

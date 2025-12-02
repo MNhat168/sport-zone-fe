@@ -1,5 +1,5 @@
 // Base path for Field Owner Profile endpoints
-export const OWNER_PROFILE_BASE = "/fields/owner-profile";
+export const OWNER_PROFILE_BASE = "/field-owner/profile";
 
 // Endpoints
 export const CREATE_OWNER_PROFILE_API = OWNER_PROFILE_BASE; // POST

@@ -608,8 +608,8 @@ export default function FieldOwnerDashboardPage() {
 
                             {/* Cột phải */}
                             <div className="lg:col-span-2 space-y-6">
-                                {/* Tóm tắt doanh thu */}
-                                <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white">
+                        {/* Tóm tắt doanh thu */}
+                                <Card className="bg-emerald-700 text-white">
                                     <CardContent>
                                         <div className="flex items-center justify-between mb-2 pt-6">
                                             <div>

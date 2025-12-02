@@ -5,7 +5,6 @@ import type {
     LoginPayload,
     RegisterPayload,
     RegisterResponse,
-    GoogleAuthResponse,
 } from "../../types/authentication-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
 import axiosPrivate from "../../utils/axios/axiosPrivate";

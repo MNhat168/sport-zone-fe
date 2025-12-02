@@ -9,6 +9,8 @@ import { amenitiesReducer } from "../features/amenities";
 import { ownerProfileReducer } from "../features/field-owner-profile";
 import { tournamentReducer } from "@/features/tournament";
 import { walletReducer } from "../features/wallet";
+import { registrationReducer } from "../features/field-owner-registration";
+import { bankAccountReducer } from "../features/bank-account";
 import chatReducer from "@/features/chat/chatSlice";
 
 export const store = configureStore({
@@ -23,6 +25,8 @@ export const store = configureStore({
         ownerProfile: ownerProfileReducer,
         tournament : tournamentReducer,
         wallet: walletReducer,
+        registration: registrationReducer,
+        bankAccount: bankAccountReducer,
         chat: chatReducer,
     },
 });

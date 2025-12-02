@@ -760,7 +760,7 @@ const handleDecline = async (bookingId: any, reason?: string) => {
             {/* Right Column */}
             <div className="lg:col-span-2 space-y-6">
               {/* Wallet Balance */}
-              <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white">
+              <Card className="bg-emerald-700 text-white">
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
                     <div>
