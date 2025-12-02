@@ -5,13 +5,17 @@ export interface Tournament {
   rules: any;
   totalRegistrationFeesCollected: any;
   prizePool: any;
+  commissionRate?: number;
+  commissionAmount?: number;
   _id: string;
   name: string;
   sportType: string;
+  category: string;
+  competitionFormat: string;
   location: string;
-  tournamentDate: string; // Changed from startDate/endDate
-  registrationStart: string; // New field
-  registrationEnd: string; // New field
+  tournamentDate: string;
+  registrationStart: string;
+  registrationEnd: string;
   startTime: string;
   endTime: string;
   maxParticipants: number;
@@ -22,6 +26,8 @@ export interface Tournament {
   participants: Array<{
     user: any;
     registeredAt: string;
+    teamNumber?: number;
+    position?: string;
   }>;
   fields: Array<{
     field: any;
@@ -30,6 +36,42 @@ export interface Tournament {
   totalFieldCost: number;
   confirmationDeadline: string;
   organizer: any;
+  // Team-related properties
+  numberOfTeams: number;
+  teamSize: number;
+  currentTeams: number;
+  teams: Array<{
+    teamNumber: number;
+    name?: string;
+    captain?: any;
+    members: any[];
+    isFull: boolean;
+    color?: string;
+    score: number;
+    matchesPlayed: number;
+    matchesWon: number;
+    matchesLost: number;
+    matchesDrawn: number;
+    points: number;
+    ranking: number;
+  }>;
+  // Team assignments for bracket
+  teamAssignments?: any[];
+  // Schedule
+  schedule?: Array<{
+    matchNumber: number;
+    round: string;
+    teamA: number;
+    teamB: number;
+    field?: any;
+    startTime?: string;
+    endTime?: string;
+    scoreA?: number;
+    scoreB?: number;
+    winner?: number;
+    status: string;
+    referee?: any;
+  }>;
 }
 
 interface TournamentState {
@@ -38,6 +80,7 @@ interface TournamentState {
   availableFields: any[];
   loading: boolean;
   error: string | null;
+  selectedTeam: number | null; // For team selection
 }
 
 const initialState: TournamentState = {
@@ -46,6 +89,7 @@ const initialState: TournamentState = {
   availableFields: [],
   loading: false,
   error: null,
+  selectedTeam: null,
 };
 
 const tournamentSlice = createSlice({
@@ -67,6 +111,9 @@ const tournamentSlice = createSlice({
     setAvailableFields: (state, action: PayloadAction<any[]>) => {
       state.availableFields = action.payload;
     },
+    setSelectedTeam: (state, action: PayloadAction<number | null>) => {
+      state.selectedTeam = action.payload;
+    },
     addTournament: (state, action: PayloadAction<Tournament>) => {
       state.tournaments.unshift(action.payload);
     },
@@ -79,6 +126,26 @@ const tournamentSlice = createSlice({
         state.currentTournament = action.payload;
       }
     },
+    updateTeam: (state, action: PayloadAction<{ tournamentId: string; team: Tournament['teams'][0] }>) => {
+      const tournament = state.tournaments.find(t => t._id === action.payload.tournamentId);
+      if (tournament) {
+        const teamIndex = tournament.teams.findIndex(t => t.teamNumber === action.payload.team.teamNumber);
+        if (teamIndex !== -1) {
+          tournament.teams[teamIndex] = action.payload.team;
+        } else {
+          tournament.teams.push(action.payload.team);
+        }
+      }
+      
+      if (state.currentTournament?._id === action.payload.tournamentId) {
+        const teamIndex = state.currentTournament.teams.findIndex(t => t.teamNumber === action.payload.team.teamNumber);
+        if (teamIndex !== -1) {
+          state.currentTournament.teams[teamIndex] = action.payload.team;
+        } else {
+          state.currentTournament.teams.push(action.payload.team);
+        }
+      }
+    },
   },
 });
 
@@ -88,8 +155,10 @@ export const {
   setTournaments,
   setCurrentTournament,
   setAvailableFields,
+  setSelectedTeam,
   addTournament,
   updateTournament,
+  updateTeam,
 } = tournamentSlice.actions;
 
 export default tournamentSlice.reducer;

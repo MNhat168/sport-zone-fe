@@ -26,8 +26,12 @@ export default function CreateTournamentPage() {
     registrationEnd: "", // Registration period end
     startTime: "",
     endTime: "",
-    maxParticipants: 20,
-    minParticipants: 10,
+    category: "",
+    competitionFormat: "",
+    numberOfTeams: 4, // Default number of teams
+    teamSize: undefined, // Will be set based on sport and category
+    maxParticipants: 0, // Calculated based on teams
+    minParticipants: 0, // Calculated based on teams
     registrationFee: 0,
     description: "",
     fieldsNeeded: 2,

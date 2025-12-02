@@ -1,13 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, Users, DollarSign, Trophy, Zap, Target } from "lucide-react"
-import { getCategoryDisplayName, getFormatDisplayName, SPORT_RULES_MAP, type SportType } from "../../../src/components/enums/ENUMS"
+import { Calendar, Clock, Users, DollarSign, Trophy, Zap, Target, Users2, Hash } from "lucide-react"
+import { 
+  getCategoryDisplayName, 
+  getFormatDisplayName, 
+  SPORT_RULES_MAP, 
+  type SportType,
+  getDefaultTeamSize,
+  calculateParticipants,
+  isTeamSport,
+  TeamSizeMap
+} from "../../../src/components/enums/ENUMS"
 
 interface Step1Props {
   formData: any
@@ -17,25 +26,65 @@ interface Step1Props {
 
 export default function CreateTournamentStep1({ formData, onUpdate, onNext }: Step1Props) {
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showTeamSizeInput, setShowTeamSizeInput] = useState(false)
+  const [teamSize, setTeamSize] = useState<number | undefined>()
 
   const handleChange = (field: string, value: any) => {
-    onUpdate({ ...formData, [field]: value })
-
+    const newData = { ...formData, [field]: value }
+    
+    if (field === "sportType") {
+      const rules = SPORT_RULES_MAP[value as SportType]
+      const defaultTeamSize = getDefaultTeamSize(value, newData.category || "")
+      setTeamSize(defaultTeamSize)
+      setShowTeamSizeInput(rules?.supportsTeamSizeOverride || false)
+      
+      newData.numberOfTeams = rules.minTeams
+      newData.teamSize = defaultTeamSize
+      newData.minParticipants = calculateParticipants(rules.minTeams, value, newData.category || "", defaultTeamSize)
+      newData.maxParticipants = calculateParticipants(rules.maxTeams, value, newData.category || "", defaultTeamSize)
+    }
+    
+    if (field === "category") {
+      const defaultTeamSize = getDefaultTeamSize(newData.sportType, value)
+      setTeamSize(defaultTeamSize)
+      newData.teamSize = defaultTeamSize
+      
+      // Recalculate participants based on new category
+      if (newData.numberOfTeams) {
+        newData.minParticipants = calculateParticipants(newData.numberOfTeams, newData.sportType, value, defaultTeamSize)
+        newData.maxParticipants = calculateParticipants(newData.numberOfTeams, newData.sportType, value, defaultTeamSize)
+      }
+    }
+    
+    if (field === "numberOfTeams" || field === "teamSize") {
+      const currentTeamSize = field === "teamSize" ? value : newData.teamSize
+      const currentTeams = field === "numberOfTeams" ? value : newData.numberOfTeams
+      
+      if (currentTeams && currentTeamSize) {
+        newData.minParticipants = calculateParticipants(currentTeams, newData.sportType, newData.category || "", currentTeamSize)
+        newData.maxParticipants = calculateParticipants(currentTeams, newData.sportType, newData.category || "", currentTeamSize)
+      }
+    }
+    
+    onUpdate(newData)
+    
     if (errors[field]) {
       setErrors({ ...errors, [field]: "" })
     }
-
-    if (field === "sportType") {
-      const rules = SPORT_RULES_MAP[value as SportType]
-      onUpdate({
-        ...formData,
-        sportType: value,
-        minParticipants: rules.minParticipants,
-        maxParticipants: rules.maxParticipants,
-        fieldsNeeded: rules.minFieldsRequired,
-      })
-    }
   }
+
+  useEffect(() => {
+    if (formData.sportType && formData.category) {
+      const rules = SPORT_RULES_MAP[formData.sportType as SportType]
+      const defaultTeamSize = getDefaultTeamSize(formData.sportType, formData.category)
+      setTeamSize(defaultTeamSize)
+      setShowTeamSizeInput(rules?.supportsTeamSizeOverride || false)
+      
+      if (!formData.teamSize) {
+        onUpdate({ ...formData, teamSize: defaultTeamSize })
+      }
+    }
+  }, [formData.sportType, formData.category])
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -47,8 +96,20 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (!formData.registrationEnd) newErrors.registrationEnd = "Ngày kết thúc đăng ký là bắt buộc"
     if (!formData.startTime) newErrors.startTime = "Giờ bắt đầu là bắt buộc"
     if (!formData.endTime) newErrors.endTime = "Giờ kết thúc là bắt buộc"
-    if (!formData.category) newErrors.category = "Vui lòng chọn thể loại";
-    if (!formData.competitionFormat) newErrors.competitionFormat = "Vui lòng chọn hình thức thi đấu";
+    if (!formData.category) newErrors.category = "Vui lòng chọn thể loại"
+    if (!formData.competitionFormat) newErrors.competitionFormat = "Vui lòng chọn hình thức thi đấu"
+    if (!formData.numberOfTeams) newErrors.numberOfTeams = "Vui lòng nhập số lượng đội"
+
+    const selectedSportRules = formData.sportType ? SPORT_RULES_MAP[formData.sportType as SportType] : null
+    
+    if (selectedSportRules) {
+      if (formData.numberOfTeams < selectedSportRules.minTeams) {
+        newErrors.numberOfTeams = `Số đội tối thiểu là ${selectedSportRules.minTeams}`
+      }
+      if (formData.numberOfTeams > selectedSportRules.maxTeams) {
+        newErrors.numberOfTeams = `Số đội tối đa là ${selectedSportRules.maxTeams}`
+      }
+    }
 
     // Validate registration period
     if (formData.registrationStart && formData.registrationEnd) {
@@ -62,14 +123,6 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
       if (new Date(formData.registrationEnd) >= new Date(formData.tournamentDate)) {
         newErrors.registrationEnd = "Đăng ký phải kết thúc trước ngày diễn ra giải đấu"
       }
-    }
-
-    if (!formData.minParticipants || formData.minParticipants < 1) {
-      newErrors.minParticipants = "Số người tối thiểu phải lớn hơn 0"
-    }
-
-    if (!formData.maxParticipants || formData.maxParticipants < formData.minParticipants) {
-      newErrors.maxParticipants = "Số người tối đa phải lớn hơn số người tối thiểu"
     }
 
     if (formData.registrationFee < 0) {
@@ -91,7 +144,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
   }
 
   const selectedSportRules = formData.sportType ? SPORT_RULES_MAP[formData.sportType as SportType] : null
-
+  const isTeamBased = isTeamSport(formData.sportType)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-green-50 p-4 md:p-8">
@@ -130,6 +183,41 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                 </div>
               )}
 
+              {/* Teams & Participants Preview */}
+              {formData.numberOfTeams && (
+                <div className="mb-6 space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-green-100 text-sm font-medium">Tournament Structure</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Users2 className="h-4 w-4" />
+                          <span className="text-sm">Teams</span>
+                        </div>
+                        <p className="text-white font-bold text-lg">{formData.numberOfTeams}</p>
+                      </div>
+                      <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          <span className="text-sm">Players</span>
+                        </div>
+                        <p className="text-white font-bold text-lg">{formData.minParticipants || formData.maxParticipants}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {isTeamBased && formData.teamSize && (
+                    <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-4 w-4" />
+                        <span className="text-sm">Team Size</span>
+                      </div>
+                      <p className="text-white font-bold text-lg">{formData.teamSize} players/team</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Date Preview */}
               {formData.tournamentDate && (
                 <div className="mb-6 space-y-3">
@@ -145,16 +233,6 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
 
               {/* Quick Stats */}
               <div className="space-y-3 mb-8 pt-6 border-t border-white border-opacity-20">
-                {formData.minParticipants && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-green-100 flex items-center gap-2">
-                      <Users className="h-4 w-4" /> Participants
-                    </span>
-                    <span className="font-bold text-lg">
-                      {formData.minParticipants}-{formData.maxParticipants}
-                    </span>
-                  </div>
-                )}
                 {formData.registrationFee !== undefined && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-green-100 flex items-center gap-2">
@@ -226,7 +304,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     <div className="mt-3 p-4 bg-green-50 rounded-lg text-sm text-gray-700 border border-green-200">
                       <p className="font-semibold text-gray-900 mb-1">{selectedSportRules.description}</p>
                       <p className="text-gray-600">
-                        Participants: {selectedSportRules.minParticipants}-{selectedSportRules.maxParticipants} |
+                        Teams: {selectedSportRules.minTeams}-{selectedSportRules.maxTeams} |
                         Fields: {selectedSportRules.minFieldsRequired}-{selectedSportRules.maxFieldsRequired} |
                         Duration: {selectedSportRules.typicalDuration}h
                       </p>
@@ -373,44 +451,76 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   </div>
                 </div>
 
-                {/* Participants */}
+                {/* Teams Configuration */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label
-                      htmlFor="minParticipants"
+                      htmlFor="numberOfTeams"
                       className="text-gray-700 font-semibold mb-2 block flex items-center gap-2"
                     >
-                      <Users className="h-4 w-4" />
-                      Số Người Tối Thiểu *
+                      <Users2 className="h-4 w-4" />
+                      Số Lượng Đội *
                     </Label>
                     <Input
-                      id="minParticipants"
+                      id="numberOfTeams"
                       type="number"
-                      min={selectedSportRules?.minParticipants || 1}
-                      max={selectedSportRules?.maxParticipants || 100}
-                      value={formData.minParticipants || ""}
-                      onChange={(e) => handleChange("minParticipants", Number.parseInt(e.target.value))}
-                      className={`border-2 ${errors.minParticipants ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
+                      min={selectedSportRules?.minTeams || 1}
+                      max={selectedSportRules?.maxTeams || 100}
+                      value={formData.numberOfTeams || ""}
+                      onChange={(e) => handleChange("numberOfTeams", Number.parseInt(e.target.value))}
+                      className={`border-2 ${errors.numberOfTeams ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
                     />
-                    {errors.minParticipants && <p className="text-red-500 text-sm mt-2">{errors.minParticipants}</p>}
+                    {errors.numberOfTeams && <p className="text-red-500 text-sm mt-2">{errors.numberOfTeams}</p>}
+                    {selectedSportRules && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Từ {selectedSportRules.minTeams} đến {selectedSportRules.maxTeams} đội
+                      </p>
+                    )}
                   </div>
 
-                  <div>
-                    <Label htmlFor="maxParticipants" className="text-gray-700 font-semibold mb-2 block">
-                      Số Người Tối Đa *
-                    </Label>
-                    <Input
-                      id="maxParticipants"
-                      type="number"
-                      min={formData.minParticipants || 1}
-                      max={selectedSportRules?.maxParticipants || 100}
-                      value={formData.maxParticipants || ""}
-                      onChange={(e) => handleChange("maxParticipants", Number.parseInt(e.target.value))}
-                      className={`border-2 ${errors.maxParticipants ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
-                    />
-                    {errors.maxParticipants && <p className="text-red-500 text-sm mt-2">{errors.maxParticipants}</p>}
-                  </div>
+                  {/* Team Size (for team sports that support override) */}
+                  {showTeamSizeInput && teamSize && (
+                    <div>
+                      <Label htmlFor="teamSize" className="text-gray-700 font-semibold mb-2 block">
+                        Số Người Mỗi Đội *
+                      </Label>
+                      <Input
+                        id="teamSize"
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={formData.teamSize || teamSize}
+                        onChange={(e) => handleChange("teamSize", Number.parseInt(e.target.value))}
+                        className={`border-2 ${errors.teamSize ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Mặc định: {teamSize} người (có thể thay đổi)
+                      </p>
+                    </div>
+                  )}
                 </div>
+
+                {/* Participants Summary */}
+                {(formData.minParticipants || formData.maxParticipants) && (
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700">Tổng Số Người Tham Gia:</p>
+                        <p className="text-lg font-bold text-blue-600">
+                          {formData.minParticipants || formData.maxParticipants} người
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-600">
+                          {formData.numberOfTeams} đội × {formData.teamSize || getDefaultTeamSize(formData.sportType, formData.category)} người/đội
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Số người sẽ tự động tính dựa trên số đội và số người mỗi đội
+                    </p>
+                  </div>
+                )}
 
                 {/* Description */}
                 <div>

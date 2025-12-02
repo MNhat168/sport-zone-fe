@@ -93,137 +93,252 @@ export const SportCategories = {
     }
 } as const;
 
+// Team size mapping based on sport category
+export const TeamSizeMap: Record<string, Record<string, number>> = {
+    [SportType.FOOTBALL]: {
+        '5_a_side': 5,
+        '7_a_side': 7,
+        '11_a_side': 11,
+        'mens': 11,
+        'womens': 11,
+        'mixed': 11,
+        'youth': 11,
+        'veterans': 11
+    },
+    [SportType.BASKETBALL]: {
+        '3x3': 3,
+        '5x5': 5,
+        'mens': 5,
+        'womens': 5,
+        'youth': 5
+    },
+    [SportType.VOLLEYBALL]: {
+        'mens': 6,
+        'womens': 6,
+        'mixed': 6,
+        'beach': 2,
+        'indoor': 6
+    },
+    [SportType.TENNIS]: {
+        'singles': 1,
+        'doubles': 2,
+        'mixed_doubles': 2
+    },
+    [SportType.BADMINTON]: {
+        'singles': 1,
+        'doubles': 2,
+        'mixed_doubles': 2
+    },
+    [SportType.PICKLEBALL]: {
+        'singles': 1,
+        'doubles': 2,
+        'mixed_doubles': 2
+    },
+    [SportType.SWIMMING]: {
+        'freestyle': 1,
+        'breaststroke': 1,
+        'backstroke': 1,
+        'butterfly': 1,
+        'individual_medley': 1,
+        'relay': 4
+    },
+    [SportType.GYM]: {
+        'bodybuilding': 1,
+        'powerlifting': 1,
+        'crossfit': 1,
+        'calisthenics': 1,
+        'weightlifting': 1
+    }
+};
+
 export interface SportRules {
     sportType: SportType;
+    minTeams: number;
+    maxTeams: number;
     minParticipants: number;
     maxParticipants: number;
     minFieldsRequired: number;
     maxFieldsRequired: number;
     typicalDuration: number;
-    teamSize: number;
     description: string;
     displayName: string;
     availableCategories: string[];
     availableFormats: CompetitionFormat[];
     defaultFormat: CompetitionFormat;
+    teamSize?: number; // Optional for individual sports
+    supportsTeamSizeOverride?: boolean; // Whether user can override team size
 }
 
 export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     [SportType.FOOTBALL]: {
         sportType: SportType.FOOTBALL,
-        minParticipants: 10,
-        maxParticipants: 22,
+        minTeams: 4,
+        maxTeams: 16,
+        minParticipants: 20, // 4 teams × 5 players (5-a-side default)
+        maxParticipants: 176, // 16 teams × 11 players
         minFieldsRequired: 1,
         maxFieldsRequired: 2,
         typicalDuration: 2,
-        teamSize: 11,
-        description: 'Giải đấu bóng đá với 11 người mỗi đội',
+        description: 'Giải đấu bóng đá với đội hình linh hoạt',
         displayName: 'Bóng đá',
         availableCategories: Object.values(SportCategories.FOOTBALL),
         availableFormats: [CompetitionFormat.GROUP_STAGE, CompetitionFormat.KNOCKOUT, CompetitionFormat.LEAGUE],
-        defaultFormat: CompetitionFormat.GROUP_STAGE
+        defaultFormat: CompetitionFormat.GROUP_STAGE,
+        supportsTeamSizeOverride: true
     },
     [SportType.TENNIS]: {
         sportType: SportType.TENNIS,
-        minParticipants: 4,
-        maxParticipants: 32,
+        minTeams: 8,
+        maxTeams: 32,
+        minParticipants: 8, // 8 players for singles
+        maxParticipants: 64, // 32 teams × 2 players for doubles
         minFieldsRequired: 1,
         maxFieldsRequired: 8,
         typicalDuration: 4,
-        teamSize: 1,
         description: 'Giải đấu quần vợt',
         displayName: 'Quần vợt',
         availableCategories: Object.values(SportCategories.NET_SPORTS),
         availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.DOUBLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION
+        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+        supportsTeamSizeOverride: false
     },
     [SportType.BADMINTON]: {
         sportType: SportType.BADMINTON,
-        minParticipants: 8,
-        maxParticipants: 32,
+        minTeams: 8,
+        maxTeams: 32,
+        minParticipants: 8, // 8 players for singles
+        maxParticipants: 64, // 32 teams × 2 players for doubles
         minFieldsRequired: 2,
         maxFieldsRequired: 8,
         typicalDuration: 4,
-        teamSize: 2,
         description: 'Giải đấu cầu lông',
         displayName: 'Cầu lông',
         availableCategories: Object.values(SportCategories.NET_SPORTS),
         availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.DOUBLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION
+        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+        supportsTeamSizeOverride: false
     },
     [SportType.PICKLEBALL]: {
         sportType: SportType.PICKLEBALL,
-        minParticipants: 8,
-        maxParticipants: 32,
+        minTeams: 8,
+        maxTeams: 32,
+        minParticipants: 8, // 8 players for singles
+        maxParticipants: 64, // 32 teams × 2 players for doubles
         minFieldsRequired: 2,
         maxFieldsRequired: 6,
         typicalDuration: 3,
-        teamSize: 2,
         description: 'Giải đấu pickleball',
         displayName: 'Pickleball',
         availableCategories: Object.values(SportCategories.NET_SPORTS),
         availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.ROUND_ROBIN
+        defaultFormat: CompetitionFormat.ROUND_ROBIN,
+        supportsTeamSizeOverride: false
     },
     [SportType.BASKETBALL]: {
         sportType: SportType.BASKETBALL,
-        minParticipants: 10,
-        maxParticipants: 20,
+        minTeams: 4,
+        maxTeams: 16,
+        minParticipants: 12, // 4 teams × 3 players (3x3 default)
+        maxParticipants: 80, // 16 teams × 5 players
         minFieldsRequired: 1,
         maxFieldsRequired: 3,
         typicalDuration: 3,
-        teamSize: 5,
         description: 'Giải đấu bóng rổ',
         displayName: 'Bóng rổ',
         availableCategories: Object.values(SportCategories.BASKETBALL),
         availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN, CompetitionFormat.LEAGUE],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION
+        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+        supportsTeamSizeOverride: true
     },
     [SportType.VOLLEYBALL]: {
         sportType: SportType.VOLLEYBALL,
-        minParticipants: 12,
-        maxParticipants: 24,
+        minTeams: 4,
+        maxTeams: 16,
+        minParticipants: 8, // 4 teams × 2 players (beach default)
+        maxParticipants: 96, // 16 teams × 6 players
         minFieldsRequired: 1,
         maxFieldsRequired: 4,
         typicalDuration: 3,
-        teamSize: 6,
         description: 'Giải đấu bóng chuyền',
         displayName: 'Bóng chuyền',
         availableCategories: Object.values(SportCategories.VOLLEYBALL),
         availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.ROUND_ROBIN
+        defaultFormat: CompetitionFormat.ROUND_ROBIN,
+        supportsTeamSizeOverride: true
     },
     [SportType.SWIMMING]: {
         sportType: SportType.SWIMMING,
-        minParticipants: 8,
-        maxParticipants: 50,
+        minTeams: 1,
+        maxTeams: 50,
+        minParticipants: 4, // 4 individuals for relay or 4 solo
+        maxParticipants: 200, // 50 teams × 4 for relay or 50 solo
         minFieldsRequired: 1,
         maxFieldsRequired: 2,
         typicalDuration: 2,
-        teamSize: 1,
         description: 'Giải thi đấu bơi lội',
         displayName: 'Bơi lội',
         availableCategories: Object.values(SportCategories.SWIMMING),
         availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION
+        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+        supportsTeamSizeOverride: true
     },
     [SportType.GYM]: {
         sportType: SportType.GYM,
-        minParticipants: 10,
-        maxParticipants: 40,
+        minTeams: 1,
+        maxTeams: 40,
+        minParticipants: 4, // 4 individuals
+        maxParticipants: 120, // 40 teams × 3 for crossfit or 40 solo
         minFieldsRequired: 1,
         maxFieldsRequired: 1,
         typicalDuration: 2,
-        teamSize: 1,
         description: 'Cuộc thi thể hình hoặc workshop',
         displayName: 'Gym/Fitness',
         availableCategories: Object.values(SportCategories.GYM),
         availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION
+        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+        supportsTeamSizeOverride: true
     },
-}
+};
 
-// Helper functions for display names
+// Helper function to calculate participants based on teams and team size
+export const calculateParticipants = (
+    numTeams: number, 
+    sportType: string, 
+    category: string, 
+    teamSize?: number
+): number => {
+    const baseTeamSize = TeamSizeMap[sportType]?.[category] || 1;
+    const finalTeamSize = teamSize || baseTeamSize;
+    return numTeams * finalTeamSize;
+};
+
+// Helper function to calculate teams based on participants and team size
+export const calculateTeams = (
+    numParticipants: number, 
+    sportType: string, 
+    category: string, 
+    teamSize?: number
+): number => {
+    const baseTeamSize = TeamSizeMap[sportType]?.[category] || 1;
+    const finalTeamSize = teamSize || baseTeamSize;
+    return Math.floor(numParticipants / finalTeamSize);
+};
+
+// Helper function to get default team size for a category
+export const getDefaultTeamSize = (sportType: string, category: string): number => {
+    return TeamSizeMap[sportType]?.[category] || 1;
+};
+
+/**
+ * Helper function to check if sport is team-based
+ * @param sportType - The sport type to check
+ * @returns True if the sport is team-based
+ */
+export const isTeamSport = (sportType: string): boolean => {
+    const teamSports: SportType[] = [SportType.FOOTBALL, SportType.BASKETBALL, SportType.VOLLEYBALL];
+    return teamSports.includes(sportType as SportType);
+};
+
 export const getCategoryDisplayName = (category: string, sportType: string): string => {
   const categoryMappings: Record<string, Record<string, string>> = {
     [SportType.TENNIS]: {
@@ -289,7 +404,7 @@ export const getFormatDisplayName = (format: string): string => {
   const formatNames: Record<string, string> = {
     'single_elimination': 'Loại trực tiếp',
     'double_elimination': 'Loại kép',
-    'round_robin': 'Vòng tròn',
+    'round_robinc': 'Vòng tròn',
     'group_stage': 'Vòng bảng',
     'league': 'Giải đấu',
     'knockout': 'Loại trực tiếp'
