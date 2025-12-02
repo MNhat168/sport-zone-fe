@@ -1,4 +1,4 @@
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
@@ -12,7 +12,7 @@ export interface ChatButtonRef {
   closeChat: () => void;
 }
 
-const ChatButton = forwardRef<ChatButtonRef>((props, ref) => {
+const ChatButton = forwardRef<ChatButtonRef>((_props, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const { unreadCount, connected } = useAppSelector((state) => state.chat);

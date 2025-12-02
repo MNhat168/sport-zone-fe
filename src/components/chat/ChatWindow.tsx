@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, Send, X, MessageCircle, User, Building } from "lucide-react";
+import { Send, X, MessageCircle, Building } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
-import { getChatRoom, markAsRead } from "@/features/chat/chatThunk";
+import { markAsRead } from "@/features/chat/chatThunk";
 import { setCurrentRoom, clearTyping } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
-import type { ChatRoom, Message } from "@/features/chat/chat-type";
+import type { Message } from "@/features/chat/chat-type";
 import axiosPrivate from "@/utils/axios/axiosPrivate";
 
 interface FieldDetailChatWindowProps {
@@ -35,7 +33,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
-    const { currentRoom, loading, typingUsers } = useAppSelector((state) => state.chat);
+    const { currentRoom, loading } = useAppSelector((state) => state.chat);
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.auth.user);
 
@@ -182,7 +180,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
     };
 
     const isUserMessage = (senderId: string) => {
-        return senderId === user?.id;
+        return senderId === user?._id;
     };
 
     const formatTime = (dateString: string | Date) => {
