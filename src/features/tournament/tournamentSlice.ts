@@ -23,6 +23,7 @@ export interface Tournament {
   registrationFee: number;
   description: string;
   status: string;
+  isFull?: boolean;
   participants: Array<{
     user: any;
     registeredAt: string;

@@ -122,7 +122,7 @@ export default function TournamentDetailsPage() {
     setActiveTab("participants")
     setHighlightedTeam(teamNumber)
     dispatch(selectTeam(teamNumber))
-    
+
     // Scroll to team section after a short delay
     setTimeout(() => {
       const teamElement = document.getElementById(`team-${teamNumber}`)
@@ -141,7 +141,7 @@ export default function TournamentDetailsPage() {
     setActiveTab("participants")
     setHighlightedTeam(teamNumber)
     dispatch(selectTeam(teamNumber))
-    
+
     setTimeout(() => {
       const teamElement = document.getElementById(`team-${teamNumber}`)
       if (teamElement) {
@@ -193,11 +193,21 @@ export default function TournamentDetailsPage() {
   const tournament = currentTournament
   const isParticipant = user && tournament.participants?.some(p => p.user?._id === user.id)
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
-  const isFull = tournament.participants?.length >= tournament.maxParticipants
+  const isFull = tournament.maxParticipants > 0 && tournament.participants?.length >= tournament.maxParticipants;
   const registrationProgress = (tournament.participants?.length / tournament.maxParticipants) * 100
   const daysUntilTournament = Math.ceil(
     (new Date(tournament.tournamentDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   )
+
+  console.log('Tournament object:', {
+    participants: tournament.participants,
+    participantsLength: tournament.participants?.length,
+    maxParticipants: tournament.maxParticipants,
+    numberOfTeams: tournament.numberOfTeams,
+    teamSize: tournament.teamSize,
+    calculatedMax: tournament.numberOfTeams * tournament.teamSize,
+    isFullCalculation: (tournament.participants?.length || 0) >= (tournament.maxParticipants || tournament.numberOfTeams * tournament.teamSize || 0)
+  });
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return 'N/A';
@@ -355,7 +365,7 @@ export default function TournamentDetailsPage() {
                       <Button disabled className="w-full bg-gray-600">
                         Tournament Full
                       </Button>
-                    ) : !isRegistrationOpen ? (
+                    ) : isRegistrationOpen ? (
                       <Button disabled className="w-full bg-gray-600">
                         Registration Closed
                       </Button>
@@ -495,16 +505,16 @@ export default function TournamentDetailsPage() {
                     <span>{tournament.currentTeams}/{tournament.numberOfTeams}</span>
                   </div>
                   <div className="flex gap-1 h-2">
-                    <div 
-                      className="bg-green-500 rounded-l" 
+                    <div
+                      className="bg-green-500 rounded-l"
                       style={{ width: `${(fullTeams / tournament.numberOfTeams) * 100}%` }}
                     />
-                    <div 
-                      className="bg-yellow-500" 
+                    <div
+                      className="bg-yellow-500"
                       style={{ width: `${(incompleteTeams / tournament.numberOfTeams) * 100}%` }}
                     />
-                    <div 
-                      className="bg-gray-500 rounded-r" 
+                    <div
+                      className="bg-gray-500 rounded-r"
                       style={{ width: `${(emptyTeams / tournament.numberOfTeams) * 100}%` }}
                     />
                   </div>
@@ -867,20 +877,20 @@ export default function TournamentDetailsPage() {
                               const teamParticipants = participantsByTeam[team.teamNumber] || []
                               const isHighlighted = highlightedTeam === team.teamNumber
                               const isTeamFull = team.isFull
-                              
+
                               return (
-                                <Card 
-                                  key={team.teamNumber} 
+                                <Card
+                                  key={team.teamNumber}
                                   id={`team-${team.teamNumber}`}
-                                  className={`transition-all ${isHighlighted 
-                                    ? 'border-2 border-blue-500 shadow-lg' 
+                                  className={`transition-all ${isHighlighted
+                                    ? 'border-2 border-blue-500 shadow-lg'
                                     : 'hover:border-gray-300'
-                                  } ${isTeamFull ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}`}
+                                    } ${isTeamFull ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}`}
                                 >
                                   <CardContent className="p-6">
                                     <div className="flex justify-between items-start mb-4">
                                       <div className="flex items-center gap-3">
-                                        <div 
+                                        <div
                                           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
                                           style={{ backgroundColor: team.color }}
                                         >
@@ -892,8 +902,8 @@ export default function TournamentDetailsPage() {
                                           </h3>
                                           <div className="flex items-center gap-2 text-sm text-gray-600">
                                             <Badge variant={isTeamFull ? "default" : "outline"} className={
-                                              isTeamFull 
-                                                ? "bg-green-600 hover:bg-green-700" 
+                                              isTeamFull
+                                                ? "bg-green-600 hover:bg-green-700"
                                                 : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
                                             }>
                                               {isTeamFull ? 'Full Team' : `${teamParticipants.length}/${tournament.teamSize}`}
@@ -907,7 +917,7 @@ export default function TournamentDetailsPage() {
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       <div className="text-right">
                                         <div className="text-sm text-gray-600">Team Score</div>
                                         <div className="text-2xl font-bold">{team.score || 0}</div>
@@ -920,8 +930,8 @@ export default function TournamentDetailsPage() {
                                       {teamParticipants.length > 0 ? (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                           {teamParticipants.map((participant, pIndex) => (
-                                            <div 
-                                              key={pIndex} 
+                                            <div
+                                              key={pIndex}
                                               className="flex items-center gap-3 p-2 bg-white rounded-lg border"
                                             >
                                               <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-white font-semibold">
@@ -974,8 +984,8 @@ export default function TournamentDetailsPage() {
 
                                     {/* Action Button */}
                                     <div className="mt-4">
-                                      <Button 
-                                        variant="outline" 
+                                      <Button
+                                        variant="outline"
                                         className="w-full"
                                         onClick={() => handleViewTeamDetails(team.teamNumber)}
                                       >
@@ -1020,27 +1030,27 @@ export default function TournamentDetailsPage() {
                           {tournament.schedule.map((match) => {
                             const teamA = tournament.teams?.find(t => t.teamNumber === match.teamA)
                             const teamB = tournament.teams?.find(t => t.teamNumber === match.teamB)
-                            
+
                             return (
                               <Card key={match.matchNumber} className="p-4">
                                 <div className="flex justify-between items-center mb-2">
                                   <Badge variant="outline" className={
                                     match.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    match.status === 'ongoing' ? 'bg-red-100 text-red-800' :
-                                    match.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-gray-100 text-gray-800'
+                                      match.status === 'ongoing' ? 'bg-red-100 text-red-800' :
+                                        match.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                                          'bg-gray-100 text-gray-800'
                                   }>
                                     {match.status?.charAt(0).toUpperCase() + match.status?.slice(1)}
                                   </Badge>
                                   <span className="text-sm text-gray-600">Round {match.round}</span>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-3 items-center py-4">
                                   {/* Team A */}
                                   <div className="text-center">
                                     <div className="flex items-center justify-center gap-2 mb-1">
-                                      <div 
-                                        className="w-4 h-4 rounded-full" 
+                                      <div
+                                        className="w-4 h-4 rounded-full"
                                         style={{ backgroundColor: teamA?.color || '#EF4444' }}
                                       />
                                       <span className="font-semibold">{teamA?.name || `Team ${match.teamA}`}</span>
@@ -1049,7 +1059,7 @@ export default function TournamentDetailsPage() {
                                       <div className="text-2xl font-bold">{match.scoreA || 0}</div>
                                     )}
                                   </div>
-                                  
+
                                   {/* VS */}
                                   <div className="text-center">
                                     <div className="text-lg font-bold text-gray-700">VS</div>
@@ -1059,12 +1069,12 @@ export default function TournamentDetailsPage() {
                                       </div>
                                     )}
                                   </div>
-                                  
+
                                   {/* Team B */}
                                   <div className="text-center">
                                     <div className="flex items-center justify-center gap-2 mb-1">
-                                      <div 
-                                        className="w-4 h-4 rounded-full" 
+                                      <div
+                                        className="w-4 h-4 rounded-full"
                                         style={{ backgroundColor: teamB?.color || '#3B82F6' }}
                                       />
                                       <span className="font-semibold">{teamB?.name || `Team ${match.teamB}`}</span>
@@ -1074,7 +1084,7 @@ export default function TournamentDetailsPage() {
                                     )}
                                   </div>
                                 </div>
-                                
+
                                 {match.winner && (
                                   <div className="text-center mt-2">
                                     <Badge className="bg-yellow-100 text-yellow-800">

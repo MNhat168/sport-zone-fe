@@ -43,104 +43,110 @@ const getTeamColor = (teamNumber: number): string => {
 // In tournamentThunk.ts - Update the mapping function
 const mapApiTournamentToAppTournament = (apiTournament: any): import("./tournamentSlice").Tournament => {
   console.log('Mapping tournament:', apiTournament);
-  
+
   // Extract date values safely
-  const tournamentDate = apiTournament?.tournamentDate ? 
-    (typeof apiTournament.tournamentDate === 'string' ? 
-      apiTournament.tournamentDate.split('T')[0] : 
+  const tournamentDate = apiTournament?.tournamentDate ?
+    (typeof apiTournament.tournamentDate === 'string' ?
+      apiTournament.tournamentDate.split('T')[0] :
       apiTournament.tournamentDate.toISOString().split('T')[0]) : "";
-  
-  const registrationStart = apiTournament?.registrationStart ? 
-    (typeof apiTournament.registrationStart === 'string' ? 
-      apiTournament.registrationStart.split('T')[0] : 
+
+  const registrationStart = apiTournament?.registrationStart ?
+    (typeof apiTournament.registrationStart === 'string' ?
+      apiTournament.registrationStart.split('T')[0] :
       apiTournament.registrationStart.toISOString().split('T')[0]) : "";
-  
-  const registrationEnd = apiTournament?.registrationEnd ? 
-    (typeof apiTournament.registrationEnd === 'string' ? 
-      apiTournament.registrationEnd.split('T')[0] : 
+
+  const registrationEnd = apiTournament?.registrationEnd ?
+    (typeof apiTournament.registrationEnd === 'string' ?
+      apiTournament.registrationEnd.split('T')[0] :
       apiTournament.registrationEnd.toISOString().split('T')[0]) : "";
-  
-  const confirmationDeadline = apiTournament?.confirmationDeadline ? 
-    (typeof apiTournament.confirmationDeadline === 'string' ? 
-      apiTournament.confirmationDeadline.split('T')[0] : 
+
+  const confirmationDeadline = apiTournament?.confirmationDeadline ?
+    (typeof apiTournament.confirmationDeadline === 'string' ?
+      apiTournament.confirmationDeadline.split('T')[0] :
       apiTournament.confirmationDeadline.toISOString().split('T')[0]) : "";
 
   // Calculate current teams based on participants and team size
   const teamSize = apiTournament?.teamSize || 1;
   const participantsCount = apiTournament?.participants?.length || 0;
-  const currentTeams = Math.ceil(participantsCount / teamSize);
-  
+  const currentTeams = Math.min(
+    Math.ceil(participantsCount / teamSize),
+    apiTournament?.numberOfTeams || 0
+  );
+
+  // Also add a proper isFull check:
+  const isFull = participantsCount >= (apiTournament?.numberOfTeams || 0) * teamSize;
+
   // Map teams with default values if not provided
-  const teams = Array.isArray(apiTournament?.teams) 
+  const teams = Array.isArray(apiTournament?.teams)
     ? apiTournament.teams.map((team: any) => ({
-        teamNumber: team.teamNumber || 0,
-        name: team.name || `Team ${team.teamNumber}`,
-        captain: team.captain || null,
-        members: team.members || [],
-        isFull: team.isFull || false,
-        color: team.color || getTeamColor(team.teamNumber || 0),
-        score: team.score || 0,
-        matchesPlayed: team.matchesPlayed || 0,
-        matchesWon: team.matchesWon || 0,
-        matchesLost: team.matchesLost || 0,
-        matchesDrawn: team.matchesDrawn || 0,
-        points: team.points || 0,
-        ranking: team.ranking || 0,
-      }))
+      teamNumber: team.teamNumber || 0,
+      name: team.name || `Team ${team.teamNumber}`,
+      captain: team.captain || null,
+      members: team.members || [],
+      isFull: team.isFull || false,
+      color: team.color || getTeamColor(team.teamNumber || 0),
+      score: team.score || 0,
+      matchesPlayed: team.matchesPlayed || 0,
+      matchesWon: team.matchesWon || 0,
+      matchesLost: team.matchesLost || 0,
+      matchesDrawn: team.matchesDrawn || 0,
+      points: team.points || 0,
+      ranking: team.ranking || 0,
+    }))
     : Array.from({ length: apiTournament?.numberOfTeams || 0 }).map((_, index) => ({
-        teamNumber: index + 1,
-        name: `Team ${index + 1}`,
-        captain: null,
-        members: [],
-        isFull: false,
-        color: getTeamColor(index + 1),
-        score: 0,
-        matchesPlayed: 0,
-        matchesWon: 0,
-        matchesLost: 0,
-        matchesDrawn: 0,
-        points: 0,
-        ranking: 0,
-      }));
+      teamNumber: index + 1,
+      name: `Team ${index + 1}`,
+      captain: null,
+      members: [],
+      isFull: false,
+      color: getTeamColor(index + 1),
+      score: 0,
+      matchesPlayed: 0,
+      matchesWon: 0,
+      matchesLost: 0,
+      matchesDrawn: 0,
+      points: 0,
+      ranking: 0,
+    }));
 
   // Map participants with team numbers
-  const participants = Array.isArray(apiTournament?.participants) 
+  const participants = Array.isArray(apiTournament?.participants)
     ? apiTournament.participants.map((p: any) => {
-        // Assign team numbers if not present (simple round-robin assignment)
-        let teamNumber = p.teamNumber;
-        if (!teamNumber && apiTournament.numberOfTeams && apiTournament.teamSize) {
-          const participantIndex = apiTournament.participants.indexOf(p);
-          teamNumber = Math.floor(participantIndex / apiTournament.teamSize) + 1;
-        }
-        
-        return {
-          user: p.user || null,
-          registeredAt: p.registeredAt ? 
-            (typeof p.registeredAt === 'string' ? p.registeredAt : p.registeredAt.toISOString()) : "",
-          teamNumber: teamNumber,
-          position: p.position || 'Player',
-        };
-      })
+      // Assign team numbers if not present (simple round-robin assignment)
+      let teamNumber = p.teamNumber;
+      if (!teamNumber && apiTournament.numberOfTeams && apiTournament.teamSize) {
+        const participantIndex = apiTournament.participants.indexOf(p);
+        teamNumber = Math.floor(participantIndex / apiTournament.teamSize) + 1;
+      }
+
+      return {
+        user: p.user || null,
+        registeredAt: p.registeredAt ?
+          (typeof p.registeredAt === 'string' ? p.registeredAt : p.registeredAt.toISOString()) : "",
+        teamNumber: teamNumber,
+        position: p.position || 'Player',
+      };
+    })
     : [];
 
   // Map schedule if exists
   const schedule = Array.isArray(apiTournament?.schedule)
     ? apiTournament.schedule.map((match: any) => ({
-        matchNumber: match.matchNumber || 0,
-        round: match.round || 'Round 1',
-        teamA: match.teamA || 0,
-        teamB: match.teamB || 0,
-        field: match.field || null,
-        startTime: match.startTime ? 
-          (typeof match.startTime === 'string' ? match.startTime : match.startTime.toISOString()) : undefined,
-        endTime: match.endTime ? 
-          (typeof match.endTime === 'string' ? match.endTime : match.endTime.toISOString()) : undefined,
-        scoreA: match.scoreA,
-        scoreB: match.scoreB,
-        winner: match.winner,
-        status: match.status || 'scheduled',
-        referee: match.referee || null,
-      }))
+      matchNumber: match.matchNumber || 0,
+      round: match.round || 'Round 1',
+      teamA: match.teamA || 0,
+      teamB: match.teamB || 0,
+      field: match.field || null,
+      startTime: match.startTime ?
+        (typeof match.startTime === 'string' ? match.startTime : match.startTime.toISOString()) : undefined,
+      endTime: match.endTime ?
+        (typeof match.endTime === 'string' ? match.endTime : match.endTime.toISOString()) : undefined,
+      scoreA: match.scoreA,
+      scoreB: match.scoreB,
+      winner: match.winner,
+      status: match.status || 'scheduled',
+      referee: match.referee || null,
+    }))
     : [];
 
   return {
@@ -192,12 +198,12 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
 // Helper function to generate team assignments
 const generateTeamAssignments = (participants: any[], numberOfTeams: number, teamSize: number) => {
   const assignments: any[] = [];
-  
+
   for (let i = 0; i < numberOfTeams; i++) {
     const startIdx = i * teamSize;
     const endIdx = startIdx + teamSize;
     const teamParticipants = participants.slice(startIdx, endIdx);
-    
+
     assignments.push({
       teamNumber: i + 1,
       participants: teamParticipants.map((p: any) => p.user),
@@ -205,7 +211,7 @@ const generateTeamAssignments = (participants: any[], numberOfTeams: number, tea
       remainingSpots: teamSize - teamParticipants.length,
     });
   }
-  
+
   return assignments;
 };
 
@@ -218,16 +224,16 @@ export const fetchTournaments = createAsyncThunk(
     try {
       const queryString = buildTournamentsQuery(filters);
       const url = queryString ? `${TOURNAMENTS_API}?${queryString}` : TOURNAMENTS_API;
-      
+
       console.log('Fetching tournaments from:', url);
-      
+
       const response = await axiosPublic.get(url);
       console.log('API Response:', response);
       console.log('Response data structure:', response.data);
-      
+
       // Handle different API response structures
       let tournaments: any[] = [];
-      
+
       if (Array.isArray(response.data)) {
         tournaments = response.data;
       } else if (response.data?.data && Array.isArray(response.data.data)) {
@@ -237,12 +243,12 @@ export const fetchTournaments = createAsyncThunk(
       } else if (response.data?.tournaments && Array.isArray(response.data.tournaments)) {
         tournaments = response.data.tournaments;
       }
-      
+
       console.log('Extracted tournaments:', tournaments);
-      
+
       const mappedTournaments = tournaments.map(mapApiTournamentToAppTournament);
       console.log('Mapped tournaments:', mappedTournaments);
-      
+
       dispatch(setTournaments(mappedTournaments));
       return mappedTournaments;
     } catch (error: any) {
@@ -266,7 +272,7 @@ export const fetchTournamentById = createAsyncThunk(
     try {
       const response = await axiosPublic.get(TOURNAMENT_BY_ID_API(id));
       const mappedTournament = mapApiTournamentToAppTournament(response.data);
-      
+
       dispatch(setCurrentTournament(mappedTournament));
       return mappedTournament;
     } catch (error: any) {
@@ -289,10 +295,10 @@ export const fetchAvailableFields = createAsyncThunk(
     try {
       const queryString = buildAvailableFieldsQuery(params);
       const response = await axiosPublic.get(`${AVAILABLE_FIELDS_API}?${queryString}`);
-      
+
       // Extract fields from the response structure
       const fields = response.data.data || response.data || [];
-      
+
       console.log('Extracted fields:', fields);
       dispatch(setAvailableFields(fields));
       return fields;
@@ -316,7 +322,7 @@ export const createTournament = createAsyncThunk(
     try {
       const response = await axiosPrivate.post(CREATE_TOURNAMENT_API, tournamentData);
       const mappedTournament = mapApiTournamentToAppTournament(response.data);
-      
+
       dispatch(addTournament(mappedTournament));
       return mappedTournament;
     } catch (error: any) {
@@ -339,7 +345,7 @@ export const registerForTournament = createAsyncThunk(
     try {
       const response = await axiosPrivate.post(REGISTER_FOR_TOURNAMENT_API, data);
       const mappedTournament = mapApiTournamentToAppTournament(response.data);
-      
+
       dispatch(updateTournament(mappedTournament));
       return mappedTournament;
     } catch (error: any) {
