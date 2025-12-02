@@ -25,11 +25,8 @@ import {
   Shield,
   AlertCircle,
   CheckCircle2,
-  XCircle,
   Phone,
   Mail,
-  Instagram,
-  Facebook,
   Users2,
   Target,
   Hash
@@ -39,9 +36,7 @@ import { fetchTournamentById, registerForTournament, selectTeam } from "@/featur
 import { getSportDisplayNameVN, getCategoryDisplayName, getFormatDisplayName } from "@/components/enums/ENUMS"
 import TournamentFormationMap from "@/components/tournamnent/TournamentFormationMapProps "
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -50,7 +45,7 @@ export default function TournamentDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const { currentTournament, loading, error, selectedTeam } = useAppSelector((state) => state.tournament)
+  const { currentTournament, loading, error } = useAppSelector((state) => state.tournament)
   const { user } = useAppSelector((state) => state.auth)
 
   const [activeTab, setActiveTab] = useState("overview")
@@ -191,7 +186,7 @@ export default function TournamentDetailsPage() {
   }
 
   const tournament = currentTournament
-  const isParticipant = user && tournament.participants?.some(p => p.user?._id === user.id)
+  const isParticipant = user && tournament.participants?.some(p => p.user?._id === user._id)
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
   const isFull = tournament.maxParticipants > 0 && tournament.participants?.length >= tournament.maxParticipants;
   const registrationProgress = (tournament.participants?.length / tournament.maxParticipants) * 100
@@ -227,25 +222,6 @@ export default function TournamentDetailsPage() {
       return 'Invalid Date';
     }
   };
-
-  const calculateDaysUntil = (dateStr: string) => {
-    if (!dateStr) return NaN;
-
-    try {
-      const targetDate = new Date(dateStr);
-      const today = new Date();
-
-      if (isNaN(targetDate.getTime())) return NaN;
-
-      const timeDiff = targetDate.getTime() - today.getTime();
-      return Math.ceil(timeDiff / (1000 * 3600 * 24));
-    } catch (error) {
-      console.error('Error calculating days difference:', error);
-      return NaN;
-    }
-  };
-
-  const registrationClosesIn = calculateDaysUntil(tournament.registrationEnd);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('vi-VN') + ' VNĐ'
@@ -873,7 +849,7 @@ export default function TournamentDetailsPage() {
                       {tournament.teams && tournament.teams.length > 0 ? (
                         <ScrollArea className="h-[600px]">
                           <div className="space-y-6">
-                            {tournament.teams.map((team, index) => {
+                            {tournament.teams.map((team) => {
                               const teamParticipants = participantsByTeam[team.teamNumber] || []
                               const isHighlighted = highlightedTeam === team.teamNumber
                               const isTeamFull = team.isFull

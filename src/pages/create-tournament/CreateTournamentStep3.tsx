@@ -41,7 +41,7 @@ export default function CreateTournamentStep3({ formData, onBack, onUpdate }: St
   const calculateRecommendedFees = () => {
     const totalFieldCost = formData.totalFieldCost || 0;
     const minParticipants = formData.minParticipants || 1;
-    const maxParticipants = formData.maxParticipants || 1;
+    //const _maxParticipants = formData.maxParticipants || 1;
     
     // Minimum fee to break even with minimum participants (including 10% commission)
     const breakEvenFee = Math.ceil((totalFieldCost / minParticipants) / 0.9);

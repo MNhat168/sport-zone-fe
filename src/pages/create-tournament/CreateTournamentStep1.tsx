@@ -14,8 +14,7 @@ import {
   type SportType,
   getDefaultTeamSize,
   calculateParticipants,
-  isTeamSport,
-  TeamSizeMap
+  isTeamSport
 } from "../../../src/components/enums/ENUMS"
 
 interface Step1Props {

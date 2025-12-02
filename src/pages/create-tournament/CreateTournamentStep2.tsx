@@ -68,8 +68,9 @@ export default function CreateTournamentStep2({ formData, onNext, onUpdate, onBa
     const safeAvailableFields: Field[] = (() => {
         if (!availableFields) return [];
         if (Array.isArray(availableFields)) return availableFields;
-        if (availableFields.data && Array.isArray(availableFields.data)) return availableFields.data;
-        if (availableFields.success && Array.isArray(availableFields.data)) return availableFields.data;
+        const fieldsObj = availableFields as any;
+        if (fieldsObj.data && Array.isArray(fieldsObj.data)) return fieldsObj.data;
+        if (fieldsObj.success && Array.isArray(fieldsObj.data)) return fieldsObj.data;
         return [];
     })();
 

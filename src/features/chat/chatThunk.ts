@@ -5,7 +5,6 @@ import {
     GET_CHAT_ROOMS_API,
     GET_CHAT_ROOM_API,
     MARK_AS_READ_API,
-    UPDATE_STATUS_API,
     UNREAD_COUNT_API,
 } from "./chatAPI";
 import type { ChatRoom, StartChatPayload } from "./chat-type";

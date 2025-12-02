@@ -74,7 +74,7 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
   );
 
   // Also add a proper isFull check:
-  const isFull = participantsCount >= (apiTournament?.numberOfTeams || 0) * teamSize;
+  //const isFull = participantsCount >= (apiTournament?.numberOfTeams || 0) * teamSize;
 
   // Map teams with default values if not provided
   const teams = Array.isArray(apiTournament?.teams)

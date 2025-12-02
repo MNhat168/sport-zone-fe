@@ -467,7 +467,7 @@ const TournamentFormationMap: React.FC<TournamentFormationMapProps> = ({
     };
 
     const renderTournamentBracket = () => {
-        const bracketSize = Math.pow(2, Math.ceil(Math.log2(Math.max(numberOfTeams, 2))));
+        // const bracketSize = Math.pow(2, Math.ceil(Math.log2(Math.max(numberOfTeams, 2))));
         
         return (
             <div className="space-y-6">

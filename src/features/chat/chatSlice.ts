@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { ChatState, ChatRoom, Message, SocketMessageEvent, TypingEvent } from "./chat-type";
+import type { ChatState, ChatRoom, SocketMessageEvent, TypingEvent } from "./chat-type";
 import {
   getChatRooms,
   getChatRoom,

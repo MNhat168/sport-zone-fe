@@ -4,7 +4,7 @@ import { ArrowLeft, CreditCard, Shield, CheckCircle, Clock, AlertCircle, Loader2
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation} from "react-router-dom";
 import type { Field } from "@/types/field-type";
 import { createFieldBooking } from "@/features/booking/bookingThunk";
 import { clearError } from "@/features/booking/bookingSlice";
@@ -69,7 +69,6 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
     selectedAmenityIds = [],
 }) => {
     const location = useLocation();
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
     const user = useAppSelector((state) => state.user.user);

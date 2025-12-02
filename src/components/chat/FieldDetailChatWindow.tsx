@@ -31,7 +31,6 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
     const [message, setMessage] = useState("");
     const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
     const { currentRoom, loading } = useAppSelector((state) => state.chat);
     const dispatch = useAppDispatch();
@@ -47,12 +46,6 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
         }
     }, [isOpen, user]);
 
-    useEffect(() => {
-        if (currentRoom?.messages) {
-            console.log('Current room messages:', currentRoom.messages); // Debug log
-            setLocalMessages(currentRoom.messages);
-        }
-    }, [currentRoom?.messages]);
 
     useEffect(() => {
         if (isOpen && currentRoom?._id) { // Add optional chaining
