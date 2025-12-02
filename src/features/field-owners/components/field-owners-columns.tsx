@@ -131,6 +131,38 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: 'createdAt',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Created' />
+    ),
+    cell: ({ row }) => {
+      const rawDate = row.getValue('createdAt') as
+        | Date
+        | string
+        | number
+        | null
+        | undefined
+      const date =
+        rawDate instanceof Date
+          ? rawDate
+          : rawDate
+            ? new Date(rawDate)
+            : null
+
+      return (
+        <div className='text-sm'>
+          {date
+            ? date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })
+            : '—'}
+        </div>
+      )
+    },
+  },
+  {
     id: 'actions',
     cell: DataTableRowActions,
   },

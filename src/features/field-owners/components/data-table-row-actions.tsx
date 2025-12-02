@@ -31,13 +31,20 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     'personalInfo' in row.original &&
     'submittedAt' in row.original
 
+  const isProfileRow =
+    'facilityName' in row.original &&
+    'isVerified' in row.original &&
+    !('submittedAt' in row.original)
+
   const handleView = () => {
-    if (isRequestRow) {
+    // Open dialog for both requests and profiles
+    if (isRequestRow || isProfileRow) {
       setCurrentRow(row.original)
       setOpen('view')
       return
     }
 
+    // Fallback to navigation if neither type matches
     navigate({
       to: '/field-owners/$id',
       params: { id: row.original.id },

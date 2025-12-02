@@ -40,6 +40,7 @@ export const authApi = createApi({
     credentials: 'include', // Quan trọng: gửi cookies trong mỗi request
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json')
+      headers.set('X-Client-Type', 'admin') // Phân biệt FE admin với FE user
       return headers
     },
   }),

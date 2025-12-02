@@ -33,26 +33,8 @@ const documentsSchema = z.object({
   businessLicense: z.string().url().optional(), // Still used for business/household owner types
 })
 
-// GPS coordinates schema
-const gpsSchema = z.object({
-  lat: z.number(),
-  lng: z.number(),
-})
 
 // Field info schema
-const fieldInfoSchema = z.object({
-  name: z.string(),
-  address: z.string(),
-  gps: gpsSchema,
-  pitchCount: z.number(),
-  pitchTypes: z.array(z.string()),
-  pricePerHour: z.object({
-    peak: z.number(),
-    offpeak: z.number(),
-  }),
-  images: z.array(z.string().url()),
-})
-
 // Bank account schema
 const bankAccountSchema = z.object({
   id: z.string().optional(),
@@ -143,18 +125,20 @@ export const fieldOwnerProfileListSchema = z.array(fieldOwnerProfileSchema)
 export const fieldOwnerProfileApiSchema = z.object({
   id: z.string(),
   user: z.string(),
-  userFullName: z.string(),
-  userEmail: z.string(),
-  facilityName: z.string(),
-  facilityLocation: z.string(),
-  supportedSports: z.array(z.string()),
+  userFullName: z.string().optional(),
+  userEmail: z.string().optional(),
+  facilityName: z.string().default(''),
+  facilityLocation: z.string().default(''),
+  supportedSports: z.array(z.string()).default([]),
   description: z.string().optional(),
-  amenities: z.array(z.string()),
-  rating: z.number(),
-  totalReviews: z.number(),
-  isVerified: z.boolean(),
+  amenities: z.array(z.string()).default([]),
+  rating: z.number().default(0),
+  totalReviews: z.number().default(0),
+  isVerified: z.boolean().default(false),
   contactPhone: z.string().optional(),
   website: z.string().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
 })
 
 export type FieldOwnerProfileApi = z.infer<typeof fieldOwnerProfileApiSchema>

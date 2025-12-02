@@ -7,6 +7,7 @@ export const axiosInstance = axios.create({
   withCredentials: true, // Important: để gửi cookies trong mỗi request
   headers: {
     'Content-Type': 'application/json',
+    'X-Client-Type': 'admin', // Phân biệt FE admin với FE user
   },
 })
 
