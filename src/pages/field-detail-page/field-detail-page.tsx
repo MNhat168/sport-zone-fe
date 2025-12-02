@@ -350,7 +350,7 @@ const FieldDetailPage: React.FC = () => {
                     {extendedImages.length > 0 && (
                         <div
                             ref={viewportRef}
-                            className="relative w-full h-56 md:h-72 lg:h-80 mb-6 overflow-hidden select-none rounded-lg"
+                            className="relative w-full h-96 md:h-[28rem] lg:h-[32rem] mb-6 overflow-hidden select-none rounded-lg"
                         >
                             <div
                                 ref={carouselRef}

@@ -241,7 +241,7 @@ export default function UserDashboardPage() {
 
                     {/* Become Field Owner Promotion Card */}
                     {authUser?.role === 'user' && (
-                        <Card className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 shadow-lg border-0 text-white">
+                        <Card className="bg-emerald-600 rounded-xl p-6 shadow-lg border-0 text-white">
                             <CardContent className="p-0">
                                 <div className="flex items-center justify-between">
                                     <div className="flex-1">
@@ -478,7 +478,7 @@ export default function UserDashboardPage() {
                         {/* Right Column */}
                         <div className="lg:col-span-2 space-y-6">
                             {/* Wallet Balance */}
-                            <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white">
+                            <Card className="bg-emerald-700 text-white">
                                 <CardContent>
                                     <div className="flex items-center justify-between mb-2">
                                         <div>

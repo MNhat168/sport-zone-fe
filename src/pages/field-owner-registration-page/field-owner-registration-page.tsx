@@ -10,12 +10,11 @@ import { CustomSuccessToast, CustomFailedToast } from "@/components/toast/notifi
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import PageHeader from "@/components/header-banner/page-header"
-import { User, Building2, FileText, CreditCard, CheckCircle, AlertTriangle } from "lucide-react"
+import { User, Building2, FileText, CheckCircle, AlertTriangle } from "lucide-react"
 import { StepIndicator } from "./StepIndicator"
 import { PersonalInfoStep } from "./PersonalInfoStep"
 import { FacilityInfoStep } from "./FacilityInfoStep"
 import { DocumentsStep } from "./DocumentsStep"
-import { BankAccountStep } from "./BankAccountStep"
 import { ConfirmationStep } from "./ConfirmationStep"
 import { StepNavigation } from "./StepNavigation"
 import { ImportantNotes } from "./ImportantNotes"
@@ -31,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 
-type RegistrationStep = 1 | 2 | 3 | 4 | 5
+type RegistrationStep = 1 | 2 | 3 | 4
 
 export default function FieldOwnerRegistrationPage() {
   const navigate = useNavigate()
@@ -59,8 +58,7 @@ export default function FieldOwnerRegistrationPage() {
     { number: 1, title: "Thông tin cá nhân & eKYC", icon: User },
     { number: 2, title: "Thông tin cơ sở vật chất", icon: Building2 },
     { number: 3, title: "Ảnh sân & Giấy ĐKKD (tuỳ chọn)", icon: FileText },
-    { number: 4, title: "Tài khoản ngân hàng", icon: CreditCard },
-    { number: 5, title: "Xác nhận", icon: CheckCircle },
+    { number: 4, title: "Xác nhận", icon: CheckCircle },
   ]
 
   const handleFormDataChange = (data: Partial<CreateRegistrationRequestPayload>) => {
@@ -68,7 +66,7 @@ export default function FieldOwnerRegistrationPage() {
   }
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < 4) {
       setCurrentStep((prev) => (prev + 1) as RegistrationStep)
     }
   }
@@ -164,6 +162,7 @@ export default function FieldOwnerRegistrationPage() {
         // Facility information
         facilityName: formData.facilityName,
         facilityLocation: formData.facilityLocation,
+        facilityLocationCoordinates: formData.facilityLocationCoordinates,
         supportedSports: formData.supportedSports,
         description: formData.description,
         contactPhone: formData.contactPhone,
@@ -199,8 +198,6 @@ export default function FieldOwnerRegistrationPage() {
       case 3:
         return <DocumentsStep formData={formData} onFormDataChange={handleFormDataChange} />
       case 4:
-        return <BankAccountStep formData={formData} onFormDataChange={handleFormDataChange} />
-      case 5:
         return <ConfirmationStep formData={formData} />
       default:
         return null
@@ -220,7 +217,7 @@ export default function FieldOwnerRegistrationPage() {
           <StepIndicator currentStep={currentStep} />
 
           <Card className="shadow-xl border-0 overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+            <CardHeader className="bg-linear-to-r from-primary/5 to-primary/10 border-b">
               <div className="flex items-center gap-3">
                 {React.createElement(steps[currentStep - 1].icon, {
                   className: "w-6 h-6 text-primary",

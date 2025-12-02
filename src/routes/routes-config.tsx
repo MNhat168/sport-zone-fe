@@ -52,7 +52,7 @@ import FieldViewPage from "../pages/field-owner-dashboard-page/fields/field-view
 // Field Owner Registration Pages
 import FieldOwnerRegistrationPage from "../pages/field-owner-registration-page/field-owner-registration-page";
 import FieldOwnerRegistrationStatusPage from "../pages/field-owner-registration-status-page/field-owner-registration-status-page";
-import FieldOwnerBankAccountPage from "../pages/field-owner-bank-account-page/field-owner-bank-account-page";
+import EkycCallbackPage from "../pages/field-owner-registration-page/EkycCallbackPage";
 
 //Notification
 import NotificationsPage from "../pages/notifications/page";
@@ -215,6 +215,14 @@ export const userRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user, UserRole.FIELD_OWNER]}>
         <FieldOwnerRegistrationStatusPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/ekyc/callback",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.FIELD_OWNER]}>
+        <EkycCallbackPage />
       </ProtectedRoute>
     ),
   },
@@ -501,19 +509,9 @@ export const fieldOwnerRoutes: RouteObject[] = [
     ),
   },
 
-  // Bank Account Management
-  {
-    path: "/field-owner/bank-accounts",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <FieldOwnerBankAccountPage />
-      </ProtectedRoute>
-    ),
-  },
-
   // Customer Management
   {
-    path: "/field-owner/customers",
+    path: "/field-owner/wallet",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <FieldOwnerWalletPage />

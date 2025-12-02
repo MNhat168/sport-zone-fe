@@ -22,7 +22,7 @@ export interface UseEkycPollingReturn {
   stopPolling: () => void;
 }
 
-const MAX_ATTEMPTS = 40; // ~2 minutes with 3s interval
+const MAX_ATTEMPTS = 120; // ~6 minutes with 3s interval
 const POLL_INTERVAL = 3000;
 
 export const useEkycPolling = (): UseEkycPollingReturn => {
@@ -43,13 +43,25 @@ export const useEkycPolling = (): UseEkycPollingReturn => {
 
   const stopPolling = useCallback(() => {
     clearPolling();
-    if (status === "polling") {
-      setStatus("idle");
-    }
-  }, [clearPolling, status]);
+    // Only reset to idle if currently polling
+    setStatus((currentStatus) => {
+      if (currentStatus === "polling") {
+        return "idle";
+      }
+      return currentStatus;
+    });
+  }, [clearPolling]);
 
   const poll = useCallback(async () => {
-    if (!sessionIdRef.current) return;
+    if (!sessionIdRef.current) {
+      clearPolling();
+      return;
+    }
+
+    // Don't poll if already in a terminal state
+    if (intervalRef.current === null) {
+      return;
+    }
 
     try {
       const result = await getEkycStatus(sessionIdRef.current);
@@ -80,34 +92,54 @@ export const useEkycPolling = (): UseEkycPollingReturn => {
         setStatus("timeout");
         setError("Hết thời gian chờ. Vui lòng thử lại.");
         clearPolling();
+        return;
       }
     } catch (err: any) {
       console.error("Poll eKYC status error:", err);
-      setError(
-        err?.response?.data?.message ??
-          err?.message ??
-          "Lỗi khi kiểm tra trạng thái xác thực",
-      );
+      
+      // Increment attempts on error too, to prevent infinite polling
+      attemptsRef.current += 1;
+      
+      // Set error but don't stop polling immediately (network errors might be temporary)
+      // Only stop if we've exceeded max attempts
+      if (attemptsRef.current >= MAX_ATTEMPTS) {
+        setStatus("timeout");
+        setError(
+          err?.response?.data?.message ??
+            err?.message ??
+            "Hết thời gian chờ. Vui lòng thử lại.",
+        );
+        clearPolling();
+      } else {
+        // Set error but continue polling
+        setError(
+          err?.response?.data?.message ??
+            err?.message ??
+            "Lỗi khi kiểm tra trạng thái xác thực",
+        );
+      }
     }
   }, [clearPolling]);
 
   const startPolling = useCallback(
     (sessionId: string) => {
+      // Clear any existing polling first
+      clearPolling();
+
+      // Reset state
       sessionIdRef.current = sessionId;
       setStatus("polling");
       setError(null);
+      setData(null);
       attemptsRef.current = 0;
 
-      // trigger immediately
+      // Trigger first poll immediately
       void poll();
 
-      // then schedule interval
-      if (intervalRef.current !== null) {
-        window.clearInterval(intervalRef.current);
-      }
+      // Schedule interval for subsequent polls
       intervalRef.current = window.setInterval(poll, POLL_INTERVAL);
     },
-    [poll],
+    [poll, clearPolling],
   );
 
   // cleanup on unmount
@@ -125,5 +157,4 @@ export const useEkycPolling = (): UseEkycPollingReturn => {
     stopPolling,
   };
 };
-
 

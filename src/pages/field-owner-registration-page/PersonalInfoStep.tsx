@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,14 +16,68 @@ interface PersonalInfoStepProps {
 
 export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoStepProps) {
   const [isCreatingSession, setIsCreatingSession] = useState(false)
-  const { status, data, error, startPolling } = useEkycPolling()
+  const { status, data, error, startPolling, stopPolling } = useEkycPolling()
+  const popupRef = useRef<Window | null>(null)
+  const popupCheckIntervalRef = useRef<number | null>(null)
 
   const isEkycVerified = status === "verified"
   const isEkycPending = status === "polling"
 
-  // Auto-fill form when eKYC verified
+  // Helper function to close popup reliably
+  const closePopupSafely = useCallback(() => {
+    if (popupRef.current) {
+      try {
+        if (!popupRef.current.closed) {
+          popupRef.current.close()
+          console.log("[PersonalInfoStep] ✅ Closed popup safely")
+        }
+      } catch (err) {
+        console.warn("[PersonalInfoStep] Could not close popup:", err)
+      } finally {
+        popupRef.current = null
+      }
+    }
+    
+    // Clear popup monitoring interval
+    if (popupCheckIntervalRef.current) {
+      window.clearInterval(popupCheckIntervalRef.current)
+      popupCheckIntervalRef.current = null
+    }
+  }, [])
+
+  // Cleanup popup monitoring and popup reference on unmount
+  useEffect(() => {
+    return () => {
+      // Clear popup monitoring interval
+      if (popupCheckIntervalRef.current) {
+        window.clearInterval(popupCheckIntervalRef.current)
+        popupCheckIntervalRef.current = null
+      }
+      
+      // Try to close popup if still open
+      if (popupRef.current && !popupRef.current.closed) {
+        try {
+          popupRef.current.close()
+          console.log("[PersonalInfoStep] Closed popup on unmount")
+        } catch (err) {
+          console.warn("[PersonalInfoStep] Could not close popup on unmount:", err)
+        }
+      }
+      
+      // Clear popup reference
+      popupRef.current = null
+    }
+  }, [])
+
+  // Auto-fill form when eKYC verified and close popup
   useEffect(() => {
     if (status === "verified" && data) {
+      console.log("[PersonalInfoStep] ✅ eKYC Verified with data:", data)
+      
+      // Close popup safely
+      closePopupSafely()
+
+      // Update form data
       onFormDataChange({
         ...formData,
         ekycSessionId: formData.ekycSessionId,
@@ -40,6 +94,12 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
       })
       CustomSuccessToast("Xác thực danh tính thành công! Thông tin đã được tự động điền.")
     } else if (status === "failed" || status === "timeout") {
+      // Clear popup monitoring on failure (but don't close popup, let user see error)
+      if (popupCheckIntervalRef.current) {
+        window.clearInterval(popupCheckIntervalRef.current)
+        popupCheckIntervalRef.current = null
+      }
+
       if (error) {
         CustomFailedToast(error)
       } else {
@@ -47,11 +107,54 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, data, error])
+  }, [status, data, error, closePopupSafely])
+
+  // Listen for postMessage from popup callback page
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Verify origin for security
+      if (event.origin !== window.location.origin) {
+        console.warn("[PersonalInfoStep] Ignored message from different origin:", event.origin)
+        return
+      }
+
+      const messageType = event.data?.type
+      const sessionId = event.data?.sessionId
+
+      if (messageType === "ekyc-verified") {
+        console.log("[PersonalInfoStep] ✅ Received eKYC verified message from popup", { sessionId })
+        
+        // Verify session ID matches
+        if (sessionId && sessionId === formData.ekycSessionId) {
+          // Close popup safely
+          closePopupSafely()
+          
+          // Polling should detect the verified status automatically, but we can trigger a check
+          // The polling will handle the status update and form filling
+        } else {
+          console.warn("[PersonalInfoStep] Session ID mismatch in message", {
+            received: sessionId,
+            expected: formData.ekycSessionId
+          })
+        }
+      } else if (messageType === "ekyc-close-popup") {
+        console.log("[PersonalInfoStep] ✅ Received close popup request from callback", { sessionId })
+        closePopupSafely()
+      }
+    }
+
+    window.addEventListener("message", handleMessage)
+    return () => {
+      window.removeEventListener("message", handleMessage)
+    }
+  }, [formData.ekycSessionId, closePopupSafely])
 
   const handleStartEkyc = async () => {
     try {
       setIsCreatingSession(true)
+
+      // Clean up any existing popup and monitoring
+      closePopupSafely()
 
       const { sessionId, redirectUrl } = await createEkycSession()
 
@@ -71,14 +174,52 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
         return
       }
 
+      // Store popup reference
+      popupRef.current = popup
+
+      // Start polling for verification status
       startPolling(sessionId)
 
-      const checkPopupClosed = window.setInterval(() => {
-        if (popup.closed) {
-          window.clearInterval(checkPopupClosed)
-          if (status === "polling") {
-            CustomFailedToast("Cửa sổ xác thực đã đóng. Vui lòng hoàn thành xác thực.")
+      // Monitor popup closure and check if it's still valid
+      popupCheckIntervalRef.current = window.setInterval(() => {
+        // Check if popup reference is still valid
+        if (!popupRef.current) {
+          // Popup reference lost, clear interval
+          if (popupCheckIntervalRef.current) {
+            window.clearInterval(popupCheckIntervalRef.current)
+            popupCheckIntervalRef.current = null
           }
+          return
+        }
+
+        // Check if popup was closed
+        try {
+          if (popupRef.current.closed) {
+            // Clear interval
+            if (popupCheckIntervalRef.current) {
+              window.clearInterval(popupCheckIntervalRef.current)
+              popupCheckIntervalRef.current = null
+            }
+
+            // Clear popup reference
+            popupRef.current = null
+
+            // Only show warning if still polling (user closed popup manually)
+            // If verified, the status effect will handle it
+            if (status === "polling") {
+              CustomFailedToast("Cửa sổ xác thực đã đóng. Vui lòng hoàn thành xác thực.")
+              stopPolling()
+            }
+          }
+        } catch (err) {
+          // Popup might have been closed or reference is invalid
+          console.warn("[PersonalInfoStep] Error checking popup status:", err)
+          // Clear interval and reference
+          if (popupCheckIntervalRef.current) {
+            window.clearInterval(popupCheckIntervalRef.current)
+            popupCheckIntervalRef.current = null
+          }
+          popupRef.current = null
         }
       }, 1000)
     } catch (err: any) {
@@ -110,7 +251,7 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
             type="button"
                 onClick={handleStartEkyc}
                 disabled={isCreatingSession}
-                className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm text-white"
               >
                 {isCreatingSession ? (
                   <>

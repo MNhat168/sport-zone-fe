@@ -16,6 +16,7 @@ export type CreateRegistrationRequestPayload = {
     // Facility information
     facilityName?: string;
     facilityLocation?: string;
+    facilityLocationCoordinates?: { lat: number; lng: number };
     supportedSports?: string[];
     description?: string;
     contactPhone?: string;

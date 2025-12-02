@@ -5,9 +5,9 @@ const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 60000, // Tăng từ 10s lên 60s để phù hợp với AI processing
   withCredentials: true, // Gửi kèm cookie tới server cho các request
-  // headers: {
-  //   "Content-Type": "application/json",
-  // },
+  headers: {
+    'X-Client-Type': 'web', // Phân biệt FE user với FE admin
+  },
 });
 
 // Track if we're currently refreshing to avoid multiple refresh calls

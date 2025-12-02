@@ -22,6 +22,7 @@ body {
 /* Theme variables */
 @theme {
   --color-primary: #097E52; /* green */
+  --color-primary-foreground: #ffffff; /* white text on primary */
   --color-secondary: #667eea; /* blue */
   --color-accent: #ffd700; /* yellow */
   --color-background: #ffffff; /* white */

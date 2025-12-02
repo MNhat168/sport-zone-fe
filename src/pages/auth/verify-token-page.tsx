@@ -61,7 +61,7 @@ export default function VerifyTokenPage() {
   }, [token, email, location.pathname, verifyEmailToken]);
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-primary-200 via-primary-500 to-primary-700">
+    <div className="h-screen w-screen flex items-center justify-center bg-primary-700">
       <div className="bg-white rounded-2xl shadow-xl px-10 py-12 flex flex-col items-center max-w-md">
         {isVerify === null && (
           <div className="w-16 h-16 mb-4 animate-spin border-4 border-green-400 border-t-transparent rounded-full" />
@@ -102,11 +102,11 @@ export default function VerifyTokenPage() {
         </p>
         <button
           onClick={() => navigate("/login")}
-          className={`bg-gradient-to-r ${
+          className={`${
             isVerify === true
-              ? "from-green-600 to-green-400"
-              : "from-primary-800 to-primary-500"
-          } text-white px-6 py-3 rounded-xl font-semibold shadow hover:from-green-700 hover:to-green-500 transition`}
+              ? "bg-green-600 hover:bg-green-500"
+              : "bg-primary-900 hover:bg-primary-800"
+          } text-white px-6 py-3 rounded-xl font-semibold shadow transition`}
         >
           Đăng nhập ngay
         </button>

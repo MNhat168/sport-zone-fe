@@ -107,8 +107,8 @@ export function FieldOwnerDashboardTabs() {
 
                     <Button
                         variant="ghost"
-                        className={baseTabClasses(isActive("/field-owner/customers"))}
-                        onClick={() => handleNavigation("/field-owner/customers")}
+                        className={baseTabClasses(isActive("/field-owner/wallet"))}
+                        onClick={() => handleNavigation("/field-owner/wallet")}
                     >
                         <Wallet className="w-5 h-5" />
                         <div className="text-center text-sm font-medium font-['Outfit']">Ví</div>

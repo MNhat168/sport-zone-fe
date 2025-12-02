@@ -384,7 +384,8 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
             alt="Background"
             className="w-full h-full object-cover opacity-40"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1a2332]/60 to-[#1a2332]/90" />
+          {/* Overlay solid thay vì gradient để giảm rối mắt */}
+          <div className="absolute inset-0 bg-[#0b1020]/80" />
         </div>
       </div>
 
@@ -400,7 +401,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   <div className="flex flex-col sm:flex-row items-start gap-6">
                     {/* Coach Avatar */}
                     <div className="relative group flex-shrink-0">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full opacity-75 group-hover:opacity-100 blur transition duration-300" />
+                      <div className="absolute -inset-1 rounded-full bg-emerald-500/70 group-hover:bg-emerald-500 blur transition duration-300" />
                       <Avatar className="relative h-24 w-24 border-4 border-white shadow-lg">
                         <AvatarImage
                           src={
@@ -410,7 +411,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                           }
                           alt={coachData.name}
                         />
-                        <AvatarFallback className="text-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                        <AvatarFallback className="text-2xl bg-emerald-600 text-white">
                           {coachData.name
                             ?.split(" ")
                             .map((n) => n[0])

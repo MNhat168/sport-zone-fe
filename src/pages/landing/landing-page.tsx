@@ -51,6 +51,13 @@ export default function LandingPage() {
     dispatch(getUserProfile());
   }, [dispatch]);
 
+  // Auto-redirect field owners to their dashboard
+  useEffect(() => {
+    if (authUser?.role === "field_owner") {
+      navigate("/field-owner-dashboard", { replace: true });
+    }
+  }, [authUser?.role, navigate]);
+
   
 
   return (
