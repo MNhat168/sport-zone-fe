@@ -1,12 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, MoreVertical } from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { MessageCircle } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -32,6 +26,8 @@ interface BookingTableProps {
     bookings: Booking[];
     onViewDetails: (bookingId: string) => void;
     onChat: (bookingId: string) => void;
+    onAccept?: (bookingId: string) => void;
+    onDeny?: (bookingId: string) => void;
 }
 
 const getStatusBadgeStyles = (status: Booking["status"]) => {
@@ -76,7 +72,9 @@ const convertTo24Hour = (time12h: string): string => {
 export function BookingTable({
     bookings,
     onViewDetails,
-    onChat
+    onChat,
+    onAccept,
+    onDeny,
 }: BookingTableProps) {
     return (
         <div className="w-full bg-white">
@@ -102,7 +100,7 @@ export function BookingTable({
                             <TableHead className="w-24 font-semibold text-gray-900 text-left py-4">
                                 Chat
                             </TableHead>
-                            <TableHead className="w-16 py-4"></TableHead>
+                            <TableHead className="w-48 py-4">Hành Động</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -140,6 +138,7 @@ export function BookingTable({
                                 </TableCell>
                                 <TableCell className="py-6 text-left">
                                     <Button
+                                        type="button"
                                         variant="ghost"
                                         className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 p-0 h-auto font-normal"
                                         onClick={() => onViewDetails(booking.id)}
@@ -149,6 +148,7 @@ export function BookingTable({
                                 </TableCell>
                                 <TableCell className="py-6 text-left">
                                     <Button
+                                        type="button"
                                         variant="ghost"
                                         className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal gap-2"
                                         onClick={() => onChat(booking.id)}
@@ -157,25 +157,29 @@ export function BookingTable({
                                         Chat
                                     </Button>
                                 </TableCell>
-                                <TableCell className="py-5 text-center">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
+                                <TableCell className="py-5 text-left">
+                                    {booking.status === "awaiting" ? (
+                                        <div className="flex items-center gap-2">
                                             <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
+                                                type="button"
+                                                variant="default"
+                                                className="bg-green-600 hover:bg-green-700 text-white h-8"
+                                                onClick={() => onAccept && onAccept(booking.id)}
                                             >
-                                                <MoreVertical className="h-4 w-4 text-gray-600" />
+                                                Chấp Nhận
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem>Sửa</DropdownMenuItem>
-                                            <DropdownMenuItem>Hủy</DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-600">
-                                                Xóa
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                            <Button
+                                                type="button"
+                                                variant="default"
+                                                className="h-8 bg-red-600 hover:bg-red-700 text-white"
+                                                onClick={() => onDeny && onDeny(booking.id)}
+                                            >
+                                                Từ Chối
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-gray-500">Không có hành động</div>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
