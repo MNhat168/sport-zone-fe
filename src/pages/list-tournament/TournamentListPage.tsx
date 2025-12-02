@@ -7,33 +7,72 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, Calendar, Users, MapPin, Trophy, Clock, ChevronRight } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Search, Filter, Calendar, Users, MapPin, Trophy, Clock, ChevronRight, DollarSign } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
 import { fetchTournaments } from "@/features/tournament/tournamentThunk"
 import { Link } from "react-router-dom"
+import { SportType, SportCategories, getSportDisplayNameVN, getCategoryDisplayName } from "@/components/enums/ENUMS"
 
 export default function TournamentListPage() {
   const dispatch = useAppDispatch()
   const { tournaments, loading, error } = useAppSelector((state) => state.tournament)
-  
+
   const [searchTerm, setSearchTerm] = useState("")
-  const [sportFilter, setSportFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [selectedSports, setSelectedSports] = useState<string[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [minFee, setMinFee] = useState(0)
+  const [maxFee, setMaxFee] = useState(1000000)
   const [locationFilter, setLocationFilter] = useState("")
 
   useEffect(() => {
     dispatch(fetchTournaments({}))
   }, [dispatch])
 
+  // Get all available sports from ENUMS
+  const allSports = Object.values(SportType)
+
+  // Get categories for selected sports
+  const getAvailableCategories = () => {
+    if (selectedSports.length === 0) return []
+
+    const categories: string[] = []
+    selectedSports.forEach(sport => {
+      switch (sport) {
+        case SportType.FOOTBALL:
+          categories.push(...Object.values(SportCategories.FOOTBALL))
+          break
+        case SportType.BASKETBALL:
+          categories.push(...Object.values(SportCategories.BASKETBALL))
+          break
+        case SportType.VOLLEYBALL:
+          categories.push(...Object.values(SportCategories.VOLLEYBALL))
+          break
+        case SportType.TENNIS:
+        case SportType.BADMINTON:
+        case SportType.PICKLEBALL:
+          categories.push(...Object.values(SportCategories.NET_SPORTS))
+          break
+        case SportType.SWIMMING:
+          categories.push(...Object.values(SportCategories.SWIMMING))
+          break
+        case SportType.GYM:
+          categories.push(...Object.values(SportCategories.GYM))
+          break
+      }
+    })
+    return [...new Set(categories)] // Remove duplicates
+  }
+
   const filteredTournaments = tournaments.filter(tournament => {
     const matchesSearch = tournament.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tournament.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesSport = sportFilter === "all" || tournament.sportType === sportFilter
-    const matchesStatus = statusFilter === "all" || tournament.status === statusFilter
+      tournament.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSport = selectedSports.length === 0 || selectedSports.includes(tournament.sportType)
     const matchesLocation = !locationFilter || tournament.location.toLowerCase().includes(locationFilter.toLowerCase())
-    
-    return matchesSearch && matchesSport && matchesStatus && matchesLocation
+    const matchesFee = tournament.registrationFee >= minFee && tournament.registrationFee <= maxFee
+
+    return matchesSearch && matchesSport && matchesLocation && matchesFee
   })
 
   const getStatusColor = (status: string) => {
@@ -66,6 +105,110 @@ export default function TournamentListPage() {
     })
   }
 
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('vi-VN') + ' VNĐ'
+  }
+
+  const handleSportToggle = (sport: string) => {
+    setSelectedSports(prev =>
+      prev.includes(sport)
+        ? prev.filter(s => s !== sport)
+        : [...prev, sport]
+    )
+  }
+
+  const handleCategoryToggle = (category: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    )
+  }
+
+  // Fixed FeeSlider Component
+  const FeeSlider = () => {
+    const handleMaxFeeChange = (value: number) => {
+      setMaxFee(value)
+    }
+
+    const getProgressWidth = () => {
+      return (maxFee / 1000000) * 100
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <Label className="text-sm font-semibold">Entry Fee Range</Label>
+          <span className="text-sm text-gray-600">
+            {minFee === 0 && maxFee === 1000000 ? 'Any' : `Up to ${formatCurrency(maxFee)}`}
+          </span>
+        </div>
+
+        {/* Custom Slider */}
+        <div className="space-y-3">
+          <div className="relative">
+            {/* Slider Track */}
+            <div className="h-2 bg-gray-200 rounded-lg">
+              {/* Progress Fill */}
+              <div 
+                className="h-full bg-green-500 rounded-lg"
+                style={{ width: `${getProgressWidth()}%` }}
+              />
+            </div>
+            
+            {/* Slider Thumb */}
+            <input
+              type="range"
+              min="0"
+              max="1000000"
+              step="50000"
+              value={maxFee}
+              onChange={(e) => handleMaxFeeChange(parseInt(e.target.value))}
+              className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
+            />
+            
+            {/* Custom Thumb */}
+            <div 
+              className="absolute top-1/2 w-4 h-4 bg-green-600 border-2 border-white rounded-full shadow-lg transform -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform"
+              style={{ left: `calc(${getProgressWidth()}% - 8px)` }}
+            />
+          </div>
+
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>50K</span>
+            <span>1M VNĐ</span>
+          </div>
+        </div>
+
+        {/* Quick selection buttons */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { value: 50000, label: '50K' },
+            { value: 200000, label: '200K' },
+            { value: 500000, label: '500K' },
+            { value: 1000000, label: '1M+' }
+          ].map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => {
+                setMinFee(50000)
+                setMaxFee(value)
+              }}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+                maxFee === value 
+                  ? 'bg-green-600 text-white border-green-600' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <>
@@ -86,124 +229,184 @@ export default function TournamentListPage() {
   return (
     <>
       <NavbarComponent />
-      
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-32 pb-20">
+
+      {/* Compact Hero Section */}
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-24 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-5xl font-bold mb-6">Tournaments</h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Discover and join exciting sports tournaments in your area. Compete, connect, and conquer.
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-3">Tournaments</h1>
+            <p className="text-gray-300 max-w-2xl mx-auto">
+              Discover and join exciting sports tournaments in your area
             </p>
+          </div>
+
+          {/* Quick Search Bar */}
+          <div className="max-w-2xl mx-auto mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                placeholder="Search tournaments by name, location, or sport..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 py-6 text-base border-gray-300 focus:border-green-500"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="min-h-screen bg-gray-50 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
-          {/* Search and Filters */}
-          <Card className="mb-8 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                {/* Search */}
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search tournaments..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-8">
+            {/* Left Sidebar - Filters (1/4) */}
+            <div className="w-1/4">
+              <Card className="shadow-sm border border-gray-200">
+                <CardContent className="p-6 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900">Filters</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedSports([])
+                        setSelectedCategories([])
+                        setMinFee(0)
+                        setMaxFee(1000000)
+                        setLocationFilter("")
+                        setSearchTerm("")
+                      }}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50 text-sm"
+                    >
+                      Reset all
+                    </Button>
+                  </div>
 
-                {/* Sport Filter */}
-                <Select value={sportFilter} onValueChange={setSportFilter}>
-                  <SelectTrigger className="w-full lg:w-40">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Sport" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sports</SelectItem>
-                    <SelectItem value="football">Football</SelectItem>
-                    <SelectItem value="basketball">Basketball</SelectItem>
-                    <SelectItem value="tennis">Tennis</SelectItem>
-                    <SelectItem value="badminton">Badminton</SelectItem>
-                    <SelectItem value="volleyball">Volleyball</SelectItem>
-                    <SelectItem value="pickleball">Pickleball</SelectItem>
-                  </SelectContent>
-                </Select>
+                  {/* Location */}
+                  <div className="space-y-3">
+                    <Label htmlFor="location" className="text-sm font-semibold">Location</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="location"
+                        placeholder="Enter location..."
+                        value={locationFilter}
+                        onChange={(e) => setLocationFilter(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
 
-                {/* Status Filter */}
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full lg:w-48">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Registration Open</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="ongoing">Live</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
+                  {/* Sport Types */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Sport Types</Label>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {allSports.map((sport) => (
+                        <div key={sport} className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`sport-${sport}`}
+                            checked={selectedSports.includes(sport)}
+                            onCheckedChange={() => handleSportToggle(sport)}
+                            className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                          />
+                          <Label
+                            htmlFor={`sport-${sport}`}
+                            className="text-sm font-normal cursor-pointer flex items-center gap-2"
+                          >
+                            <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                              <Trophy className="h-3 w-3 text-gray-600" />
+                            </div>
+                            {getSportDisplayNameVN(sport)}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Location Filter */}
-                <Input
-                  placeholder="Location"
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
-                  className="w-full lg:w-48"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  {/* Categories */}
+                  {getAvailableCategories().length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">Categories</Label>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {getAvailableCategories().map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`category-${category}`}
+                              checked={selectedCategories.includes(category)}
+                              onCheckedChange={() => handleCategoryToggle(category)}
+                              className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                            />
+                            <Label
+                              htmlFor={`category-${category}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {getCategoryDisplayName(category, selectedSports[0])}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-          {/* Results Count */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Tournaments <span className="text-gray-500">({filteredTournaments.length})</span>
-            </h2>
-          </div>
-
-          {/* Tournaments Grid */}
-          {error && (
-            <Card className="mb-6 border-red-200 bg-red-50">
-              <CardContent className="p-6">
-                <p className="text-red-700">Error loading tournaments: {error}</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {filteredTournaments.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No tournaments found</h3>
-                <p className="text-gray-600 mb-4">
-                  {searchTerm || sportFilter !== 'all' || statusFilter !== 'all' || locationFilter
-                    ? "Try adjusting your search filters to find more tournaments."
-                    : "Be the first to create a tournament in your area!"
-                  }
-                </p>
-                <Button className="bg-green-600 hover:bg-green-700">
-                  Create Tournament
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTournaments.map((tournament) => (
-                <TournamentCard 
-                  key={tournament._id} 
-                  tournament={tournament}
-                  getStatusColor={getStatusColor}
-                  getStatusText={getStatusText}
-                  formatDate={formatDate}
-                />
-              ))}
+                  {/* Entry Fee Range with Fixed Slider */}
+                  <FeeSlider />
+                </CardContent>
+              </Card>
             </div>
-          )}
+
+            {/* Right Content - Tournaments List (3/4) */}
+            <div className="w-3/4">
+              {/* Results Count */}
+              <div className="flex items-center gap-2 mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Tournaments
+                </h2>
+                <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
+                  {filteredTournaments.length} found
+                </span>
+              </div>
+
+              {/* Tournaments List */}
+              {error && (
+                <Card className="mb-6 border-red-200 bg-red-50">
+                  <CardContent className="p-6">
+                    <p className="text-red-700">Error loading tournaments: {error}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {filteredTournaments.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No tournaments found</h3>
+                    <p className="text-gray-600 mb-4">
+                      {searchTerm || selectedSports.length > 0 || locationFilter || minFee > 0 || maxFee < 1000000
+                        ? "Try adjusting your search filters to find more tournaments."
+                        : "Be the first to create a tournament in your area!"
+                      }
+                    </p>
+                    <Button className="bg-green-600 hover:bg-green-700">
+                      Create Tournament
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {filteredTournaments.map((tournament) => (
+                    <TournamentCard
+                      key={tournament._id}
+                      tournament={tournament}
+                      getStatusColor={getStatusColor}
+                      getStatusText={getStatusText}
+                      formatDate={formatDate}
+                      formatCurrency={formatCurrency}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -217,110 +420,124 @@ interface TournamentCardProps {
   getStatusColor: (status: string) => string
   getStatusText: (status: string) => string
   formatDate: (date: string) => string
+  formatCurrency: (amount: number) => string
 }
 
-function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate }: TournamentCardProps) {
+function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate, formatCurrency }: TournamentCardProps) {
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
   const isLive = tournament.status === 'ongoing'
   const isCompleted = tournament.status === 'completed'
 
   return (
-    <Card className="hover:shadow-xl transition-all duration-300 border-0 bg-white group">
-      <CardContent className="p-0">
-        {/* Tournament Header */}
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6 relative">
-          <div className="flex justify-between items-start mb-3">
-            <Badge className={`${getStatusColor(tournament.status)} capitalize`}>
-              {getStatusText(tournament.status)}
-            </Badge>
-            {isLive && (
-              <div className="flex items-center gap-1 bg-red-600 px-2 py-1 rounded-full">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                <span className="text-xs font-semibold">LIVE</span>
+    <Card className="hover:shadow-lg transition-all duration-300 border border-gray-200 group cursor-pointer">
+      <CardContent className="p-6">
+        <div className="flex justify-between items-start">
+          {/* Left Content */}
+          <div className="flex-1">
+            <div className="flex items-start gap-4">
+              {/* Sport Icon/Emblem */}
+              <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Trophy className="h-6 w-6 text-white" />
               </div>
-            )}
-          </div>
-          
-          <h3 className="text-xl font-bold mb-2 group-hover:text-green-400 transition-colors line-clamp-2">
-            {tournament.name}
-          </h3>
-          
-          <div className="flex items-center gap-2 text-gray-300">
-            <Trophy className="h-4 w-4" />
-            <span className="text-sm capitalize">{tournament.sportType}</span>
-          </div>
-        </div>
 
-        {/* Tournament Details */}
-        <div className="p-6 space-y-4">
-          {/* Date and Time */}
-          <div className="flex items-center gap-3 text-gray-600">
-            <Calendar className="h-4 w-4 flex-shrink-0" />
-            <div className="text-sm">
-              <div className="font-semibold">{formatDate(tournament.tournamentDate)}</div>
-              <div>{tournament.startTime} - {tournament.endTime}</div>
-            </div>
-          </div>
+              {/* Tournament Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className={`${getStatusColor(tournament.status)} capitalize text-xs`}>
+                    {getStatusText(tournament.status)}
+                  </Badge>
+                  {isLive && (
+                    <div className="flex items-center gap-1 bg-red-600 px-2 py-1 rounded-full">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      <span className="text-xs font-semibold text-white">LIVE</span>
+                    </div>
+                  )}
+                </div>
 
-          {/* Location */}
-          <div className="flex items-center gap-3 text-gray-600">
-            <MapPin className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm">{tournament.location}</span>
-          </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors line-clamp-2">
+                  {tournament.name}
+                </h3>
 
-          {/* Participants */}
-          <div className="flex items-center gap-3 text-gray-600">
-            <Users className="h-4 w-4 flex-shrink-0" />
-            <div className="text-sm">
-              <span className="font-semibold">{tournament.participants?.length || 0}</span>
-              <span className="text-gray-500">/{tournament.maxParticipants} participants</span>
-            </div>
-          </div>
+                <div className="space-y-2 mb-4">
+                  {/* Sport Type and Location */}
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Trophy className="h-4 w-4" />
+                      <span className="capitalize">{getSportDisplayNameVN(tournament.sportType)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>{tournament.location}</span>
+                    </div>
+                  </div>
 
-          {/* Registration Period */}
-          {isRegistrationOpen && (
-            <div className="flex items-center gap-3 text-gray-600">
-              <Clock className="h-4 w-4 flex-shrink-0" />
-              <div className="text-sm">
-                Registeration end by: {formatDate(tournament.registrationEnd)}
+                  {/* Date and Time */}
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(tournament.tournamentDate)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{tournament.startTime} - {tournament.endTime}</span>
+                    </div>
+                  </div>
+
+                  {/* Participants */}
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <Users className="h-4 w-4" />
+                    <span>
+                      <span className="font-semibold">{tournament.participants?.length || 0}</span>
+                      <span className="text-gray-500">/{tournament.maxParticipants} participants</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Registration Period */}
+                {isRegistrationOpen && (
+                  <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
+                    <Clock className="h-4 w-4" />
+                    <span>Registration ends: {formatDate(tournament.registrationEnd)}</span>
+                  </div>
+                )}
               </div>
             </div>
-          )}
-
-          {/* Fee */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-            <div className="text-2xl font-bold text-green-600">
-              {tournament.registrationFee > 0 
-                ? `${tournament.registrationFee.toLocaleString()} VNĐ`
-                : 'Free'
-              }
-            </div>
-            <Badge variant="outline" className="text-gray-600">
-              Entry Fee
-            </Badge>
           </div>
-        </div>
 
-        {/* Action Button */}
-        <div className="px-6 pb-6">
-          <Link to={`/tournaments/${tournament._id}`}>
-            <Button 
-              className={`w-full group/btn ${
-                isCompleted 
-                  ? 'bg-gray-600 hover:bg-gray-700' 
-                  : isLive
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-green-600 hover:bg-green-700'
-              }`}
-              disabled={tournament.status === 'cancelled'}
-            >
-              {isCompleted ? 'View Results' : 
-               isLive ? 'Watch Live' : 
-               tournament.status === 'cancelled' ? 'Cancelled' : 
-               'View Details'}
-              <ChevronRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
+          {/* Right Content - Fee and Action */}
+          <div className="flex flex-col items-end gap-4 ml-6">
+            {/* Fee */}
+            <div className="text-right">
+              <div className="text-2xl font-bold text-green-600">
+                {tournament.registrationFee > 0
+                  ? formatCurrency(tournament.registrationFee)
+                  : 'Free'
+                }
+              </div>
+              <Badge variant="outline" className="text-gray-600 mt-1">
+                Entry Fee
+              </Badge>
+            </div>
+
+            {/* Action Button */}
+            <Link to={`/tournaments/${tournament._id}`}>
+              <Button
+                className={`group/btn ${isCompleted
+                    ? 'bg-gray-600 hover:bg-gray-700'
+                    : isLive
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
+                disabled={tournament.status === 'cancelled'}
+              >
+                {isCompleted ? 'View Results' :
+                  isLive ? 'Watch Live' :
+                    tournament.status === 'cancelled' ? 'Cancelled' :
+                      'View Details'}
+                <ChevronRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </CardContent>
     </Card>

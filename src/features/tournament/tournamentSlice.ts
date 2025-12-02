@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export interface Tournament {
+  categories: string[];
   rules: any;
   totalRegistrationFeesCollected: any;
   prizePool: any;

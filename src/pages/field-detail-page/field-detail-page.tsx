@@ -19,7 +19,10 @@ import { GalleryCard } from "./components/GalleryCard"
 import { RatingCard } from "./components/RatingCard"
 import { LocationCard } from "./components/LocationCard"
 import { Button } from "@/components/ui/button"
-
+import { MessageCircle } from "lucide-react";
+import { startChat } from "@/features/chat/chatThunk";
+import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow";
+import { setCurrentRoom } from "@/features/chat/chatSlice"
 
 const mockDescription =
     "Sân cầu lông hiện đại với 4 sân tiêu chuẩn, máy đánh bóng tự động, tiện ích đầy đủ. Phù hợp tập luyện và thi đấu."
@@ -37,6 +40,48 @@ const FieldDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
     const dispatch = useAppDispatch()
+    const { user } = useAppSelector((state) => state.auth);
+    const [startingChat, setStartingChat] = useState(false);
+    const [showChatWindow, setShowChatWindow] = useState(false);
+
+    const handleMessageOwner = async () => {
+        if (!user || !currentField) return;
+
+        const ownerRaw = (currentField as any)?.owner;
+        const fieldOwnerId =
+            typeof ownerRaw === "string"
+                ? ownerRaw
+                : ownerRaw && (ownerRaw.id ?? ownerRaw._id)
+                    ? String(ownerRaw.id ?? ownerRaw._id)
+                    : "";
+
+        if (!fieldOwnerId) {
+            alert("Owner information is not available.");
+            return;
+        }
+
+        try {
+            setStartingChat(true);
+            // Start chat and get the chat room
+            const result = await dispatch(
+                startChat({
+                    fieldOwnerId,
+                    fieldId: currentField.id,
+                })
+            ).unwrap();
+
+            // Set the current room in the state
+            dispatch(setCurrentRoom(result));
+
+            // Open the chat window
+            setShowChatWindow(true);
+        } catch (error) {
+            console.error("Failed to start chat:", error);
+            alert("Failed to start chat. Please try again.");
+        } finally {
+            setStartingChat(false);
+        }
+    };
 
     const { currentField, loading } = useAppSelector((s) => s.field)
 
@@ -419,6 +464,13 @@ const FieldDetailPage: React.FC = () => {
                                     <Star className="h-4 w-4 text-yellow-500" />
                                     <span>Add to favorites</span>
                                 </button>
+                                <button
+                                    onClick={() => setShowChatWindow(true)}
+                                    className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                    <span>Message Owner</span>
+                                </button>
                             </div>
                         </div>
                         <hr className="border-t border-gray-200 my-4" />
@@ -523,6 +575,16 @@ const FieldDetailPage: React.FC = () => {
                         )}
                     </div>
                 </div>
+                {showChatWindow && (
+                    <FieldDetailChatWindow
+                        onClose={() => setShowChatWindow(false)}
+                        fieldOwnerId={String((currentField as any)?.owner?.id || (currentField as any)?.owner?._id || '')}
+                        fieldId={String(currentField?.id || '')}
+                        fieldName={currentField?.name || ''}
+                        fieldOwnerName={(currentField as any)?.owner?.name || 'Field Owner'}
+                        isOpen={showChatWindow}
+                    />
+                )}
                 <FooterComponent />
             </PageWrapper>
         </>

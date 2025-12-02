@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Clock, Users, DollarSign, Trophy, Zap, Target } from "lucide-react"
-import { SPORT_RULES_MAP, type SportType } from "../../../src/components/enums/ENUMS"
+import { getCategoryDisplayName, getFormatDisplayName, SPORT_RULES_MAP, type SportType } from "../../../src/components/enums/ENUMS"
 
 interface Step1Props {
   formData: any
@@ -47,6 +47,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (!formData.registrationEnd) newErrors.registrationEnd = "Ngày kết thúc đăng ký là bắt buộc"
     if (!formData.startTime) newErrors.startTime = "Giờ bắt đầu là bắt buộc"
     if (!formData.endTime) newErrors.endTime = "Giờ kết thúc là bắt buộc"
+    if (!formData.category) newErrors.category = "Vui lòng chọn thể loại";
+    if (!formData.competitionFormat) newErrors.competitionFormat = "Vui lòng chọn hình thức thi đấu";
 
     // Validate registration period
     if (formData.registrationStart && formData.registrationEnd) {
@@ -89,6 +91,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
   }
 
   const selectedSportRules = formData.sportType ? SPORT_RULES_MAP[formData.sportType as SportType] : null
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-green-50 p-4 md:p-8">
@@ -321,6 +324,54 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     {errors.endTime && <p className="text-red-500 text-sm mt-2">{errors.endTime}</p>}
                   </div>
                 </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Sport Category */}
+                  <div>
+                    <Label htmlFor="category" className="text-gray-700 font-semibold mb-2 block">
+                      Thể Loại *
+                    </Label>
+                    <Select
+                      value={formData.category || ""}
+                      onValueChange={(val) => handleChange("category", val)}
+                    >
+                      <SelectTrigger className={`border-2 ${errors.category ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}>
+                        <SelectValue placeholder="Chọn thể loại" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedSportRules?.availableCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {getCategoryDisplayName(category, formData.sportType)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.category && <p className="text-red-500 text-sm mt-2">{errors.category}</p>}
+                  </div>
+
+                  {/* Competition Format */}
+                  <div>
+                    <Label htmlFor="competitionFormat" className="text-gray-700 font-semibold mb-2 block">
+                      Hình Thức Thi Đấu *
+                    </Label>
+                    <Select
+                      value={formData.competitionFormat || selectedSportRules?.defaultFormat || ""}
+                      onValueChange={(val) => handleChange("competitionFormat", val)}
+                    >
+                      <SelectTrigger className={`border-2 ${errors.competitionFormat ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}>
+                        <SelectValue placeholder="Chọn hình thức" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedSportRules?.availableFormats.map((format) => (
+                          <SelectItem key={format} value={format}>
+                            {getFormatDisplayName(format)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.competitionFormat && <p className="text-red-500 text-sm mt-2">{errors.competitionFormat}</p>}
+                  </div>
+                </div>
 
                 {/* Participants */}
                 <div className="grid grid-cols-2 gap-4">
@@ -359,27 +410,6 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     />
                     {errors.maxParticipants && <p className="text-red-500 text-sm mt-2">{errors.maxParticipants}</p>}
                   </div>
-                </div>
-
-                {/* Registration Fee */}
-                <div>
-                  <Label
-                    htmlFor="registrationFee"
-                    className="text-gray-700 font-semibold mb-2 block flex items-center gap-2"
-                  >
-                    <DollarSign className="h-4 w-4" />
-                    Phí Đăng Ký (VNĐ) *
-                  </Label>
-                  <Input
-                    id="registrationFee"
-                    type="number"
-                    min={0}
-                    value={formData.registrationFee || 0}
-                    onChange={(e) => handleChange("registrationFee", Number.parseFloat(e.target.value))}
-                    placeholder="150000"
-                    className={`border-2 ${errors.registrationFee ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
-                  />
-                  {errors.registrationFee && <p className="text-red-500 text-sm mt-2">{errors.registrationFee}</p>}
                 </div>
 
                 {/* Description */}

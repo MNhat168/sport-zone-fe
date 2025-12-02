@@ -9,6 +9,7 @@ import { amenitiesReducer } from "../features/amenities";
 import { ownerProfileReducer } from "../features/field-owner-profile";
 import { tournamentReducer } from "@/features/tournament";
 import { walletReducer } from "../features/wallet";
+import chatReducer from "@/features/chat/chatSlice";
 
 export const store = configureStore({
     reducer: {
@@ -20,8 +21,9 @@ export const store = configureStore({
         transactions: transactionsReducer,
         amenities: amenitiesReducer,
         ownerProfile: ownerProfileReducer,
-        tournament : tournamentReducer
+        tournament : tournamentReducer,
         wallet: walletReducer,
+        chat: chatReducer,
     },
 });
 

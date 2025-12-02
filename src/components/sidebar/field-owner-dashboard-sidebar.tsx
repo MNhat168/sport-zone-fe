@@ -70,7 +70,7 @@ const menuItems: MenuItem[] = [
     },
     {
         title: "Chat",
-        url: "/field-owner/analytics",
+        url: "/field-owner/chat",
         icon: MessageSquare,
     },
     {

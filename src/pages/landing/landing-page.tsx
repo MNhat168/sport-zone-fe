@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAppDispatch } from "@/store/hook";
 import { getUserProfile } from "@/features/user/userThunk";
 import { Button } from "@/components/ui/button";
-import { Card} from "@/components/ui/card";
+import { Card, CardContent} from "@/components/ui/card";
 import {
   Select,
   SelectContent,

@@ -54,6 +54,7 @@ import NotificationsPage from "../pages/notifications/page";
 import TournamentListPage from "@/pages/list-tournament/TournamentListPage.tsx";
 import CreateTournamentPage from "@/pages/create-tournament/CreateTournamentPage.tsx";
 import TournamentDetailPage from "@/pages/tournament-detail-page/tournament-detail-page.tsx";
+import FieldOwnerChatDashboard from "@/pages/field-owner-dashboard-page/chat/FieldOwnerChatPage.tsx";
 
 /**
  * Placeholder component for pages under development
@@ -511,6 +512,14 @@ export const fieldOwnerRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <FieldOwnerWalletPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/chat",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <FieldOwnerChatDashboard />
       </ProtectedRoute>
     ),
   },

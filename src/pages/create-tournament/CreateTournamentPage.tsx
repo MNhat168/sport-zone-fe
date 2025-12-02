@@ -28,7 +28,7 @@ export default function CreateTournamentPage() {
     endTime: "",
     maxParticipants: 20,
     minParticipants: 10,
-    registrationFee: 150000,
+    registrationFee: 0,
     description: "",
     fieldsNeeded: 2,
     selectedFieldIds: [],
@@ -71,13 +71,12 @@ export default function CreateTournamentPage() {
                   >
                     <div className="flex flex-col items-center" style={{ minWidth: "140px" }}>
                       <div
-                        className={`flex items-center justify-center w-16 h-16 rounded-full font-bold text-lg transition-all duration-300 shadow-md ${
-                          currentStep > step.id
+                        className={`flex items-center justify-center w-16 h-16 rounded-full font-bold text-lg transition-all duration-300 shadow-md ${currentStep > step.id
                             ? "bg-green-600 border-2 border-green-700 text-white scale-105"
                             : currentStep === step.id
                               ? "border-3 border-green-600 text-green-600 bg-green-50 scale-110"
                               : "border-2 border-gray-300 text-gray-400 bg-white"
-                        }`}
+                          }`}
                       >
                         {currentStep > step.id ? (
                           <CheckCircle2 className="h-8 w-8" />
@@ -87,9 +86,8 @@ export default function CreateTournamentPage() {
                       </div>
                       <div className="mt-4 text-center">
                         <p
-                          className={`text-sm font-bold transition-colors ${
-                            currentStep >= step.id ? "text-green-700" : "text-gray-400"
-                          }`}
+                          className={`text-sm font-bold transition-colors ${currentStep >= step.id ? "text-green-700" : "text-gray-400"
+                            }`}
                         >
                           {step.name}
                         </p>
@@ -101,9 +99,8 @@ export default function CreateTournamentPage() {
 
                     {index < steps.length - 1 && (
                       <div
-                        className={`h-1 mx-4 self-start transition-all duration-300 rounded-full ${
-                          currentStep > step.id ? "bg-green-600 shadow-md" : "bg-gray-200"
-                        }`}
+                        className={`h-1 mx-4 self-start transition-all duration-300 rounded-full ${currentStep > step.id ? "bg-green-600 shadow-md" : "bg-gray-200"
+                          }`}
                         style={{ flexGrow: 1, marginTop: "32px" }}
                       />
                     )}
@@ -125,7 +122,13 @@ export default function CreateTournamentPage() {
                 onBack={handleBack}
               />
             )}
-            {currentStep === 3 && <CreateTournamentStep3 formData={formData} onBack={handleBack} />}
+            {currentStep === 3 && (
+              <CreateTournamentStep3
+                formData={formData}
+                onBack={handleBack}
+                onUpdate={handleUpdateFormData} 
+              />
+            )}
           </div>
         </div>
       </div>
