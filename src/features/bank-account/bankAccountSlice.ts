@@ -2,34 +2,31 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
     addBankAccount,
     getMyBankAccounts,
-    validateBankAccount,
     updateBankAccount,
     deleteBankAccount,
     setDefaultBankAccount,
+    getVerificationStatus,
     type BankAccountResponse,
-    type BankAccountValidationResponse,
 } from "./bankAccountThunk";
 
 interface BankAccountState {
     accounts: BankAccountResponse[];
-    validationResult: BankAccountValidationResponse | null;
     loading: boolean;
     adding: boolean;
     updating: boolean;
     deleting: boolean;
-    validating: boolean;
     error: string | null;
+    verificationStatuses: Record<string, { status: string; polling: boolean }>;
 }
 
 const initialState: BankAccountState = {
     accounts: [],
-    validationResult: null,
     loading: false,
     adding: false,
     updating: false,
     deleting: false,
-    validating: false,
     error: null,
+    verificationStatuses: {},
 };
 
 const bankAccountSlice = createSlice({
@@ -38,9 +35,6 @@ const bankAccountSlice = createSlice({
     reducers: {
         clearError: (state) => {
             state.error = null;
-        },
-        clearValidationResult: (state) => {
-            state.validationResult = null;
         },
     },
     extraReducers: (builder) => {
@@ -76,21 +70,6 @@ const bankAccountSlice = createSlice({
                 state.error = action.payload?.message || "Failed to get bank accounts";
             });
 
-        // Validate bank account
-        builder
-            .addCase(validateBankAccount.pending, (state) => {
-                state.validating = true;
-                state.error = null;
-            })
-            .addCase(validateBankAccount.fulfilled, (state, action) => {
-                state.validating = false;
-                state.validationResult = action.payload;
-                state.error = null;
-            })
-            .addCase(validateBankAccount.rejected, (state, action) => {
-                state.validating = false;
-                state.error = action.payload?.message || "Failed to validate bank account";
-            });
 
         // Update bank account
         builder
@@ -153,9 +132,41 @@ const bankAccountSlice = createSlice({
                 state.updating = false;
                 state.error = action.payload?.message || "Failed to set default bank account";
             });
+
+        // Get verification status
+        builder
+            .addCase(getVerificationStatus.pending, (state, action) => {
+                const accountId = action.meta.arg;
+                state.verificationStatuses[accountId] = {
+                    status: 'pending',
+                    polling: true,
+                };
+            })
+            .addCase(getVerificationStatus.fulfilled, (state, action) => {
+                const accountId = action.meta.arg;
+                state.verificationStatuses[accountId] = {
+                    status: action.payload.status,
+                    polling: action.payload.status === 'pending',
+                };
+                // Update account if verification is complete
+                if (action.payload.status === 'verified' || action.payload.status === 'failed') {
+                    const account = state.accounts.find(acc => acc.id === accountId);
+                    if (account) {
+                        account.verificationPaymentStatus = action.payload.status === 'verified' ? 'paid' : 'failed';
+                        account.status = action.payload.status === 'verified' ? 'verified' : account.status;
+                    }
+                }
+            })
+            .addCase(getVerificationStatus.rejected, (state, action) => {
+                const accountId = action.meta.arg;
+                state.verificationStatuses[accountId] = {
+                    status: 'error',
+                    polling: false,
+                };
+            });
     },
 });
 
-export const { clearError, clearValidationResult } = bankAccountSlice.actions;
+export const { clearError } = bankAccountSlice.actions;
 export default bankAccountSlice.reducer;
 

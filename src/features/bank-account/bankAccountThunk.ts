@@ -3,10 +3,10 @@ import axiosPrivate from "../../utils/axios/axiosPrivate";
 import {
     ADD_BANK_ACCOUNT_API,
     GET_MY_BANK_ACCOUNTS_API,
-    VALIDATE_BANK_ACCOUNT_API,
     UPDATE_BANK_ACCOUNT_API,
     DELETE_BANK_ACCOUNT_API,
     SET_DEFAULT_BANK_ACCOUNT_API,
+    GET_VERIFICATION_STATUS_API,
 } from "./bankAccountAPI";
 
 export type CreateBankAccountPayload = {
@@ -30,10 +30,6 @@ export type UpdateBankAccountPayload = {
     isDefault?: boolean;
 };
 
-export type ValidateBankAccountPayload = {
-    bankCode: string;
-    accountNumber: string;
-};
 
 export type BankAccountResponse = {
     id: string;
@@ -53,11 +49,22 @@ export type BankAccountResponse = {
     rejectionReason?: string;
     createdAt: string;
     updatedAt: string;
+    // Verification payment fields
+    verificationUrl?: string;
+    verificationQrCode?: string;
+    verificationPaymentStatus?: 'pending' | 'paid' | 'failed';
+    needsVerification?: boolean;
+    verificationOrderCode?: string;
 };
 
-export type BankAccountValidationResponse = {
-    isValid: boolean;
-    accountName: string;
+
+export type VerificationStatusResponse = {
+    status: 'pending' | 'verified' | 'failed';
+    verificationUrl?: string;
+    qrCodeUrl?: string;
+    needsVerification?: boolean;
+    verificationPaymentStatus?: 'pending' | 'paid' | 'failed';
+    verificationOrderCode?: string;
 };
 
 export type ErrorResponse = {
@@ -76,7 +83,7 @@ export const addBankAccount = createAsyncThunk<
 >("bankAccount/add", async (payload, thunkAPI) => {
     try {
         const response = await axiosPrivate.post(ADD_BANK_ACCOUNT_API, payload);
-        return response.data;
+        return response.data?.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to add bank account",
@@ -97,7 +104,7 @@ export const getMyBankAccounts = createAsyncThunk<
 >("bankAccount/getMyAccounts", async (_, thunkAPI) => {
     try {
         const response = await axiosPrivate.get(GET_MY_BANK_ACCOUNTS_API);
-        return response.data || [];
+        return response.data?.data || [];
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to get bank accounts",
@@ -107,25 +114,6 @@ export const getMyBankAccounts = createAsyncThunk<
     }
 });
 
-/**
- * Validate bank account via PayOS
- */
-export const validateBankAccount = createAsyncThunk<
-    BankAccountValidationResponse,
-    ValidateBankAccountPayload,
-    { rejectValue: ErrorResponse }
->("bankAccount/validate", async (payload, thunkAPI) => {
-    try {
-        const response = await axiosPrivate.post(VALIDATE_BANK_ACCOUNT_API, payload);
-        return response.data;
-    } catch (error: any) {
-        const errorResponse: ErrorResponse = {
-            message: error.response?.data?.message || error.message || "Failed to validate bank account",
-            status: error.response?.status?.toString() || "500",
-        };
-        return thunkAPI.rejectWithValue(errorResponse);
-    }
-});
 
 /**
  * Update bank account
@@ -138,7 +126,7 @@ export const updateBankAccount = createAsyncThunk<
     try {
         const { id, ...updateData } = payload;
         const response = await axiosPrivate.patch(UPDATE_BANK_ACCOUNT_API(id), updateData);
-        return response.data;
+        return response.data?.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to update bank account",
@@ -179,10 +167,30 @@ export const setDefaultBankAccount = createAsyncThunk<
 >("bankAccount/setDefault", async (accountId, thunkAPI) => {
     try {
         const response = await axiosPrivate.patch(SET_DEFAULT_BANK_ACCOUNT_API(accountId));
-        return response.data;
+        return response.data?.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to set default bank account",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Get verification status for bank account
+ */
+export const getVerificationStatus = createAsyncThunk<
+    VerificationStatusResponse,
+    string,
+    { rejectValue: ErrorResponse }
+>("bankAccount/getVerificationStatus", async (accountId, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(GET_VERIFICATION_STATUS_API(accountId));
+        return response.data?.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get verification status",
             status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

@@ -14,7 +14,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({ refObj, id, descript
     <Card ref={refObj as any} id={id} className="shadow-md border-0 bg-white">
       <CardHeader onClick={() => setIsExpanded(!isExpanded)} className="cursor-pointer hover:bg-gray-50 transition-colors duration-200">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base md:text-lg">Overview</CardTitle>
+          <CardTitle className="text-base md:text-lg">Tổng quan</CardTitle>
           <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} />
         </div>
       </CardHeader>

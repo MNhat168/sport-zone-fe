@@ -1,6 +1,6 @@
-import { User, Building2, FileText, CreditCard, CheckCircle } from "lucide-react"
+import { User, Building2, FileText, CheckCircle } from "lucide-react"
 
-type RegistrationStep = 1 | 2 | 3 | 4 | 5
+type RegistrationStep = 1 | 2 | 3 | 4
 
 interface StepIndicatorProps {
   currentStep: RegistrationStep
@@ -10,8 +10,7 @@ const steps = [
   { number: 1, title: "Thông tin cá nhân", icon: User },
   { number: 2, title: "Thông tin cơ sở", icon: Building2 },
   { number: 3, title: "Giấy tờ pháp lý", icon: FileText },
-  { number: 4, title: "Tài khoản ngân hàng", icon: CreditCard },
-  { number: 5, title: "Xác nhận", icon: CheckCircle },
+  { number: 4, title: "Xác nhận", icon: CheckCircle },
 ]
 
 export function StepIndicator({ currentStep }: StepIndicatorProps) {
@@ -21,7 +20,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
         {/* Progress line */}
         <div className="absolute top-6 left-0 right-0 h-1 bg-gray-200 -z-10">
           <div
-            className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500 ease-out"
+            className="h-full bg-primary transition-all duration-500 ease-out"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
           />
         </div>

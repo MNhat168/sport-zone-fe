@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
 
-type RegistrationStep = 1 | 2 | 3 | 4 | 5
+type RegistrationStep = 1 | 2 | 3 | 4
 
 interface StepNavigationProps {
   currentStep: RegistrationStep
@@ -28,10 +28,11 @@ export function StepNavigation({
       >
         ← Quay lại
       </Button>
-      {currentStep < 5 ? (
+      {currentStep < 4 ? (
         <Button
           onClick={onNext}
-          className="h-11 px-8 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+          variant="default"
+          className="h-11 px-8 bg-emerald-600 hover:bg-emerald-500"
         >
           Tiếp theo →
         </Button>
@@ -39,7 +40,7 @@ export function StepNavigation({
         <Button
           onClick={onSubmit}
           disabled={submitting}
-          className="h-11 px-8 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-600"
+          className="h-11 px-8 bg-emerald-600 hover:bg-emerald-500"
         >
           {submitting ? (
             <span className="flex items-center gap-2">

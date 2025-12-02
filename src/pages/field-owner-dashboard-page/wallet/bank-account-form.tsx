@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useAppDispatch, useAppSelector } from '@/store/hook'
-import { validateBankAccount, clearValidationResult, type BankAccountResponse } from '@/features/bank-account'
+import { useAppDispatch } from '@/store/hook'
+import { type BankAccountResponse } from '@/features/bank-account'
 import { uploadRegistrationDocument } from '@/features/field-owner-registration'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,7 +34,6 @@ export function BankAccountForm({
   requireValidation = true,
 }: BankAccountFormProps) {
   const dispatch = useAppDispatch()
-  const { validationResult, validating } = useAppSelector((state) => state.bankAccount)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -72,30 +71,6 @@ export function BankAccountForm({
     }
   }, [initialData])
 
-  // Clear validation result when form data changes
-  useEffect(() => {
-    if (!isEditMode) {
-      dispatch(clearValidationResult())
-    }
-  }, [formData.bankCode, formData.accountNumber, isEditMode, dispatch])
-
-  const handleValidate = async () => {
-    if (!formData.bankCode || !formData.accountNumber) {
-      CustomFailedToast('Vui lòng nhập mã ngân hàng và số tài khoản')
-      return
-    }
-
-    try {
-      await dispatch(
-        validateBankAccount({
-          bankCode: formData.bankCode,
-          accountNumber: formData.accountNumber,
-        })
-      ).unwrap()
-    } catch (error: any) {
-      CustomFailedToast(error.message || 'Xác thực thất bại')
-    }
-  }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -146,12 +121,6 @@ export function BankAccountForm({
       return
     }
 
-    // For new accounts, require validation
-    if (!isEditMode && requireValidation && (!validationResult || !validationResult.isValid)) {
-      CustomFailedToast('Vui lòng xác thực tài khoản trước khi thêm')
-      return
-    }
-
     let verificationDocumentUrl = formData.verificationDocument
 
     // Upload file if provided
@@ -178,12 +147,6 @@ export function BankAccountForm({
       isDefault: formData.isDefault,
     })
   }
-
-  const canSubmit = isEditMode
-    ? true
-    : requireValidation
-      ? validationResult?.isValid === true
-      : true
 
   return (
     <div className="space-y-4">
@@ -313,34 +276,6 @@ export function BankAccountForm({
         </div>
       )}
 
-      {!isEditMode && (
-        <>
-          {validationResult && (
-            <div
-              className={`p-3 rounded ${
-                validationResult.isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-              }`}
-            >
-              <p className={validationResult.isValid ? 'text-green-700' : 'text-red-700'}>
-                {validationResult.isValid
-                  ? `✓ Tài khoản hợp lệ. Tên chủ TK: ${validationResult.accountName}`
-                  : '✗ Tài khoản không hợp lệ'}
-              </p>
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleValidate}
-              disabled={validating || !formData.bankCode || !formData.accountNumber}
-            >
-              {validating ? 'Đang xác thực...' : 'Xác thực tài khoản'}
-            </Button>
-          </div>
-        </>
-      )}
 
       <div className="flex gap-2 pt-2">
         {onCancel && (
@@ -348,10 +283,11 @@ export function BankAccountForm({
             Hủy
           </Button>
         )}
-        <Button type="button" onClick={handleSubmit} disabled={!canSubmit || uploading}>
+        <Button type="button" onClick={handleSubmit} disabled={uploading}>
           {uploading ? 'Đang tải lên...' : submitLabel}
         </Button>
       </div>
+
     </div>
   )
 }

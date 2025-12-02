@@ -314,7 +314,7 @@ export default function FindCoachPage() {
               <CardContent className="p-0 h-full">
                 <div className="relative h-full bg-gray-100 rounded-lg overflow-hidden">
                   {/* Map placeholder with pins */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300">
+                  <div className="absolute inset-0 bg-gray-200">
                     {/* Simulated map pins */}
                     <div className="absolute top-1/4 left-1/3 animate-bounce">
                       <div className="w-6 h-6 bg-[#00775C] rounded-full border-2 border-white shadow-lg flex items-center justify-center">

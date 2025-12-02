@@ -80,7 +80,7 @@ const menuItems: MenuItem[] = [
     },
     {
         title: "Ví",
-        url: "/field-owner/customers",
+        url: "/field-owner/wallet",
         icon: Wallet,
     },
     {
