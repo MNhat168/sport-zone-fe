@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { MapPin, Search, X } from 'lucide-react'
+import { MapPin, Search } from 'lucide-react'
 import {
   Dialog,
   DialogContent,

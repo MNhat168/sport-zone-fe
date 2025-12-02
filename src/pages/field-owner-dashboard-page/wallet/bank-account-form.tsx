@@ -31,7 +31,7 @@ export function BankAccountForm({
   onSubmit,
   onCancel,
   submitLabel = 'Thêm tài khoản',
-  requireValidation = true,
+  requireValidation: _requireValidation = true,
 }: BankAccountFormProps) {
   const dispatch = useAppDispatch()
   const fileInputRef = useRef<HTMLInputElement>(null)

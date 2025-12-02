@@ -114,24 +114,24 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
 };
 
 // Helper function to map tab to TransactionStatus
-const mapTabToTransactionStatus = (tab: string): TransactionStatus | undefined => {
-    switch (tab) {
-        case TransactionStatus.PENDING:
-            return TransactionStatus.PENDING;
-        case TransactionStatus.PROCESSING:
-            return TransactionStatus.PROCESSING;
-        case TransactionStatus.SUCCEEDED:
-            return TransactionStatus.SUCCEEDED;
-        case TransactionStatus.FAILED:
-            return TransactionStatus.FAILED;
-        case TransactionStatus.CANCELLED:
-            return TransactionStatus.CANCELLED;
-        case TransactionStatus.REFUNDED:
-            return TransactionStatus.REFUNDED;
-        default:
-            return undefined;
-    }
-};
+// const mapTabToTransactionStatus = (tab: string): TransactionStatus | undefined => {
+//     switch (tab) {
+//         case TransactionStatus.PENDING:
+//             return TransactionStatus.PENDING;
+//         case TransactionStatus.PROCESSING:
+//             return TransactionStatus.PROCESSING;
+//         case TransactionStatus.SUCCEEDED:
+//             return TransactionStatus.SUCCEEDED;
+//         case TransactionStatus.FAILED:
+//             return TransactionStatus.FAILED;
+//         case TransactionStatus.CANCELLED:
+//             return TransactionStatus.CANCELLED;
+//         case TransactionStatus.REFUNDED:
+//             return TransactionStatus.REFUNDED;
+//         default:
+//             return undefined;
+//     }
+// };
 
 // Helper function to get date range from time filter
 const getDateRangeFromTimeFilter = (timeFilter: string): { startDate?: string; endDate?: string } => {
@@ -352,9 +352,6 @@ export default function FieldHistoryBookingPage() {
         const mapped = rows.map(mapBookingToUI);
         return mapped.filter((b) => !hiddenIds.includes(b.id));
     }, [fieldOwnerBookings, hiddenIds]);
-
-    // Get pagination info
-    const totalPages = fieldOwnerBookingsPagination?.totalPages || 1;
 
     return (
         <FieldOwnerDashboardLayout>

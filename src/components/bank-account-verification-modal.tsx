@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { QrCode, Loader2, CheckCircle2, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
+import { Loader2, CheckCircle2, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
 import { CustomSuccessToast, CustomFailedToast } from '@/components/toast/notificiation-toast'
 
 // QR Code Display component

@@ -18,7 +18,6 @@ import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { mockFavorites /* keep mockFavorites for now */ } from "@/components/mock-data/mock-data"
-import axiosPrivate from '@/utils/axios/axiosPrivate'
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
