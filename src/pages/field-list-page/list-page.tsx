@@ -194,8 +194,8 @@ const FieldBookingPage = () => {
         // Sort by price
         if (priceSort && priceSort !== 'none') {
             filtered.sort((a, b) => {
-                const priceA = parseFloat((a.price || '0').toString().replace(/[^0-9.]/g, '')) || 0
-                const priceB = parseFloat((b.price || '0').toString().replace(/[^0-9.]/g, '')) || 0
+                const priceA = (a.basePrice ?? 0) || 0
+                const priceB = (b.basePrice ?? 0) || 0
                 return priceSort === 'asc' ? priceA - priceB : priceB - priceA
             })
         }
@@ -206,16 +206,23 @@ const FieldBookingPage = () => {
     useEffect(() => {
         setFilters((prev) => {
             const prevAny: any = prev
-            const sameSort = (!!prevAny.sortBy && prevAny.sortBy === 'price') === !!priceSort &&
-                (priceSort ? prevAny.sortOrder === priceSort : !prevAny.sortOrder)
-            if (sameSort && prev.page === 1) return prev
+            const prevSortBy = prevAny.sortBy
+            const prevSortOrder = prevAny.sortOrder
+            const newSortBy = priceSort && priceSort !== 'none' ? 'price' : undefined
+            const newSortOrder = priceSort && priceSort !== 'none' ? priceSort : undefined
+            
+            // Check if sort actually changed
+            const sortChanged = prevSortBy !== newSortBy || prevSortOrder !== newSortOrder
+            
+            // Only update if sort changed or page is not 1
+            if (!sortChanged && prev.page === 1) return prev
 
             const copy: any = { ...prevAny }
             delete copy.sortBy
             delete copy.sortOrder
-            if (priceSort && priceSort !== 'none') {
-                copy.sortBy = 'price'
-                copy.sortOrder = priceSort
+            if (newSortBy && newSortOrder) {
+                copy.sortBy = newSortBy
+                copy.sortOrder = newSortOrder
             }
             copy.page = 1
             return copy

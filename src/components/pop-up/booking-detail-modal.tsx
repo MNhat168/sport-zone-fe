@@ -127,6 +127,20 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
         }
     };
 
+    // Helper function to get location text from location object or string
+    const getLocationText = (location: any): string => {
+        if (!location) return '';
+        if (typeof location === 'string') return location;
+        if (typeof location === 'object') {
+            // Handle location object with address property
+            if (location.address) return location.address;
+            // Fallback: try to construct from other properties
+            const parts = [location.ward, location.district, location.city, location.province].filter(Boolean);
+            return parts.length ? parts.join(', ') : 'Địa chỉ đang cập nhật';
+        }
+        return 'Địa chỉ đang cập nhật';
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent
@@ -191,7 +205,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                                     </p>
                                     {fieldData?.location && (
                                         <p className="text-xs text-gray-500 mt-1 truncate">
-                                            {fieldData.location}
+                                            {getLocationText(fieldData.location)}
                                         </p>
                                     )}
                                 </div>

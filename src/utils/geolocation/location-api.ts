@@ -43,14 +43,16 @@ export interface NearbyFieldsResponse {
   data?: Array<{
     id: string;
     name: string;
-    location: {
-      latitude: number;
-      longitude: number;
-    };
+    location: string; // address string
+    latitude: number;
+    longitude: number;
     distance: number; // in kilometers
-    address?: string;
     rating?: number;
-    price?: number;
+    basePrice?: number; // base price for sorting
+    price?: string; // formatted price string
+    sportType?: string;
+    images?: string[];
+    isActive?: boolean;
   }>;
   error?: string;
 }
