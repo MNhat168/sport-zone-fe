@@ -25,7 +25,7 @@ import { DocumentViewer } from './document-viewer'
 //   useApproveFieldOwnerMutation,
 //   useRejectFieldOwnerMutation,
 // } from '@/store/services/fieldOwnersApi'
-import { statusColors, ownerTypes, bankAccountStatusColors } from '../data/data'
+import { statusColors, bankAccountStatusColors } from '../data/data'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { ApprovalDialog } from './approval-dialog'
@@ -210,13 +210,6 @@ export function FieldOwnerDetailView() {
             <div>
               <p className='text-sm text-muted-foreground'>Address</p>
               <p className='font-medium'>{fieldOwner.personalInfo.address}</p>
-            </div>
-            <div>
-              <p className='text-sm text-muted-foreground'>Owner Type</p>
-              <Badge variant='outline' className='mt-1'>
-                {ownerTypes.find((t) => t.value === fieldOwner.ownerType)
-                  ?.label || fieldOwner.ownerType}
-              </Badge>
             </div>
           </CardContent>
         </Card>

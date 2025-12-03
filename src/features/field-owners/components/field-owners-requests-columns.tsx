@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { LongText } from '@/components/long-text'
-import { statusColors, ownerTypes } from '../data/data'
+import { statusColors } from '../data/data'
 import { type FieldOwnerRequest } from '../data/schema'
 import { DataTableRowActions } from './data-table-row-actions'
 
@@ -76,25 +76,6 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
     cell: ({ row }) => (
       <LongText className='max-w-52'>{row.original.personalInfo.address}</LongText>
     ),
-    enableSorting: false,
-  },
-  {
-    accessorKey: 'ownerType',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Owner Type' />
-    ),
-    cell: ({ row }) => {
-      const ownerType = ownerTypes.find(
-        (type) => type.value === row.getValue('ownerType')
-      )
-      return (
-        <div className='text-sm capitalize'>
-          {ownerType?.label || row.getValue('ownerType')}
-        </div>
-      )
-    },
-    filterFn: (row, id, value) =>
-      Array.isArray(value) ? value.includes(row.getValue(id)) : true,
     enableSorting: false,
   },
   {

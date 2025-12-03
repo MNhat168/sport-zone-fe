@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { CalendarDays, FileText, IdCard, MapPin, ShieldCheck, ShieldX, ShieldAlert, Image as ImageIcon } from 'lucide-react'
-import { ownerTypes, statusColors } from '../data/data'
+import { statusColors } from '../data/data'
 import { useFieldOwners } from './field-owners-provider'
 import { DocumentViewer } from './document-viewer'
 import { type FieldOwnerRequest } from '../data/schema'
@@ -51,11 +51,6 @@ export function RequestDetailDialog() {
       })
     : ''
 
-  const ownerTypeLabel = request
-    ? ownerTypes.find((type) => type.value === request.ownerType)?.label ??
-      request.ownerType
-    : ''
-
   const openDocumentViewer = (title: string, images: string[], initialIndex: number = 0) => {
     if (images.length === 0) return
     setDocumentViewerImages(images)
@@ -89,7 +84,6 @@ export function RequestDetailDialog() {
                     </p>
                   </div>
                   <div className='flex flex-wrap items-center gap-2'>
-                    <Badge variant='outline'>{ownerTypeLabel}</Badge>
                     <Badge
                       variant='outline'
                       className={statusColors.get(request.status)}
@@ -142,14 +136,10 @@ export function RequestDetailDialog() {
                 {/* Middle Column: Additional Details, Identity Verification, Documents */}
                 <div className='space-y-6'>
                   <div className='space-y-2'>
-                    <p className='text-sm font-semibold text-muted-foreground'>
-                      Additional Details
-                    </p>
-                    <div className='rounded-md border p-6 space-y-4'>
-                      <div>
-                        <p className='text-xs text-muted-foreground mb-1'>Owner Type</p>
-                        <p className='font-medium text-base'>{ownerTypeLabel}</p>
-                      </div>
+                  <p className='text-sm font-semibold text-muted-foreground'>
+                    Additional Details
+                  </p>
+                  <div className='rounded-md border p-6 space-y-4'>
                       <div>
                         <p className='text-xs text-muted-foreground mb-1'>Status</p>
                         <Badge

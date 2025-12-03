@@ -58,7 +58,6 @@ export function FieldOwnersRequestsTable({
     columnFilters: [
       { columnId: 'applicantName', searchKey: 'search', type: 'string' },
       { columnId: 'status', searchKey: 'status', type: 'array' },
-      { columnId: 'ownerType', searchKey: 'ownerType', type: 'array' },
     ],
   })
 
@@ -108,14 +107,6 @@ export function FieldOwnersRequestsTable({
             options: registrationStatuses.map((status) => ({
               label: status.label,
               value: status.value,
-            })),
-          },
-          {
-            columnId: 'ownerType',
-            title: 'Owner Type',
-            options: ownerTypes.map((type) => ({
-              label: type.label,
-              value: type.value,
             })),
           },
         ]}

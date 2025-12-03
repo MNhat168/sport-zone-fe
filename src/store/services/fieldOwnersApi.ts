@@ -32,6 +32,32 @@ export interface VerifyBankAccountPayload {
   rejectionReason?: string
 }
 
+// Helper function to recursively transform Date objects to ISO strings
+// This ensures Redux state is serializable
+function transformDatesToStrings<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj
+  }
+
+  if (obj instanceof Date) {
+    return obj.toISOString() as T
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(transformDatesToStrings) as T
+  }
+
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const transformed = {} as T
+    for (const [key, value] of Object.entries(obj)) {
+      ;(transformed as any)[key] = transformDatesToStrings(value)
+    }
+    return transformed
+  }
+
+  return obj
+}
+
 export const fieldOwnersApi = createApi({
   reducerPath: 'fieldOwnersApi',
   baseQuery: fetchBaseQuery({
@@ -60,13 +86,16 @@ export const fieldOwnersApi = createApi({
         // Handle API response format: { success: true, data: { data: [...], pagination: {...} } }
         // or direct format: { data: [...], pagination: {...} }
         const raw = response as { success?: boolean; data?: unknown }
+        let parsed
         if (raw?.success && raw?.data) {
           // If API wraps response in { success: true, data: {...} }
-          return fieldOwnerProfileListResponseSchema.parse(raw.data)
+          parsed = fieldOwnerProfileListResponseSchema.parse(raw.data)
+        } else {
+          // Otherwise, parse the response directly
+          parsed = fieldOwnerProfileListResponseSchema.parse(response)
         }
-        // Otherwise, parse the response directly
-        const parsed = fieldOwnerProfileListResponseSchema.parse(response)
-        return parsed
+        // Transform Date objects to ISO strings for Redux serialization
+        return transformDatesToStrings(parsed)
       },
       providesTags: ['FieldOwner'],
     }),
