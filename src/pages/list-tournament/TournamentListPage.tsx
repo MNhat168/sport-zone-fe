@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { Search, Calendar, Users, MapPin, Trophy, Clock, ChevronRight } from "lucide-react"
+import { Search, Filter, Calendar, Users, MapPin, Trophy, Clock, ChevronRight, DollarSign, ChevronLeft, ChevronRightIcon } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
 import { fetchTournaments } from "@/features/tournament/tournamentThunk"
 import { Link } from "react-router-dom"
 import { SportType, SportCategories, getSportDisplayNameVN, getCategoryDisplayName } from "@/components/enums/ENUMS"
+
+const ITEMS_PER_PAGE = 10;
 
 export default function TournamentListPage() {
   const dispatch = useAppDispatch()
@@ -25,6 +27,7 @@ export default function TournamentListPage() {
   const [minFee, setMinFee] = useState(0)
   const [maxFee, setMaxFee] = useState(1000000)
   const [locationFilter, setLocationFilter] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     dispatch(fetchTournaments({}))
@@ -75,6 +78,13 @@ export default function TournamentListPage() {
     return matchesSearch && matchesSport && matchesLocation && matchesFee
   })
 
+  // Calculate pagination
+  const totalItems = filteredTournaments.length
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentTournaments = filteredTournaments.slice(startIndex, endIndex)
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800'
@@ -115,6 +125,7 @@ export default function TournamentListPage() {
         ? prev.filter(s => s !== sport)
         : [...prev, sport]
     )
+    setCurrentPage(1) // Reset to first page when filters change
   }
 
   const handleCategoryToggle = (category: string) => {
@@ -123,12 +134,23 @@ export default function TournamentListPage() {
         ? prev.filter(c => c !== category)
         : [...prev, category]
     )
+    setCurrentPage(1) // Reset to first page when filters change
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    // Scroll to top of results when changing page
+    const resultsElement = document.getElementById('tournament-results')
+    if (resultsElement) {
+      resultsElement.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   // Fixed FeeSlider Component
   const FeeSlider = () => {
     const handleMaxFeeChange = (value: number) => {
       setMaxFee(value)
+      setCurrentPage(1) // Reset to first page when filters change
     }
 
     const getProgressWidth = () => {
@@ -194,6 +216,7 @@ export default function TournamentListPage() {
               onClick={() => {
                 setMinFee(50000)
                 setMaxFee(value)
+                setCurrentPage(1) // Reset to first page when filters change
               }}
               className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
                 maxFee === value 
@@ -247,7 +270,10 @@ export default function TournamentListPage() {
               <Input
                 placeholder="Search tournaments by name, location, or sport..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1) // Reset to first page when search changes
+                }}
                 className="pl-10 py-6 text-base border-gray-300 focus:border-green-500"
               />
             </div>
@@ -259,9 +285,9 @@ export default function TournamentListPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-8">
-            {/* Left Sidebar - Filters (1/4) */}
+            {/* Left Sidebar - Filters (1/4) - Now scrollable */}
             <div className="w-1/4">
-              <Card className="shadow-sm border border-gray-200">
+              <Card className="shadow-sm border border-gray-200 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
                 <CardContent className="p-6 space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-900">Filters</h3>
@@ -275,6 +301,7 @@ export default function TournamentListPage() {
                         setMaxFee(1000000)
                         setLocationFilter("")
                         setSearchTerm("")
+                        setCurrentPage(1)
                       }}
                       className="text-green-600 hover:text-green-700 hover:bg-green-50 text-sm"
                     >
@@ -291,7 +318,10 @@ export default function TournamentListPage() {
                         id="location"
                         placeholder="Enter location..."
                         value={locationFilter}
-                        onChange={(e) => setLocationFilter(e.target.value)}
+                        onChange={(e) => {
+                          setLocationFilter(e.target.value)
+                          setCurrentPage(1)
+                        }}
                         className="pl-10"
                       />
                     </div>
@@ -355,7 +385,7 @@ export default function TournamentListPage() {
             </div>
 
             {/* Right Content - Tournaments List (3/4) */}
-            <div className="w-3/4">
+            <div className="w-3/4" id="tournament-results">
               {/* Results Count */}
               <div className="flex items-center gap-2 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -364,6 +394,11 @@ export default function TournamentListPage() {
                 <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
                   {filteredTournaments.length} found
                 </span>
+                {filteredTournaments.length > 0 && (
+                  <span className="text-sm text-gray-600">
+                    (Page {currentPage} of {totalPages})
+                  </span>
+                )}
               </div>
 
               {/* Tournaments List */}
@@ -375,7 +410,7 @@ export default function TournamentListPage() {
                 </Card>
               )}
 
-              {filteredTournaments.length === 0 ? (
+              {currentTournaments.length === 0 ? (
                 <Card>
                   <CardContent className="p-12 text-center">
                     <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -392,18 +427,23 @@ export default function TournamentListPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-4">
-                  {filteredTournaments.map((tournament) => (
-                    <TournamentCard
-                      key={tournament._id}
-                      tournament={tournament}
-                      getStatusColor={getStatusColor}
-                      getStatusText={getStatusText}
-                      formatDate={formatDate}
-                      formatCurrency={formatCurrency}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="space-y-4">
+                    {currentTournaments.map((tournament) => (
+                      <TournamentCard
+                        key={tournament._id}
+                        tournament={tournament}
+                        getStatusColor={getStatusColor}
+                        getStatusText={getStatusText}
+                        formatDate={formatDate}
+                        formatCurrency={formatCurrency}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {renderPagination()}
+                </>
               )}
             </div>
           </div>
@@ -413,6 +453,112 @@ export default function TournamentListPage() {
       <FooterComponent />
     </>
   )
+
+  // Pagination component function
+  function renderPagination() {
+    if (totalPages <= 1) return null
+
+    const maxVisiblePages = 5
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+
+    // Adjust if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    }
+
+    return (
+      <div className="flex flex-col items-center gap-4 mt-8">
+        <div className="flex items-center gap-2">
+          {/* Previous button */}
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-3 py-1 rounded-md border ${
+              currentPage === 1
+                ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
+                : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+            }`}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {/* First page */}
+          {startPage > 1 && (
+            <>
+              <button
+                onClick={() => handlePageChange(1)}
+                className={`px-3 py-1 rounded-md border ${
+                  currentPage === 1
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+                }`}
+              >
+                1
+              </button>
+              {startPage > 2 && (
+                <span className="px-2 py-1 text-gray-500">
+                  ...
+                </span>
+              )}
+            </>
+          )}
+
+          {/* Page numbers */}
+          {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((pageNum) => (
+            <button
+              key={pageNum}
+              onClick={() => handlePageChange(pageNum)}
+              className={`px-3 py-1 rounded-md border ${
+                currentPage === pageNum
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+              }`}
+            >
+              {pageNum}
+            </button>
+          ))}
+
+          {/* Last page */}
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <span className="px-2 py-1 text-gray-500">
+                  ...
+                </span>
+              )}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className={`px-3 py-1 rounded-md border ${
+                  currentPage === totalPages
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+                }`}
+              >
+                {totalPages}
+              </button>
+            </>
+          )}
+
+          {/* Next button */}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1 rounded-md border ${
+              currentPage === totalPages
+                ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
+                : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+            }`}
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600">
+          Showing {startIndex + 1} - {Math.min(endIndex, totalItems)} of {totalItems} tournaments
+        </p>
+      </div>
+    )
+  }
 }
 
 interface TournamentCardProps {

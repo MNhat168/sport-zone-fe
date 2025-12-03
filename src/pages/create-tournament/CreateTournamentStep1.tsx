@@ -155,7 +155,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
               {/* Poster Header */}
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-white bg-opacity-20 p-3 rounded-xl">
+                  <div className="bg-gradient-to-br from-gray-900 to-gray-80 bg-opacity-20 p-3 rounded-xl">
                     <Trophy className="h-8 w-8" />
                   </div>
                   <h1 className="text-4xl font-black tracking-tight">CREATE</h1>
@@ -165,7 +165,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
 
               {/* Tournament Name Preview */}
               {formData.name && (
-                <div className="mb-8 p-4 bg-white bg-opacity-10 rounded-xl backdrop-blur-sm border border-white border-opacity-20">
+                <div className="mb-8 p-4 bg-gradient-to-br from-gray-900 to-gray-800 bg-opacity-10 rounded-xl backdrop-blur-sm border border-white border-opacity-20">
                   <p className="text-green-100 text-sm font-medium mb-1">Tournament Name</p>
                   <p className="text-white text-2xl font-bold">{formData.name}</p>
                 </div>
@@ -175,7 +175,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
               {formData.sportType && (
                 <div className="mb-6 space-y-3">
                   <p className="text-green-100 text-sm font-medium">Sport Type</p>
-                  <div className="flex items-center gap-3 bg-white bg-opacity-10 p-3 rounded-lg">
+                  <div className="flex items-center gap-3 bg-gradient-to-br from-gray-900 to-gray-80 bg-opacity-10 p-3 rounded-lg">
                     <Target className="h-5 w-5" />
                     <span className="text-white font-semibold capitalize">{formData.sportType}</span>
                   </div>
@@ -188,14 +188,14 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   <div className="space-y-2">
                     <p className="text-green-100 text-sm font-medium">Tournament Structure</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                      <div className="bg-gradient-to-br from-gray-900 to-gray-800 bg-opacity-10 p-3 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Users2 className="h-4 w-4" />
                           <span className="text-sm">Teams</span>
                         </div>
                         <p className="text-white font-bold text-lg">{formData.numberOfTeams}</p>
                       </div>
-                      <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                      <div className="bg-gradient-to-br from-gray-900 to-gray-800 bg-opacity-10 p-3 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4" />
                           <span className="text-sm">Players</span>
@@ -206,7 +206,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   </div>
                   
                   {isTeamBased && formData.teamSize && (
-                    <div className="bg-white bg-opacity-10 p-3 rounded-lg">
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-80 bg-opacity-10 p-3 rounded-lg">
                       <div className="flex items-center gap-2">
                         <Hash className="h-4 w-4" />
                         <span className="text-sm">Team Size</span>
@@ -221,7 +221,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
               {formData.tournamentDate && (
                 <div className="mb-6 space-y-3">
                   <p className="text-green-100 text-sm font-medium">Tournament Date</p>
-                  <div className="flex items-center gap-3 bg-white bg-opacity-10 p-3 rounded-lg">
+                  <div className="flex items-center gap-3 bg-gradient-to-br from-gray-900 to-gray-80 bg-opacity-10 p-3 rounded-lg">
                     <Calendar className="h-5 w-5" />
                     <span className="text-white font-semibold">
                       {new Date(formData.tournamentDate).toLocaleDateString('vi-VN')}
@@ -229,18 +229,6 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   </div>
                 </div>
               )}
-
-              {/* Quick Stats */}
-              <div className="space-y-3 mb-8 pt-6 border-t border-white border-opacity-20">
-                {formData.registrationFee !== undefined && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-green-100 flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" /> Fee
-                    </span>
-                    <span className="font-bold text-lg">{formData.registrationFee.toLocaleString()} VNĐ</span>
-                  </div>
-                )}
-              </div>
 
               {/* Motivational Text */}
               <div className="text-green-100 text-sm leading-relaxed">

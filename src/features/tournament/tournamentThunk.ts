@@ -40,41 +40,46 @@ const getTeamColor = (teamNumber: number): string => {
   return colors[(teamNumber - 1) % colors.length];
 };
 
-// In tournamentThunk.ts - Update the mapping function
-const mapApiTournamentToAppTournament = (apiTournament: any): import("./tournamentSlice").Tournament => {
-  console.log('Mapping tournament:', apiTournament);
+const mapApiTournamentToAppTournament = (apiTournament: any): import("./tournamentSlice").Tournament | null => {
+  console.log('Raw API tournament data:', apiTournament); // Debug log
+  
+  // Check if apiTournament is null or undefined
+  if (!apiTournament) {
+    console.error('apiTournament is null or undefined');
+    return null;
+  }
 
   // Extract date values safely
-  const tournamentDate = apiTournament?.tournamentDate ?
-    (typeof apiTournament.tournamentDate === 'string' ?
-      apiTournament.tournamentDate.split('T')[0] :
-      apiTournament.tournamentDate.toISOString().split('T')[0]) : "";
+  const tournamentDate = apiTournament?.tournamentDate ? 
+    (typeof apiTournament.tournamentDate === 'string' ? 
+      apiTournament.tournamentDate.split('T')[0] : 
+      apiTournament.tournamentDate?.toISOString?.()?.split('T')[0] || "") : "";
 
-  const registrationStart = apiTournament?.registrationStart ?
-    (typeof apiTournament.registrationStart === 'string' ?
-      apiTournament.registrationStart.split('T')[0] :
-      apiTournament.registrationStart.toISOString().split('T')[0]) : "";
-
-  const registrationEnd = apiTournament?.registrationEnd ?
-    (typeof apiTournament.registrationEnd === 'string' ?
-      apiTournament.registrationEnd.split('T')[0] :
-      apiTournament.registrationEnd.toISOString().split('T')[0]) : "";
-
-  const confirmationDeadline = apiTournament?.confirmationDeadline ?
-    (typeof apiTournament.confirmationDeadline === 'string' ?
-      apiTournament.confirmationDeadline.split('T')[0] :
-      apiTournament.confirmationDeadline.toISOString().split('T')[0]) : "";
+  // Debug: Check the actual values
+  console.log('Extracted values:', {
+    maxParticipants: apiTournament?.maxParticipants,
+    minParticipants: apiTournament?.minParticipants,
+    numberOfTeams: apiTournament?.numberOfTeams,
+    teamSize: apiTournament?.teamSize,
+    participants: apiTournament?.participants
+  });
 
   // Calculate current teams based on participants and team size
   const teamSize = apiTournament?.teamSize || 1;
   const participantsCount = apiTournament?.participants?.length || 0;
+  
+  // Use the actual values from API, don't recalculate
+  const maxParticipants = apiTournament?.maxParticipants || 0;
+  const minParticipants = apiTournament?.minParticipants || 0;
+  const numberOfTeams = apiTournament?.numberOfTeams || 0;
+
   const currentTeams = Math.min(
     Math.ceil(participantsCount / teamSize),
-    apiTournament?.numberOfTeams || 0
+    numberOfTeams
   );
 
   // Also add a proper isFull check:
-  //const isFull = participantsCount >= (apiTournament?.numberOfTeams || 0) * teamSize;
+  const isFull = participantsCount >= (apiTournament?.numberOfTeams || 0) * teamSize;
 
   // Map teams with default values if not provided
   const teams = Array.isArray(apiTournament?.teams)
@@ -157,22 +162,30 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
     competitionFormat: apiTournament?.competitionFormat || "single_elimination",
     location: apiTournament?.location || "",
     tournamentDate: tournamentDate,
-    registrationStart: registrationStart,
-    registrationEnd: registrationEnd,
+    registrationStart: apiTournament?.registrationStart ? 
+      (typeof apiTournament.registrationStart === 'string' ? 
+        apiTournament.registrationStart.split('T')[0] : 
+        apiTournament.registrationStart?.toISOString?.()?.split('T')[0] || "") : "",
+    registrationEnd: apiTournament?.registrationEnd ? 
+      (typeof apiTournament.registrationEnd === 'string' ? 
+        apiTournament.registrationEnd.split('T')[0] : 
+        apiTournament.registrationEnd?.toISOString?.()?.split('T')[0] || "") : "",
     startTime: apiTournament?.startTime || "",
     endTime: apiTournament?.endTime || "",
-    maxParticipants: apiTournament?.maxParticipants || 0,
-    minParticipants: apiTournament?.minParticipants || 0,
+    // USE THE ACTUAL VALUES FROM API
+    maxParticipants: maxParticipants,
+    minParticipants: minParticipants,
     registrationFee: apiTournament?.registrationFee || 0,
     description: apiTournament?.description || "",
     status: apiTournament?.status?.toLowerCase() || "",
-    participants: participants,
-    fields: Array.isArray(apiTournament?.fields) ? apiTournament.fields.map((f: any) => ({
-      field: f.field || null
-    })) : [],
+    participants: Array.isArray(apiTournament?.participants) ? apiTournament.participants : [],
+    fields: Array.isArray(apiTournament?.fields) ? apiTournament.fields : [],
     fieldsNeeded: apiTournament?.fieldsNeeded || 0,
     totalFieldCost: apiTournament?.totalFieldCost || 0,
-    confirmationDeadline: confirmationDeadline,
+    confirmationDeadline: apiTournament?.confirmationDeadline ? 
+      (typeof apiTournament.confirmationDeadline === 'string' ? 
+        apiTournament.confirmationDeadline.split('T')[0] : 
+        apiTournament.confirmationDeadline?.toISOString?.()?.split('T')[0] || "") : "",
     organizer: apiTournament?.organizer || null,
     rules: apiTournament?.rules || undefined,
     totalRegistrationFeesCollected: apiTournament?.totalRegistrationFeesCollected || 0,
@@ -180,18 +193,12 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
     commissionRate: apiTournament?.commissionRate || 0.1,
     commissionAmount: apiTournament?.commissionAmount || 0,
     categories: apiTournament?.categories || [],
-    // Team properties
-    numberOfTeams: apiTournament?.numberOfTeams || 0,
+    // Team properties - USE ACTUAL VALUES
+    numberOfTeams: numberOfTeams,
     teamSize: teamSize,
     currentTeams: currentTeams,
-    teams: teams,
-    schedule: schedule,
-    // Calculate team assignments if needed
-    teamAssignments: apiTournament?.teamAssignments || generateTeamAssignments(
-      participants,
-      apiTournament?.numberOfTeams || 0,
-      teamSize
-    ),
+    teams: Array.isArray(apiTournament?.teams) ? apiTournament.teams : [],
+    schedule: Array.isArray(apiTournament?.schedule) ? apiTournament.schedule : [],
   };
 };
 
@@ -249,8 +256,10 @@ export const fetchTournaments = createAsyncThunk(
       const mappedTournaments = tournaments.map(mapApiTournamentToAppTournament);
       console.log('Mapped tournaments:', mappedTournaments);
 
-      dispatch(setTournaments(mappedTournaments));
-      return mappedTournaments;
+      const validTournaments = mappedTournaments.filter((t): t is import("./tournamentSlice").Tournament => t !== null);
+
+      dispatch(setTournaments(validTournaments));
+      return validTournaments;
     } catch (error: any) {
       console.error('Error fetching tournaments:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch tournaments';
@@ -262,7 +271,6 @@ export const fetchTournaments = createAsyncThunk(
   }
 );
 
-// Fetch tournament by ID
 export const fetchTournamentById = createAsyncThunk(
   'tournament/fetchTournamentById',
   async (id: string, { dispatch, rejectWithValue }) => {
@@ -271,12 +279,20 @@ export const fetchTournamentById = createAsyncThunk(
 
     try {
       const response = await axiosPublic.get(TOURNAMENT_BY_ID_API(id));
-      const mappedTournament = mapApiTournamentToAppTournament(response.data);
+      console.log('API response for tournament:', response.data); // Add this line for debugging
+      
+      // Make sure we're passing the correct data structure
+      const tournamentData = response.data.data || response.data;
+      console.log('Extracted tournament data:', tournamentData); // Debug log
+      
+      const mappedTournament = mapApiTournamentToAppTournament(tournamentData);
+      console.log('Mapped tournament:', mappedTournament); // Debug log
 
       dispatch(setCurrentTournament(mappedTournament));
       return mappedTournament;
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'Failed to fetch tournament';
+      console.error('Error fetching tournament:', error); // Add detailed error logging
       dispatch(setError(errorMsg));
       return rejectWithValue(errorMsg);
     } finally {
@@ -323,6 +339,12 @@ export const createTournament = createAsyncThunk(
       const response = await axiosPrivate.post(CREATE_TOURNAMENT_API, tournamentData);
       const mappedTournament = mapApiTournamentToAppTournament(response.data);
 
+      if (!mappedTournament) {
+        const errorMsg = 'Invalid tournament data returned from API';
+        dispatch(setError(errorMsg));
+        return rejectWithValue(errorMsg);
+      }
+
       dispatch(addTournament(mappedTournament));
       return mappedTournament;
     } catch (error: any) {
@@ -346,6 +368,11 @@ export const registerForTournament = createAsyncThunk(
       const response = await axiosPrivate.post(REGISTER_FOR_TOURNAMENT_API, data);
       const mappedTournament = mapApiTournamentToAppTournament(response.data);
 
+      if (!mappedTournament) {
+        const errorMsg = 'Invalid tournament data returned from API';
+        dispatch(setError(errorMsg));
+        return rejectWithValue(errorMsg);
+      }
       dispatch(updateTournament(mappedTournament));
       return mappedTournament;
     } catch (error: any) {

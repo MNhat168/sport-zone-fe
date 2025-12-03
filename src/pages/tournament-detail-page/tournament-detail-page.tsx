@@ -188,8 +188,10 @@ export default function TournamentDetailsPage() {
   const tournament = currentTournament
   const isParticipant = user && tournament.participants?.some(p => p.user?._id === user._id)
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
-  const isFull = tournament.maxParticipants > 0 && tournament.participants?.length >= tournament.maxParticipants;
-  const registrationProgress = (tournament.participants?.length / tournament.maxParticipants) * 100
+  const isFull = tournament.participants?.length >= (tournament.maxParticipants || 0);
+  const registrationProgress = tournament.maxParticipants > 0
+    ? (tournament.participants?.length || 0) / tournament.maxParticipants * 100
+    : 0;
   const daysUntilTournament = Math.ceil(
     (new Date(tournament.tournamentDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   )
@@ -223,6 +225,23 @@ export default function TournamentDetailsPage() {
     }
   };
 
+  const calculateDaysUntil = (dateStr: string) => {
+    if (!dateStr) return NaN;
+
+    try {
+      const targetDate = new Date(dateStr);
+      const today = new Date();
+
+      if (isNaN(targetDate.getTime())) return NaN;
+
+      const timeDiff = targetDate.getTime() - today.getTime();
+      return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    } catch (error) {
+      console.error('Error calculating days difference:', error);
+      return NaN;
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('vi-VN') + ' VNĐ'
   }
@@ -247,6 +266,16 @@ export default function TournamentDetailsPage() {
     }
     participantsByTeam[teamNumber].push(participant)
   })
+
+  console.log('Tournament data debug:', {
+    maxParticipants: tournament.maxParticipants,
+    minParticipants: tournament.minParticipants,
+    participantsCount: tournament.participants?.length || 0,
+    participants: tournament.participants,
+    numberOfTeams: tournament.numberOfTeams,
+    teamSize: tournament.teamSize,
+    calculatedMax: tournament.numberOfTeams * tournament.teamSize
+  });
 
   return (
     <>
@@ -341,7 +370,7 @@ export default function TournamentDetailsPage() {
                       <Button disabled className="w-full bg-gray-600">
                         Tournament Full
                       </Button>
-                    ) : isRegistrationOpen ? (
+                    ) : !isRegistrationOpen ? (
                       <Button disabled className="w-full bg-gray-600">
                         Registration Closed
                       </Button>
@@ -466,9 +495,18 @@ export default function TournamentDetailsPage() {
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <div className="flex justify-between text-sm mb-2">
                     <span>Registration Progress</span>
-                    <span>{tournament.participants?.length || 0}/{tournament.maxParticipants}</span>
+                    <span>
+                      {tournament.participants?.length || 0}/
+                      {tournament.numberOfTeams * tournament.teamSize}
+                    </span>
                   </div>
-                  <Progress value={registrationProgress} className="h-2" />
+                  <Progress
+                    value={
+                      ((tournament.participants?.length || 0) /
+                        (tournament.numberOfTeams * tournament.teamSize)) * 100
+                    }
+                    className="h-2"
+                  />
                   <div className="text-xs text-center mt-2 opacity-80">
                     {tournament.minParticipants} participants needed to confirm tournament
                   </div>
