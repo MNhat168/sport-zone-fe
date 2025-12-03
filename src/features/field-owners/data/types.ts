@@ -13,6 +13,9 @@ export type {
   VerifyBankAccountRequest,
 } from './schema'
 
+// Import types for use in this file
+import type { OwnerType, RegistrationStatus } from './schema'
+
 // Additional utility types
 export interface FieldOwnerTableRow {
   id: string

@@ -48,14 +48,26 @@ export function BookingStatsCards({ year }: BookingStatsCardsProps) {
     }> = []
 
     if (Array.isArray(data)) {
-      statsArray = data
+      statsArray = data as Array<{
+        year: number
+        month: number
+        type: string
+        count: number
+      }>
     } else if (
       data &&
       typeof data === 'object' &&
-      'data' in data &&
-      Array.isArray(data.data)
+      'data' in data
     ) {
-      statsArray = data.data
+      const dataValue = (data as { data: unknown }).data
+      if (Array.isArray(dataValue)) {
+        statsArray = dataValue as Array<{
+          year: number
+          month: number
+          type: string
+          count: number
+        }>
+      }
     }
 
     // Calculate total for the year

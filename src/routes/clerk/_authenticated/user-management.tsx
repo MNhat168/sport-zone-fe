@@ -89,7 +89,24 @@ function UserManagement() {
               <UsersPrimaryButtons />
             </div>
             <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-              <UsersTable data={users} navigate={navigate} search={search} />
+              <UsersTable 
+                data={users.map(user => ({
+                  _id: user.id,
+                  fullName: `${user.firstName} ${user.lastName}`,
+                  email: user.email,
+                  phone: user.phoneNumber || null,
+                  role: (user.role === 'superadmin' || user.role === 'admin' ? 'admin' : 'user') as 'user' | 'admin' | 'field_owner' | 'coach',
+                  status: (user.status === 'active' ? 'active' : 'inactive') as 'active' | 'inactive',
+                  isVerified: true,
+                  createdAt: user.createdAt.toISOString(),
+                  updatedAt: user.updatedAt.toISOString(),
+                }))} 
+                total={users.length}
+                limit={10}
+                isLoading={false}
+                navigate={navigate} 
+                search={search} 
+              />
             </div>
           </Main>
 

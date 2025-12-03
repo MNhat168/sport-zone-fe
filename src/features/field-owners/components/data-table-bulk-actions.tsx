@@ -1,11 +1,11 @@
 import { type Table } from '@tanstack/react-table'
-import { type FieldOwnerRequest, type FieldOwnerProfile } from '../data/schema'
+import { type FieldOwnerRequest, type FieldOwnerProfile, type FieldOwnerProfileApi } from '../data/schema'
 
 type DataTableBulkActionsProps<TData> = {
   table: Table<TData>
 }
 
-export function DataTableBulkActions<TData extends FieldOwnerRequest | FieldOwnerProfile>({
+export function DataTableBulkActions<TData extends FieldOwnerRequest | FieldOwnerProfile | FieldOwnerProfileApi>({
   table,
 }: DataTableBulkActionsProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows

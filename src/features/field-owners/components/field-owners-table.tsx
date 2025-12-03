@@ -25,7 +25,6 @@ import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { type FieldOwnerProfileApi } from '../data/schema'
 import { fieldOwnersColumns as columns } from './field-owners-columns'
 import { DataTableBulkActions } from './data-table-bulk-actions'
-import { registrationStatuses } from '../data/data'
 
 type DataTableProps = {
   data: FieldOwnerProfileApi[]

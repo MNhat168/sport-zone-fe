@@ -13,12 +13,13 @@ import {
 import {
   type FieldOwnerRequest,
   type FieldOwnerProfile,
+  type FieldOwnerProfileApi,
 } from '../data/schema'
 import { useFieldOwners } from './field-owners-provider'
 import { useNavigate } from '@tanstack/react-router'
 
 type DataTableRowActionsProps = {
-  row: Row<FieldOwnerRequest | FieldOwnerProfile>
+  row: Row<FieldOwnerRequest | FieldOwnerProfile | FieldOwnerProfileApi>
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
@@ -39,7 +40,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const handleView = () => {
     // Open dialog for both requests and profiles
     if (isRequestRow || isProfileRow) {
-      setCurrentRow(row.original)
+      setCurrentRow(row.original as any)
       setOpen('view')
       return
     }
@@ -61,8 +62,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     setOpen('reject')
   }
 
-  const isRequest = 'status' in row.original && row.original.status !== undefined
-  const status = isRequest ? row.original.status : null
+  const isRequest = 
+    'status' in row.original && 
+    row.original.status !== undefined &&
+    (row.original.status === 'pending' || row.original.status === 'approved' || row.original.status === 'rejected')
+  const status = isRequest && 'status' in row.original ? (row.original as FieldOwnerRequest).status : null
 
   return (
     <DropdownMenu modal={false}>

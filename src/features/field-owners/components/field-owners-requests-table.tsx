@@ -25,7 +25,7 @@ import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { type FieldOwnerRequest } from '../data/schema'
 import { fieldOwnersRequestsColumns as columns } from './field-owners-requests-columns'
 import { DataTableBulkActions } from './data-table-bulk-actions'
-import { ownerTypes, registrationStatuses } from '../data/data'
+import { registrationStatuses } from '../data/data'
 
 type DataTableProps = {
   data: FieldOwnerRequest[]
@@ -104,7 +104,7 @@ export function FieldOwnersRequestsTable({
           {
             columnId: 'status',
             title: 'Status',
-            options: registrationStatuses.map((status) => ({
+            options: registrationStatuses.map((status: { label: string; value: string }) => ({
               label: status.label,
               value: status.value,
             })),

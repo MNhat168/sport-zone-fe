@@ -30,7 +30,7 @@ export function BookingMonthlyChart({ year }: BookingMonthlyChartProps) {
   const chartData = useMemo(() => {
     if (!data) {
       // Return empty data for all 12 months
-      return monthNames.map((name, index) => ({
+      return monthNames.map((name) => ({
         name,
         count: 0,
       }))
@@ -42,11 +42,16 @@ export function BookingMonthlyChart({ year }: BookingMonthlyChartProps) {
     
     if (Array.isArray(data)) {
       statsArray = data
-    } else if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
-      statsArray = data.data
-    } else {
+    } else if (data && typeof data === 'object' && 'data' in data) {
+      const dataValue = (data as { data: unknown }).data
+      if (Array.isArray(dataValue)) {
+        statsArray = dataValue as Array<{ year: number; month: number; type: string; count: number }>
+      }
+    }
+    
+    if (statsArray.length === 0) {
       // If data is not in expected format, return empty data
-      return monthNames.map((name, index) => ({
+      return monthNames.map((name) => ({
         name,
         count: 0,
       }))
@@ -59,8 +64,8 @@ export function BookingMonthlyChart({ year }: BookingMonthlyChartProps) {
     })
 
     // Create chart data for all 12 months, filling missing months with 0
-    return monthNames.map((name, index) => {
-      const month = index + 1 // months are 1-indexed
+    return monthNames.map((name, monthIndex) => {
+      const month = monthIndex + 1 // months are 1-indexed
       return {
         name,
         count: monthCountMap.get(month) || 0,

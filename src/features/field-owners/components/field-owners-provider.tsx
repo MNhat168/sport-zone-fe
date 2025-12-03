@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
-import { type FieldOwnerRequest, type FieldOwnerProfile } from '../data/schema'
+import { type FieldOwnerRequest, type FieldOwnerProfile, type FieldOwnerProfileApi } from '../data/schema'
 
 type FieldOwnersDialogType = 'view' | 'approve' | 'reject' | 'verify-bank'
 
 type FieldOwnersContextType = {
   open: FieldOwnersDialogType | null
   setOpen: (str: FieldOwnersDialogType | null) => void
-  currentRow: FieldOwnerRequest | FieldOwnerProfile | null
+  currentRow: FieldOwnerRequest | FieldOwnerProfile | FieldOwnerProfileApi | null
   setCurrentRow: React.Dispatch<
-    React.SetStateAction<FieldOwnerRequest | FieldOwnerProfile | null>
+    React.SetStateAction<FieldOwnerRequest | FieldOwnerProfile | FieldOwnerProfileApi | null>
   >
 }
 
@@ -24,7 +24,7 @@ export function FieldOwnersProvider({
 }) {
   const [open, setOpen] = useDialogState<FieldOwnersDialogType>(null)
   const [currentRow, setCurrentRow] = useState<
-    FieldOwnerRequest | FieldOwnerProfile | null
+    FieldOwnerRequest | FieldOwnerProfile | FieldOwnerProfileApi | null
   >(null)
 
   return (
