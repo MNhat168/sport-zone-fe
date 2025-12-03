@@ -353,6 +353,9 @@ export default function FieldHistoryBookingPage() {
         return mapped.filter((b) => !hiddenIds.includes(b.id));
     }, [fieldOwnerBookings, hiddenIds]);
 
+    // Get pagination info
+    const totalPages = fieldOwnerBookingsPagination?.totalPages || 1;
+
     return (
         <FieldOwnerDashboardLayout>
             <div className="space-y-6">
