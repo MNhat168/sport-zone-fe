@@ -104,7 +104,7 @@ const FieldBookingPage = () => {
                 page: 1
             } as any))
         }
-    }, [authUser, favouriteSports])
+    }, [authUser, favouriteSports, isFilteringByFavorites, sportFilter, nameFilter, locationFilter, isNearbyMode])
 
     // Toggle favorite sports filter
     const handleToggleFavoriteFilter = () => {
@@ -134,6 +134,8 @@ const FieldBookingPage = () => {
     }
 
     useEffect(() => {
+        if (isNearbyMode) return
+        
         setFilters((prev) => {
             const prevAny: any = prev
             const sameSort = (!!prevAny.sortBy && prevAny.sortBy === 'price') === !!priceSort &&
@@ -150,22 +152,6 @@ const FieldBookingPage = () => {
             copy.page = 1
             return copy
         })
-
-        if (isNearbyMode) return
-
-        const base: any = {}
-        if (nameFilter?.trim()) base.name = nameFilter.trim()
-        if (sportFilter !== 'all') base.sportType = sportFilter
-        if (timeFilter !== 'any') base.weekday = timeFilter
-        if (locationFilter?.trim()) base.location = locationFilter.trim()
-        if (priceSort && priceSort !== 'none') {
-            base.sortBy = 'price'
-            base.sortOrder = priceSort
-        }
-        base.page = 1
-        base.limit = 10
-        skipNextDebounceRef.current = true
-        dispatch(getAllFields(base))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [priceSort, isNearbyMode])
 
@@ -191,42 +177,88 @@ const FieldBookingPage = () => {
 
     useEffect(() => {
         setFilters((prev) => {
-            const copy: any = { ...prev }
-            if (nameFilter?.trim()) {
-                copy.name = nameFilter.trim()
-            } else {
-                delete copy.name
+            const prevAny: any = prev
+            const copy: any = { ...prevAny }
+            
+            // Check if name filter changed
+            const newName = nameFilter?.trim() || undefined
+            const prevName = prevAny.name
+            if (newName !== prevName) {
+                if (newName) {
+                    copy.name = newName
+                } else {
+                    delete copy.name
+                }
             }
             
             // Handle sport filtering - priority: manual selection > favorites
+            let sportChanged = false
             if (isFilteringByFavorites && favouriteSports.length > 0 && sportFilter === 'all') {
                 // Use favorite sports
-                copy.sportTypes = favouriteSports
-                delete copy.sportType
-                delete copy.type
+                const prevSportTypes = prevAny.sportTypes
+                const sportTypesEqual = Array.isArray(prevSportTypes) && 
+                    prevSportTypes.length === favouriteSports.length &&
+                    prevSportTypes.every((s: string, i: number) => s === favouriteSports[i])
+                if (!sportTypesEqual || prevAny.sportType || prevAny.type) {
+                    copy.sportTypes = favouriteSports
+                    delete copy.sportType
+                    delete copy.type
+                    sportChanged = true
+                }
             } else if (sportFilter !== 'all') {
                 // User selected specific sport - override favorites
-                copy.type = sportFilter
-                copy.sportType = sportFilter
-                delete copy.sportTypes
-                setIsFilteringByFavorites(false)
+                if (prevAny.sportType !== sportFilter || prevAny.type !== sportFilter || prevAny.sportTypes) {
+                    copy.type = sportFilter
+                    copy.sportType = sportFilter
+                    delete copy.sportTypes
+                    if (isFilteringByFavorites) {
+                        setIsFilteringByFavorites(false)
+                    }
+                    sportChanged = true
+                }
             } else {
                 // No filter
-                delete copy.type
-                delete copy.sportType
-                delete copy.sportTypes
+                if (prevAny.type || prevAny.sportType || prevAny.sportTypes) {
+                    delete copy.type
+                    delete copy.sportType
+                    delete copy.sportTypes
+                    sportChanged = true
+                }
             }
             
-            if (timeFilter !== 'any') {
-                copy.weekday = timeFilter
-            } else {
-                delete copy.weekday
+            // Check if time filter changed
+            const newWeekday = timeFilter !== 'any' ? timeFilter : undefined
+            const prevWeekday = prevAny.weekday
+            if (newWeekday !== prevWeekday) {
+                if (newWeekday) {
+                    copy.weekday = newWeekday
+                } else {
+                    delete copy.weekday
+                }
             }
-            if (locationFilter?.trim()) {
-                copy.location = locationFilter.trim()
-            } else {
-                delete copy.location
+            
+            // Check if location filter changed
+            const newLocation = locationFilter?.trim() || undefined
+            const prevLocation = prevAny.location
+            if (newLocation !== prevLocation) {
+                if (newLocation) {
+                    copy.location = newLocation
+                } else {
+                    delete copy.location
+                }
             }
+            
+            // Only update if something actually changed
+            const hasChanges = newName !== prevName || 
+                             sportChanged || 
+                             newWeekday !== prevWeekday || 
+                             newLocation !== prevLocation ||
+                             prev.page !== 1
+            
+            if (!hasChanges) {
+                return prev
+            }
+            
             copy.page = 1
             return copy
         })
