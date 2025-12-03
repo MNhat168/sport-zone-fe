@@ -14,6 +14,7 @@ import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
 import { getMyBookings, cancelFieldBooking } from "../../features/booking/bookingThunk"
 import type { Booking } from "../../types/booking-type"
+import BookingDetailModal from "@/components/pop-up/booking-detail-modal"
 
 export default function UserBookingsPage() {
   const dispatch = useAppDispatch()
@@ -31,6 +32,8 @@ export default function UserBookingsPage() {
   const [sortBy, setSortBy] = useState("Relevance")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   // Load bookings when component mounts and when filters change
   useEffect(() => {
@@ -146,6 +149,16 @@ export default function UserBookingsPage() {
     } catch (error) {
       console.error('Failed to cancel booking:', error)
     }
+  }
+
+  const handleViewDetails = (booking: Booking) => {
+    setSelectedBooking(booking)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false)
+    setSelectedBooking(null)
   }
 
   return (
@@ -340,7 +353,8 @@ export default function UserBookingsPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200 bg-transparent text-red-500 border-red-500"
+                                    onClick={() => handleViewDetails(booking)}
+                                    className="hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200 bg-transparent text-blue-500 border-blue-500"
                                   >
                                     👁 Xem chi tiết
                                   </Button>
@@ -420,6 +434,13 @@ export default function UserBookingsPage() {
           </div>
         </div>
       </PageWrapper>
+
+      {/* Booking Detail Modal */}
+      <BookingDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        booking={selectedBooking}
+      />
     </>
   )
 }

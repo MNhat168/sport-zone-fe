@@ -85,15 +85,15 @@ export const NavbarComponent = () => {
                     <Link to="/tournaments" className={linkClass}>
                         Giải đấu
                     </Link>
-                    <Link to="/reviews" className={linkClass}>
+                    {/* <Link to="/reviews" className={linkClass}>
                         Đánh giá
-                    </Link>
+                    </Link> */}
                     <Link to="/about" className={linkClass}>
                         Về chúng tôi
                     </Link>
-                    <Link to="/contact" className={linkClass}>
+                    {/* <Link to="/contact" className={linkClass}>
                         Liên hệ
-                    </Link>
+                    </Link> */}
                     {auth.user?.role === "field_owner" && (
                         <Link to="/field-owner-dashboard" className={linkClass}>
                             Quản lý đặt sân
