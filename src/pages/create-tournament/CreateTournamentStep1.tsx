@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, Users, DollarSign, Trophy, Zap, Target, Users2, Hash } from "lucide-react"
+import { Calendar, Clock, Users, Trophy, Zap, Target, Users2, Hash } from "lucide-react"
 import { 
   getCategoryDisplayName, 
   getFormatDisplayName, 

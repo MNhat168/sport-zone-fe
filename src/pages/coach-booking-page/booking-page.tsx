@@ -168,6 +168,18 @@ const BookingPage = () => {
         const L: any = (window as any).L
         if (!L || !mapRef.current) return
 
+        // Fix default marker icon
+        const defaultIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+        L.Marker.prototype.options.icon = defaultIcon
+
         // Clear old markers
         markersRef.current.forEach(m => m.remove && m.remove())
         markersRef.current = []
@@ -190,7 +202,9 @@ const BookingPage = () => {
         // Coach markers
         mappedCoaches.forEach((c) => {
             if (c.latitude != null && c.longitude != null) {
-                const marker = L.marker([c.latitude, c.longitude]).addTo(mapRef.current)
+                const marker = L.marker([c.latitude, c.longitude], {
+                    icon: defaultIcon
+                }).addTo(mapRef.current)
                 const popupHtml = `
                     <div style="min-width: 160px">
                         <div style="font-weight:600;margin-bottom:4px">${c.name}</div>

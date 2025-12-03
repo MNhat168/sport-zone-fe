@@ -21,24 +21,7 @@ import {
   setSelectedTeam,
 } from './tournamentSlice';
 
-// Helper function to generate team colors
-const getTeamColor = (teamNumber: number): string => {
-  const colors = [
-    '#EF4444', // Red
-    '#3B82F6', // Blue
-    '#10B981', // Green
-    '#F59E0B', // Yellow
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#06B6D4', // Cyan
-    '#F97316', // Orange
-    '#84CC16', // Lime
-    '#6366F1', // Indigo
-    '#14B8A6', // Teal
-    '#F43F5E', // Rose
-  ];
-  return colors[(teamNumber - 1) % colors.length];
-};
+
 
 const mapApiTournamentToAppTournament = (apiTournament: any): import("./tournamentSlice").Tournament | null => {
   console.log('Raw API tournament data:', apiTournament); // Debug log
@@ -77,82 +60,6 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
     Math.ceil(participantsCount / teamSize),
     numberOfTeams
   );
-
-  // Also add a proper isFull check:
-  const isFull = participantsCount >= (apiTournament?.numberOfTeams || 0) * teamSize;
-
-  // Map teams with default values if not provided
-  const teams = Array.isArray(apiTournament?.teams)
-    ? apiTournament.teams.map((team: any) => ({
-      teamNumber: team.teamNumber || 0,
-      name: team.name || `Team ${team.teamNumber}`,
-      captain: team.captain || null,
-      members: team.members || [],
-      isFull: team.isFull || false,
-      color: team.color || getTeamColor(team.teamNumber || 0),
-      score: team.score || 0,
-      matchesPlayed: team.matchesPlayed || 0,
-      matchesWon: team.matchesWon || 0,
-      matchesLost: team.matchesLost || 0,
-      matchesDrawn: team.matchesDrawn || 0,
-      points: team.points || 0,
-      ranking: team.ranking || 0,
-    }))
-    : Array.from({ length: apiTournament?.numberOfTeams || 0 }).map((_, index) => ({
-      teamNumber: index + 1,
-      name: `Team ${index + 1}`,
-      captain: null,
-      members: [],
-      isFull: false,
-      color: getTeamColor(index + 1),
-      score: 0,
-      matchesPlayed: 0,
-      matchesWon: 0,
-      matchesLost: 0,
-      matchesDrawn: 0,
-      points: 0,
-      ranking: 0,
-    }));
-
-  // Map participants with team numbers
-  const participants = Array.isArray(apiTournament?.participants)
-    ? apiTournament.participants.map((p: any) => {
-      // Assign team numbers if not present (simple round-robin assignment)
-      let teamNumber = p.teamNumber;
-      if (!teamNumber && apiTournament.numberOfTeams && apiTournament.teamSize) {
-        const participantIndex = apiTournament.participants.indexOf(p);
-        teamNumber = Math.floor(participantIndex / apiTournament.teamSize) + 1;
-      }
-
-      return {
-        user: p.user || null,
-        registeredAt: p.registeredAt ?
-          (typeof p.registeredAt === 'string' ? p.registeredAt : p.registeredAt.toISOString()) : "",
-        teamNumber: teamNumber,
-        position: p.position || 'Player',
-      };
-    })
-    : [];
-
-  // Map schedule if exists
-  const schedule = Array.isArray(apiTournament?.schedule)
-    ? apiTournament.schedule.map((match: any) => ({
-      matchNumber: match.matchNumber || 0,
-      round: match.round || 'Round 1',
-      teamA: match.teamA || 0,
-      teamB: match.teamB || 0,
-      field: match.field || null,
-      startTime: match.startTime ?
-        (typeof match.startTime === 'string' ? match.startTime : match.startTime.toISOString()) : undefined,
-      endTime: match.endTime ?
-        (typeof match.endTime === 'string' ? match.endTime : match.endTime.toISOString()) : undefined,
-      scoreA: match.scoreA,
-      scoreB: match.scoreB,
-      winner: match.winner,
-      status: match.status || 'scheduled',
-      referee: match.referee || null,
-    }))
-    : [];
 
   return {
     _id: apiTournament?._id || apiTournament?.id || "",
@@ -200,26 +107,6 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
     teams: Array.isArray(apiTournament?.teams) ? apiTournament.teams : [],
     schedule: Array.isArray(apiTournament?.schedule) ? apiTournament.schedule : [],
   };
-};
-
-// Helper function to generate team assignments
-const generateTeamAssignments = (participants: any[], numberOfTeams: number, teamSize: number) => {
-  const assignments: any[] = [];
-
-  for (let i = 0; i < numberOfTeams; i++) {
-    const startIdx = i * teamSize;
-    const endIdx = startIdx + teamSize;
-    const teamParticipants = participants.slice(startIdx, endIdx);
-
-    assignments.push({
-      teamNumber: i + 1,
-      participants: teamParticipants.map((p: any) => p.user),
-      isFull: teamParticipants.length === teamSize,
-      remainingSpots: teamSize - teamParticipants.length,
-    });
-  }
-
-  return assignments;
 };
 
 export const fetchTournaments = createAsyncThunk(

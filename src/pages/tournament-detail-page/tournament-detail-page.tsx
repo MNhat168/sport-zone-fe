@@ -189,9 +189,6 @@ export default function TournamentDetailsPage() {
   const isParticipant = user && tournament.participants?.some(p => p.user?._id === user._id)
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
   const isFull = tournament.participants?.length >= (tournament.maxParticipants || 0);
-  const registrationProgress = tournament.maxParticipants > 0
-    ? (tournament.participants?.length || 0) / tournament.maxParticipants * 100
-    : 0;
   const daysUntilTournament = Math.ceil(
     (new Date(tournament.tournamentDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   )
@@ -222,23 +219,6 @@ export default function TournamentDetailsPage() {
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Invalid Date';
-    }
-  };
-
-  const calculateDaysUntil = (dateStr: string) => {
-    if (!dateStr) return NaN;
-
-    try {
-      const targetDate = new Date(dateStr);
-      const today = new Date();
-
-      if (isNaN(targetDate.getTime())) return NaN;
-
-      const timeDiff = targetDate.getTime() - today.getTime();
-      return Math.ceil(timeDiff / (1000 * 3600 * 24));
-    } catch (error) {
-      console.error('Error calculating days difference:', error);
-      return NaN;
     }
   };
 

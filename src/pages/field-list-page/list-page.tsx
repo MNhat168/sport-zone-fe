@@ -318,6 +318,18 @@ const FieldBookingPage = () => {
         const L: any = (window as any).L
         if (!L || !mapRef.current) return
 
+        // Fix default marker icon
+        const defaultIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+        L.Marker.prototype.options.icon = defaultIcon
+
         markersRef.current.forEach((m) => m.remove && m.remove())
         markersRef.current = []
         const bounds = L.latLngBounds([])
@@ -336,7 +348,9 @@ const FieldBookingPage = () => {
 
         filteredTransformedFields.forEach((f) => {
             if (f.latitude != null && f.longitude != null) {
-                const marker = L.marker([f.latitude, f.longitude]).addTo(mapRef.current)
+                const marker = L.marker([f.latitude, f.longitude], {
+                    icon: defaultIcon
+                }).addTo(mapRef.current)
                 const popupHtml = `
                     <div style="min-width: 160px">
                         <div style="font-weight:600;margin-bottom:4px">${f.name}</div>

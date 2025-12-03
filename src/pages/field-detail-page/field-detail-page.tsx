@@ -333,7 +333,19 @@ const FieldDetailPage: React.FC = () => {
                 }
                 if (cancelled || lat == null || lon == null) return
                 if (!markerRef.current) {
-                    markerRef.current = L.marker([lat, lon]).addTo(map)
+                    // Get default icon from prototype or create new one
+                    const defaultIcon = (L as any).Marker.prototype.options.icon || L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                    markerRef.current = L.marker([lat, lon], {
+                        icon: defaultIcon
+                    }).addTo(map)
                 } else {
                     markerRef.current.setLatLng([lat, lon])
                 }
