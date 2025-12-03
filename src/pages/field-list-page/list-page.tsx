@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getAllFields } from "../../features/field/fieldThunk"
 import { useGeolocation } from "../../hooks/useGeolocation"
 import { locationAPIService } from "../../utils/geolocation"
-import { Navigation, AlertCircle, Filter, Heart } from "lucide-react"
+import { Navigation, AlertCircle, Filter, Heart, DollarSign } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -48,17 +48,35 @@ const FieldBookingPage = () => {
             const coordinates = await getCoordinates()
             if (coordinates?.lat && coordinates?.lng) {
                 setUserLocation(coordinates as { lat: number; lng: number })
-                await getNearbyFields(coordinates.lat, coordinates.lng)
+                // Get current filters
+                const currentSportType = sportFilter !== 'all' ? sportFilter : undefined
+                const currentName = nameFilter?.trim() || undefined
+                const currentLocation = locationFilter?.trim() || undefined
+                await getNearbyFields(coordinates.lat, coordinates.lng, currentSportType, currentName, currentLocation)
             }
         } catch (error) {
             console.error('Error getting location:', error)
         }
     }
 
-    const getNearbyFields = async (lat: number, lng: number) => {
+    const getNearbyFields = async (
+        lat: number, 
+        lng: number, 
+        sportType?: string, 
+        name?: string, 
+        location?: string
+    ) => {
         setIsLoadingNearby(true)
         try {
-            const result = await locationAPIService.getNearbyFields({ latitude: lat, longitude: lng, radius: 10, limit: 20 })
+            const result = await locationAPIService.getNearbyFields({ 
+                latitude: lat, 
+                longitude: lng, 
+                radius: 10, 
+                limit: 20,
+                sportType: sportType as any,
+                name: name,
+                location: location
+            })
             if (result.success && result.data) {
                 setNearbyFields(result.data)
                 setIsNearbyMode(true)
@@ -133,9 +151,59 @@ const FieldBookingPage = () => {
         }
     }
 
+    // Apply client-side filters to nearby fields
+    const applyFiltersToNearbyFields = (fields: any[]) => {
+        let filtered = [...fields]
+
+        // Filter by name
+        if (nameFilter?.trim()) {
+            const nameLower = nameFilter.trim().toLowerCase()
+            filtered = filtered.filter((f) => {
+                const fieldName = (f.name || '').toLowerCase()
+                // Handle different location structures: string, object with address, or object with location.address
+                const fieldLocation = typeof f.location === 'string' 
+                    ? f.location.toLowerCase()
+                    : (f.location?.address || f.address || '').toLowerCase()
+                return fieldName.includes(nameLower) || fieldLocation.includes(nameLower)
+            })
+        }
+
+        // Filter by location
+        if (locationFilter?.trim()) {
+            const locationLower = locationFilter.trim().toLowerCase()
+            filtered = filtered.filter((f) => {
+                // Handle different location structures
+                const fieldLocation = typeof f.location === 'string' 
+                    ? f.location.toLowerCase()
+                    : (f.location?.address || f.address || '').toLowerCase()
+                return fieldLocation.includes(locationLower)
+            })
+        }
+
+        // Filter by sport type (already handled by API, but apply client-side as well for consistency)
+        if (sportFilter !== 'all') {
+            filtered = filtered.filter((f) => {
+                const fieldSportType = (f.sportType || '').toLowerCase()
+                return fieldSportType === sportFilter.toLowerCase()
+            })
+        }
+
+        // Filter by time (weekday) - this would need to be implemented based on field schedule
+        // For now, we'll skip this as it requires schedule data
+
+        // Sort by price
+        if (priceSort && priceSort !== 'none') {
+            filtered.sort((a, b) => {
+                const priceA = parseFloat((a.price || '0').toString().replace(/[^0-9.]/g, '')) || 0
+                const priceB = parseFloat((b.price || '0').toString().replace(/[^0-9.]/g, '')) || 0
+                return priceSort === 'asc' ? priceA - priceB : priceB - priceA
+            })
+        }
+
+        return filtered
+    }
+
     useEffect(() => {
-        if (isNearbyMode) return
-        
         setFilters((prev) => {
             const prevAny: any = prev
             const sameSort = (!!prevAny.sortBy && prevAny.sortBy === 'price') === !!priceSort &&
@@ -153,7 +221,7 @@ const FieldBookingPage = () => {
             return copy
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [priceSort, isNearbyMode])
+    }, [priceSort])
 
     const location = useLocation()
     const navigate = useNavigate()
@@ -174,6 +242,17 @@ const FieldBookingPage = () => {
             console.error('Error reading query params:', error)
         }
     }, [location.search])
+
+    // Re-call nearby API when filters change in nearby mode
+    useEffect(() => {
+        if (isNearbyMode && userLocation?.lat && userLocation?.lng) {
+            const currentSportType = sportFilter !== 'all' ? sportFilter : undefined
+            const currentName = nameFilter?.trim() || undefined
+            const currentLocation = locationFilter?.trim() || undefined
+            getNearbyFields(userLocation.lat, userLocation.lng, currentSportType, currentName, currentLocation)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sportFilter, nameFilter, locationFilter, isNearbyMode])
 
     useEffect(() => {
         setFilters((prev) => {
@@ -309,7 +388,12 @@ const FieldBookingPage = () => {
         }
     }
 
-    const transformedFields = ((isNearbyMode && nearbyFields.length > 0) ? nearbyFields : fields).map((field) => {
+    // Get fields to transform - apply filters to nearby fields if in nearby mode
+    const fieldsToTransform = isNearbyMode && nearbyFields.length > 0 
+        ? applyFiltersToNearbyFields(nearbyFields)
+        : fields
+
+    const transformedFields = fieldsToTransform.map((field) => {
         const rawLocation: any = (field as any).location ?? (field as any).address
         let locationText = 'Địa chỉ không xác định'
         if (typeof rawLocation === 'string' && rawLocation.trim()) {
@@ -364,6 +448,11 @@ const FieldBookingPage = () => {
         if (qLocation && !(f.location || '').toLowerCase().includes(qLocation)) return false
         return true
     })
+
+    // Calculate filtered nearby fields count for display
+    const filteredNearbyCount = isNearbyMode && nearbyFields.length > 0 
+        ? applyFiltersToNearbyFields(nearbyFields).length 
+        : 0
 
     useEffect(() => {
         ;(async () => {
@@ -576,6 +665,20 @@ const FieldBookingPage = () => {
                                                     </SelectContent>
                                                 </Select>
                                             </div>
+                                            <div className="flex items-center gap-2">
+                                                <DollarSign className="w-4 h-4 text-gray-600" />
+                                                <span className="text-sm text-gray-600 whitespace-nowrap">Giá:</span>
+                                                <Select value={priceSort || 'none'} onValueChange={(value) => setPriceSort(value === 'none' ? '' : value)}>
+                                                    <SelectTrigger className="w-[160px]">
+                                                        <SelectValue placeholder="Sắp xếp giá" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">Không sắp xếp</SelectItem>
+                                                        <SelectItem value="asc">Thấp → Cao</SelectItem>
+                                                        <SelectItem value="desc">Cao → Thấp</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             {!geolocationSupported && (
@@ -616,7 +719,10 @@ const FieldBookingPage = () => {
                                     </div>
                                     {isNearbyMode && nearbyFields.length > 0 && (
                                         <div className="mt-3 flex items-center gap-2">
-                                            <span className="text-sm text-gray-600">Đã tìm thấy {nearbyFields.length} sân gần vị trí của bạn</span>
+                                            <span className="text-sm text-gray-600">
+                                                Đã tìm thấy {filteredNearbyCount} sân gần vị trí của bạn
+                                                {filteredNearbyCount !== nearbyFields.length && ` (trong tổng số ${nearbyFields.length} sân)`}
+                                            </span>
                                         </div>
                                     )}
                                     {isFilteringByFavorites && favouriteSports.length > 0 && (
@@ -634,8 +740,6 @@ const FieldBookingPage = () => {
                                     onOpenChange={setIsSidebarOpen}
                                     timeFilter={timeFilter}
                                     onTimeFilterChange={setTimeFilter}
-                                    priceSort={priceSort}
-                                    onPriceSortChange={setPriceSort}
                                     hasActiveFilters={hasActiveFilters}
                                     onResetFilters={() => {
                                         setNameFilter('')

@@ -34,6 +34,8 @@ export interface NearbyFieldsRequest {
   radius?: number; // in kilometers, default 10
   limit?: number; // default 20
   sportType?: 'football' | 'tennis' | 'badminton' | 'pickleball' | 'basketball' | 'volleyball' | 'swimming' | 'gym';
+  name?: string; // filter by field name
+  location?: string; // filter by location address
 }
 
 export interface NearbyFieldsResponse {
@@ -104,7 +106,9 @@ class LocationAPIService {
         lng: request.longitude.toString(),
         radius: (request.radius || 10).toString(),
         limit: (request.limit || 20).toString(),
-        ...(request.sportType ? { sportType: request.sportType } : {})
+        ...(request.sportType ? { sportType: request.sportType } : {}),
+        ...(request.name ? { name: request.name } : {}),
+        ...(request.location ? { location: request.location } : {})
       } as Record<string, string>);
 
       // Match BE spec: GET /fields/nearby

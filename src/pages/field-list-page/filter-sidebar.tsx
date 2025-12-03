@@ -1,5 +1,5 @@
 import React from "react";
-import { Filter, Calendar, DollarSign, RotateCcw } from "lucide-react";
+import { Filter, Calendar, RotateCcw } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,6 @@ interface FilterSidebarProps {
     onOpenChange: (open: boolean) => void;
     timeFilter: string;
     onTimeFilterChange: (value: string) => void;
-    priceSort: string;
-    onPriceSortChange: (value: string) => void;
     hasActiveFilters: boolean;
     onResetFilters: () => void;
 }
@@ -20,8 +18,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onOpenChange,
     timeFilter,
     onTimeFilterChange,
-    priceSort,
-    onPriceSortChange,
     hasActiveFilters,
     onResetFilters,
 }) => {
@@ -59,26 +55,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 <SelectItem value="fri">Thứ 6</SelectItem>
                                 <SelectItem value="sat">Thứ 7</SelectItem>
                                 <SelectItem value="sun">Chủ nhật</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Sắp xếp theo giá Section */}
-                    <div className="bg-white rounded-xl border border-border shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-2.5">
-                            <div className="p-2 rounded-lg bg-green-50 border border-green-100">
-                                <DollarSign className="w-4 h-4 text-green-600" />
-                            </div>
-                            <label className="text-sm font-semibold text-foreground">Sắp xếp theo giá</label>
-                        </div>
-                        <Select value={priceSort || undefined} onValueChange={(value) => onPriceSortChange(value === 'none' ? '' : value)}>
-                            <SelectTrigger className="w-full h-10 border-border hover:border-primary/50 transition-colors">
-                                <SelectValue placeholder="Chọn cách sắp xếp" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">Không sắp xếp</SelectItem>
-                                <SelectItem value="asc">Giá: thấp → cao</SelectItem>
-                                <SelectItem value="desc">Giá: cao → thấp</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
