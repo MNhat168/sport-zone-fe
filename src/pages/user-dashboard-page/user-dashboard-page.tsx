@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
     Calendar,
     Wallet,
@@ -31,7 +32,8 @@ export default function UserDashboardPage() {
     const authUser = useAppSelector((state) => state.auth.user)
     const bookings = bookingState?.bookings || []
     const pagination = bookingState?.pagination || null
-    const loading = bookingState?.loading || false
+    const loadingBookings = bookingState?.loadingBookings || false
+    const loadingInvoices = bookingState?.loadingInvoices || false
     const error = bookingState?.error || null
     
     const [selectedTab, setSelectedTab] = useState<'court' | 'coaching'>('court')
@@ -113,6 +115,7 @@ export default function UserDashboardPage() {
             time: `${booking.startTime} - ${booking.endTime}`,
             price: formattedPrice,
             status: booking.status,
+            image: (field as any)?.images?.[0] || "-",
             color: booking.status === 'confirmed' ? 'from-green-500 to-green-600' : 
                    booking.status === 'pending' ? 'from-yellow-500 to-yellow-600' :
                    booking.status === 'cancelled' ? 'from-red-500 to-red-600' : 'from-gray-500 to-gray-600'
@@ -295,13 +298,13 @@ export default function UserDashboardPage() {
                     <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
                         <CardHeader>
                             <CardTitle className="text-xl font-semibold mb-2 text-start">Lịch hẹn hôm nay</CardTitle>
-                            <p className="text-muted-foreground text-start">Lịch trình cầu lông cá nhân của bạn</p>
+                            <p className="text-muted-foreground text-start">Lịch trình của bạn</p>
                         </CardHeader>
                         <div className="border-t border-gray-100" />
                         <CardContent>
                             {nextBooking ? (
                                 <div className="flex items-center gap-4 p-4 rounded-lg">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                                         <span className="text-white font-semibold text-sm text-start">
                                             {typeof nextBooking.field === 'object' && nextBooking.field 
                                                 ? nextBooking.field.name.split(' ').map(w => w[0]).join('')
@@ -366,9 +369,9 @@ export default function UserDashboardPage() {
                             <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
                                 <CardHeader className="flex flex-row items-center justify-between py-2">
                                     <div className="flex flex-col space-y-1">
-                                        <CardTitle className="text-xl font-semibold mb-2 text-start">Đặt sân của tôi</CardTitle>
+                                        <CardTitle className="text-xl font-semibold mb-2 text-start">Lịch sử đặt sân của bạn</CardTitle>
                                         <p className="text-muted-foreground text-start">
-                                            Đặt sân dễ dàng
+                                            
                                             {pagination && (
                                                 <span className="ml-2 text-sm">
                                                     ({pagination.total} booking{pagination.total !== 1 ? 's' : ''})
@@ -395,7 +398,7 @@ export default function UserDashboardPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4 text-start">
                                     <div className="border-t border-gray-100" />
-                                    {loading ? (
+                                    {loadingBookings ? (
                                         <div className="flex items-center justify-center py-8">
                                             <div className="text-muted-foreground">Đang tải...</div>
                                         </div>
@@ -413,15 +416,12 @@ export default function UserDashboardPage() {
                                             return (
                                                 <div key={booking._id}>
                                                     <div className="flex items-center gap-4 p-4">
-                                                        <div
-                                                            className={`w-12 h-12 bg-gradient-to-br ${formattedBooking.color} rounded-lg flex items-center justify-center`}
-                                                        >
-                                                            <span className="text-white font-semibold text-xs">
-                                                                {formattedBooking.name
-                                                                    .split(" ")
-                                                                    .map((w) => w[0])
-                                                                    .join("")}
-                                                            </span>
+                                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
+                                                            <img
+                                                                src={formattedBooking.image}
+                                                                alt={formattedBooking.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
                                                         </div>
                                                         <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
                                                             <div>
@@ -477,7 +477,7 @@ export default function UserDashboardPage() {
                         {/* Right Column */}
                         <div className="lg:col-span-2 space-y-6">
                             {/* Wallet Balance */}
-                            <Card className="bg-emerald-700 text-white">
+                            {/* <Card className="bg-emerald-700 text-white">
                                 <CardContent>
                                     <div className="flex items-center justify-between mb-2">
                                         <div>
@@ -493,10 +493,10 @@ export default function UserDashboardPage() {
                                         </Button>
                                     </div>
                                 </CardContent>
-                            </Card>
+                            </Card> */}
 
                             {/* Upcoming Appointment */}
-                            <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
+                            {/* <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
                                 <CardHeader className="flex flex-row items-center justify-between">
                                     <div className="flex flex-col space-y-2">
                                         <CardTitle className="text-start">Lịch hẹn sắp tới</CardTitle>
@@ -550,7 +550,7 @@ export default function UserDashboardPage() {
                                         )}
                                     </div>
                                 </CardContent>
-                            </Card>
+                            </Card> */}
 
                             {/* My Favourites */}
                             <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
@@ -574,7 +574,7 @@ export default function UserDashboardPage() {
                                             <div key={`favorite-${index}`}>
                                                 <div className="flex items-center gap-3 p-3 rounded-lg">
                                                     <div
-                                                        className={`w-8 h-8 bg-gradient-to-br ${favorite.color} rounded-lg flex items-center justify-center`}
+                                                        className={`w-8 h-8 bg-linear-to-br ${favorite.color} rounded-lg flex items-center justify-center`}
                                                     >
                                                         <span className="text-white font-semibold text-xs">
                                                             {favorite.name
@@ -616,100 +616,191 @@ export default function UserDashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="border-t border-gray-100 pt-4">
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-5 gap-4 text-sm font-bold bg-gray-100 text-gray-700 pb-2 px-4 py-3">
-                                        <div className="text-start">Tên sân</div>
-                                        <div className="text-start">Ngày & Giờ</div>
-                                        <div className="text-start">Thanh toán</div>
-                                        <div className="text-start">Đã thanh toán</div>
-                                        <div className="text-start">Trạng thái</div>
-                                    </div>
-                                    {bookingState.loading ? (
-                                        <div className="flex items-center justify-center py-8">
-                                            <div className="text-muted-foreground">Đang tải hóa đơn...</div>
-                                        </div>
-                                    ) : bookingState.error ? (
-                                        <div className="flex items-center justify-center py-8">
-                                            <div className="text-red-600">Lỗi tải hóa đơn</div>
-                                        </div>
-                                    ) : ( (bookingState.invoices || []).length === 0 ? (
-                                        <div className="flex items-center justify-center py-8">
-                                            <div className="text-muted-foreground">Không có hóa đơn gần đây</div>
-                                        </div>
-                                    ) : (
-                                        (bookingState.invoices || []).map((invoice: any, index: number) => {
-                                            const paidOnDate = invoice.paidOn ? new Date(invoice.paidOn).toLocaleDateString('vi-VN') : ''
-                                            const paidOnTime = invoice.paidOn ? new Date(invoice.paidOn).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''
-                                            const mapped = {
-                                                id: invoice.bookingId || invoice._id || invoice.bookingId,
-                                                name: invoice.name || invoice.fieldName || 'Unknown Field',
-                                                court: invoice.court || '',
-                                                date: invoice.date || '',
-                                                time: invoice.time || '',
-                                                payment: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.payment ?? 0),
-                                                paidOnDate,
-                                                paidOnTime,
-                                                paid: !!invoice.paidOn,
-                                                color: invoice.paidOn ? 'from-green-500 to-green-600' : 'from-yellow-500 to-yellow-600'
-                                            }
-                                            return (
-                                                <div key={mapped.id}>
-                                                    <div className="grid grid-cols-5 gap-4 items-center py-3">
-                                                        <div className="flex items-center gap-3">
-                                                            <div
-                                                                className={`w-8 h-8 bg-gradient-to-br ${mapped.color} rounded-lg flex items-center justify-center`}
-                                                            >
-                                                                <span className="text-white font-semibold text-xs">
-                                                                    {mapped.name
-                                                                        .split(" ")
-                                                                        .map((w: string) => w[0])
-                                                                        .join("")}
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b border-gray-200">
+                                                <th className="text-left py-4 px-2 font-medium text-gray-700">Tên sân</th>
+                                                <th className="text-left py-4 px-2 font-medium text-gray-700">Ngày & Giờ</th>
+                                                <th className="text-left py-4 px-2 font-medium text-gray-700">Thanh toán</th>
+                                                <th className="text-left py-4 px-2 font-medium text-gray-700">Đã thanh toán</th>
+                                                <th className="text-left py-4 px-2 font-medium text-gray-700">Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {loadingInvoices ? (
+                                                <tr>
+                                                    <td colSpan={5} className="py-8 text-center">
+                                                        <div className="text-gray-500">Đang tải hóa đơn...</div>
+                                                    </td>
+                                                </tr>
+                                            ) : bookingState.error ? (
+                                                <tr>
+                                                    <td colSpan={5} className="py-8 text-center">
+                                                        <div className="text-red-600">Lỗi tải hóa đơn</div>
+                                                    </td>
+                                                </tr>
+                                            ) : (bookingState.invoices || []).length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="py-8 text-center">
+                                                        <div className="text-gray-500">Không có hóa đơn gần đây</div>
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                (bookingState.invoices || []).map((invoice: any) => {
+                                                    const paidOnDate = invoice.paidOn
+                                                        ? new Date(invoice.paidOn).toLocaleDateString('vi-VN')
+                                                        : ''
+                                                    const paidOnTime = invoice.paidOn
+                                                        ? new Date(invoice.paidOn).toLocaleTimeString('vi-VN', {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })
+                                                        : ''
+
+                                                    const mapped = {
+                                                        id: invoice.bookingId || invoice._id || invoice.bookingId,
+                                                        name: invoice.name || invoice.fieldName || 'Unknown Field',
+                                                        court: invoice.court || '',
+                                                        date: invoice.date || '',
+                                                        time: invoice.time || '',
+                                                        image: invoice.fieldImage || invoice.image || "-",
+                                                        payment: new Intl.NumberFormat('vi-VN', {
+                                                            style: 'currency',
+                                                            currency: 'VND',
+                                                        }).format(invoice.payment ?? 0),
+                                                        paidOnDate,
+                                                        paidOnTime,
+                                                        paid: !!invoice.paidOn,
+                                                    }
+
+                                                    return (
+                                                        <tr
+                                                            key={mapped.id}
+                                                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                                        >
+                                                            <td className="py-4 px-2">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
+                                                                        <img
+                                                                            src={mapped.image}
+                                                                            alt={mapped.name}
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="text-start">
+                                                                        <p className="font-medium text-sm">{mapped.name}</p>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {mapped.court}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4 px-2">
+                                                                <div className="text-sm">
+                                                                    <div className="font-medium text-gray-900">
+                                                                        {mapped.date}
+                                                                    </div>
+                                                                    <div className="text-gray-500">{mapped.time}</div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4 px-2">
+                                                                <span className="font-medium text-gray-900">
+                                                                    {mapped.payment}
                                                                 </span>
-                                                            </div>
-                                                            <div className="text-start">
-                                                                <p className="font-medium text-sm">{mapped.name}</p>
-                                                                <p className="text-xs text-muted-foreground">{mapped.court}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-start">
-                                                            <p className="text-sm">{mapped.date}</p>
-                                                            <p className="text-xs text-muted-foreground">{mapped.time}</p>
-                                                        </div>
-                                                        <div className="font-semibold text-start">{mapped.payment}</div>
-                                                        <div className="text-start">
-                                                            <p className="text-sm">{mapped.paidOnDate || ''}</p>
-                                                            <p className="text-xs text-muted-foreground">{mapped.paidOnTime || ''}</p>
-                                                        </div>
-                                                        <div className="text-start">
-                                                            <Badge variant="secondary" className={mapped.paid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}>
-                                                                {mapped.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                    {index < (bookingState.invoices || []).length - 1 && (
-                                                        <div className="border-t border-gray-100" />
-                                                    )}
-                                                </div>
-                                            )
-                                        })
-                                    ))}
+                                                            </td>
+                                                            <td className="py-4 px-2">
+                                                                <div className="text-sm">
+                                                                    <div className="text-gray-900">
+                                                                        {mapped.paidOnDate || '--'}
+                                                                    </div>
+                                                                    <div className="text-xs text-muted-foreground">
+                                                                        {mapped.paidOnTime || ''}
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4 px-2">
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className={
+                                                                        mapped.paid
+                                                                            ? 'bg-green-100 text-green-700'
+                                                                            : 'bg-yellow-100 text-yellow-700'
+                                                                    }
+                                                                >
+                                                                    {mapped.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                                                                </Badge>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </CardContent>
 
                         {/* Pagination controls for invoices */}
                         {bookingState.invoicesPagination && (
-                            <div className="flex items-center justify-end gap-2 mt-3">
-                                <select value={invoicesLimit} onChange={(e) => { setInvoicesLimit(Number(e.target.value)); setInvoicesPage(1); }} className="border rounded px-2 py-1">
-                                    <option value={5}>5</option>
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                </select>
-                                <Button onClick={() => setInvoicesPage(1)} disabled={invoicesPage === 1}>First</Button>
-                                <Button onClick={() => setInvoicesPage(prev => Math.max(1, prev - 1))} disabled={!bookingState.invoicesPagination?.hasPrevPage}>Prev</Button>
-                                <div className="px-2">{invoicesPage} / {bookingState.invoicesPagination.totalPages}</div>
-                                <Button onClick={() => setInvoicesPage(prev => Math.min((bookingState.invoicesPagination?.totalPages || 1), prev + 1))} disabled={!bookingState.invoicesPagination?.hasNextPage}>Next</Button>
-                                <Button onClick={() => setInvoicesPage(bookingState.invoicesPagination?.totalPages || 1)} disabled={invoicesPage === (bookingState.invoicesPagination?.totalPages || 1)}>Last</Button>
+                            <div className="flex items-center justify-between mt-6">
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-600">Hiển thị</span>
+                                    <Select
+                                        value={invoicesLimit.toString()}
+                                        onValueChange={(value) => {
+                                            setInvoicesLimit(parseInt(value))
+                                            setInvoicesPage(1)
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-16">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <span className="text-sm text-gray-600">mỗi trang</span>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
+                                        disabled={!bookingState.invoicesPagination.hasPrevPage}
+                                        onClick={() =>
+                                            setInvoicesPage((prev) => Math.max(1, prev - 1))
+                                        }
+                                    >
+                                        &lt;
+                                    </Button>
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                    >
+                                        {invoicesPage}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
+                                        disabled={!bookingState.invoicesPagination.hasNextPage}
+                                        onClick={() =>
+                                            setInvoicesPage((prev) =>
+                                                Math.min(
+                                                    bookingState.invoicesPagination?.totalPages || 1,
+                                                    prev + 1,
+                                                ),
+                                            )
+                                        }
+                                    >
+                                        &gt;
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </Card>

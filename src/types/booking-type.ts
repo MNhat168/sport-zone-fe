@@ -148,7 +148,10 @@ export interface BookingState {
     invoices: Invoice[];
     invoicesPagination: PaginationInfo | null;
     upcomingBooking?: UpcomingBooking | null;
-    loading: boolean;
+    // Separate loading flags for better UI control
+    loadingBookings: boolean;
+    loadingInvoices: boolean;
+    loadingUpcoming: boolean;
     error: ErrorResponse | null;
 }
 

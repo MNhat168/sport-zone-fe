@@ -22,7 +22,9 @@ const initialState: BookingState = {
     invoices: [],
     invoicesPagination: null,
     upcomingBooking: null,
-    loading: false,
+    loadingBookings: false,
+    loadingInvoices: false,
+    loadingUpcoming: false,
     error: null,
 };
 
@@ -56,7 +58,7 @@ const bookingSlice = createSlice({
         // Create Field Booking
         builder
             .addCase(createFieldBooking.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 state.currentBooking = action.payload;
                 state.bookings.push(action.payload);
             })
@@ -65,7 +67,7 @@ const bookingSlice = createSlice({
         // Cancel Field Booking
         builder
             .addCase(cancelFieldBooking.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 // Update booking in the list
                 const index = state.bookings.findIndex(booking => booking._id === action.payload._id);
                 if (index !== -1) {
@@ -81,7 +83,7 @@ const bookingSlice = createSlice({
         // Create Session Booking
         builder
             .addCase(createSessionBooking.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 state.sessionBooking = action.payload;
                 // Add both bookings to the list
                 state.bookings.push(action.payload.fieldBooking);
@@ -92,7 +94,7 @@ const bookingSlice = createSlice({
         // Cancel Session Booking
         builder
             .addCase(cancelSessionBooking.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 state.sessionBooking = action.payload;
                 // Update bookings in the list
                 const fieldIndex = state.bookings.findIndex(booking => booking._id === action.payload.fieldBooking._id);
@@ -109,7 +111,7 @@ const bookingSlice = createSlice({
         // Get Coach Bookings
         builder
             .addCase(getCoachBookings.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 state.bookings = action.payload;
             })
             
@@ -117,7 +119,7 @@ const bookingSlice = createSlice({
         // Get My Bookings
         builder
             .addCase(getMyBookings.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 state.bookings = action.payload.bookings;
                 state.pagination = action.payload.pagination;
             })
@@ -125,7 +127,7 @@ const bookingSlice = createSlice({
         // Get My Invoices
         builder
             .addCase(getMyInvoices.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingInvoices = false;
                 state.invoices = action.payload.invoices;
                 state.invoicesPagination = action.payload.pagination;
             })
@@ -133,7 +135,7 @@ const bookingSlice = createSlice({
         // Get Upcoming Booking
         builder
             .addCase(getUpcomingBooking.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingUpcoming = false;
                 state.upcomingBooking = action.payload || null;
             })
             
@@ -141,7 +143,7 @@ const bookingSlice = createSlice({
         // Get Coach Schedule
         builder
             .addCase(getCoachSchedule.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 state.coachSchedules = action.payload;
             })
             
@@ -149,22 +151,57 @@ const bookingSlice = createSlice({
         // Set Coach Holiday
         builder
             .addCase(setCoachHoliday.fulfilled, (state) => {
-                state.loading = false;
+                state.loadingBookings = false;
                 // Refresh coach schedules might be needed here
             })
             
-            // Matchers: unify pending/rejected handling like authentication slice
+            // Matchers: handle pending/rejected per group of thunks
             .addMatcher(
-                (action) => action.type.startsWith("booking/") && action.type.endsWith("/pending"),
+                (action) =>
+                    action.type.startsWith("booking/") &&
+                    action.type.endsWith("/pending") &&
+                    [
+                        createFieldBooking.typePrefix,
+                        cancelFieldBooking.typePrefix,
+                        createSessionBooking.typePrefix,
+                        cancelSessionBooking.typePrefix,
+                        getCoachBookings.typePrefix,
+                        getMyBookings.typePrefix,
+                        getCoachSchedule.typePrefix,
+                        setCoachHoliday.typePrefix,
+                    ].some((prefix) => action.type.startsWith(prefix)),
                 (state) => {
-                    state.loading = true;
+                    state.loadingBookings = true;
+                    state.error = null;
+                }
+            )
+            .addMatcher(
+                (action) =>
+                    action.type.startsWith("booking/") &&
+                    action.type.endsWith("/pending") &&
+                    [getMyInvoices.typePrefix].some((prefix) => action.type.startsWith(prefix)),
+                (state) => {
+                    state.loadingInvoices = true;
+                    state.error = null;
+                }
+            )
+            .addMatcher(
+                (action) =>
+                    action.type.startsWith("booking/") &&
+                    action.type.endsWith("/pending") &&
+                    [getUpcomingBooking.typePrefix].some((prefix) => action.type.startsWith(prefix)),
+                (state) => {
+                    state.loadingUpcoming = true;
                     state.error = null;
                 }
             )
             .addMatcher(
                 (action) => action.type.startsWith("booking/") && action.type.endsWith("/rejected"),
                 (state, action: PayloadAction<ErrorResponse>) => {
-                    state.loading = false;
+                    // On error, stop all loading flags
+                    state.loadingBookings = false;
+                    state.loadingInvoices = false;
+                    state.loadingUpcoming = false;
                     state.error = action.payload || { message: "Unknown error", status: "500" };
                 }
             );

@@ -20,10 +20,10 @@ export default function UserBookingsPage() {
   const bookingState = useAppSelector((state) => state?.booking)
   const bookings = bookingState?.bookings || []
   const pagination = bookingState?.pagination || null
-  const loading = bookingState?.loading || false
+  const loadingBookings = bookingState?.loadingBookings || false
   const error = bookingState?.error || null
 
-  const [activeTab, setActiveTab] = useState("upcoming")
+  const [activeTab, setActiveTab] = useState<"confirmed" | "pending" | "cancelled">("confirmed")
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCourt, setFilterCourt] = useState("")
   const [viewType, setViewType] = useState("courts")
@@ -40,9 +40,9 @@ export default function UserBookingsPage() {
     }
 
     // Map activeTab to API status
-    if (activeTab === "upcoming") {
+    if (activeTab === "pending") {
       params.status = "pending"
-    } else if (activeTab === "completed") {
+    } else if (activeTab === "confirmed") {
       params.status = "confirmed"
     } else if (activeTab === "cancelled") {
       params.status = "cancelled"
@@ -137,10 +137,10 @@ export default function UserBookingsPage() {
     try {
       await dispatch(cancelFieldBooking({ id: bookingId })).unwrap()
       // Refresh bookings after cancellation
-      dispatch(getMyBookings({ 
-        page: currentPage, 
+      dispatch(getMyBookings({
+        page: currentPage,
         limit: pageSize,
-        status: activeTab === "upcoming" ? "pending" : undefined,
+        status: activeTab,
         type: viewType === "courts" ? "field" : "coach"
       }))
     } catch (error) {
@@ -163,28 +163,20 @@ export default function UserBookingsPage() {
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 space-y-4 lg:space-y-0">
                 <div className="flex space-x-1">
                   <Button
-                    variant={activeTab === "upcoming" ? "default" : "outline"}
-                    onClick={() => setActiveTab("upcoming")}
-                    className={`${activeTab === "upcoming" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                    variant={activeTab === "confirmed" ? "default" : "outline"}
+                    onClick={() => setActiveTab("confirmed")}
+                    className={`${activeTab === "confirmed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                       } transition-all duration-200`}
                   >
-                    Sắp tới
+                    Đã đặt
                   </Button>
                   <Button
-                    variant={activeTab === "completed" ? "default" : "outline"}
-                    onClick={() => setActiveTab("completed")}
-                    className={`${activeTab === "completed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                    variant={activeTab === "pending" ? "default" : "outline"}
+                    onClick={() => setActiveTab("pending")}
+                    className={`${activeTab === "pending" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                       } transition-all duration-200`}
                   >
-                    Hoàn thành
-                  </Button>
-                  <Button
-                    variant={activeTab === "ongoing" ? "default" : "outline"}
-                    onClick={() => setActiveTab("ongoing")}
-                    className={`${activeTab === "ongoing" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
-                      } transition-all duration-200`}
-                  >
-                    Đang diễn ra
+                    Đang chờ
                   </Button>
                   <Button
                     variant={activeTab === "cancelled" ? "default" : "outline"}
@@ -292,7 +284,7 @@ export default function UserBookingsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {loading ? (
+                        {loadingBookings ? (
                           <tr>
                             <td colSpan={7} className="py-8 text-center">
                               <div className="text-gray-500">Đang tải...</div>

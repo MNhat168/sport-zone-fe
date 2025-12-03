@@ -72,7 +72,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
     const user = useAppSelector((state) => state.user.user);
-    const bookingLoading = useAppSelector((state) => state.booking.loading);
+    const bookingLoading = useAppSelector((state) => state.booking.loadingBookings);
     const bookingError = useAppSelector((state) => state.booking.error);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
     

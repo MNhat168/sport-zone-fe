@@ -136,19 +136,6 @@ export default function FieldOwnerRegistrationStatusPage() {
         }
     };
 
-    const getOwnerTypeText = (type?: string) => {
-        switch (type) {
-            case 'individual':
-                return 'Cá nhân';
-            case 'business':
-                return 'Doanh nghiệp';
-            case 'household':
-                return 'Hộ kinh doanh';
-            default:
-                return 'Không xác định';
-        }
-    };
-
     const getNextSteps = () => {
         switch (currentRequest.status) {
             case 'approved':
@@ -213,11 +200,6 @@ export default function FieldOwnerRegistrationStatusPage() {
                                         <CardTitle className="text-2xl mb-2">Trạng thái đăng ký</CardTitle>
                                         <div className="flex items-center gap-2">
                                             {getStatusBadge()}
-                                            {currentRequest.ownerType && (
-                                                <Badge variant="outline">
-                                                    {getOwnerTypeText(currentRequest.ownerType)}
-                                                </Badge>
-                                            )}
                                         </div>
                                     </div>
                                 </div>

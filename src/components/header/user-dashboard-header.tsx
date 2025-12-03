@@ -50,12 +50,26 @@ export function UserDashboardHeader() {
     }
     
     const headerInfo = getHeaderInfo(location.pathname)
-    
+
+    // Use shared banner image from public/banner.img
+    const backgroundImage = "/banner.img/sport_banner_2.jpg"
+
     return (
-        <div className="bg-gradient-to-r from-teal-800 via-blue-800 to-purple-800 text-white">
-            <div className="max-w-[1320px] mx-auto px-12 py-12">
-                <h1 className="text-4xl font-bold text-start mb-4">{headerInfo.title}</h1>
-                <div className="flex items-center gap-2 text-sm opacity-90">
+        <div className="relative text-white">
+            {/* Background image */}
+            <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${backgroundImage})` }}
+            />
+            {/* Dark overlay to keep text readable */}
+            <div className="absolute inset-0 bg-black/60" />
+
+            {/* Content */}
+            <div className="relative max-w-[1320px] mx-auto px-12 py-12">
+                <h1 className="text-4xl font-bold text-start mb-4 drop-shadow-md">
+                    {headerInfo.title}
+                </h1>
+                <div className="flex items-center gap-2 text-sm opacity-90 drop-shadow">
                     {headerInfo.breadcrumb.map((item, index) => (
                         <div key={index} className="flex items-center gap-2">
                             <span>{item}</span>

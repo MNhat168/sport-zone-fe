@@ -44,8 +44,8 @@ export const GET_NEARBY_FIELDS_API = (
 export const GET_FIELDS_BY_LOCATION_API = (location: string) => `${BASE_URL}/fields?location=${encodeURIComponent(location)}`;
 
 // Field owner endpoints
-export const GET_MY_FIELDS_API = `${BASE_URL}/fields/my-fields`;
-export const GET_MY_FIELDS_BOOKINGS_API = `${BASE_URL}/fields/my-fields/bookings`;
+export const GET_MY_FIELDS_API = `${BASE_URL}/field-owner/fields`;
+export const GET_MY_FIELDS_BOOKINGS_API = `${BASE_URL}/field-owner/bookings`;
 
 // Field owner note-approval endpoints
 export const OWNER_BOOKING_DETAIL_API = (bookingId: string) => `${BASE_URL}/owners/bookings/${bookingId}`;
