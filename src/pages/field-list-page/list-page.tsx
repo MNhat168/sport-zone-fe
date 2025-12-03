@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getAllFields } from "../../features/field/fieldThunk"
 import { useGeolocation } from "../../hooks/useGeolocation"
 import { locationAPIService } from "../../utils/geolocation"
-import { Navigation, AlertCircle, Filter } from "lucide-react"
+import { Navigation, AlertCircle, Filter, Heart } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -20,8 +20,11 @@ const FieldBookingPage = () => {
     const fieldsListRef = useRef<HTMLDivElement>(null)
     const dispatch = useAppDispatch()
     const { fields, loading, error, pagination } = useAppSelector((state) => state.field)
+    const authUser = useAppSelector((state) => state.auth.user)
+    const favouriteSports = authUser?.favouriteSports || []
     
     const [filters, setFilters] = useState({ location: "", type: "", page: 1, limit: 10 })
+    const [isFilteringByFavorites, setIsFilteringByFavorites] = useState(false)
     const { loading: geolocationLoading, supported: geolocationSupported, getCoordinates } = useGeolocation()
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
     const [nearbyFields, setNearbyFields] = useState<any[]>([])
@@ -81,6 +84,54 @@ const FieldBookingPage = () => {
         }, 500)
         return () => clearTimeout(timeoutId)
     }, [dispatch, filters, isNearbyMode])
+
+    // Auto-filter by favorite sports on mount
+    useEffect(() => {
+        if (
+            authUser && 
+            favouriteSports.length > 0 && 
+            !isFilteringByFavorites &&
+            sportFilter === 'all' &&
+            !nameFilter &&
+            !locationFilter &&
+            !isNearbyMode
+        ) {
+            // Auto-enable favorite sports filter
+            setIsFilteringByFavorites(true)
+            setFilters((prev) => ({
+                ...prev,
+                sportTypes: favouriteSports,
+                page: 1
+            } as any))
+        }
+    }, [authUser, favouriteSports])
+
+    // Toggle favorite sports filter
+    const handleToggleFavoriteFilter = () => {
+        if (isFilteringByFavorites) {
+            // Turn off favorite filter
+            setIsFilteringByFavorites(false)
+            setSportFilter('all')
+            setFilters((prev) => {
+                const copy: any = { ...prev }
+                delete copy.sportTypes
+                delete copy.sportType
+                copy.page = 1
+                return copy
+            })
+        } else {
+            // Turn on favorite filter
+            if (favouriteSports.length > 0) {
+                setIsFilteringByFavorites(true)
+                setSportFilter('all')
+                setFilters((prev) => ({
+                    ...prev,
+                    sportTypes: favouriteSports,
+                    page: 1
+                } as any))
+            }
+        }
+    }
 
     useEffect(() => {
         setFilters((prev) => {
@@ -146,13 +197,26 @@ const FieldBookingPage = () => {
             } else {
                 delete copy.name
             }
-            if (sportFilter !== 'all') {
+            
+            // Handle sport filtering - priority: manual selection > favorites
+            if (isFilteringByFavorites && favouriteSports.length > 0 && sportFilter === 'all') {
+                // Use favorite sports
+                copy.sportTypes = favouriteSports
+                delete copy.sportType
+                delete copy.type
+            } else if (sportFilter !== 'all') {
+                // User selected specific sport - override favorites
                 copy.type = sportFilter
                 copy.sportType = sportFilter
+                delete copy.sportTypes
+                setIsFilteringByFavorites(false)
             } else {
+                // No filter
                 delete copy.type
                 delete copy.sportType
+                delete copy.sportTypes
             }
+            
             if (timeFilter !== 'any') {
                 copy.weekday = timeFilter
             } else {
@@ -166,7 +230,7 @@ const FieldBookingPage = () => {
             copy.page = 1
             return copy
         })
-    }, [nameFilter, sportFilter, timeFilter, locationFilter])
+    }, [nameFilter, sportFilter, timeFilter, locationFilter, isFilteringByFavorites, favouriteSports])
 
     const hasActiveFilters = !!(nameFilter || (sportFilter !== 'all') || (timeFilter !== 'any') || locationFilter || (priceSort && priceSort !== 'none') || isNearbyMode)
 
@@ -430,7 +494,18 @@ const FieldBookingPage = () => {
                                                     )}
                                                 </button>
                                             )}
-                                            <Input 
+                                            {authUser && favouriteSports.length > 0 && (
+                                                <Button
+                                                    variant={isFilteringByFavorites ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={handleToggleFavoriteFilter}
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <Heart className={`w-4 h-4 ${isFilteringByFavorites ? 'fill-current' : ''}`} />
+                                                    {isFilteringByFavorites ? 'Đang hiển thị sân yêu thích' : 'Sân yêu thích của tôi'}
+                                                </Button>
+                                            )}
+                                            <Input
                                                 ref={nameInputRef}
                                                 className="w-[140px]" 
                                                 placeholder="Tên sân" 
@@ -510,6 +585,14 @@ const FieldBookingPage = () => {
                                     {isNearbyMode && nearbyFields.length > 0 && (
                                         <div className="mt-3 flex items-center gap-2">
                                             <span className="text-sm text-gray-600">Đã tìm thấy {nearbyFields.length} sân gần vị trí của bạn</span>
+                                        </div>
+                                    )}
+                                    {isFilteringByFavorites && favouriteSports.length > 0 && (
+                                        <div className="mt-3 flex items-center gap-2">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700">
+                                                <Heart className="w-4 h-4 fill-current" />
+                                                <span>Đang hiển thị {favouriteSports.length} môn thể thao yêu thích: {favouriteSports.join(', ')}</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

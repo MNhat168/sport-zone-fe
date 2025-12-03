@@ -21,7 +21,6 @@ import {
   Instagram,
   Link,
 } from "lucide-react";
-import Image from "next/image";
 
 export default function CoachBioPage() {
   const [activeTab, setActiveTab] = useState("Short Bio");
@@ -195,11 +194,9 @@ export default function CoachBioPage() {
                   }`}
                 >
                   <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <Image
+                    <img
                       src={item.image || "/placeholder.svg"}
                       alt={item.title}
-                      width={200}
-                      height={200}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
@@ -245,12 +242,10 @@ export default function CoachBioPage() {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <Image
+                    <img
                       src={review.avatar || "/placeholder.svg"}
                       alt={review.name}
-                      width={40}
-                      height={40}
-                      className="rounded-full hover:scale-110 transition-transform duration-300"
+                      className="w-10 h-10 rounded-full hover:scale-110 transition-transform duration-300"
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -321,12 +316,10 @@ export default function CoachBioPage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-start gap-6">
             <div className="relative animate-in zoom-in-50 duration-700 delay-200">
-              <Image
+              <img
                 src={coach.image || "/placeholder.svg"}
                 alt={coach.name}
-                width={120}
-                height={120}
-                className="rounded-full border-4 border-white shadow-lg hover:scale-105 transition-transform duration-300"
+                className="w-30 h-30 rounded-full border-4 border-white shadow-lg hover:scale-105 transition-transform duration-300"
               />
             </div>
 

@@ -83,7 +83,18 @@ export const getAllFields = createAsyncThunk<
         const queryParams = new URLSearchParams();
         if (params.name) queryParams.append("name", params.name);
         if (params.location) queryParams.append("location", params.location);
-        if (params.sportType) queryParams.append("sportType", params.sportType);
+        
+        // Priority: sportTypes > sportType
+        if (params.sportTypes && params.sportTypes.length > 0) {
+            // Send as multiple query params: sportTypes=football&sportTypes=badminton
+            params.sportTypes.forEach(sport => {
+                queryParams.append("sportTypes", sport);
+            });
+        } else if (params.sportType) {
+            // Backward compatible: single sport
+            queryParams.append("sportType", params.sportType);
+        }
+        
         if ((params as any).sortBy) queryParams.append("sortBy", (params as any).sortBy);
         if ((params as any).sortOrder) queryParams.append("sortOrder", (params as any).sortOrder);
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Filter } from "lucide-react";
+import { Filter, Calendar, DollarSign, RotateCcw } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -27,18 +27,27 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 }) => {
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-[320px] sm:w-[400px]">
-                <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                        <Filter className="w-5 h-5" />
-                        Bộ lọc nâng cao
+            <SheetContent side="right" className="w-[320px] sm:w-[400px] bg-background-secondary">
+                <SheetHeader className="border-b border-border pb-4">
+                    <SheetTitle className="flex items-center gap-2.5 text-lg">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                            <Filter className="w-5 h-5 text-primary" />
+                        </div>
+                        <span className="font-semibold text-foreground">Bộ lọc nâng cao</span>
                     </SheetTitle>
                 </SheetHeader>
-                <div className="mt-6 space-y-6">
-                    <div className="space-y-3">
-                        <label className="text-sm font-medium text-gray-700">Ngày trong tuần</label>
+                
+                <div className="mt-6 space-y-5 overflow-y-auto flex-1">
+                    {/* Ngày trong tuần Section */}
+                    <div className="bg-white rounded-xl border border-border shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
+                                <Calendar className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <label className="text-sm font-semibold text-foreground">Ngày trong tuần</label>
+                        </div>
                         <Select value={timeFilter} onValueChange={onTimeFilterChange}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full h-10 border-border hover:border-primary/50 transition-colors">
                                 <SelectValue placeholder="Chọn ngày" />
                             </SelectTrigger>
                             <SelectContent>
@@ -54,10 +63,16 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         </Select>
                     </div>
 
-                    <div className="space-y-3">
-                        <label className="text-sm font-medium text-gray-700">Sắp xếp theo giá</label>
+                    {/* Sắp xếp theo giá Section */}
+                    <div className="bg-white rounded-xl border border-border shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 rounded-lg bg-green-50 border border-green-100">
+                                <DollarSign className="w-4 h-4 text-green-600" />
+                            </div>
+                            <label className="text-sm font-semibold text-foreground">Sắp xếp theo giá</label>
+                        </div>
                         <Select value={priceSort || undefined} onValueChange={(value) => onPriceSortChange(value === 'none' ? '' : value)}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full h-10 border-border hover:border-primary/50 transition-colors">
                                 <SelectValue placeholder="Chọn cách sắp xếp" />
                             </SelectTrigger>
                             <SelectContent>
@@ -68,15 +83,19 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         </Select>
                     </div>
 
+                    {/* Reset Button */}
                     {hasActiveFilters && (
-                        <div className="pt-4 border-t">
-                            <Button
-                                onClick={onResetFilters}
-                                variant="outline"
-                                className="w-full"
-                            >
-                                Đặt lại tất cả
-                            </Button>
+                        <div className="pt-2">
+                            <div className="bg-white rounded-xl border border-border shadow-sm p-4">
+                                <Button
+                                    onClick={onResetFilters}
+                                    variant="outline"
+                                    className="w-full h-10 border-border hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all group"
+                                >
+                                    <RotateCcw className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-500" />
+                                    Đặt lại tất cả
+                                </Button>
+                            </div>
                         </div>
                     )}
                 </div>

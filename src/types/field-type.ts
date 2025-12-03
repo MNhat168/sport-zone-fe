@@ -188,6 +188,7 @@ export interface GetFieldsParams {
     name?: string;
     location?: string;
     sportType?: SportType | string;
+    sportTypes?: string[]; // Multiple sports (new)
     page?: number;
     limit?: number;
     sortBy?: 'name' | 'rating' | 'price' | 'createdAt';
