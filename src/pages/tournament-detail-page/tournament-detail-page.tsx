@@ -40,6 +40,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { createPayOSPayment, queryPayOSTransaction } from "@/features/transactions/transactionsThunk"
+import { setError } from "@/features/tournament"
 
 export default function TournamentDetailsPage() {
   const { id } = useParams<{ id: string }>()
@@ -89,28 +91,206 @@ export default function TournamentDetailsPage() {
 
   const handleRegister = async () => {
     if (!currentTournament || !user) {
-      navigate('/login')
-      return
+      navigate('/login');
+      return;
     }
 
-    setIsRegistering(true)
+    setIsRegistering(true);
     try {
-      await dispatch(registerForTournament({
+      // Register for tournament - now returns full response
+      const registrationResponse = await dispatch(registerForTournament({
         tournamentId: currentTournament._id,
         paymentMethod
-      })).unwrap()
+      })).unwrap();
 
-      setRegistrationSuccess(true)
-      setShowRegisterDialog(false)
-      dispatch(fetchTournamentById(currentTournament._id))
+      console.log('Full registration response:', registrationResponse);
 
-      setTimeout(() => setRegistrationSuccess(false), 5000)
-    } catch (error) {
-      console.error('Registration failed:', error)
+      // ✅ Check different possible response structures
+      let paymentUrl = null;
+      let orderCode = null;
+      let transactionId = null;
+
+      if (registrationResponse.paymentUrl) {
+        // Direct paymentUrl in response
+        paymentUrl = registrationResponse.paymentUrl;
+        orderCode = registrationResponse.orderCode;
+        transactionId = registrationResponse.transaction?._id;
+      } else if (registrationResponse.data?.paymentUrl) {
+        // Nested in data property
+        paymentUrl = registrationResponse.data.paymentUrl;
+        orderCode = registrationResponse.data.orderCode;
+        transactionId = registrationResponse.data.transaction?._id;
+      } else if (registrationResponse.result?.paymentUrl) {
+        // Nested in result property
+        paymentUrl = registrationResponse.result.paymentUrl;
+        orderCode = registrationResponse.result.orderCode;
+        transactionId = registrationResponse.result.transaction?._id;
+      }
+
+      console.log('Extracted payment info:', { paymentUrl, orderCode, transactionId });
+
+      // Handle PayOS payment
+      if (paymentMethod === 'payos' && paymentUrl) {
+        // Store payment info
+        localStorage.setItem('pendingTournamentPayment', JSON.stringify({
+          tournamentId: currentTournament._id,
+          orderCode,
+          transactionId,
+          timestamp: Date.now()
+        }));
+
+        // Close dialog and redirect
+        setShowRegisterDialog(false);
+
+        // Short delay to ensure dialog closes
+        setTimeout(() => {
+          console.log('Redirecting to PayOS:', paymentUrl);
+          window.location.href = paymentUrl;
+        }, 100);
+
+        return;
+      }
+
+      // For non-PayOS methods
+      if (paymentMethod !== 'payos') {
+        setRegistrationSuccess(true);
+        setShowRegisterDialog(false);
+        dispatch(fetchTournamentById(currentTournament._id));
+
+        setTimeout(() => setRegistrationSuccess(false), 5000);
+      } else {
+        // PayOS was selected but no paymentUrl returned
+        throw new Error('No payment URL received from server');
+      }
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      alert(`Registration failed: ${error.message || 'Unknown error'}`);
     } finally {
-      setIsRegistering(false)
+      setIsRegistering(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    // Check for payment status in URL parameters
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const paymentStatus = params.get('payment');
+      const orderCode = params.get('orderCode');
+
+      if (paymentStatus && id) {
+        // Clear URL parameters without reloading
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+
+        if (paymentStatus === 'success') {
+          // Show success message
+          setRegistrationSuccess(true);
+          // Refresh tournament data
+          dispatch(fetchTournamentById(id));
+
+          // Show success toast/notification
+          setTimeout(() => {
+            setRegistrationSuccess(false);
+          }, 5000);
+        } else if (paymentStatus === 'failed' || paymentStatus === 'cancelled') {
+          // Show error toast/notification
+          const reason = params.get('reason');
+          console.error('Payment failed:', { paymentStatus, reason });
+          // You might want to show a toast notification here
+        }
+      }
+    }
+  }, [id, dispatch]);
+
+  const handlePayOSPayment = async () => {
+    try {
+      if (!currentTournament || !user) {
+        console.error('Missing tournament or user data');
+        return;
+      }
+
+      console.log('Starting PayOS payment process...');
+
+      // First, create a tournament registration transaction
+      const registrationResponse = await dispatch(registerForTournament({
+        tournamentId: currentTournament._id,
+        paymentMethod: 'payos'
+      })).unwrap();
+
+      console.log('Registration response:', registrationResponse);
+
+      // ✅ FIX: Check if we already have a payment link in the response
+      if (registrationResponse.paymentLink) {
+        setShowRegisterDialog(false);
+
+        // Store payment info for polling
+        localStorage.setItem('pendingPayment', JSON.stringify({
+          tournamentId: currentTournament._id,
+          orderCode: registrationResponse.orderCode,
+          transactionId: registrationResponse.transaction?._id,
+          timestamp: Date.now()
+        }));
+
+        // Open payment window directly
+        window.open(registrationResponse.paymentLink, '_blank', 'width=500,height=700');
+        return;
+      }
+
+      // If no payment link, try to create one using transaction ID
+      console.log('No payment link in response, trying with transaction ID...');
+
+      // Extract transaction ID from registration response
+      const transactionId = registrationResponse.transaction?._id;
+      if (!transactionId) {
+        throw new Error('No transaction ID found in registration response');
+      }
+
+      // Create PayOS payment link using createPayOSPayment API
+      console.log('Creating PayOS payment link using transaction ID:', transactionId);
+      const response = await dispatch(createPayOSPayment({
+        orderId: transactionId, // ✅ Use transaction ID
+        amount: currentTournament.registrationFee,
+        description: `Đăng ký tham gia giải đấu ${currentTournament.name}`,
+        returnUrl: `${window.location.origin}/tournaments/${currentTournament._id}/payment-return`,
+        cancelUrl: `${window.location.origin}/tournaments/${currentTournament._id}`,
+        items: [{
+          name: `Đăng ký giải đấu: ${currentTournament.name}`,
+          quantity: 1,
+          price: currentTournament.registrationFee
+        }],
+        buyerName: user.fullName || user.email || 'User',
+        buyerEmail: user.email,
+        buyerPhone: user.phone || '',
+        expiredAt: 15
+      })).unwrap();
+
+      console.log('PayOS payment link response:', response);
+
+      if (response.checkoutUrl) {
+        setShowRegisterDialog(false);
+        console.log('Opening payment URL:', response.checkoutUrl);
+
+        // Store payment info for polling
+        localStorage.setItem('pendingPayment', JSON.stringify({
+          tournamentId: currentTournament._id,
+          orderCode: response.orderCode,
+          transactionId: transactionId,
+          timestamp: Date.now()
+        }));
+
+        window.open(response.checkoutUrl, '_blank', 'width=500,height=700');
+      }
+    } catch (error: any) {
+      console.error('PayOS payment failed:', error);
+
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+
+      alert(`Payment Error: ${error.message || 'Failed to create payment link'}`);
+    }
+  };
 
   // Handle team click from formation map
   const handleTeamClick = (teamNumber: number) => {
@@ -186,7 +366,13 @@ export default function TournamentDetailsPage() {
   }
 
   const tournament = currentTournament
-  const isParticipant = user && tournament.participants?.some(p => p.user?._id === user._id)
+  const isParticipant = user && tournament.participants?.some(p =>
+    p.user?._id === user._id && p.paymentStatus === 'confirmed'
+  );
+
+  const hasPendingPayment = user && tournament.participants?.some(p =>
+    p.user?._id === user._id && p.paymentStatus === 'pending'
+  );
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
   const isFull = tournament.participants?.length >= (tournament.maxParticipants || 0);
   const daysUntilTournament = Math.ceil(
@@ -362,90 +548,123 @@ export default function TournamentDetailsPage() {
                             Join Now
                           </Button>
                         </DialogTrigger>
+                        {/* Inside the Register Dialog Content */}
                         <DialogContent className="sm:max-w-md">
                           <DialogHeader>
                             <DialogTitle className="text-2xl">Join Tournament</DialogTitle>
                           </DialogHeader>
 
-                          <div className="space-y-6 py-4">
-                            <div className="space-y-2">
-                              <h3 className="font-semibold">Tournament Details</h3>
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <div className="text-gray-600">Name</div>
-                                  <div className="font-medium">{tournament.name}</div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-600">Fee</div>
-                                  <div className="font-medium">{formatCurrency(tournament.registrationFee)}</div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-600">Teams</div>
-                                  <div className="font-medium">{tournament.numberOfTeams} teams</div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-600">Team Size</div>
-                                  <div className="font-medium">{tournament.teamSize} players</div>
+                          <ScrollArea className="max-h-[80vh] pr-4">
+                            <div className="space-y-6 py-4">
+                              <div className="space-y-2">
+                                <h3 className="font-semibold">Tournament Details</h3>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <div className="text-gray-600">Name</div>
+                                    <div className="font-medium">{tournament.name}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-600">Fee</div>
+                                    <div className="font-medium">{formatCurrency(tournament.registrationFee)}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-600">Teams</div>
+                                    <div className="font-medium">{tournament.numberOfTeams} teams</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-gray-600">Team Size</div>
+                                    <div className="font-medium">{tournament.teamSize} players</div>
+                                  </div>
                                 </div>
                               </div>
+
+                              <Separator />
+
+                              <div className="space-y-4">
+                                <h3 className="font-semibold">Select Payment Method</h3>
+                                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                                  {/* SportZone Wallet option */}
+                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                    <RadioGroupItem value="wallet" id="wallet" />
+                                    <Label htmlFor="wallet" className="flex-1 cursor-pointer">
+                                      <div className="font-medium">SportZone Wallet</div>
+                                      <div className="text-sm text-gray-600">Pay from your wallet balance</div>
+                                    </Label>
+                                    <Badge variant="outline">Recommended</Badge>
+                                  </div>
+
+                                  {/* PayOS option */}
+                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                    <RadioGroupItem value="payos" id="payos" />
+                                    <Label htmlFor="payos" className="flex-1 cursor-pointer">
+                                      <div className="font-medium">PayOS Payment</div>
+                                      <div className="text-sm text-gray-600">Credit/Debit card, e-wallet via PayOS</div>
+                                    </Label>
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                      Popular
+                                    </Badge>
+                                  </div>
+
+                                  {/* MoMo option */}
+                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                    <RadioGroupItem value="momo" id="momo" />
+                                    <Label htmlFor="momo" className="flex-1 cursor-pointer">
+                                      <div className="font-medium">MoMo E-Wallet</div>
+                                      <div className="text-sm text-gray-600">Instant payment via MoMo</div>
+                                    </Label>
+                                  </div>
+
+                                  {/* Bank Transfer option */}
+                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                    <RadioGroupItem value="banking" id="banking" />
+                                    <Label htmlFor="banking" className="flex-1 cursor-pointer">
+                                      <div className="font-medium">Bank Transfer</div>
+                                      <div className="text-sm text-gray-600">Direct bank transfer</div>
+                                    </Label>
+                                  </div>
+                                </RadioGroup>
+
+                                {/* Payment Method Details */}
+                                {paymentMethod === 'payos' && (
+                                  <Alert className="bg-blue-50 border-blue-200">
+                                    <div className="flex items-start gap-2">
+                                      <div className="h-4 w-4 mt-0.5 flex-shrink-0">
+                                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  </Alert>
+                                )}
+                              </div>
+
+                              <Alert>
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription className="text-sm">
+                                  You will be automatically assigned to a team based on availability.
+                                  By joining, you agree to the tournament rules and understand that fees are non-refundable unless the tournament is cancelled.
+                                </AlertDescription>
+                              </Alert>
+
+                              <div className="flex gap-3">
+                                <Button
+                                  variant="outline"
+                                  className="flex-1"
+                                  onClick={() => setShowRegisterDialog(false)}
+                                  disabled={isRegistering}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  className="flex-1 bg-green-600 hover:bg-green-700"
+                                  onClick={handleRegister}
+                                  disabled={isRegistering}
+                                >
+                                  {isRegistering ? "Processing..." : "Confirm & Pay"}
+                                </Button>
+                              </div>
                             </div>
-
-                            <Separator />
-
-                            <div className="space-y-4">
-                              <h3 className="font-semibold">Select Payment Method</h3>
-                              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                                <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                                  <RadioGroupItem value="wallet" id="wallet" />
-                                  <Label htmlFor="wallet" className="flex-1 cursor-pointer">
-                                    <div className="font-medium">SportZone Wallet</div>
-                                    <div className="text-sm text-gray-600">Pay from your wallet balance</div>
-                                  </Label>
-                                  <Badge variant="outline">Recommended</Badge>
-                                </div>
-                                <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                                  <RadioGroupItem value="momo" id="momo" />
-                                  <Label htmlFor="momo" className="flex-1 cursor-pointer">
-                                    <div className="font-medium">MoMo E-Wallet</div>
-                                    <div className="text-sm text-gray-600">Instant payment via MoMo</div>
-                                  </Label>
-                                </div>
-                                <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                                  <RadioGroupItem value="banking" id="banking" />
-                                  <Label htmlFor="banking" className="flex-1 cursor-pointer">
-                                    <div className="font-medium">Bank Transfer</div>
-                                    <div className="text-sm text-gray-600">Direct bank transfer</div>
-                                  </Label>
-                                </div>
-                              </RadioGroup>
-                            </div>
-
-                            <Alert>
-                              <AlertCircle className="h-4 w-4" />
-                              <AlertDescription className="text-sm">
-                                You will be automatically assigned to a team based on availability.
-                                By joining, you agree to the tournament rules and understand that fees are non-refundable unless the tournament is cancelled.
-                              </AlertDescription>
-                            </Alert>
-
-                            <div className="flex gap-3">
-                              <Button
-                                variant="outline"
-                                className="flex-1"
-                                onClick={() => setShowRegisterDialog(false)}
-                                disabled={isRegistering}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                className="flex-1 bg-green-600 hover:bg-green-700"
-                                onClick={handleRegister}
-                                disabled={isRegistering}
-                              >
-                                {isRegistering ? "Processing..." : "Confirm & Pay"}
-                              </Button>
-                            </div>
-                          </div>
+                          </ScrollArea>
                         </DialogContent>
                       </Dialog>
                     )}
