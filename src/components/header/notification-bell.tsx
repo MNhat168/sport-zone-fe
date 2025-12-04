@@ -34,7 +34,7 @@ export function NotificationBell({
 }: NotificationBellProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const socket = useSocket(userId || "");
+  const socket = useSocket(userId || "", "notifications");
 
   console.log("📱 NotificationBell props:", { userId, variant });
   console.log("📱 Socket instance:", socket);
@@ -73,8 +73,10 @@ export function NotificationBell({
     interface IncomingNotification {
       id?: string;
       _id?: string;
-      content: string;
-      created_at: string;
+      title?: string;
+      message?: string;
+      createdAt?: string;
+      created_at?: string;
       url?: string;
     }
 
@@ -90,9 +92,12 @@ export function NotificationBell({
 
       const newNotification: Notification = {
         id: notificationId,
-        content: data?.content || "Bạn có thông báo mới!",
-        created_at: data?.created_at || new Date().toISOString(),
-        url: data?.url || "/",
+        content: data?.message || data?.title || "Bạn có thông báo mới!",
+        created_at:
+          data?.createdAt ||
+          data?.created_at ||
+          new Date().toISOString(),
+        url: data?.url || "/notifications",
       };
       console.log("📩 Processed notification:", newNotification);
 

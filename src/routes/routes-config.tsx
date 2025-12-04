@@ -59,6 +59,7 @@ import NotificationsPage from "../pages/notifications/page";
 import TournamentListPage from "@/pages/list-tournament/TournamentListPage.tsx";
 import CreateTournamentPage from "@/pages/create-tournament/CreateTournamentPage.tsx";
 import TournamentDetailPage from "@/pages/tournament-detail-page/tournament-detail-page.tsx";
+import MyReportsPage from "../pages/my-reports-page/my-reports-page";
 import FieldOwnerChatDashboard from "@/pages/field-owner-dashboard-page/chat/FieldOwnerChatPage.tsx";
 
 /**
@@ -170,6 +171,14 @@ export const userRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserInvoicesPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/my-reports",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <MyReportsPage />
       </ProtectedRoute>
     ),
   },
