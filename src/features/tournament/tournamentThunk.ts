@@ -155,51 +155,57 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
     : [];
 
   return {
-    _id: apiTournament?._id || apiTournament?.id || "",
-    name: apiTournament?.name || "",
-    sportType: apiTournament?.sportType || "",
-    category: apiTournament?.category || "",
-    competitionFormat: apiTournament?.competitionFormat || "single_elimination",
-    location: apiTournament?.location || "",
-    tournamentDate: tournamentDate,
-    registrationStart: apiTournament?.registrationStart ? 
-      (typeof apiTournament.registrationStart === 'string' ? 
-        apiTournament.registrationStart.split('T')[0] : 
-        apiTournament.registrationStart?.toISOString?.()?.split('T')[0] || "") : "",
-    registrationEnd: apiTournament?.registrationEnd ? 
-      (typeof apiTournament.registrationEnd === 'string' ? 
-        apiTournament.registrationEnd.split('T')[0] : 
-        apiTournament.registrationEnd?.toISOString?.()?.split('T')[0] || "") : "",
-    startTime: apiTournament?.startTime || "",
-    endTime: apiTournament?.endTime || "",
-    // USE THE ACTUAL VALUES FROM API
-    maxParticipants: maxParticipants,
-    minParticipants: minParticipants,
-    registrationFee: apiTournament?.registrationFee || 0,
-    description: apiTournament?.description || "",
-    status: apiTournament?.status?.toLowerCase() || "",
-    participants: Array.isArray(apiTournament?.participants) ? apiTournament.participants : [],
-    fields: Array.isArray(apiTournament?.fields) ? apiTournament.fields : [],
-    fieldsNeeded: apiTournament?.fieldsNeeded || 0,
-    totalFieldCost: apiTournament?.totalFieldCost || 0,
-    confirmationDeadline: apiTournament?.confirmationDeadline ? 
-      (typeof apiTournament.confirmationDeadline === 'string' ? 
-        apiTournament.confirmationDeadline.split('T')[0] : 
-        apiTournament.confirmationDeadline?.toISOString?.()?.split('T')[0] || "") : "",
-    organizer: apiTournament?.organizer || null,
-    rules: apiTournament?.rules || undefined,
-    totalRegistrationFeesCollected: apiTournament?.totalRegistrationFeesCollected || 0,
-    prizePool: apiTournament?.prizePool || 0,
-    commissionRate: apiTournament?.commissionRate || 0.1,
-    commissionAmount: apiTournament?.commissionAmount || 0,
-    categories: apiTournament?.categories || [],
-    // Team properties - USE ACTUAL VALUES
-    numberOfTeams: numberOfTeams,
-    teamSize: teamSize,
-    currentTeams: currentTeams,
-    teams: Array.isArray(apiTournament?.teams) ? apiTournament.teams : [],
-    schedule: Array.isArray(apiTournament?.schedule) ? apiTournament.schedule : [],
-  };
+  _id: apiTournament?._id || apiTournament?.id || "",
+  name: apiTournament?.name || "",
+  sportType: apiTournament?.sportType || "",
+  category: apiTournament?.category || "",
+  competitionFormat: apiTournament?.competitionFormat || "single_elimination",
+  location: apiTournament?.location || "",
+  tournamentDate: tournamentDate,
+  registrationStart: apiTournament?.registrationStart ?
+    (typeof apiTournament.registrationStart === 'string' ?
+      apiTournament.registrationStart.split('T')[0] :
+      apiTournament.registrationStart?.toISOString?.()?.split('T')[0] || "") : "",
+  registrationEnd: apiTournament?.registrationEnd ?
+    (typeof apiTournament.registrationEnd === 'string' ?
+      apiTournament.registrationEnd.split('T')[0] :
+      apiTournament.registrationEnd?.toISOString?.()?.split('T')[0] || "") : "",
+  startTime: apiTournament?.startTime || "",
+  endTime: apiTournament?.endTime || "",
+  // USE THE ACTUAL VALUES FROM API
+  maxParticipants: maxParticipants,
+  minParticipants: minParticipants,
+  registrationFee: apiTournament?.registrationFee || 0,
+  description: apiTournament?.description || "",
+  status: apiTournament?.status?.toLowerCase() || "",
+  participants: Array.isArray(apiTournament?.participants) ? apiTournament.participants : [],
+  fields: Array.isArray(apiTournament?.fields) ? apiTournament.fields : [],
+  fieldsNeeded: apiTournament?.fieldsNeeded || 0,
+  totalFieldCost: apiTournament?.totalFieldCost || 0,
+  confirmationDeadline: apiTournament?.confirmationDeadline ?
+    (typeof apiTournament.confirmationDeadline === 'string' ?
+      apiTournament.confirmationDeadline.split('T')[0] :
+      apiTournament.confirmationDeadline?.toISOString?.()?.split('T')[0] || "") : "",
+  organizer: apiTournament?.organizer || null,
+  rules: apiTournament?.rules || undefined,
+  totalRegistrationFeesCollected: apiTournament?.totalRegistrationFeesCollected || 0,
+  prizePool: apiTournament?.prizePool || 0,
+  commissionRate: apiTournament?.commissionRate || 0.1,
+  commissionAmount: apiTournament?.commissionAmount || 0,
+  categories: apiTournament?.categories || [],
+  // Team properties - USE ACTUAL VALUES
+  numberOfTeams: numberOfTeams,
+  teamSize: teamSize,
+  currentTeams: currentTeams,
+  teams: Array.isArray(apiTournament?.teams) ? apiTournament.teams : [],
+  schedule: Array.isArray(apiTournament?.schedule) ? apiTournament.schedule : [],
+  orderCode: undefined,
+  paymentLink: undefined,
+  externalTransactionId: undefined,
+  transaction: undefined,
+  transactionId: undefined,
+  paymentUrl: false,
+};
 };
 
 // Helper function to generate team assignments
@@ -357,7 +363,7 @@ export const createTournament = createAsyncThunk(
   }
 );
 
-// Register for tournament
+/// Register for tournament
 export const registerForTournament = createAsyncThunk(
   'tournament/registerForTournament',
   async (data: { tournamentId: string; paymentMethod: string }, { dispatch, rejectWithValue }) => {
@@ -366,15 +372,18 @@ export const registerForTournament = createAsyncThunk(
 
     try {
       const response = await axiosPrivate.post(REGISTER_FOR_TOURNAMENT_API, data);
-      const mappedTournament = mapApiTournamentToAppTournament(response.data);
-
-      if (!mappedTournament) {
-        const errorMsg = 'Invalid tournament data returned from API';
-        dispatch(setError(errorMsg));
-        return rejectWithValue(errorMsg);
+      const fullResponse = response.data; // Keep the full response
+      
+      // Still update tournament in state
+      if (fullResponse.tournament) {
+        const mappedTournament = mapApiTournamentToAppTournament(fullResponse.tournament);
+        if (mappedTournament) {
+          dispatch(updateTournament(mappedTournament));
+        }
       }
-      dispatch(updateTournament(mappedTournament));
-      return mappedTournament;
+      
+      // ✅ Return the FULL response including paymentUrl, orderCode, etc.
+      return fullResponse;
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'Failed to register for tournament';
       dispatch(setError(errorMsg));
