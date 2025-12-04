@@ -4,22 +4,35 @@ import { NavbarDarkComponent } from "../../components/header/navbar-dark-compone
 import PageHeader from "../../components/header-banner/page-header"
 import CoachCard from "./card-list/coach-card-props"
 import { useRef, useEffect, useState, useMemo } from "react"
-import axios from "axios"
 import { FooterComponent } from "../../components/footer/footer-component"
 import { useGeolocation } from "../../hooks/useGeolocation"
 import { Navigation, MapPin, AlertCircle } from "lucide-react"
 import { PageWrapper } from "../../components/layouts/page-wrapper"
+import { useAppDispatch, useAppSelector } from "../../store/hook"
+import { getCoaches } from "../../features/coach/coachThunk"
+import type { Coach } from "../../types/coach-type"
 
 const BookingPage = () => {
     const coachesListRef = useRef<HTMLDivElement>(null)
-    
+    const dispatch = useAppDispatch()
+    const { coaches: coachesData, loading: coachesLoading, error: coachesError } = useAppSelector((state) => state.coach)
 
     const breadcrumbs = [{ label: "Trang chủ", href: "/" }, { label: "Đặt huấn luyện viên" }]
 
-    // State for API data
-    const [coaches, setCoaches] = useState<any[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    // Map Coach data to format expected by CoachCard
+    const coaches = useMemo(() => {
+        if (!coachesData || !Array.isArray(coachesData)) return []
+        return coachesData.map((coach: Coach) => ({
+            id: coach.id,
+            name: coach.fullName,
+            location: '', // Location not available in Coach type, can be enhanced later
+            description: coach.bio || '',
+            rating: coach.rating || 0,
+            totalReviews: coach.totalReviews || 0,
+            price: coach.hourlyRate ? `${coach.hourlyRate.toLocaleString('vi-VN')}đ/giờ` : '0đ/giờ',
+            nextAvailability: null, // Not available in current API
+        }))
+    }, [coachesData])
     
     const [addressText, setAddressText] = useState<string>("")
     const {
@@ -30,55 +43,24 @@ const BookingPage = () => {
     } = useGeolocation()
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
 
-    // Location helpers (aligned with field booking)
-    const getLocationText = (loc: any): string => {
-        try {
-            return typeof loc === 'string' ? loc : loc?.address || ''
-        } catch {
-            return ''
-        }
-    }
-
     // Leaflet map refs and container id
     const mapContainerId = 'coaches-map-container'
     const mapRef = useRef<any>(null)
     const markersRef = useRef<any[]>([])
 
     // Normalized coaches for map markers
+    // Note: Location data not available in current Coach API response
+    // This can be enhanced when location data is added to the API
     const mappedCoaches = useMemo(() => {
         return coaches.map((coach: any) => {
-            const loc: any = coach?.location
-            let latitude: number | undefined
-            let longitude: number | undefined
-            try {
-                if (loc && typeof loc === 'object') {
-                    if (loc.geo) {
-                        const g: any = loc.geo
-                        if (Array.isArray(g.coordinates) && g.coordinates.length >= 2) {
-                            const [lng, lat] = g.coordinates as [number, number]
-                            if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
-                                latitude = lat
-                                longitude = lng
-                            }
-                        } else {
-                            const lat = g.latitude ?? g.lat
-                            const lng = g.longitude ?? g.lng
-                            if (typeof lat === 'number' && typeof lng === 'number') {
-                                latitude = lat
-                                longitude = lng
-                            }
-                        }
-                    }
-                }
-            } catch {
-                // ignore
-            }
+            // Location data not available in current API response
+            // Return empty location for now
             return {
                 id: coach.id,
                 name: coach.name,
-                locationText: getLocationText(loc),
-                latitude,
-                longitude,
+                locationText: coach.location || '',
+                latitude: undefined,
+                longitude: undefined,
             }
         })
     }, [coaches])
@@ -95,27 +77,10 @@ const BookingPage = () => {
         }
     }
 
+    // Fetch coaches using Redux thunk
     useEffect(() => {
-        const fetchCoaches = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const response = await axios.get(
-                    `${import.meta.env.VITE_API_URL}/coaches/all`
-                );
-                setCoaches(
-                  Array.isArray(response.data)
-                    ? response.data
-                    : response.data?.data || []
-                );
-            } catch (err: any) {
-                setError(err?.message || 'Lỗi khi lấy danh sách huấn luyện viên');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchCoaches();
-    }, []);
+        dispatch(getCoaches())
+    }, [dispatch])
 
     // Initialize Leaflet map once (copied pattern from field list page)
     useEffect(() => {
@@ -323,12 +288,12 @@ const BookingPage = () => {
                             }}
                         >
                             <div className="space-y-4">
-                                {loading && <div>Đang tải danh sách huấn luyện viên...</div>}
-                                {error && <div className="text-red-500">{error}</div>}
-                                {!loading && !error && coaches.length === 0 && (
+                                {coachesLoading && <div>Đang tải danh sách huấn luyện viên...</div>}
+                                {coachesError && <div className="text-red-500">{coachesError.message || 'Lỗi khi lấy danh sách huấn luyện viên'}</div>}
+                                {!coachesLoading && !coachesError && coaches.length === 0 && (
                                     <div>Không có huấn luyện viên nào.</div>
                                 )}
-                                {!loading && !error && coaches.map((coach, index) => (
+                                {!coachesLoading && !coachesError && coaches.map((coach, index) => (
                                     <div key={coach.id || index} className="scroll-snap-start">
                                         <CoachCard
                                             id={coach.id}

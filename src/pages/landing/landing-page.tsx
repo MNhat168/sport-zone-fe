@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { getUserProfile } from "@/features/user/userThunk";
+import { useAppSelector } from "@/store/hook";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent} from "@/components/ui/card";
 import {
@@ -26,7 +25,6 @@ export default function LandingPage() {
   const [selectedWeekday, setSelectedWeekday] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const authUser = useAppSelector((state) => state.auth.user);
 
@@ -44,11 +42,6 @@ export default function LandingPage() {
 
     return () => clearInterval(interval);
   }, [slideImages.length]);
-  // Fetch user profile on mount (simulate login success)
-  useEffect(() => {
-    dispatch(getUserProfile());
-  }, [dispatch]);
-
   // Auto-redirect field owners to their dashboard
   useEffect(() => {
     if (authUser?.role === "field_owner") {

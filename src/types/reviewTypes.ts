@@ -15,11 +15,45 @@ export interface CreateCoachReviewForm {
    */
   comment: string;
   /**
+   * Optional review title
+   */
+  title?: string;
+  /**
    * Coach ID being reviewed
    */
   coachId: string;
   /**
    * Booking ID associated with the review
+   */
+  bookingId: string;
+}
+
+/**
+ * Form data for creating a field review
+ */
+export interface CreateFieldReviewForm {
+  /**
+   * Review type (must be 'field')
+   */
+  type: 'field';
+  /**
+   * Rating from 1 to 5
+   */
+  rating: number;
+  /**
+   * Review comment
+   */
+  comment: string;
+  /**
+   * Optional review title
+   */
+  title?: string;
+  /**
+   * Field ID being reviewed
+   */
+  fieldId: string;
+  /**
+   * Booking ID associated with the review (optional)
    */
   bookingId: string;
 }

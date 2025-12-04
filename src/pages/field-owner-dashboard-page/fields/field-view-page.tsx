@@ -383,6 +383,7 @@ export default function FieldViewPage() {
                                         id="rating" 
                                         ratingValue={ratingValue} 
                                         reviewCount={((currentField as any)?.reviewCount ?? 0) as number} 
+                                        fieldId={String(fieldId || (currentField as any)?.id || "")}
                                     />
 
                                     <LocationCard

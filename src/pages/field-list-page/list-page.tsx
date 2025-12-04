@@ -668,7 +668,11 @@ const FieldBookingPage = () => {
                                                         <SelectItem value="football">Bóng đá</SelectItem>
                                                         <SelectItem value="tennis">Quần vợt</SelectItem>
                                                         <SelectItem value="badminton">Cầu lông</SelectItem>
+                                                        <SelectItem value="pickleball">Pickleball</SelectItem>
                                                         <SelectItem value="basketball">Bóng rổ</SelectItem>
+                                                        <SelectItem value="volleyball">Bóng chuyền</SelectItem>
+                                                        <SelectItem value="swimming">Bơi lội</SelectItem>
+                                                        <SelectItem value="gym">Phòng gym</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>

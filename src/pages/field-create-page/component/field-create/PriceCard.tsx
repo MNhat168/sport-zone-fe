@@ -64,15 +64,22 @@ export default function PriceCard({ formData, onInputChange, onApplyDefaultHours
                                 />
                             </div>
                             <div className="space-y-2.5">
-                                <Label>Số slot tối đa</Label>
+                                <Label>Số slot tối đa (tối đa 4)</Label>
                                 <Input
                                     type="text"
                                     placeholder="4"
                                     value={formData.maxSlots || ''}
                                     onChange={(e) => {
                                         const rawValue = e.target.value.replace(/[^\d]/g, '');
-                                        onInputChange('maxSlots', rawValue === '' ? '' : Number(rawValue));
+                                        const numValue = rawValue === '' ? '' : Number(rawValue);
+                                        // Giới hạn tối đa là 4
+                                        if (numValue !== '' && Number(numValue) > 4) {
+                                            onInputChange('maxSlots', 4);
+                                        } else {
+                                            onInputChange('maxSlots', numValue);
+                                        }
                                     }}
+                                    max={4}
                                     className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>

@@ -111,7 +111,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
         };
 
         initializeChat();
-    }, [isOpen, user, fieldOwnerId, fieldId, dispatch]);
+    }, [isOpen, user, fieldOwnerId, fieldId, currentRoom, onClose, dispatch]);
 
     const handleSendMessage = async () => {
         if (!message.trim()) return;
@@ -204,11 +204,11 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                             <Building className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900">Chat with {fieldOwnerName}</h3>
-                            <p className="text-sm text-gray-600">About: {fieldName}</p>
+                            <h3 className="font-semibold text-gray-900">Trò chuyện với {fieldOwnerName}</h3>
+                            <p className="text-sm text-gray-600">Về sân: {fieldName}</p>
                             {!currentRoom && (
                                 <p className="text-xs text-yellow-600 mt-1">
-                                    Chat room will be created when you send your first message
+                                    Phòng chat sẽ được tạo khi bạn gửi tin nhắn đầu tiên
                                 </p>
                             )}
                         </div>
@@ -226,14 +226,14 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                 {/* Messages Area */}
                 <ScrollArea className="flex-1 p-4">
                     {loading ? (
-                        <div className="text-center py-8">Loading chat...</div>
+                        <div className="text-center py-8">Đang tải cuộc trò chuyện...</div>
                     ) : localMessages.length === 0 ? (
                         <div className="text-center text-gray-500 mt-10">
                             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                            <h4 className="font-medium mb-2">Start a conversation</h4>
-                            <p className="text-sm">Send your first message to {fieldOwnerName}</p>
+                            <h4 className="font-medium mb-2">Bắt đầu cuộc trò chuyện</h4>
+                            <p className="text-sm">Gửi tin nhắn đầu tiên cho {fieldOwnerName}</p>
                             <p className="text-xs text-gray-500 mt-2">
-                                Ask about availability, pricing, or any other questions
+                                Hãy hỏi về lịch trống, giá thuê hoặc bất kỳ thắc mắc nào khác
                             </p>
                         </div>
                     ) : (
@@ -272,7 +272,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                 <div className="p-4 border-t">
                     <div className="flex items-center gap-2">
                         <Input
-                            placeholder={`Type your message to ${fieldOwnerName}...`}
+                            placeholder={`Nhập tin nhắn gửi đến ${fieldOwnerName}...`}
                             value={message}
                             onChange={(e) => {
                                 setMessage(e.target.value);
@@ -296,7 +296,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                         </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-2 text-center">
-                        Press Enter to send • Responds within 24 hours
+                        Nhấn Enter để gửi • Thường phản hồi trong vòng 24 giờ
                     </p>
                 </div>
             </div>

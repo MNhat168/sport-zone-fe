@@ -1,7 +1,7 @@
 import {useState, useEffect} from "react";
 //redux + navigation
 import { useAppDispatch } from "../../store/hook";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 
 //UI
@@ -56,7 +56,60 @@ export default function AuthenticationPage() {
     confirmPassword: "",
   });
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
+
+  // Helper function to get redirect URL from localStorage or location state
+  const getRedirectUrl = (): string | null => {
+    try {
+      // First check location state (passed from AuthRequiredPopup)
+      const stateRedirectUrl = (location.state as any)?.redirectUrl;
+      if (stateRedirectUrl) {
+        return stateRedirectUrl;
+      }
+      
+      // Then check localStorage
+      const storedRedirectUrl = localStorage.getItem('bookingRedirectUrl');
+      if (storedRedirectUrl) {
+        return storedRedirectUrl;
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Failed to get redirect URL:', error);
+      return null;
+    }
+  };
+
+  // Helper function to clear redirect URL from localStorage
+  const clearRedirectUrl = () => {
+    try {
+      localStorage.removeItem('bookingRedirectUrl');
+    } catch (error) {
+      console.warn('Failed to clear redirect URL from localStorage:', error);
+    }
+  };
+
+  // Helper function to handle redirect after successful login
+  const handleRedirectAfterLogin = (user: any) => {
+    const redirectUrl = getRedirectUrl();
+    
+    // Clear redirect URL from localStorage
+    clearRedirectUrl();
+    
+    // If we have a redirect URL and it's a valid booking page, redirect there
+    if (redirectUrl && (redirectUrl.includes('/field-booking') || redirectUrl.includes('/fields'))) {
+      navigate(redirectUrl, { replace: true });
+      return;
+    }
+    
+    // Otherwise, use default redirect logic
+    if (user.role === "field_owner") {
+      navigate("/field-owner-dashboard", { replace: true });
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
 
   console.log("Dữ liệu trong LOGIN PAGE -----------------------------------");
   console.log("Dữ liệu trong Form Data: ", JSON.stringify(formData, null, 2));
@@ -146,10 +199,9 @@ export default function AuthenticationPage() {
         
         CustomSuccessToast("Đăng nhập Google thành công!");
         
-        if (result?.user?.role === "field_owner") {
-          navigate("/field-owner-dashboard");
-        } else {
-          navigate("/");
+        // Handle redirect after successful Google login
+        if (result?.user) {
+          handleRedirectAfterLogin(result.user);
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -207,11 +259,8 @@ export default function AuthenticationPage() {
 
           CustomSuccessToast("Đăng nhập thành công!");
           
-          if (user.role === "field_owner") {
-            navigate("/field-owner-dashboard");
-          } else {
-            navigate("/");
-          }
+          // Handle redirect after successful login
+          handleRedirectAfterLogin(user);
         }
       } else {
         const result = await dispatch(

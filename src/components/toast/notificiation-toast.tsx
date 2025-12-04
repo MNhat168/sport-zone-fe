@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 export const CustomToast = () => {
   return (
     <ToastContainer
-      position="top-right"
+      position="bottom-right"
       autoClose={2000}
       hideProgressBar={false} // Changed to false to show progress bar
       newestOnTop={true}
@@ -36,7 +36,7 @@ export const CustomToast = () => {
 
 export const CustomSuccessToast = (msg: any) => {
   return toast.success(msg, {
-    position: "top-right",
+    position: "bottom-right",
     autoClose: 2000,
     hideProgressBar: false, // Show progress bar
     closeOnClick: true,
@@ -54,7 +54,7 @@ export const CustomSuccessToast = (msg: any) => {
 
 export const CustomFailedToast = (msg: any) => {
   return toast.error(msg, {
-    position: "top-right",
+    position: "bottom-right",
     autoClose: 2000,
     hideProgressBar: false, // Show progress bar
     closeOnClick: true,

@@ -99,6 +99,35 @@ const FieldBookingPage = () => {
         }
     }, [currentField?.id, currentField?.name]);
 
+    // Restore booking data from localStorage on mount (if user just logged in)
+    useEffect(() => {
+        if (authUser) {
+            try {
+                const raw = localStorage.getItem('bookingFormData');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        setBookingData(prev => ({
+                            date: parsed.date ?? prev.date,
+                            startTime: parsed.startTime ?? prev.startTime,
+                            endTime: parsed.endTime ?? prev.endTime,
+                            name: parsed.name ?? prev.name,
+                            email: parsed.email ?? prev.email,
+                            phone: parsed.phone ?? prev.phone,
+                        }));
+                        
+                        // If we have complete booking data, move to amenities step
+                        if (parsed.date && parsed.startTime && parsed.endTime) {
+                            setCurrentStep(BookingStep.AMENITIES);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to restore booking data from localStorage:', error);
+            }
+        }
+    }, [authUser]);
+
     // Handle user login - if user logs in and we have pending booking data, continue the flow
     useEffect(() => {
         if (authUser && showAuthPopup) {
@@ -123,6 +152,15 @@ const FieldBookingPage = () => {
 
         // Kiểm tra xem người dùng đã đăng nhập chưa
         if (!authUser) {
+            // Save current location (pathname + search params) to localStorage for redirect after login
+            const redirectUrl = location.pathname + location.search;
+            try {
+                localStorage.setItem('bookingRedirectUrl', redirectUrl);
+                // Also save booking form data to localStorage (already done in BookCourtTab, but ensure it's saved)
+                localStorage.setItem('bookingFormData', JSON.stringify(formData));
+            } catch (error) {
+                console.warn('Failed to save redirect URL or booking data to localStorage:', error);
+            }
             setShowAuthPopup(true);
             return;
         }

@@ -8,7 +8,7 @@ import { getFieldById } from "@/features/field/fieldThunk"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { FooterComponent } from "@/components/footer/footer-component"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
-import { ChevronLeft, ChevronRight, MapPin, Share2, Star, CalendarDays } from "lucide-react"
+import { ChevronLeft, ChevronRight, MapPin, Share2, Star, CalendarDays, AlertCircle } from "lucide-react"
 import L from "leaflet"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { QuickNavPills } from "./components/QuickNavPills"
@@ -19,26 +19,21 @@ import { GalleryCard } from "./components/GalleryCard"
 import { RatingCard } from "./components/RatingCard"
 import { LocationCard } from "./components/LocationCard"
 import { Button } from "@/components/ui/button"
-import { MessageCircle } from "lucide-react";
-import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow";
+import { MessageCircle } from "lucide-react"
+import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow"
+import ReportDialog from "@/components/report/ReportDialog"
+import axiosPrivate from "@/utils/axios/axiosPrivate"
+import OwnerInfoCard from "./components/OwnerInfoCard"
 
-const mockDescription =
-    "Sân cầu lông hiện đại với 4 sân tiêu chuẩn, máy đánh bóng tự động, tiện ích đầy đủ. Phù hợp tập luyện và thi đấu."
-const mockRules = ["Không mang giày ngoài vào sân", "Hủy trước 24h", "Mang theo vợt cá nhân"]
-const mockAmenities = ["Vợt miễn phí", "Nước uống", "Bãi đỗ xe"]
-const mockImages = [
-    "https://source.unsplash.com/random/800x600/?badminton-court-1",
-    "https://source.unsplash.com/random/800x600/?badminton-court-2",
-    "https://source.unsplash.com/random/800x600/?badminton-court-3",
-    "https://source.unsplash.com/random/800x600/?badminton-court-4",
-    "https://source.unsplash.com/random/800x600/?badminton-court-5",
-]
 
 const FieldDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
     const dispatch = useAppDispatch()
     const [showChatWindow, setShowChatWindow] = useState(false);
+    const [showReportDialog, setShowReportDialog] = useState(false);
+    const [fieldReports, setFieldReports] = useState<any[] | null>(null);
+    const [loadingReports, setLoadingReports] = useState(false);
 
     const { currentField, loading } = useAppSelector((s) => s.field)
 
@@ -47,6 +42,30 @@ const FieldDetailPage: React.FC = () => {
             dispatch(getFieldById(id))
         }
     }, [id, currentField, dispatch])
+
+    useEffect(() => {
+        if (!id) return
+        let cancelled = false
+        const fetchReports = async () => {
+            try {
+                setLoadingReports(true)
+                const res = await axiosPrivate.get("/reports", {
+                    params: { fieldId: id, limit: 5 },
+                })
+                if (cancelled) return
+                const data = (res.data as any)?.data ?? res.data ?? []
+                setFieldReports(Array.isArray(data) ? data : [])
+            } catch {
+                if (!cancelled) setFieldReports([])
+            } finally {
+                if (!cancelled) setLoadingReports(false)
+            }
+        }
+        fetchReports()
+        return () => {
+            cancelled = true
+        }
+    }, [id])
 
     const overviewRef = useRef<HTMLDivElement | null>(null)
     const rulesRef = useRef<HTMLDivElement | null>(null)
@@ -140,13 +159,19 @@ const FieldDetailPage: React.FC = () => {
 
     const rules: string[] = useMemo(() => {
         const raw = (currentField as any)?.rules as string[] | undefined
-        return Array.isArray(raw) && raw.length > 0 ? raw : mockRules
+        return Array.isArray(raw) && raw.length > 0 ? raw : []
     }, [currentField])
 
     const ratingValue: number = useMemo(() => {
         const r = (currentField as any)?.rating ?? (currentField as any)?.averageRating
         const n = Number(r)
         return Number.isFinite(n) ? Math.max(0, Math.min(5, n)) : 0
+    }, [currentField])
+
+    const reviewCount: number = useMemo(() => {
+        const raw = (currentField as any)?.reviewCount
+        const n = Number(raw)
+        return Number.isFinite(n) && n > 0 ? n : 0
     }, [currentField])
 
     const [currentIndex, setCurrentIndex] = useState(0)
@@ -424,21 +449,45 @@ const FieldDetailPage: React.FC = () => {
                                 </div>
                             </div>
                             {/* right */}
-                            <div className="flex md:justify-center items-center gap-4">
-                                <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-                                    <Share2 className="h-4 w-4" />
-                                    <span>Share</span>
-                                </button>
-                                <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-                                    <Star className="h-4 w-4 text-yellow-500" />
-                                    <span>Add to favorites</span>
-                                </button>
+                            <div className="flex flex-col items-end gap-2">
+                                <div className="flex md:justify-center items-center gap-4">
+                                    <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                                        <Share2 className="h-4 w-4" />
+                                        <span>Share</span>
+                                    </button>
+                                    <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                                        <Star className="h-4 w-4 text-yellow-500" />
+                                        <span>Add to favorites</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setShowReportDialog(true)}
+                                        className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-800"
+                                    >
+                                        <MessageCircle className="h-4 w-4" />
+                                        <span>Report</span>
+                                    </button>
+                                </div>
                                 <button
-                                    onClick={() => setShowChatWindow(true)}
-                                    className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                                    onClick={() => scrollToSection("rating")}
+                                    className="inline-flex items-center gap-3 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm hover:shadow-md hover:border-gray-300 transition"
                                 >
-                                    <MessageCircle className="h-4 w-4" />
-                                    <span>Message Owner</span>
+                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-green-700 text-white text-xs font-semibold">
+                                        {ratingValue.toFixed(1)}
+                                    </div>
+                                    <div className="flex flex-col items-start">
+                                        <div className="flex items-center gap-0.5 text-yellow-500">
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                <Star
+                                                    key={i}
+                                                    className="h-3.5 w-3.5"
+                                                    fill="#FBBF24"
+                                                />
+                                            ))}
+                                        </div>
+                                        <span className="text-xs">
+                                            {reviewCount} Reviews
+                                        </span>
+                                    </div>
                                 </button>
                             </div>
                         </div>
@@ -476,15 +525,38 @@ const FieldDetailPage: React.FC = () => {
 
                                     {/* Always-visible sections */}
                                     <div className="mt-4 space-y-4">
-                                        <OverviewCard refObj={overviewRef} id="overview" description={currentField.description || mockDescription} />
+                                        <OverviewCard
+                                            refObj={overviewRef}
+                                            id="overview"
+                                            description={
+                                                (currentField?.description as string | undefined) ||
+                                                "Mô tả đang được cập nhật."
+                                            }
+                                        />
 
                                         <RulesCard refObj={rulesRef} id="rules" rules={rules} />
 
-                                        <AmenitiesCard refObj={amenitiesRef} id="amenities" items={amenitiesDisplay} fallback={mockAmenities} />
+                                        <AmenitiesCard
+                                            refObj={amenitiesRef}
+                                            id="amenities"
+                                            items={amenitiesDisplay}
+                                            fallback={[]}
+                                        />
 
-                                        <GalleryCard refObj={galleryRef} id="gallery" images={(currentField.images as string[]) || []} fallback={mockImages} />
+                                        <GalleryCard
+                                            refObj={galleryRef}
+                                            id="gallery"
+                                            images={(currentField.images as string[]) || []}
+                                            fallback={[]}
+                                        />
 
-                                        <RatingCard refObj={ratingRef} id="rating" ratingValue={ratingValue} reviewCount={((currentField as any)?.reviewCount ?? 0) as number} />
+                                        <RatingCard
+                                            refObj={ratingRef}
+                                            id="rating"
+                                            ratingValue={ratingValue}
+                                            reviewCount={((currentField as any)?.reviewCount ?? 0) as number}
+                                            fieldId={id || ''}
+                                        />
 
                                         <LocationCard
                                             refObj={locationRef}
@@ -500,6 +572,7 @@ const FieldDetailPage: React.FC = () => {
 
                                 <aside className="lg:col-span-1">
                                     <div className="lg:sticky lg:top-20 space-y-4">
+                                        {/* Info card */}
                                         <Card className="bg-white rounded-2xl shadow-md border border-gray-100">
                                             <CardHeader className="">
                                                 <div className="flex items-center gap-3 justify-center">
@@ -507,7 +580,9 @@ const FieldDetailPage: React.FC = () => {
                                                         <CalendarDays className="h-6 w-6 text-green-600 block" />
                                                     </div>
                                                     <div className="text-left">
-                                                        <CardTitle className="text-lg font-semibold text-gray-900">Availability</CardTitle>
+                                                        <CardTitle className="text-lg font-semibold text-gray-900">
+                                                            Availability
+                                                        </CardTitle>
                                                         <CardDescription className="text-gray-600 text-sm mt-1">
                                                             Check availability on your convenient time
                                                         </CardDescription>
@@ -515,9 +590,8 @@ const FieldDetailPage: React.FC = () => {
                                                 </div>
                                             </CardHeader>
                                         </Card>
-                                    </div>
 
-                                    <div className="lg:sticky lg:top-20 space-y-4 pt-6">
+                                        {/* Booking card */}
                                         <Card className="shadow-lg border-0 bg-white">
                                             <CardHeader className="pb-4">
                                                 <CardTitle className="text-sm text-gray-700">Availability</CardTitle>
@@ -527,14 +601,99 @@ const FieldDetailPage: React.FC = () => {
                                                     <p className="text-xs text-gray-500 mb-1">Book a Court</p>
                                                     <p className="text-3xl font-bold text-green-600">
                                                         {currentField.price ||
-                                                            (currentField.basePrice ? `${currentField.basePrice.toLocaleString()}đ/h` : "Contact")}
+                                                            (currentField.basePrice
+                                                                ? `${currentField.basePrice.toLocaleString()}đ/h`
+                                                                : "Contact")}
                                                     </p>
                                                 </div>
                                                 <Button
-                                                    onClick={() => navigate("/field-booking", { state: { fieldId: currentField.id } })}
+                                                    onClick={() =>
+                                                        navigate("/field-booking", { state: { fieldId: currentField.id } })
+                                                    }
                                                     className="w-full bg-green-600 hover:bg-green-700 text-white py-2 h-auto"
                                                 >
                                                     Đặt sân ngay
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Owner info card */}
+                                        {currentField && (
+                                            <OwnerInfoCard
+                                                name={
+                                                    (currentField as any)?.owner?.name ||
+                                                    (currentField as any)?.owner?.businessName ||
+                                                    "Chủ sân"
+                                                }
+                                                phone={
+                                                    (currentField as any)?.owner?.contactInfo?.phone ||
+                                                    (currentField as any)?.owner?.contact ||
+                                                    (currentField as any)?.ownerPhone
+                                                }
+                                                email={(currentField as any)?.owner?.contactInfo?.email}
+                                                avatarUrl={(currentField as any)?.owner?.avatarUrl}
+                                            />
+                                        )}
+
+                                        {/* User reports for this field */}
+                                        <Card className="border bg-white shadow-sm">
+                                            <CardHeader className="pb-3">
+                                                <CardTitle className="text-sm text-gray-800 flex items-center gap-2">
+                                                    <AlertCircle className="h-4 w-4 text-red-500" />
+                                                    Báo cáo của bạn về sân này
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="space-y-2">
+                                                {loadingReports ? (
+                                                    <p className="text-xs text-gray-500">Đang tải lịch sử báo cáo...</p>
+                                                ) : !fieldReports || fieldReports.length === 0 ? (
+                                                    <p className="text-xs text-gray-500">
+                                                        Bạn chưa gửi báo cáo nào cho sân này.
+                                                    </p>
+                                                ) : (
+                                                    <ul className="space-y-2 text-xs">
+                                                        {fieldReports.map((r) => (
+                                                            <li key={r._id} className="flex flex-col rounded-md border px-3 py-2">
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <span className="font-semibold">
+                                                                        {String(r.category || "").replace(/_/g, " ")}
+                                                                    </span>
+                                                                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] uppercase tracking-wide">
+                                                                        {r.status}
+                                                                    </span>
+                                                                </div>
+                                                                {r.description && (
+                                                                    <p className="mt-1 text-[11px] text-gray-600 line-clamp-2">
+                                                                        {r.description}
+                                                                    </p>
+                                                                )}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Chat with owner card */}
+                                        <Card className="border bg-white shadow-sm">
+                                            <CardHeader className="pb-3">
+                                                <CardTitle className="text-sm text-gray-800 flex items-center gap-2">
+                                                    <MessageCircle className="h-4 w-4 text-green-600" />
+                                                    Liên hệ chủ sân
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="space-y-3">
+                                                <p className="text-xs text-gray-600">
+                                                    Có thắc mắc về lịch trống, giá hoặc tiện ích? Gửi tin nhắn trực tiếp
+                                                    cho chủ sân để được hỗ trợ nhanh hơn.
+                                                </p>
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700"
+                                                    onClick={() => setShowChatWindow(true)}
+                                                >
+                                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                                    Message Owner
                                                 </Button>
                                             </CardContent>
                                         </Card>
@@ -554,6 +713,12 @@ const FieldDetailPage: React.FC = () => {
                         isOpen={showChatWindow}
                     />
                 )}
+                <ReportDialog
+                    isOpen={showReportDialog}
+                    onClose={() => setShowReportDialog(false)}
+                    fieldId={String(currentField?.id || '')}
+                    fieldName={currentField?.name || ''}
+                />
                 <FooterComponent />
             </PageWrapper>
         </>
