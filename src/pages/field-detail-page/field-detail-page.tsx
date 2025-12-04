@@ -19,8 +19,9 @@ import { GalleryCard } from "./components/GalleryCard"
 import { RatingCard } from "./components/RatingCard"
 import { LocationCard } from "./components/LocationCard"
 import { Button } from "@/components/ui/button"
-import { MessageCircle } from "lucide-react";
-import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow";
+import { MessageCircle } from "lucide-react"
+import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow"
+import OwnerInfoCard from "./components/OwnerInfoCard"
 
 const mockDescription =
     "Sân cầu lông hiện đại với 4 sân tiêu chuẩn, máy đánh bóng tự động, tiện ích đầy đủ. Phù hợp tập luyện và thi đấu."
@@ -484,7 +485,13 @@ const FieldDetailPage: React.FC = () => {
 
                                         <GalleryCard refObj={galleryRef} id="gallery" images={(currentField.images as string[]) || []} fallback={mockImages} />
 
-                                        <RatingCard refObj={ratingRef} id="rating" ratingValue={ratingValue} reviewCount={((currentField as any)?.reviewCount ?? 0) as number} />
+                                        <RatingCard 
+                                            refObj={ratingRef} 
+                                            id="rating" 
+                                            ratingValue={ratingValue} 
+                                            reviewCount={((currentField as any)?.reviewCount ?? 0) as number}
+                                            fieldId={id || ''}
+                                        />
 
                                         <LocationCard
                                             refObj={locationRef}
@@ -500,6 +507,7 @@ const FieldDetailPage: React.FC = () => {
 
                                 <aside className="lg:col-span-1">
                                     <div className="lg:sticky lg:top-20 space-y-4">
+                                        {/* Info card */}
                                         <Card className="bg-white rounded-2xl shadow-md border border-gray-100">
                                             <CardHeader className="">
                                                 <div className="flex items-center gap-3 justify-center">
@@ -507,7 +515,9 @@ const FieldDetailPage: React.FC = () => {
                                                         <CalendarDays className="h-6 w-6 text-green-600 block" />
                                                     </div>
                                                     <div className="text-left">
-                                                        <CardTitle className="text-lg font-semibold text-gray-900">Availability</CardTitle>
+                                                        <CardTitle className="text-lg font-semibold text-gray-900">
+                                                            Availability
+                                                        </CardTitle>
                                                         <CardDescription className="text-gray-600 text-sm mt-1">
                                                             Check availability on your convenient time
                                                         </CardDescription>
@@ -515,9 +525,8 @@ const FieldDetailPage: React.FC = () => {
                                                 </div>
                                             </CardHeader>
                                         </Card>
-                                    </div>
 
-                                    <div className="lg:sticky lg:top-20 space-y-4 pt-6">
+                                        {/* Booking card */}
                                         <Card className="shadow-lg border-0 bg-white">
                                             <CardHeader className="pb-4">
                                                 <CardTitle className="text-sm text-gray-700">Availability</CardTitle>
@@ -527,14 +536,60 @@ const FieldDetailPage: React.FC = () => {
                                                     <p className="text-xs text-gray-500 mb-1">Book a Court</p>
                                                     <p className="text-3xl font-bold text-green-600">
                                                         {currentField.price ||
-                                                            (currentField.basePrice ? `${currentField.basePrice.toLocaleString()}đ/h` : "Contact")}
+                                                            (currentField.basePrice
+                                                                ? `${currentField.basePrice.toLocaleString()}đ/h`
+                                                                : "Contact")}
                                                     </p>
                                                 </div>
                                                 <Button
-                                                    onClick={() => navigate("/field-booking", { state: { fieldId: currentField.id } })}
+                                                    onClick={() =>
+                                                        navigate("/field-booking", { state: { fieldId: currentField.id } })
+                                                    }
                                                     className="w-full bg-green-600 hover:bg-green-700 text-white py-2 h-auto"
                                                 >
                                                     Đặt sân ngay
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Owner info card */}
+                                        {currentField && (
+                                            <OwnerInfoCard
+                                                name={
+                                                    (currentField as any)?.owner?.name ||
+                                                    (currentField as any)?.owner?.businessName ||
+                                                    "Chủ sân"
+                                                }
+                                                phone={
+                                                    (currentField as any)?.owner?.contactInfo?.phone ||
+                                                    (currentField as any)?.owner?.contact ||
+                                                    (currentField as any)?.ownerPhone
+                                                }
+                                                email={(currentField as any)?.owner?.contactInfo?.email}
+                                                avatarUrl={(currentField as any)?.owner?.avatarUrl}
+                                            />
+                                        )}
+
+                                        {/* Chat with owner card */}
+                                        <Card className="border bg-white shadow-sm">
+                                            <CardHeader className="pb-3">
+                                                <CardTitle className="text-sm text-gray-800 flex items-center gap-2">
+                                                    <MessageCircle className="h-4 w-4 text-green-600" />
+                                                    Liên hệ chủ sân
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="space-y-3">
+                                                <p className="text-xs text-gray-600">
+                                                    Có thắc mắc về lịch trống, giá hoặc tiện ích? Gửi tin nhắn trực tiếp
+                                                    cho chủ sân để được hỗ trợ nhanh hơn.
+                                                </p>
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700"
+                                                    onClick={() => setShowChatWindow(true)}
+                                                >
+                                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                                    Message Owner
                                                 </Button>
                                             </CardContent>
                                         </Card>

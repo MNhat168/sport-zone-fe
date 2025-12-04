@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Navigation, ChevronDown } from "lucide-react"
+import { Navigation, ChevronDown, MapPin } from "lucide-react"
 import L from "leaflet"
 
 interface LocationCardProps {
@@ -16,6 +16,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressT
   const mapRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.Marker | null>(null)
   const [isExpanded, setIsExpanded] = useState(true)
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (!document.getElementById("leaflet-css")) {
@@ -64,9 +65,38 @@ export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressT
       ;(L as any).Marker.prototype.options.icon = defaultIcon
 
       mapRef.current = map
-      setTimeout(() => map.invalidateSize(), 100)
-      setTimeout(() => map.invalidateSize(), 300)
-      setTimeout(() => map.invalidateSize(), 500)
+      
+      // Debounced resize handler to prevent map shaking
+      const handleResize = () => {
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current)
+        }
+        resizeTimeoutRef.current = setTimeout(() => {
+          const anyMap = map as any
+          if (anyMap && !anyMap._destroyed) {
+            map.invalidateSize(false)
+          }
+        }, 150)
+      }
+      
+      // Initial size validation
+      setTimeout(() => {
+        const anyMap = map as any
+        if (anyMap && !anyMap._destroyed) {
+          map.invalidateSize(false)
+        }
+      }, 100)
+      
+      // Listen to window resize
+      window.addEventListener('resize', handleResize)
+      
+      // Cleanup function
+      return () => {
+        window.removeEventListener('resize', handleResize)
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current)
+        }
+      }
     }
 
     if (!hasSize()) {
@@ -88,24 +118,43 @@ export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressT
       lat = geoCoords[1]
     }
     if (lat == null || lon == null) return
-    if (!markerRef.current) {
-      // Get default icon from prototype or create new one
-      const defaultIcon = (L as any).Marker.prototype.options.icon || L.icon({
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-      })
-      markerRef.current = L.marker([lat, lon], {
-        icon: defaultIcon
-      }).addTo(map)
-    } else {
-      markerRef.current.setLatLng([lat, lon])
+    
+    // Debounce map updates to prevent shaking during scroll
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current)
     }
-    map.flyTo([lat, lon], Math.max(map.getZoom(), 14), { duration: 1.0 })
+    
+    resizeTimeoutRef.current = setTimeout(() => {
+      if (!map || (map as any)._destroyed) return
+      
+      if (!markerRef.current) {
+        // Get default icon from prototype or create new one
+        const defaultIcon = (L as any).Marker.prototype.options.icon || L.icon({
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+        markerRef.current = L.marker([lat, lon], {
+          icon: defaultIcon
+        }).addTo(map)
+      } else {
+        markerRef.current.setLatLng([lat, lon])
+      }
+      
+      // Use setView instead of flyTo to prevent animation that can cause shaking
+      const currentZoom = map.getZoom()
+      map.setView([lat, lon], Math.max(currentZoom, 14), { animate: false })
+    }, 200)
+    
+    return () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current)
+      }
+    }
   }, [geoCoords])
 
   const handleOpenMaps = () => {
@@ -135,8 +184,22 @@ export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressT
         <>
           <hr className="border-t border-gray-300 my-0 mx-6" />
           <CardContent className="pt-6 space-y-4">
+            {/* Address Display */}
+            {addressText && (
+              <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="bg-green-600 p-2 rounded-lg flex-shrink-0">
+                  <MapPin className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-green-900 text-sm mb-1">Địa chỉ sân</h4>
+                  <p className="text-sm text-green-700">{addressText}</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Map Container */}
             <div className="h-96 rounded-lg relative overflow-hidden border border-gray-200 bg-gray-50">
-              <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-10" style={{ minHeight: "384px", position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+              <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-10" />
             </div>
           </CardContent>
         </>

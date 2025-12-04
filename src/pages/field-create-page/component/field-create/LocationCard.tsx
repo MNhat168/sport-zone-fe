@@ -31,7 +31,7 @@ interface GeocodingResult {
 }
 
 // Constants
-const DEFAULT_CENTER: [number, number] = [10.776889, 106.700806]; // Ho Chi Minh City
+const DEFAULT_CENTER: [number, number] = [16.0544, 108.2022]; // Đà Nẵng
 const MAP_CONFIG = {
     zoom: 13,
     maxZoom: 19,

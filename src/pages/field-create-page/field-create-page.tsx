@@ -229,6 +229,11 @@ export default function FieldCreatePage() {
             CustomFailedToast('Vui lòng nhập giá cơ bản hợp lệ');
             return false;
         }
+        // Validate maxSlots - giới hạn tối đa là 4
+        if (formData.maxSlots && Number(formData.maxSlots) > 4) {
+            CustomFailedToast('Số slot tối đa không được vượt quá 4');
+            return false;
+        }
         if (selectedDays.length === 0) {
             CustomFailedToast('Vui lòng chọn ít nhất một ngày hoạt động');
             return false;

@@ -27,7 +27,20 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
     if (isAuthenticated && (location.pathname === '/auth')) {
       console.log('AuthWrapper - Redirecting from auth page for role:', user.role);
       
-      // Redirect based on user role
+      // Check for redirect URL from booking page (stored in localStorage)
+      try {
+        const redirectUrl = localStorage.getItem('bookingRedirectUrl');
+        if (redirectUrl && (redirectUrl.includes('/field-booking') || redirectUrl.includes('/fields'))) {
+          console.log('AuthWrapper - Found booking redirect URL, redirecting to:', redirectUrl);
+          localStorage.removeItem('bookingRedirectUrl');
+          navigate(redirectUrl, { replace: true });
+          return;
+        }
+      } catch (error) {
+        console.warn('AuthWrapper - Failed to check redirect URL:', error);
+      }
+      
+      // Default redirect based on user role
       if (user.role === "field_owner") {
         navigate("/field-owner-dashboard", { replace: true });
       } else {

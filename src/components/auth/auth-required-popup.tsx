@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -26,15 +26,32 @@ export const AuthRequiredPopup: React.FC<AuthRequiredPopupProps> = ({
   description = "Bạn cần đăng nhập để tiếp tục đặt sân. Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = () => {
+    // Save current location (pathname + search params) to localStorage for redirect after login
+    const redirectUrl = location.pathname + location.search;
+    try {
+      localStorage.setItem('bookingRedirectUrl', redirectUrl);
+    } catch (error) {
+      console.warn('Failed to save redirect URL to localStorage:', error);
+    }
+    
     onClose();
-    navigate('/auth', { state: { mode: 'login' } });
+    navigate('/auth', { state: { mode: 'login', redirectUrl } });
   };
 
   const handleRegister = () => {
+    // Save current location (pathname + search params) to localStorage for redirect after login
+    const redirectUrl = location.pathname + location.search;
+    try {
+      localStorage.setItem('bookingRedirectUrl', redirectUrl);
+    } catch (error) {
+      console.warn('Failed to save redirect URL to localStorage:', error);
+    }
+    
     onClose();
-    navigate('/auth', { state: { mode: 'register' } });
+    navigate('/auth', { state: { mode: 'register', redirectUrl } });
   };
 
   return (

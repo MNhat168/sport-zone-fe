@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, User, LogOut } from "lucide-react";
+import { Bell, User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
 import { clearUserAuth } from "../../lib/cookies";
@@ -103,10 +103,10 @@ export const NavbarComponent = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-4">
-                    {/* Search */}
+                    {/* Notification */}
                     <Button variant="ghost" size="icon" className="hover:bg-transparent">
-                        <Search className={iconClass} />
-                        <span className="sr-only">Tìm kiếm</span>
+                        <Bell className={iconClass} />
+                        <span className="sr-only">Thông báo</span>
                     </Button>
 
                     {auth.user ? (
