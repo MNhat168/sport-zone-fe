@@ -420,347 +420,405 @@ const FieldDetailPage: React.FC = () => {
     }, [currentField, locationText])
 
     return (
-        <>
-            <NavbarDarkComponent />
-            <PageWrapper className="bg-white">
-                <div className="w-full">
-                    {extendedImages.length > 0 && (
-                        <div
-                            ref={viewportRef}
-                            className="relative w-full h-96 md:h-[28rem] lg:h-[32rem] mb-6 overflow-hidden select-none rounded-lg"
-                        >
-                            <div
-                                ref={carouselRef}
-                                className="flex h-full gap-3"
-                                style={{
-                                    transform: `translateX(${translateXPx}px)`,
-                                    transition: isTransitioning ? "transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
-                                }}
-                            >
-                                {extendedImages.map((src, i) => (
-                                    <div
-                                        key={`slide-${i}`}
-                                        className="flex-none h-full"
-                                        style={{ width: itemWidthPx ? `${itemWidthPx}px` : undefined }}
-                                    >
-                                        <img
-                                            src={src || "/placeholder.svg"}
-                                            alt={`Ảnh ${i + 1}`}
-                                            className="w-full h-full object-cover rounded-md object-center"
-                                            onError={(e) => {
-                                                ; (e.target as HTMLImageElement).src = placeholderImg
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                            <button
-                                aria-label="Ảnh trước"
-                                onClick={prevSlide}
-                                className="absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow border"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
-                            <button
-                                aria-label="Ảnh tiếp"
-                                onClick={nextSlide}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow border"
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
-                    )}
+      <>
+        <NavbarDarkComponent />
+        <PageWrapper className="bg-white">
+          <div className="w-full">
+            {extendedImages.length > 0 && (
+              <div
+                ref={viewportRef}
+                className="relative w-full h-96 md:h-[28rem] lg:h-[32rem] mb-6 overflow-hidden select-none rounded-lg"
+              >
+                <div
+                  ref={carouselRef}
+                  className="flex h-full gap-3"
+                  style={{
+                    transform: `translateX(${translateXPx}px)`,
+                    transition: isTransitioning
+                      ? "transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+                      : "none",
+                  }}
+                >
+                  {extendedImages.map((src, i) => (
+                    <div
+                      key={`slide-${i}`}
+                      className="flex-none h-full"
+                      style={{
+                        width: itemWidthPx ? `${itemWidthPx}px` : undefined,
+                      }}
+                    >
+                      <img
+                        src={src || "/placeholder.svg"}
+                        alt={`Ảnh ${i + 1}`}
+                        className="w-full h-full object-cover rounded-md object-center"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = placeholderImg;
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
+                <button
+                  aria-label="Ảnh trước"
+                  onClick={prevSlide}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow border"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  aria-label="Ảnh tiếp"
+                  onClick={nextSlide}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow border"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            )}
+          </div>
 
-                <div className="w-full pb-6">
-                    <div className="max-w-6xl mx-auto px-2">
-                        {/* Upper side: two columns */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-4">
-                            {/* left */}
-                            <div className="md:col-span-2">
-                                <h1 className="text-2xl md:text-3xl font-bold text-left">{currentField?.name}</h1>
-                                <div className="mt-2 flex flex-wrap items-center gap-3 text-gray-600">
-                                    <span className="inline-flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 flex-shrink-0" />
-                                        <span className="truncate">{locationText}</span>
-                                    </span>
-                                </div>
-                            </div>
-                            {/* right */}
-                            <div className="flex flex-col items-end gap-2">
-                                <div className="flex md:justify-center items-center gap-4">
-                                    <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-                                        <Share2 className="h-4 w-4" />
-                                        <span>Share</span>
-                                    </button>
-                                    <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-                                        <Star className="h-4 w-4 text-yellow-500" />
-                                        <span>Add to favorites</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setShowReportDialog(true)}
-                                        className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-800"
-                                    >
-                                        <MessageCircle className="h-4 w-4" />
-                                        <span>Report</span>
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={() => scrollToSection("rating")}
-                                    className="inline-flex items-center gap-3 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm hover:shadow-md hover:border-gray-300 transition"
-                                >
-                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-green-700 text-white text-xs font-semibold">
-                                        {ratingValue.toFixed(1)}
-                                    </div>
-                                    <div className="flex flex-col items-start">
-                                        <div className="flex items-center gap-0.5 text-yellow-500">
-                                            {Array.from({ length: 5 }).map((_, i) => (
-                                                <Star
-                                                    key={i}
-                                                    className="h-3.5 w-3.5"
-                                                    fill="#FBBF24"
-                                                />
-                                            ))}
-                                        </div>
-                                        <span className="text-xs">
-                                            {reviewCount} Reviews
-                                        </span>
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-                        <hr className="border-t border-gray-200 my-4" />
-                        {/* under side: two columns */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                                <span className="text-gray-500">Môn Thể thao:</span>
-                                <span className="font-medium">{String(currentField?.sportType || "-")}</span>
-                            </div>
-                            {/* <div className="flex items-center gap-2">
+          <div className="w-full pb-6">
+            <div className="max-w-6xl mx-auto px-2">
+              {/* Upper side: two columns */}
+              <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-4">
+                {/* left */}
+                <div className="md:col-span-2">
+                  <h1 className="text-2xl md:text-3xl font-bold text-left">
+                    {currentField?.name}
+                  </h1>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-gray-600">
+                    <span className="inline-flex items-center gap-2">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{locationText}</span>
+                    </span>
+                  </div>
+                </div>
+                {/* right */}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex md:justify-center items-center gap-4">
+                    <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                      <Share2 className="h-4 w-4" />
+                      <span>Share</span>
+                    </button>
+                    <button
+                      onClick={toggleFavourite}
+                      disabled={favLoading}
+                      className={`inline-flex items-center gap-2 text-sm ${
+                        isFavourite
+                          ? "text-red-600 hover:text-red-800"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      <Star
+                        className={`h-4 w-4 ${
+                          isFavourite ? "text-red-500" : "text-yellow-500"
+                        }`}
+                      />
+                      <span>
+                        {favLoading
+                          ? "Đang xử lý..."
+                          : isFavourite
+                          ? "Đã yêu thích"
+                          : "Add to favorites"}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setShowReportDialog(true)}
+                      className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-800"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      <span>Report</span>
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => scrollToSection("rating")}
+                    className="inline-flex items-center gap-3 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm hover:shadow-md hover:border-gray-300 transition"
+                  >
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-green-700 text-white text-xs font-semibold">
+                      {ratingValue.toFixed(1)}
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <div className="flex items-center gap-0.5 text-yellow-500">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className="h-3.5 w-3.5"
+                            fill="#FBBF24"
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs">{reviewCount} Reviews</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              <hr className="border-t border-gray-200 my-4" />
+              {/* under side: two columns */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500">Môn Thể thao:</span>
+                  <span className="font-medium">
+                    {String(currentField?.sportType || "-")}
+                  </span>
+                </div>
+                {/* <div className="flex items-center gap-2">
                                 <span className="text-gray-500">Giá:</span>
                                 <span className="font-medium">{currentField?.price || ((currentField as any)?.basePrice ? `${(currentField as any).basePrice.toLocaleString()}đ/giờ` : "-")}</span>
                             </div> */}
-                        </div>
-                    </div>
-                </div>
-                <div className="w-full bg-[#FAFAFA]">
-                    <div className="max-w-6xl mx-auto pt-6">
-                        {!loading && currentField && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6">
-                                <div className="lg:col-span-2 space-y-4 text-left">
-                                    <QuickNavPills
-                                        activeTab={activeTab}
-                                        pills={[
-                                            { k: "overview", label: "Overview" },
-                                            { k: "rules", label: "Rules" },
-                                            { k: "amenities", label: "Amenities" },
-                                            { k: "gallery", label: "Gallery" },
-                                            { k: "rating", label: "Rating" },
-                                            { k: "location", label: "Location" },
-                                        ]}
-                                        onSelect={(k) => scrollToSection(k)}
-                                    />
-
-                                    {/* Always-visible sections */}
-                                    <div className="mt-4 space-y-4">
-                                        <OverviewCard
-                                            refObj={overviewRef}
-                                            id="overview"
-                                            description={
-                                                (currentField?.description as string | undefined) ||
-                                                "Mô tả đang được cập nhật."
-                                            }
-                                        />
-
-                                        <RulesCard refObj={rulesRef} id="rules" rules={rules} />
-
-                                        <AmenitiesCard
-                                            refObj={amenitiesRef}
-                                            id="amenities"
-                                            items={amenitiesDisplay}
-                                            fallback={[]}
-                                        />
-
-                                        <GalleryCard
-                                            refObj={galleryRef}
-                                            id="gallery"
-                                            images={(currentField.images as string[]) || []}
-                                            fallback={[]}
-                                        />
-
-                                        <RatingCard
-                                            refObj={ratingRef}
-                                            id="rating"
-                                            ratingValue={ratingValue}
-                                            reviewCount={((currentField as any)?.reviewCount ?? 0) as number}
-                                            fieldId={id || ''}
-                                        />
-
-                                        <LocationCard
-                                            refObj={locationRef}
-                                            id="location"
-                                            addressText={String(((currentField as any)?.location?.address ?? locationText) || "")}
-                                            geoCoords={(() => {
-                                                const c = (currentField as any)?.location?.geo?.coordinates as number[] | undefined
-                                                return Array.isArray(c) && c.length === 2 ? [c[0], c[1]] : null
-                                            })() as [number, number] | null}
-                                        />
-                                    </div>
-                                </div>
-
-                                <aside className="lg:col-span-1">
-                                    <div className="lg:sticky lg:top-20 space-y-4">
-                                        {/* Info card */}
-                                        <Card className="bg-white rounded-2xl shadow-md border border-gray-100">
-                                            <CardHeader className="">
-                                                <div className="flex items-center gap-3 justify-center">
-                                                    <div className="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-green-100 shrink-0">
-                                                        <CalendarDays className="h-6 w-6 text-green-600 block" />
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <CardTitle className="text-lg font-semibold text-gray-900">
-                                                            Availability
-                                                        </CardTitle>
-                                                        <CardDescription className="text-gray-600 text-sm mt-1">
-                                                            Check availability on your convenient time
-                                                        </CardDescription>
-                                                    </div>
-                                                </div>
-                                            </CardHeader>
-                                        </Card>
-
-                                        {/* Booking card */}
-                                        <Card className="shadow-lg border-0 bg-white">
-                                            <CardHeader className="pb-4">
-                                                <CardTitle className="text-sm text-gray-700">Availability</CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <div>
-                                                    <p className="text-xs text-gray-500 mb-1">Book a Court</p>
-                                                    <p className="text-3xl font-bold text-green-600">
-                                                        {currentField.price ||
-                                                            (currentField.basePrice
-                                                                ? `${currentField.basePrice.toLocaleString()}đ/h`
-                                                                : "Contact")}
-                                                    </p>
-                                                </div>
-                                                <Button
-                                                    onClick={() =>
-                                                        navigate("/field-booking", { state: { fieldId: currentField.id } })
-                                                    }
-                                                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 h-auto"
-                                                >
-                                                    Đặt sân ngay
-                                                </Button>
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Owner info card */}
-                                        {currentField && (
-                                            <OwnerInfoCard
-                                                name={
-                                                    (currentField as any)?.owner?.name ||
-                                                    (currentField as any)?.owner?.businessName ||
-                                                    "Chủ sân"
-                                                }
-                                                phone={
-                                                    (currentField as any)?.owner?.contactInfo?.phone ||
-                                                    (currentField as any)?.owner?.contact ||
-                                                    (currentField as any)?.ownerPhone
-                                                }
-                                                email={(currentField as any)?.owner?.contactInfo?.email}
-                                                avatarUrl={(currentField as any)?.owner?.avatarUrl}
-                                            />
-                                        )}
-
-                                        {/* User reports for this field */}
-                                        <Card className="border bg-white shadow-sm">
-                                            <CardHeader className="pb-3">
-                                                <CardTitle className="text-sm text-gray-800 flex items-center gap-2">
-                                                    <AlertCircle className="h-4 w-4 text-red-500" />
-                                                    Báo cáo của bạn về sân này
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-2">
-                                                {loadingReports ? (
-                                                    <p className="text-xs text-gray-500">Đang tải lịch sử báo cáo...</p>
-                                                ) : !fieldReports || fieldReports.length === 0 ? (
-                                                    <p className="text-xs text-gray-500">
-                                                        Bạn chưa gửi báo cáo nào cho sân này.
-                                                    </p>
-                                                ) : (
-                                                    <ul className="space-y-2 text-xs">
-                                                        {fieldReports.map((r) => (
-                                                            <li key={r._id} className="flex flex-col rounded-md border px-3 py-2">
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <span className="font-semibold">
-                                                                        {String(r.category || "").replace(/_/g, " ")}
-                                                                    </span>
-                                                                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] uppercase tracking-wide">
-                                                                        {r.status}
-                                                                    </span>
-                                                                </div>
-                                                                {r.description && (
-                                                                    <p className="mt-1 text-[11px] text-gray-600 line-clamp-2">
-                                                                        {r.description}
-                                                                    </p>
-                                                                )}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Chat with owner card */}
-                                        <Card className="border bg-white shadow-sm">
-                                            <CardHeader className="pb-3">
-                                                <CardTitle className="text-sm text-gray-800 flex items-center gap-2">
-                                                    <MessageCircle className="h-4 w-4 text-green-600" />
-                                                    Liên hệ chủ sân
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-3">
-                                                <p className="text-xs text-gray-600">
-                                                    Có thắc mắc về lịch trống, giá hoặc tiện ích? Gửi tin nhắn trực tiếp
-                                                    cho chủ sân để được hỗ trợ nhanh hơn.
-                                                </p>
-                                                <Button
-                                                    variant="outline"
-                                                    className="w-full border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700"
-                                                    onClick={() => setShowChatWindow(true)}
-                                                >
-                                                    <MessageCircle className="h-4 w-4 mr-2" />
-                                                    Message Owner
-                                                </Button>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                </aside>
-                            </div>
-                        )}
-                    </div>
-                </div>
-                {showChatWindow && (
-                    <FieldDetailChatWindow
-                        onClose={() => setShowChatWindow(false)}
-                        fieldOwnerId={String((currentField as any)?.owner?.id || (currentField as any)?.owner?._id || '')}
-                        fieldId={String(currentField?.id || '')}
-                        fieldName={currentField?.name || ''}
-                        fieldOwnerName={(currentField as any)?.owner?.name || 'Field Owner'}
-                        isOpen={showChatWindow}
+              </div>
+            </div>
+          </div>
+          <div className="w-full bg-[#FAFAFA]">
+            <div className="max-w-6xl mx-auto pt-6">
+              {!loading && currentField && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6">
+                  <div className="lg:col-span-2 space-y-4 text-left">
+                    <QuickNavPills
+                      activeTab={activeTab}
+                      pills={[
+                        { k: "overview", label: "Overview" },
+                        { k: "rules", label: "Rules" },
+                        { k: "amenities", label: "Amenities" },
+                        { k: "gallery", label: "Gallery" },
+                        { k: "rating", label: "Rating" },
+                        { k: "location", label: "Location" },
+                      ]}
+                      onSelect={(k) => scrollToSection(k)}
                     />
-                )}
-                <ReportDialog
-                    isOpen={showReportDialog}
-                    onClose={() => setShowReportDialog(false)}
-                    fieldId={String(currentField?.id || '')}
-                    fieldName={currentField?.name || ''}
-                />
-                <FooterComponent />
-            </PageWrapper>
-        </>
-    )
+
+                    {/* Always-visible sections */}
+                    <div className="mt-4 space-y-4">
+                      <OverviewCard
+                        refObj={overviewRef}
+                        id="overview"
+                        description={
+                          (currentField?.description as string | undefined) ||
+                          "Mô tả đang được cập nhật."
+                        }
+                      />
+
+                      <RulesCard refObj={rulesRef} id="rules" rules={rules} />
+
+                      <AmenitiesCard
+                        refObj={amenitiesRef}
+                        id="amenities"
+                        items={amenitiesDisplay}
+                        fallback={[]}
+                      />
+
+                      <GalleryCard
+                        refObj={galleryRef}
+                        id="gallery"
+                        images={(currentField.images as string[]) || []}
+                        fallback={[]}
+                      />
+
+                      <RatingCard
+                        refObj={ratingRef}
+                        id="rating"
+                        ratingValue={ratingValue}
+                        reviewCount={
+                          ((currentField as any)?.reviewCount ?? 0) as number
+                        }
+                        fieldId={id || ""}
+                      />
+
+                      <LocationCard
+                        refObj={locationRef}
+                        id="location"
+                        addressText={String(
+                          ((currentField as any)?.location?.address ??
+                            locationText) ||
+                            ""
+                        )}
+                        geoCoords={
+                          (() => {
+                            const c = (currentField as any)?.location?.geo
+                              ?.coordinates as number[] | undefined;
+                            return Array.isArray(c) && c.length === 2
+                              ? [c[0], c[1]]
+                              : null;
+                          })() as [number, number] | null
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <aside className="lg:col-span-1">
+                    <div className="lg:sticky lg:top-20 space-y-4">
+                      {/* Info card */}
+                      <Card className="bg-white rounded-2xl shadow-md border border-gray-100">
+                        <CardHeader className="">
+                          <div className="flex items-center gap-3 justify-center">
+                            <div className="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-green-100 shrink-0">
+                              <CalendarDays className="h-6 w-6 text-green-600 block" />
+                            </div>
+                            <div className="text-left">
+                              <CardTitle className="text-lg font-semibold text-gray-900">
+                                Availability
+                              </CardTitle>
+                              <CardDescription className="text-gray-600 text-sm mt-1">
+                                Check availability on your convenient time
+                              </CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+
+                      {/* Booking card */}
+                      <Card className="shadow-lg border-0 bg-white">
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-sm text-gray-700">
+                            Availability
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">
+                              Book a Court
+                            </p>
+                            <p className="text-3xl font-bold text-green-600">
+                              {currentField.price ||
+                                (currentField.basePrice
+                                  ? `${currentField.basePrice.toLocaleString()}đ/h`
+                                  : "Contact")}
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() =>
+                              navigate("/field-booking", {
+                                state: { fieldId: currentField.id },
+                              })
+                            }
+                            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 h-auto"
+                          >
+                            Đặt sân ngay
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      {/* Owner info card */}
+                      {currentField && (
+                        <OwnerInfoCard
+                          name={
+                            (currentField as any)?.owner?.name ||
+                            (currentField as any)?.owner?.businessName ||
+                            "Chủ sân"
+                          }
+                          phone={
+                            (currentField as any)?.owner?.contactInfo?.phone ||
+                            (currentField as any)?.owner?.contact ||
+                            (currentField as any)?.ownerPhone
+                          }
+                          email={
+                            (currentField as any)?.owner?.contactInfo?.email
+                          }
+                          avatarUrl={(currentField as any)?.owner?.avatarUrl}
+                        />
+                      )}
+
+                      {/* User reports for this field */}
+                      <Card className="border bg-white shadow-sm">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm text-gray-800 flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-red-500" />
+                            Báo cáo của bạn về sân này
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {loadingReports ? (
+                            <p className="text-xs text-gray-500">
+                              Đang tải lịch sử báo cáo...
+                            </p>
+                          ) : !fieldReports || fieldReports.length === 0 ? (
+                            <p className="text-xs text-gray-500">
+                              Bạn chưa gửi báo cáo nào cho sân này.
+                            </p>
+                          ) : (
+                            <ul className="space-y-2 text-xs">
+                              {fieldReports.map((r) => (
+                                <li
+                                  key={r._id}
+                                  className="flex flex-col rounded-md border px-3 py-2"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-semibold">
+                                      {String(r.category || "").replace(
+                                        /_/g,
+                                        " "
+                                      )}
+                                    </span>
+                                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] uppercase tracking-wide">
+                                      {r.status}
+                                    </span>
+                                  </div>
+                                  {r.description && (
+                                    <p className="mt-1 text-[11px] text-gray-600 line-clamp-2">
+                                      {r.description}
+                                    </p>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Chat with owner card */}
+                      <Card className="border bg-white shadow-sm">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm text-gray-800 flex items-center gap-2">
+                            <MessageCircle className="h-4 w-4 text-green-600" />
+                            Liên hệ chủ sân
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-xs text-gray-600">
+                            Có thắc mắc về lịch trống, giá hoặc tiện ích? Gửi
+                            tin nhắn trực tiếp cho chủ sân để được hỗ trợ nhanh
+                            hơn.
+                          </p>
+                          <Button
+                            variant="outline"
+                            className="w-full border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700"
+                            onClick={() => setShowChatWindow(true)}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message Owner
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </aside>
+                </div>
+              )}
+            </div>
+          </div>
+          {showChatWindow && (
+            <FieldDetailChatWindow
+              onClose={() => setShowChatWindow(false)}
+              fieldOwnerId={String(
+                (currentField as any)?.owner?.id ||
+                  (currentField as any)?.owner?._id ||
+                  ""
+              )}
+              fieldId={String(currentField?.id || "")}
+              fieldName={currentField?.name || ""}
+              fieldOwnerName={
+                (currentField as any)?.owner?.name || "Field Owner"
+              }
+              isOpen={showChatWindow}
+            />
+          )}
+          <ReportDialog
+            isOpen={showReportDialog}
+            onClose={() => setShowReportDialog(false)}
+            fieldId={String(currentField?.id || "")}
+            fieldName={currentField?.name || ""}
+          />
+          <FooterComponent />
+        </PageWrapper>
+      </>
+    );
 }
 
 export default FieldDetailPage
