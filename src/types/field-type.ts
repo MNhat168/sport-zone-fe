@@ -29,6 +29,7 @@ export interface Field {
     basePrice: number; // in VND
     price?: string; // Formatted price from backend (e.g., "250.000đ/giờ" or "N/A")
     isActive: boolean;
+    isAdminVerify?: boolean; // Admin verification status
     maintenanceNote?: string;
     maintenanceUntil?: string; // ISO date string
     rating: number;

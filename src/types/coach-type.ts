@@ -25,6 +25,7 @@ export interface Coach {
     bio: string;
     rating: number;
     totalReviews: number;
+    location?: string; // Coach location for filtering
 }
 
 // Legacy Coach interface for /coaches/all endpoint
@@ -39,6 +40,15 @@ export interface LegacyCoach {
     nextAvailability: null; // TODO: Will be implemented
 }
 
+// Location data structure with geo coordinates
+export interface LocationData {
+    address?: string;
+    geo?: {
+        type: 'Point';
+        coordinates: [number, number]; // [longitude, latitude]
+    };
+}
+
 // Coach Detail interface for /coaches/:id endpoint
 export interface CoachDetail {
     id: string;
@@ -49,6 +59,7 @@ export interface CoachDetail {
     rating: number;
     reviewCount: number;
     location: string;
+    locationData?: LocationData; // Location with geo coordinates
     level: string;
     completedSessions: number;
     createdAt: string;
@@ -83,6 +94,7 @@ export interface CoachFilters {
     sportType?: SportType | string;
     minRate?: number;
     maxRate?: number;
+    district?: string; // Filter by district (quận)
 }
 
 // API Response interfaces
@@ -174,3 +186,33 @@ export type HttpStatus = typeof HttpStatus[keyof typeof HttpStatus];
 // Utility types
 export type CoachId = string;
 export type UserId = string;
+
+// Coach Bank Account interface
+export interface CoachBankAccount {
+    accountName: string;
+    accountNumber: string;
+    bankName: string;
+    bankCode: string;
+    qrCodeUrl?: string;
+    branch?: string;
+}
+
+// Available slot interface
+export interface AvailableSlot {
+    startTime: string;
+    endTime: string;
+    available: boolean;
+}
+
+// Create Coach Booking V2 Payload
+export interface CreateCoachBookingV2Payload {
+    fieldId: string;
+    coachId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    note?: string;
+    guestEmail?: string;
+    guestName?: string;
+    guestPhone?: string;
+}

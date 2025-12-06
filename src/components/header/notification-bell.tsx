@@ -114,7 +114,7 @@ export function NotificationBell({
       });
 
       // Show toast notification
-      toast(data?.content || "Bạn có thông báo mới!");
+      toast(data?.message || data?.title || "Bạn có thông báo mới!");
     };
 
     socket.on("notification", handleNotification);

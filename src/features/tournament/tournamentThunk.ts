@@ -106,12 +106,6 @@ const mapApiTournamentToAppTournament = (apiTournament: any): import("./tourname
   currentTeams: currentTeams,
   teams: Array.isArray(apiTournament?.teams) ? apiTournament.teams : [],
   schedule: Array.isArray(apiTournament?.schedule) ? apiTournament.schedule : [],
-  orderCode: undefined,
-  paymentLink: undefined,
-  externalTransactionId: undefined,
-  transaction: undefined,
-  transactionId: undefined,
-  paymentUrl: false,
 };
 };
 

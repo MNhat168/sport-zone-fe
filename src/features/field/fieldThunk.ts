@@ -54,6 +54,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         basePrice: Number(apiField?.basePrice ?? 0),
         price: apiField?.price || undefined, // Formatted price from backend (e.g., "250.000đ/giờ")
         isActive: apiField?.isActive ?? true,
+        isAdminVerify: apiField?.isAdminVerify ?? false,
         maintenanceNote: apiField?.maintenanceNote,
         maintenanceUntil: apiField?.maintenanceUntil,
         rating: apiField?.rating || 0,
@@ -688,6 +689,44 @@ export const ownerDenyNote = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to deny booking note",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Owner: accept a booking
+export const ownerAcceptBooking = createAsyncThunk<
+    any,
+    string,
+    { rejectValue: ErrorResponse }
+>("field/ownerAcceptBooking", async (bookingId, thunkAPI) => {
+    try {
+        const { OWNER_ACCEPT_BOOKING_API } = await import("./fieldAPI");
+        const response = await axiosPrivate.patch(OWNER_ACCEPT_BOOKING_API(bookingId));
+        return response.data?.data ?? response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to accept booking",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Owner: reject a booking
+export const ownerRejectBooking = createAsyncThunk<
+    any,
+    { bookingId: string; reason?: string },
+    { rejectValue: ErrorResponse }
+>("field/ownerRejectBooking", async ({ bookingId, reason }, thunkAPI) => {
+    try {
+        const { OWNER_REJECT_BOOKING_API } = await import("./fieldAPI");
+        const response = await axiosPrivate.patch(OWNER_REJECT_BOOKING_API(bookingId), reason ? { reason } : undefined);
+        return response.data?.data ?? response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to reject booking",
             status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

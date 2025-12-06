@@ -5,8 +5,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DollarSign, Building2, TrendingUp, Calendar } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
-import { getMyFields, getMyFieldsBookings } from "@/features/field/fieldThunk"
+import { getMyFields, getMyFieldsBookings, ownerAcceptBooking, ownerRejectBooking, ownerGetBookingDetail } from "@/features/field/fieldThunk"
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
+import CourtBookingDetails from "@/components/pop-up/court-booking-detail"
+import type { FieldOwnerBooking } from "@/types/field-type"
 
 export default function FieldOwnerDashboardPage() {
     const dispatch = useAppDispatch();
@@ -22,6 +24,135 @@ export default function FieldOwnerDashboardPage() {
     const [selectedTab, setSelectedTab] = useState<"court" | "coaching">("court");
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 3;
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState<any>();
+
+    // Helper functions for time and date formatting
+    const formatTime = (time24h: string): string => {
+        try {
+            const [hours, minutes] = time24h.split(":");
+            const hour = parseInt(hours, 10);
+            const period = hour >= 12 ? "PM" : "AM";
+            const hour12 = hour % 12 || 12;
+            return `${hour12.toString().padStart(2, "0")}:${minutes} ${period}`;
+        } catch {
+            return time24h;
+        }
+    };
+
+    const formatDate = (dateStr: string): string => {
+        try {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        } catch {
+            return dateStr;
+        }
+    };
+
+    const formatCurrency = (amount: number | undefined): string => {
+        if (!amount) return "0 đ";
+        return `${amount.toLocaleString('vi-VN')} đ`;
+    };
+
+    // Handle view details
+    const handleViewDetails = async (bookingId: string) => {
+        const booking = fieldOwnerBookings?.find((b: FieldOwnerBooking) => b.bookingId === bookingId);
+        if (!booking) return;
+        
+        // Try to fetch owner booking detail to get user note if exists
+        let note: string | undefined;
+        try {
+            const res: any = await dispatch(ownerGetBookingDetail(bookingId)).unwrap();
+            note = res?.note;
+        } catch {
+            // ignore detail fetch error; proceed with list data
+        }
+
+        const startTime12h = formatTime(booking.startTime);
+        const endTime12h = formatTime(booking.endTime);
+        const bookingDate = formatDate(booking.date);
+
+        const toNumber = (v?: number) => (typeof v === "number" ? v : 0);
+        const bookingAmount = toNumber((booking as any).bookingAmount ?? booking.totalPrice - (booking as any).platformFee ?? 0);
+        const platformFee = toNumber((booking as any).platformFee);
+        const amenitiesFee = toNumber(booking.amenitiesFee);
+        const totalPrice = toNumber(booking.totalPrice);
+
+        // Compute duration hours
+        const totalHours = (() => {
+            try {
+                const [sh, sm = "0"] = booking.startTime.split(":");
+                const [eh, em = "0"] = booking.endTime.split(":");
+                const start = parseInt(sh, 10) * 60 + parseInt(sm, 10);
+                const end = parseInt(eh, 10) * 60 + parseInt(em, 10);
+                const diff = Math.max(0, end - start);
+                return (diff / 60).toString();
+            } catch {
+                return "0";
+            }
+        })();
+
+        const createdAt = booking.createdAt ? formatDate(booking.createdAt) : bookingDate;
+
+        setSelectedBooking({
+            academy: booking.fieldName,
+            court: booking.fieldName,
+            bookedOn: createdAt,
+            bookingDate: bookingDate,
+            bookingTime: `${startTime12h} - ${endTime12h}`,
+            totalHours,
+            courtBookingAmount: formatCurrency(bookingAmount),
+            additionalGuests: "0", // not tracked in entity
+            additionalGuestsAmount: "0 đ",
+            serviceCharge: platformFee ? formatCurrency(platformFee) : "0 đ",
+            totalAmountPaid: formatCurrency(totalPrice),
+            paidOn: createdAt,
+            transactionId: booking.bookingId,
+            paymentType: "Chuyển khoản",
+            customer: booking.customer,
+            amenities: booking.selectedAmenities,
+            amenitiesFee: amenitiesFee ? formatCurrency(amenitiesFee) : "0 đ",
+            originalBooking: booking,
+            note,
+        });
+        setIsDetailsOpen(true);
+    };
+
+    // Handle accept booking
+    const handleAccept = async (bookingId: string) => {
+        try {
+            await dispatch(ownerAcceptBooking(bookingId)).unwrap();
+            // Refresh bookings list
+            dispatch(getMyFieldsBookings({
+                page: 1,
+                limit: 50
+            }));
+        } catch (error: any) {
+            console.error("Accept booking failed", error);
+            alert(error?.message || "Không thể chấp nhận booking. Vui lòng thử lại.");
+        }
+    };
+
+    // Handle reject booking
+    const handleReject = async (bookingId: string) => {
+        const reason = prompt("Vui lòng nhập lý do từ chối (tùy chọn):");
+        try {
+            await dispatch(ownerRejectBooking({ bookingId, reason: reason || undefined })).unwrap();
+            // Refresh bookings list
+            dispatch(getMyFieldsBookings({
+                page: 1,
+                limit: 50
+            }));
+        } catch (error: any) {
+            console.error("Reject booking failed", error);
+            alert(error?.message || "Không thể từ chối booking. Vui lòng thử lại.");
+        }
+    };
 
     // Hàm để lọc và tải bookings
     const handleFilterBookings = (filters?: { 
@@ -521,11 +652,13 @@ export default function FieldOwnerDashboardPage() {
                                                                         {request.totalPrice?.toLocaleString('vi-VN')} ₫
                                                                     </p>
                                                                     {/* Hiển thị nút action dựa trên status */}
-                                                                    {request.status === "pending" ? (
+                                                                    {request.status === "pending" || (request as any).approvalStatus === "pending" ? (
                                                                         <div className="flex space-x-2">
                                                                             <Button
                                                                                 size="sm"
                                                                                 className="bg-green-600 hover:bg-green-700"
+                                                                                onClick={() => handleAccept(request.bookingId)}
+                                                                                disabled={fieldOwnerBookingsLoading}
                                                                             >
                                                                                 Chấp nhận
                                                                             </Button>
@@ -533,16 +666,19 @@ export default function FieldOwnerDashboardPage() {
                                                                                 size="sm"
                                                                                 variant="outline"
                                                                                 className="border-red-500 text-red-500 hover:bg-red-50"
+                                                                                onClick={() => handleReject(request.bookingId)}
+                                                                                disabled={fieldOwnerBookingsLoading}
                                                                             >
                                                                                 Từ chối
                                                                             </Button>
                                                                         </div>
-                                                                    ) : request.status === "confirmed" ? (
+                                                                    ) : request.status === "confirmed" || (request as any).approvalStatus === "approved" ? (
                                                                         <div className="flex space-x-2">
                                                                             <Button
                                                                                 size="sm"
                                                                                 variant="outline"
                                                                                 className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                                                                                onClick={() => handleViewDetails(request.bookingId)}
                                                                             >
                                                                                 Xem chi tiết
                                                                             </Button>
@@ -553,18 +689,20 @@ export default function FieldOwnerDashboardPage() {
                                                                                 size="sm"
                                                                                 variant="outline"
                                                                                 className="border-gray-500 text-gray-500 hover:bg-gray-50"
+                                                                                onClick={() => handleViewDetails(request.bookingId)}
                                                                             >
-                                                                                Đã hoàn thành
+                                                                                Xem chi tiết
                                                                             </Button>
                                                                         </div>
-                                                                    ) : request.status === "cancelled" ? (
+                                                                    ) : request.status === "cancelled" || (request as any).approvalStatus === "rejected" ? (
                                                                         <div className="flex space-x-2">
                                                                             <Button
                                                                                 size="sm"
                                                                                 variant="outline"
                                                                                 className="border-red-500 text-red-500 hover:bg-red-50"
+                                                                                onClick={() => handleViewDetails(request.bookingId)}
                                                                             >
-                                                                                Đã hủy
+                                                                                Xem chi tiết
                                                                             </Button>
                                                                         </div>
                                                                     ) : null}
@@ -698,6 +836,13 @@ export default function FieldOwnerDashboardPage() {
                         </div>
 
             </div>
+
+            {/* Booking Details Modal */}
+            <CourtBookingDetails
+                isOpen={isDetailsOpen}
+                onClose={() => setIsDetailsOpen(false)}
+                bookingData={selectedBooking}
+            />
         </FieldOwnerDashboardLayout>
     )
 }

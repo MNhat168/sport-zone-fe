@@ -58,6 +58,11 @@ const mapApiCoachDetailToAppCoachDetail = (apiCoach: any): import("../../types/c
     const experience = apiCoach?.coachingDetails?.experience || apiCoach?.experience || "";
     const certification = apiCoach?.coachingDetails?.certification || apiCoach?.certification || "";
 
+    // Extract locationData from API response
+    // BE returns locationData as an object with { address, geo: { type, coordinates } }
+    const locationData = apiCoach?.locationData || 
+                        (apiCoach?.location && typeof apiCoach.location === 'object' ? apiCoach.location : null);
+
     return {
         id: apiCoach?.id || apiCoach?._id || "",
         name,
@@ -67,6 +72,7 @@ const mapApiCoachDetailToAppCoachDetail = (apiCoach: any): import("../../types/c
         rating: Number(apiCoach?.rating ?? 0),
         reviewCount,
         location: apiCoach?.location || apiCoach?.user?.location || "",
+        locationData: locationData || undefined, // Include locationData with geo coordinates
         level,
         completedSessions: Number(apiCoach?.completedSessions ?? 0),
         createdAt: apiCoach?.createdAt || "",
@@ -93,6 +99,7 @@ export const getCoaches = createAsyncThunk<
         if (filters.sportType) queryParams.append("sportType", filters.sportType);
         if (filters.minRate) queryParams.append("minRate", filters.minRate.toString());
         if (filters.maxRate) queryParams.append("maxRate", filters.maxRate.toString());
+        if (filters.district) queryParams.append("district", filters.district);
 
         const url = queryParams.toString() ? `${COACHES_API}?${queryParams}` : COACHES_API;
         const response = await axiosPublic.get(url);

@@ -40,8 +40,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { createPayOSPayment, queryPayOSTransaction } from "@/features/transactions/transactionsThunk"
-import { setError } from "@/features/tournament"
 
 export default function TournamentDetailsPage() {
   const { id } = useParams<{ id: string }>()
@@ -175,7 +173,6 @@ export default function TournamentDetailsPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const paymentStatus = params.get('payment');
-      const orderCode = params.get('orderCode');
 
       if (paymentStatus && id) {
         // Clear URL parameters without reloading
@@ -201,96 +198,6 @@ export default function TournamentDetailsPage() {
       }
     }
   }, [id, dispatch]);
-
-  const handlePayOSPayment = async () => {
-    try {
-      if (!currentTournament || !user) {
-        console.error('Missing tournament or user data');
-        return;
-      }
-
-      console.log('Starting PayOS payment process...');
-
-      // First, create a tournament registration transaction
-      const registrationResponse = await dispatch(registerForTournament({
-        tournamentId: currentTournament._id,
-        paymentMethod: 'payos'
-      })).unwrap();
-
-      console.log('Registration response:', registrationResponse);
-
-      // ✅ FIX: Check if we already have a payment link in the response
-      if (registrationResponse.paymentLink) {
-        setShowRegisterDialog(false);
-
-        // Store payment info for polling
-        localStorage.setItem('pendingPayment', JSON.stringify({
-          tournamentId: currentTournament._id,
-          orderCode: registrationResponse.orderCode,
-          transactionId: registrationResponse.transaction?._id,
-          timestamp: Date.now()
-        }));
-
-        // Open payment window directly
-        window.open(registrationResponse.paymentLink, '_blank', 'width=500,height=700');
-        return;
-      }
-
-      // If no payment link, try to create one using transaction ID
-      console.log('No payment link in response, trying with transaction ID...');
-
-      // Extract transaction ID from registration response
-      const transactionId = registrationResponse.transaction?._id;
-      if (!transactionId) {
-        throw new Error('No transaction ID found in registration response');
-      }
-
-      // Create PayOS payment link using createPayOSPayment API
-      console.log('Creating PayOS payment link using transaction ID:', transactionId);
-      const response = await dispatch(createPayOSPayment({
-        orderId: transactionId, // ✅ Use transaction ID
-        amount: currentTournament.registrationFee,
-        description: `Đăng ký tham gia giải đấu ${currentTournament.name}`,
-        returnUrl: `${window.location.origin}/tournaments/${currentTournament._id}/payment-return`,
-        cancelUrl: `${window.location.origin}/tournaments/${currentTournament._id}`,
-        items: [{
-          name: `Đăng ký giải đấu: ${currentTournament.name}`,
-          quantity: 1,
-          price: currentTournament.registrationFee
-        }],
-        buyerName: user.fullName || user.email || 'User',
-        buyerEmail: user.email,
-        buyerPhone: user.phone || '',
-        expiredAt: 15
-      })).unwrap();
-
-      console.log('PayOS payment link response:', response);
-
-      if (response.checkoutUrl) {
-        setShowRegisterDialog(false);
-        console.log('Opening payment URL:', response.checkoutUrl);
-
-        // Store payment info for polling
-        localStorage.setItem('pendingPayment', JSON.stringify({
-          tournamentId: currentTournament._id,
-          orderCode: response.orderCode,
-          transactionId: transactionId,
-          timestamp: Date.now()
-        }));
-
-        window.open(response.checkoutUrl, '_blank', 'width=500,height=700');
-      }
-    } catch (error: any) {
-      console.error('PayOS payment failed:', error);
-
-      if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-      }
-
-      alert(`Payment Error: ${error.message || 'Failed to create payment link'}`);
-    }
-  };
 
   // Handle team click from formation map
   const handleTeamClick = (teamNumber: number) => {
@@ -367,11 +274,7 @@ export default function TournamentDetailsPage() {
 
   const tournament = currentTournament
   const isParticipant = user && tournament.participants?.some(p =>
-    p.user?._id === user._id && p.paymentStatus === 'confirmed'
-  );
-
-  const hasPendingPayment = user && tournament.participants?.some(p =>
-    p.user?._id === user._id && p.paymentStatus === 'pending'
+    p.user?._id === user._id
   );
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
   const isFull = tournament.participants?.length >= (tournament.maxParticipants || 0);

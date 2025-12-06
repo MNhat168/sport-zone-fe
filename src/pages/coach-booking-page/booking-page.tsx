@@ -6,11 +6,13 @@ import CoachCard from "./card-list/coach-card-props"
 import { useRef, useEffect, useState, useMemo } from "react"
 import { FooterComponent } from "../../components/footer/footer-component"
 import { useGeolocation } from "../../hooks/useGeolocation"
-import { Navigation, MapPin, AlertCircle } from "lucide-react"
+import { Navigation, MapPin, AlertCircle, Filter } from "lucide-react"
 import { PageWrapper } from "../../components/layouts/page-wrapper"
 import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getCoaches } from "../../features/coach/coachThunk"
 import type { Coach } from "../../types/coach-type"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SportType } from "@/types/coach-type"
 
 const BookingPage = () => {
     const coachesListRef = useRef<HTMLDivElement>(null)
@@ -19,13 +21,17 @@ const BookingPage = () => {
 
     const breadcrumbs = [{ label: "Trang chủ", href: "/" }, { label: "Đặt huấn luyện viên" }]
 
+    // Filter states
+    const [selectedSport, setSelectedSport] = useState<string>('all')
+    const [selectedDistrict, setSelectedDistrict] = useState<string>('all')
+
     // Map Coach data to format expected by CoachCard
     const coaches = useMemo(() => {
         if (!coachesData || !Array.isArray(coachesData)) return []
         return coachesData.map((coach: Coach) => ({
             id: coach.id,
             name: coach.fullName,
-            location: '', // Location not available in Coach type, can be enhanced later
+            location: coach.location || '', // Use location from Coach type
             description: coach.bio || '',
             rating: coach.rating || 0,
             totalReviews: coach.totalReviews || 0,
@@ -77,10 +83,17 @@ const BookingPage = () => {
         }
     }
 
-    // Fetch coaches using Redux thunk
+    // Fetch coaches using Redux thunk with filters
     useEffect(() => {
-        dispatch(getCoaches())
-    }, [dispatch])
+        const filters: any = {}
+        if (selectedSport !== 'all') {
+            filters.sportType = selectedSport
+        }
+        if (selectedDistrict !== 'all') {
+            filters.district = selectedDistrict
+        }
+        dispatch(getCoaches(Object.keys(filters).length > 0 ? filters : undefined))
+    }, [dispatch, selectedSport, selectedDistrict])
 
     // Initialize Leaflet map once (copied pattern from field list page)
     useEffect(() => {
@@ -230,6 +243,58 @@ const BookingPage = () => {
                 <div className="flex gap-6 items-start">
                     {/* Left Panel - Coaches List */}
                     <div className="flex-[6] bg-white flex flex-col h-screen">
+                        {/* Filters */}
+                        <div className="p-4 border-b border-gray-200">
+                            <div className="flex items-center gap-4 flex-wrap">
+                                <div className="flex items-center gap-2">
+                                    <Filter className="w-4 h-4 text-gray-500" />
+                                    <span className="text-sm font-medium text-gray-700">Lọc theo:</span>
+                                </div>
+                                <Select value={selectedSport} onValueChange={setSelectedSport}>
+                                    <SelectTrigger className="w-40">
+                                        <SelectValue placeholder="Tất cả môn" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Tất cả môn</SelectItem>
+                                        <SelectItem value={SportType.FOOTBALL}>Bóng đá</SelectItem>
+                                        <SelectItem value={SportType.TENNIS}>Tennis</SelectItem>
+                                        <SelectItem value={SportType.BADMINTON}>Cầu lông</SelectItem>
+                                        <SelectItem value={SportType.BASKETBALL}>Bóng rổ</SelectItem>
+                                        <SelectItem value={SportType.VOLLEYBALL}>Bóng chuyền</SelectItem>
+                                        <SelectItem value={SportType.SWIMMING}>Bơi lội</SelectItem>
+                                        <SelectItem value={SportType.GYM}>Gym</SelectItem>
+                                        <SelectItem value={SportType.PICKLEBALL}>Pickleball</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+                                    <SelectTrigger className="w-40">
+                                        <SelectValue placeholder="Tất cả quận" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Tất cả quận</SelectItem>
+                                        <SelectItem value="Quận 1">Quận 1</SelectItem>
+                                        <SelectItem value="Quận 2">Quận 2</SelectItem>
+                                        <SelectItem value="Quận 3">Quận 3</SelectItem>
+                                        <SelectItem value="Quận 4">Quận 4</SelectItem>
+                                        <SelectItem value="Quận 5">Quận 5</SelectItem>
+                                        <SelectItem value="Quận 6">Quận 6</SelectItem>
+                                        <SelectItem value="Quận 7">Quận 7</SelectItem>
+                                        <SelectItem value="Quận 8">Quận 8</SelectItem>
+                                        <SelectItem value="Quận 9">Quận 9</SelectItem>
+                                        <SelectItem value="Quận 10">Quận 10</SelectItem>
+                                        <SelectItem value="Quận 11">Quận 11</SelectItem>
+                                        <SelectItem value="Quận 12">Quận 12</SelectItem>
+                                        <SelectItem value="Bình Thạnh">Bình Thạnh</SelectItem>
+                                        <SelectItem value="Tân Bình">Tân Bình</SelectItem>
+                                        <SelectItem value="Tân Phú">Tân Phú</SelectItem>
+                                        <SelectItem value="Phú Nhuận">Phú Nhuận</SelectItem>
+                                        <SelectItem value="Gò Vấp">Gò Vấp</SelectItem>
+                                        <SelectItem value="Bình Tân">Bình Tân</SelectItem>
+                                        <SelectItem value="Thủ Đức">Thủ Đức</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
                         {/* Geolocation UI (copied from field list style) */}
                         <div className="p-4 border-b border-gray-200">
                             <div className="flex items-center justify-between">

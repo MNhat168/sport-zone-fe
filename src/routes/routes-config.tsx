@@ -17,13 +17,15 @@ import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
 import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 
 // Coach Pages
-import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page";
-import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page";
-import CoachWalletPage from "../pages/coach-dashboard-page/coach-wallet-page";
+import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page.tsx";
+import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page.tsx";
+import CoachWalletPage from "../pages/coach-dashboard-page/coach-wallet-page.tsx";
+import CoachVerifyPaymentsPage from "../pages/coach-dashboard-page/verify-payments.tsx";
 // Coach profile self-page for coaches only
 import CoachSelfDetailPage from "../pages/coach-profile-page/coach-profile-page";
 
 import BookingPage from "../pages/coach-booking-page/booking-page";
+import CoachBookingFlow from "../pages/coach-booking-page/coach-booking-flow";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 
 // Field Pages
@@ -112,6 +114,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/coaches", element: <Placeholder title="Danh sách HLV" /> },
   { path: "/coach-detail", element: <CoachDetailPage /> },
   { path: "/coach/:id", element: <CoachDetailPage /> },
+  { path: "/coaches/:id/booking", element: <CoachBookingFlow /> },
 
   // General Booking (Public)
   { path: "/coach/booking", element: <BookingPage /> },
@@ -318,6 +321,14 @@ export const coachRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <BookingPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/coach/verify-payments",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachVerifyPaymentsPage />
       </ProtectedRoute>
     ),
   },

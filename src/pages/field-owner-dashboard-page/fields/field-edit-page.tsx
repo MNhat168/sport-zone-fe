@@ -119,19 +119,31 @@ export default function FieldEditPage() {
             });
             setDayAvailability(availability);
 
-            // Extract amenities
+            // Extract amenities and categorize by type
             const amenities = currentField.amenities || [];
-            const amenityList: AmenityWithPrice[] = [];
+            const includesList: AmenityWithPrice[] = [];
+            const amenitiesList: AmenityWithPrice[] = [];
             
             amenities.forEach((amenity: any) => {
+                const amenityId = amenity.amenityId || amenity.amenity?._id || amenity.amenity?.id || amenity.amenity || '';
+                const amenityType = amenity.type || amenity.amenity?.type;
                 const amenityData: AmenityWithPrice = {
-                    amenityId: amenity.amenity?._id || amenity.amenity?.id || amenity.amenity || '',
+                    amenityId,
                     price: amenity.price || 0
                 };
-                // You might need to categorize includes vs amenities based on your logic
-                amenityList.push(amenityData);
+                
+                // Phân loại: FACILITY -> includes, DRINK và OTHER -> amenities
+                if (amenityType === 'facility') {
+                    includesList.push(amenityData);
+                } else if (amenityType === 'drink' || amenityType === 'other') {
+                    amenitiesList.push(amenityData);
+                } else {
+                    // Fallback: nếu không có type, đưa vào amenities
+                    amenitiesList.push(amenityData);
+                }
             });
-            setSelectedAmenities(amenityList);
+            setSelectedIncludes(includesList);
+            setSelectedAmenities(amenitiesList);
 
             // Set form data
             setFormData({

@@ -7,12 +7,13 @@ import { BookCourtTab } from "./fieldTabs/bookCourt";
 import { AmenitiesTab } from "./fieldTabs/amenities";
 import { PersonalInfoTab } from "./fieldTabs/personalInfo";
 import { ConfirmCourtTab } from "./fieldTabs/confirmCourt";
-import { PaymentTab } from "./fieldTabs/payment";
+import { PaymentV2 } from "./fieldTabs/payment-v2";
 import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { getFieldById } from "@/features/field/fieldThunk";
-import { AuthRequiredPopup } from "@/components/auth/auth-required-popup";
+import { LoginBenefitsBanner } from "@/components/auth/login-benefits-banner";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
+import { useAuth } from "@/routes/auth-wrapper";
  
 
 /**
@@ -33,6 +34,7 @@ const FieldBookingPage = () => {
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
     const authUser = useAppSelector((state) => state.auth.user);
+    const { isAuthenticated } = useAuth();
 
     // State để quản lý step hiện tại và booking data
     const [currentStep, setCurrentStep] = useState<BookingStep>(BookingStep.BOOK_COURT);
@@ -46,8 +48,8 @@ const FieldBookingPage = () => {
     });
     
 
-    // State để quản lý popup yêu cầu đăng nhập
-    const [showAuthPopup, setShowAuthPopup] = useState(false);
+    // State để quản lý banner khuyến khích đăng nhập
+    const [showBenefitsBanner, setShowBenefitsBanner] = useState(true);
 
     // Amenities selection data
     const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
@@ -128,16 +130,12 @@ const FieldBookingPage = () => {
         }
     }, [authUser]);
 
-    // Handle user login - if user logs in and we have pending booking data, continue the flow
+    // Ẩn banner khi user đăng nhập
     useEffect(() => {
-        if (authUser && showAuthPopup) {
-            setShowAuthPopup(false);
-            // If we have booking data, continue to amenities step
-            if (bookingData.date && bookingData.startTime && bookingData.endTime) {
-                setCurrentStep(BookingStep.AMENITIES);
-            }
+        if (isAuthenticated) {
+            setShowBenefitsBanner(false);
         }
-    }, [authUser, showAuthPopup, bookingData]);
+    }, [isAuthenticated]);
 
     // Mock courts data - thay thế bằng data thật từ API
     const mockCourts = [
@@ -150,21 +148,7 @@ const FieldBookingPage = () => {
     const handleBookCourtSubmit = (formData: BookingFormData) => {
         console.log('BookCourt submitted:', formData);
 
-        // Kiểm tra xem người dùng đã đăng nhập chưa
-        if (!authUser) {
-            // Save current location (pathname + search params) to localStorage for redirect after login
-            const redirectUrl = location.pathname + location.search;
-            try {
-                localStorage.setItem('bookingRedirectUrl', redirectUrl);
-                // Also save booking form data to localStorage (already done in BookCourtTab, but ensure it's saved)
-                localStorage.setItem('bookingFormData', JSON.stringify(formData));
-            } catch (error) {
-                console.warn('Failed to save redirect URL or booking data to localStorage:', error);
-            }
-            setShowAuthPopup(true);
-            return;
-        }
-
+        // Cho phép tiếp tục đặt sân mà không cần đăng nhập
         setBookingData(formData);
         // Move to amenities selection before confirmation
         setCurrentStep(BookingStep.AMENITIES);
@@ -204,15 +188,23 @@ const FieldBookingPage = () => {
         alert('Booking and payment completed successfully!');
     };
 
-    const handleShowAuthPopup = () => {
-        setShowAuthPopup(true);
-    };
 
     return (
         <>
             <NavbarDarkComponent />
             <PageWrapper>
                 <PageHeader title="Đặt sân" breadcrumbs={breadcrumbs} />
+                
+                {/* Banner khuyến khích đăng nhập - chỉ hiển thị khi chưa đăng nhập */}
+                {!isAuthenticated && showBenefitsBanner && (
+                    <div className="w-full max-w-[1320px] mx-auto px-3 mt-4">
+                        <LoginBenefitsBanner 
+                            onClose={() => setShowBenefitsBanner(false)}
+                            showCloseButton={true}
+                        />
+                    </div>
+                )}
+                
                 <BookingFieldTabs
                     currentStep={currentStep}
                 />
@@ -240,7 +232,6 @@ const FieldBookingPage = () => {
                         onSubmit={handlePersonalInfoSubmit}
                         onBack={handleBackToConfirmStep}
                         courts={mockCourts}
-                        onShowAuthPopup={handleShowAuthPopup}
                     />
                 )}
 
@@ -261,7 +252,7 @@ const FieldBookingPage = () => {
 
 
                 {currentStep === BookingStep.PAYMENT && (
-                    <PaymentTab
+                    <PaymentV2
                         bookingData={bookingData}
                         selectedAmenityIds={selectedAmenityIds}
                         amenities={(currentField as any)?.amenities?.map((a: any) => ({
@@ -271,18 +262,22 @@ const FieldBookingPage = () => {
                         })) || []}
                         onPaymentComplete={handlePaymentComplete}
                         onBack={handleBackToConfirm}
-                        courts={mockCourts}
-                        // selectedAmenityIds can be used here for pricing if desired
+                        onCountdownExpired={() => {
+                            // Reset to step 1 when countdown expires
+                            setCurrentStep(BookingStep.BOOK_COURT);
+                            setBookingData({
+                                date: '',
+                                startTime: '',
+                                endTime: '',
+                                name: '',
+                                email: '',
+                                phone: '',
+                            });
+                            setSelectedAmenityIds([]);
+                        }}
                     />
                 )}
 
-                {/* Authentication Required Popup */}
-                <AuthRequiredPopup
-                    isOpen={showAuthPopup}
-                    onClose={() => setShowAuthPopup(false)}
-                    title="Yêu cầu đăng nhập"
-                    description="Bạn cần đăng nhập để tiếp tục đặt sân. Vui lòng đăng nhập hoặc đăng ký tài khoản mới."
-                />
             </PageWrapper>
         </>
     )

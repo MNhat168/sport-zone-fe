@@ -1,0 +1,142 @@
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MapPin, Star, Award, Calendar, CheckCircle2, Heart } from "lucide-react";
+
+interface CoachInfoCardProps {
+  coachData: any;
+  coachReviews: any[];
+  isFavourite: boolean;
+  favLoading: boolean;
+  onToggleFavourite: () => void;
+}
+
+export const CoachInfoCard: React.FC<CoachInfoCardProps> = ({
+  coachData,
+  coachReviews,
+  isFavourite,
+  favLoading,
+  onToggleFavourite,
+}) => {
+  return (
+    <Card className="shadow-2xl border-0 animate-fade-in-up bg-white">
+      <CardContent className="p-6">
+        {coachData ? (
+          <div className="flex flex-col sm:flex-row items-start gap-6">
+            {/* Coach Avatar */}
+            <div className="relative group shrink-0">
+              <div className="absolute -inset-1 rounded-full bg-emerald-500/70 group-hover:bg-emerald-500 blur transition duration-300" />
+              <Avatar className="relative h-24 w-24 border-4 border-white shadow-lg">
+                <AvatarImage
+                  src={
+                    coachData.avatar ||
+                    coachData.profileImage ||
+                    "/professional-coach-portrait.png"
+                  }
+                  alt={coachData.name}
+                />
+                <AvatarFallback className="text-2xl bg-emerald-600 text-white">
+                  {coachData.name
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+
+            {/* Coach Info */}
+            <div className="flex-1 space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-3xl font-bold text-balance">
+                    {coachData.name}
+                  </h1>
+                  <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                  </Badge>
+                  <Button
+                    size="sm"
+                    onClick={onToggleFavourite}
+                    disabled={favLoading}
+                    className={`ml-auto ${isFavourite ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white border-0 flex items-center gap-2`}
+                  >
+                    <Heart className="h-4 w-4" />
+                    {favLoading ? 'Đang xử lý...' : isFavourite ? 'Đã yêu thích' : 'Yêu thích'}
+                  </Button>
+                </div>
+                <p className="text-base text-muted-foreground text-left">
+                  {coachData.description}
+                </p>
+              </div>
+
+              {/* Stats Row */}
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                {/* Only show rating if there are reviews */}
+                {Array.isArray(coachReviews) && coachReviews.length > 0 && coachData?.rating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-100 p-1.5 rounded">
+                      <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
+                    </div>
+                    <span className="font-semibold">
+                      {Number(coachData.rating).toFixed(1)}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {coachReviews.length} đánh giá
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-100 p-1.5 rounded">
+                      <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
+                    </div>
+                    <span className="text-muted-foreground">
+                      Chưa có đánh giá
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  <span>{coachData.location}</span>
+                </div>
+              </div>
+
+              {/* Additional Stats */}
+              <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground pt-2 border-t">
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4" />
+                  <span>Hạng: {coachData.level}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Buổi đã hoàn thành: {coachData.completedSessions}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Tham gia Dreamsports từ: {coachData.memberSince
+                      ? new Date(
+                          coachData.memberSince
+                        ).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground">
+            Coach data not found.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+

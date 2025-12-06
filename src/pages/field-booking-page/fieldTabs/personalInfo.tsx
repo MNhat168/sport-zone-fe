@@ -11,7 +11,7 @@ import type { Field } from "@/types/field-type";
 /**
  * Interface for booking form data
  */
-interface BookingFormData {
+export interface BookingFormData {
     date: string;
     startTime: string;
     endTime: string;
@@ -45,10 +45,6 @@ interface PersonalInfoTabProps {
      * Available courts list
      */
     courts?: Array<{ id: string; name: string }>;
-    /**
-     * Callback to show authentication popup
-     */
-    onShowAuthPopup?: () => void;
 }
 
 /**
@@ -59,7 +55,6 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     bookingData,
     onSubmit,
     onBack,
-    onShowAuthPopup,
 }) => {
     const location = useLocation();
     const currentField = useAppSelector((state) => state.field.currentField);
@@ -81,13 +76,6 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     });
 
     const [errors, setErrors] = useState<{[key: string]: string}>({});
-
-    // Check authentication when component mounts
-    useEffect(() => {
-        if (!currentUser && onShowAuthPopup) {
-            onShowAuthPopup();
-        }
-    }, [currentUser, onShowAuthPopup]);
 
     // Update form when user info changes
     useEffect(() => {
@@ -135,13 +123,131 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         }
     };
 
-    const handleSubmit = () => {
+    const [isHoldingSlot, setIsHoldingSlot] = useState(false);
+    const [holdError, setHoldError] = useState<string | null>(null);
+
+    const handleSubmit = async () => {
         if (!validateForm()) {
             return;
         }
 
-        if (onSubmit) {
-            onSubmit(formData);
+        // Call booking hold API before moving to payment
+        if (!venue?.id || !formData.date || !formData.startTime || !formData.endTime) {
+            setHoldError('Thiếu thông tin đặt sân. Vui lòng quay lại và kiểm tra.');
+            return;
+        }
+
+        setIsHoldingSlot(true);
+        setHoldError(null);
+
+        try {
+            // Get selected amenity IDs from localStorage
+            const selectedAmenityIds: string[] = [];
+            try {
+                const raw = localStorage.getItem('selectedAmenityIds');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        selectedAmenityIds.push(...parsed);
+                    }
+                }
+            } catch {
+                // Ignore parsing errors
+            }
+
+            // Get note from localStorage
+            const note = localStorage.getItem('amenitiesNote') || undefined;
+
+            const payload: any = {
+                fieldId: venue.id,
+                date: formData.date,
+                startTime: formData.startTime,
+                endTime: formData.endTime,
+            };
+
+            if (selectedAmenityIds.length > 0) {
+                payload.selectedAmenities = selectedAmenityIds;
+            }
+
+            if (note) {
+                payload.note = note;
+            }
+
+            // Add guest info if not logged in
+            if (!currentUser) {
+                if (formData.email) {
+                    payload.guestEmail = formData.email;
+                }
+                if (formData.phone) {
+                    payload.guestPhone = formData.phone;
+                }
+                if (formData.name) {
+                    payload.guestName = formData.name;
+                }
+            }
+
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = {
+                'Content-Type': 'application/json',
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/field-booking-hold`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: 'Có lỗi xảy ra' }));
+                let errorMessage = errorData.message || 'Không thể giữ chỗ. Vui lòng thử lại.';
+                if (errorData.details && Array.isArray(errorData.details)) {
+                    const validationErrors = errorData.details
+                        .map((detail: any) => {
+                            if (detail.constraints) {
+                                return Object.values(detail.constraints).join(', ');
+                            }
+                            return detail.message || detail;
+                        })
+                        .filter(Boolean)
+                        .join('; ');
+                    if (validationErrors) {
+                        errorMessage = `${errorMessage}: ${validationErrors}`;
+                    }
+                }
+                throw new Error(errorMessage);
+            }
+
+            const responseData = await response.json();
+            
+            // API wraps response in {success: true, data: booking} format
+            const booking = responseData.data || responseData;
+            const bookingIdStr = booking._id || booking.id;
+
+            // Validate booking ID before storing
+            if (!bookingIdStr || typeof bookingIdStr !== 'string' || bookingIdStr.trim() === '') {
+                console.error('❌ [PERSONAL INFO] Invalid booking ID received from server:', { responseData, booking });
+                throw new Error('Không nhận được ID booking hợp lệ từ server. Vui lòng thử lại.');
+            }
+
+            // Store booking hold in localStorage
+            localStorage.setItem('heldBookingId', bookingIdStr);
+            localStorage.setItem('heldBookingTime', Date.now().toString());
+            localStorage.setItem('heldBookingCountdown', '300'); // 5 minutes
+
+            console.log('✅ [PERSONAL INFO] Booking hold created:', bookingIdStr);
+
+            // Move to payment step
+            if (onSubmit) {
+                onSubmit(formData);
+            }
+        } catch (error: any) {
+            console.error('❌ [PERSONAL INFO] Error creating booking hold:', error);
+            setHoldError(error?.message || 'Không thể giữ chỗ. Vui lòng thử lại.');
+        } finally {
+            setIsHoldingSlot(false);
         }
     };
 
@@ -228,6 +334,12 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                             </div>
 
                             
+                            {/* Hold Error Display */}
+                            {holdError && (
+                                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                                    <p className="text-sm">{holdError}</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -248,10 +360,19 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 <Button
                     onClick={handleSubmit}
                     className="px-5 py-3 bg-gray-800 hover:bg-gray-900 text-white"
-                    disabled={!formData.name || !formData.email || !formData.phone}
+                    disabled={!formData.name || !formData.email || !formData.phone || isHoldingSlot}
                 >
-                    Tiếp tục đến thanh toán
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {isHoldingSlot ? (
+                        <>
+                            <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Đang giữ chỗ...
+                        </>
+                    ) : (
+                        <>
+                            Tiếp tục đến thanh toán
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </>
+                    )}
                 </Button>
             </div>
         </div>

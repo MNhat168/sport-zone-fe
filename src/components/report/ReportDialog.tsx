@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -43,7 +42,6 @@ export default function ReportDialog({ isOpen, onClose, fieldId, fieldName }: Pr
   const [message, setMessage] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
-  const navigate = useNavigate()
 
   useEffect(() => {
     if (!isOpen) {
@@ -110,7 +108,7 @@ export default function ReportDialog({ isOpen, onClose, fieldId, fieldName }: Pr
       if (message.trim()) form.append('description', message.trim())
       files.forEach((f) => form.append('files', f))
 
-      const res = await axiosUpload.post('/reports', form)
+      await axiosUpload.post('/reports', form)
       toast.success('Đã gửi báo cáo. Cảm ơn bạn!')
       onClose()
     } catch (err: any) {

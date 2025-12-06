@@ -357,3 +357,107 @@ export const getUpcomingBooking = createAsyncThunk<
         return thunkAPI.rejectWithValue(errorResponse);
     }
 });
+
+/**
+ * Create coach booking V2 with bank transfer payment proof
+ */
+export const createCoachBookingV2 = createAsyncThunk<
+    Booking,
+    FormData,
+    { rejectValue: ErrorResponse }
+>("booking/createCoachBookingV2", async (formData, thunkAPI) => {
+    try {
+        console.log("Creating coach booking V2 with form data");
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const token = localStorage.getItem('token');
+        
+        const headers: HeadersInit = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${apiUrl}/bookings/coach/v2`, {
+            method: 'POST',
+            headers,
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Có lỗi xảy ra' }));
+            throw new Error(errorData.message || 'Không thể tạo booking. Vui lòng thử lại.');
+        }
+
+        const booking = await response.json();
+        console.log("Coach booking V2 created successfully:", booking);
+        return booking;
+    } catch (error: any) {
+        console.error("Error creating coach booking V2:", error);
+        const errorResponse: ErrorResponse = {
+            message: error?.message || "Failed to create coach booking",
+            status: error?.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Get coach bank account
+ */
+export const getCoachBankAccount = createAsyncThunk<
+    any,
+    string,
+    { rejectValue: ErrorResponse }
+>("booking/getCoachBankAccount", async (coachId, thunkAPI) => {
+    try {
+        console.log("Getting coach bank account for:", coachId);
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${apiUrl}/coaches/${coachId}/bank-account`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch bank account');
+        }
+        
+        const result = await response.json();
+        const bankAccount = result?.data || result;
+        console.log("Coach bank account retrieved successfully:", bankAccount);
+        return bankAccount;
+    } catch (error: any) {
+        console.error("Error getting coach bank account:", error);
+        const errorResponse: ErrorResponse = {
+            message: error?.message || "Failed to get coach bank account",
+            status: error?.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Get coach available slots for a specific date
+ */
+export const getCoachAvailableSlots = createAsyncThunk<
+    any[],
+    { coachId: string; date: string },
+    { rejectValue: ErrorResponse }
+>("booking/getCoachAvailableSlots", async ({ coachId, date }, thunkAPI) => {
+    try {
+        console.log("Getting coach available slots:", { coachId, date });
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${apiUrl}/coaches/${coachId}/slots?date=${date}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch available slots');
+        }
+        
+        const result = await response.json();
+        const slots = Array.isArray(result) ? result : (result?.data || []);
+        console.log("Coach available slots retrieved successfully:", slots);
+        return slots;
+    } catch (error: any) {
+        console.error("Error getting coach available slots:", error);
+        const errorResponse: ErrorResponse = {
+            message: error?.message || "Failed to get coach available slots",
+            status: error?.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});

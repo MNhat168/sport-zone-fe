@@ -47,7 +47,7 @@ export const UserSyncProvider = ({ children }: { children: React.ReactNode }) =>
             authUser &&
             (!userStoreUser || authUser._id !== userStoreUser._id)
         ) {
-            if (Array.isArray(authUser.favouriteField)) {
+            if (Array.isArray(authUser.favouriteFields)) {
                 dispatch(syncUserFromAuth(authUser));
             }
             // Otherwise, do not overwrite userStoreUser

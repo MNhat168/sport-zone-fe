@@ -52,3 +52,7 @@ export const OWNER_BOOKING_DETAIL_API = (bookingId: string) => `${BASE_URL}/owne
 export const OWNER_ACCEPT_NOTE_API = (bookingId: string) => `${BASE_URL}/owners/bookings/${bookingId}/note/accept`;
 export const OWNER_DENY_NOTE_API = (bookingId: string) => `${BASE_URL}/owners/bookings/${bookingId}/note/deny`;
 export const OWNER_NOTE_BOOKINGS_API = `${BASE_URL}/owners/bookings/notes`;
+
+// Field owner booking accept/reject endpoints
+export const OWNER_ACCEPT_BOOKING_API = (bookingId: string) => `${BASE_URL}/owners/bookings/${bookingId}/accept`;
+export const OWNER_REJECT_BOOKING_API = (bookingId: string) => `${BASE_URL}/owners/bookings/${bookingId}/reject`;

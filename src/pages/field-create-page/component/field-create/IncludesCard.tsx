@@ -25,7 +25,7 @@ export default function IncludesCard({ selectedIncludes, onIncludesChange, sport
         return typeof id === 'string' ? id : String(id);
     };
 
-    // Filter amenities by type FACILITY và COACH từ tất cả amenities của sportType
+    // Filter amenities by type FACILITY từ tất cả amenities của sportType
     const facilityAmenities = useMemo(() => {
         const amenitiesArray = (amenities as any)?.data || amenities;
 
@@ -34,7 +34,7 @@ export default function IncludesCard({ selectedIncludes, onIncludesChange, sport
         }
 
         return amenitiesArray.filter(amenity =>
-            (amenity.type === AmenityType.FACILITY || amenity.type === AmenityType.COACH) &&
+            amenity.type === AmenityType.FACILITY &&
             amenity.isActive
         );
     }, [amenities]);
@@ -82,7 +82,7 @@ export default function IncludesCard({ selectedIncludes, onIncludesChange, sport
     };
 
     return (
-        // type FACILITY và COACH in includes
+        // type FACILITY in includes
         <Card className="bg-white shadow-md border-0">
             <CardHeader
                 onClick={toggleExpanded}
@@ -103,16 +103,16 @@ export default function IncludesCard({ selectedIncludes, onIncludesChange, sport
                         {!sportType ? (
                             <div className="text-center py-8">
                                 <div className="text-gray-500 text-lg font-medium">
-                                    Vui lòng chọn loại sân ở phần "Thông tin cơ bản" để xem các cơ sở vật chất và huấn luyện viên có sẵn
+                                    Vui lòng chọn loại sân ở phần "Thông tin cơ bản" để xem các cơ sở vật chất có sẵn
                                 </div>
                             </div>
                         ) : loading ? (
                             <div className="text-center py-4">
-                                <div className="text-gray-500">Đang tải cơ sở vật chất và huấn luyện viên...</div>
+                                <div className="text-gray-500">Đang tải cơ sở vật chất...</div>
                             </div>
                         ) : facilityAmenities.length === 0 ? (
                             <div className="text-center py-4">
-                                <div className="text-gray-500">Không có cơ sở vật chất hoặc huấn luyện viên nào cho loại sân này</div>
+                                <div className="text-gray-500">Không có cơ sở vật chất nào cho loại sân này</div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

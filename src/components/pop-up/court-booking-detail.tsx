@@ -10,15 +10,12 @@ interface BookingData {
     academy?: string;
     court?: string;
     bookedOn?: string;
-    pricePerGuest?: string;
-    maxGuests?: string;
     bookingDate?: string;
     bookingTime?: string;
     totalHours?: string;
     courtBookingAmount?: string;
-    additionalGuests?: string;
-    additionalGuestsAmount?: string;
-    serviceCharge?: string;
+    amenitiesFee?: string;
+    serviceCharge?: string; // platform fee
     totalAmountPaid?: string;
     paidOn?: string;
     transactionId?: string;
@@ -34,22 +31,19 @@ interface CourtBookingDetailsProps {
 
 const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClose, bookingData }) => {
     const {
-        academy = 'Wing Sports Academy',
-        court = 'Court 1',
-        bookedOn = 'Mon, Jul 14',
-        pricePerGuest = '$15',
-        maxGuests = '2',
-        bookingDate = 'Mon, Jul 14',
-        bookingTime = '05:00 PM - 08:00 PM',
-        totalHours = '2',
-        courtBookingAmount = '$150',
-        additionalGuests = '2',
-        additionalGuestsAmount = '$30',
-        serviceCharge = '$20',
-        totalAmountPaid = '$180',
-        paidOn = 'Mon, Jul 14',
-        transactionId = '#5464164445676781641',
-        paymentType = 'Wallet',
+        academy = '—',
+        court = '—',
+        bookedOn = '—',
+        bookingDate = '—',
+        bookingTime = '—',
+        totalHours = '—',
+        courtBookingAmount = '—',
+        amenitiesFee = '—',
+        serviceCharge = '—',
+        totalAmountPaid = '—',
+        paidOn = '—',
+        transactionId = '—',
+        paymentType = '—',
         note = ''
     } = bookingData || {};
 
@@ -101,23 +95,17 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                 Thông Tin Sân
                             </h3>
                         </div>
-                        <div className="grid grid-cols-4 gap-4">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-11 h-11 rounded-[10px] overflow-hidden flex-shrink-0">
-                                    <img
-                                        src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAUFBQUFBQUGBgUICAcICAsKCQkKCxEMDQwNDBEaEBMQEBMQGhcbFhUWGxcpIBwcICkvJyUnLzkzMzlHREddXX0BBQUFBQUFBQYGBQgIBwgICwoJCQoLEQwNDA0MERoQExAQExAaFxsWFRYbFykgHBwgKS8nJScvOTMzOUdER11dff/CABEIASwBLAMBIgACEQEDEQH/xAA2AAAABwEBAQAAAAAAAAAAAAAAAQIDBAUGBwgJAQADAQEBAQEAAAAAAAAAAAAAAQIDBAUGB//aAAwDAQACEAMQAAAAmP1q/A/"
-                                        alt="Đặt sân"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-[5px]">
-                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                        {academy}
-                                    </h4>
-                                    <p className="text-sm font-normal text-[#26A65B] font-['Outfit']">
-                                        {court}
-                                    </p>
-                                </div>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="flex flex-col gap-[5px]">
+                                <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
+                                    Sân
+                                </h4>
+                                <p className="text-sm font-normal text-[#1A3353] font-['Outfit']">
+                                    {academy}
+                                </p>
+                                <p className="text-sm font-normal text-[#26A65B] font-['Outfit']">
+                                    {court}
+                                </p>
                             </div>
 
                             <div className="flex flex-col gap-[5px]">
@@ -131,19 +119,10 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                             <div className="flex flex-col gap-[5px]">
                                 <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                    Giá Mỗi Khách
+                                    Tổng Số Giờ
                                 </h4>
                                 <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
-                                    {pricePerGuest}
-                                </p>
-                            </div>
-
-                            <div className="flex flex-col gap-[5px]">
-                                <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                    Số Lượng Khách Tối Đa
-                                </h4>
-                                <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
-                                    {maxGuests}
+                                    {totalHours}
                                 </p>
                             </div>
                         </div>
@@ -214,7 +193,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                 <div className="grid grid-cols-4 gap-4">
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Số Tiền Đặt Sân
+                                            Tiền sân
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {courtBookingAmount}
@@ -223,19 +202,10 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
 
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Khách Thêm
+                                            Tiện ích
                                         </h4>
                                         <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
-                                            {additionalGuests}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
-                                            Số Tiền Khách Thêm
-                                        </h4>
-                                        <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
-                                            {additionalGuestsAmount}
+                                            {amenitiesFee}
                                         </p>
                                     </div>
 
@@ -247,11 +217,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                             {serviceCharge}
                                         </p>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div className="px-4 pt-3.5 pb-4 border border-[#EDEDED]">
-                                <div className="grid grid-cols-4 gap-4">
                                     <div className="flex flex-col gap-[5px]">
                                         <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Tổng Số Tiền Đã Thanh Toán

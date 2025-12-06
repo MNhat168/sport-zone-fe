@@ -26,6 +26,15 @@ import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow"
 import ReportDialog from "@/components/report/ReportDialog"
 import axiosPrivate from "@/utils/axios/axiosPrivate"
 import OwnerInfoCard from "./components/OwnerInfoCard"
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 
 
 const FieldDetailPage: React.FC = () => {
@@ -34,6 +43,7 @@ const FieldDetailPage: React.FC = () => {
     const dispatch = useAppDispatch()
     const [showChatWindow, setShowChatWindow] = useState(false);
     const [showReportDialog, setShowReportDialog] = useState(false);
+    const [showUnverifiedDialog, setShowUnverifiedDialog] = useState(false);
     const [fieldReports, setFieldReports] = useState<any[] | null>(null);
     const [loadingReports, setLoadingReports] = useState(false);
 
@@ -83,6 +93,11 @@ const FieldDetailPage: React.FC = () => {
 
     useEffect(() => {
         if (!id) return
+        // Chỉ fetch reports nếu user đã đăng nhập (API yêu cầu authentication)
+        if (!currentUser) {
+            setFieldReports([])
+            return
+        }
         let cancelled = false
         const fetchReports = async () => {
             try {
@@ -103,7 +118,14 @@ const FieldDetailPage: React.FC = () => {
         return () => {
             cancelled = true
         }
-    }, [id])
+    }, [id, currentUser])
+
+    // Hiển thị popup cảnh báo khi field chưa được admin verify
+    useEffect(() => {
+        if (currentField && currentField.isAdminVerify === false) {
+            setShowUnverifiedDialog(true)
+        }
+    }, [currentField])
 
     const overviewRef = useRef<HTMLDivElement | null>(null)
     const rulesRef = useRef<HTMLDivElement | null>(null)
@@ -815,6 +837,30 @@ const FieldDetailPage: React.FC = () => {
             fieldId={String(currentField?.id || "")}
             fieldName={currentField?.name || ""}
           />
+          <AlertDialog open={showUnverifiedDialog} onOpenChange={setShowUnverifiedDialog}>
+            <AlertDialogContent className="max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-xl font-semibold text-amber-600">
+                  <AlertCircle className="h-5 w-5" />
+                  Sân chưa được xác minh
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-gray-600 mt-2">
+                  Sân bóng này chưa được quản trị viên xác minh. Thông tin có thể chưa đầy đủ hoặc chưa được kiểm duyệt.
+                  <br />
+                  <br />
+                  Vui lòng liên hệ với chủ sân hoặc báo cáo nếu bạn phát hiện thông tin không chính xác.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction
+                  onClick={() => setShowUnverifiedDialog(false)}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  Đã hiểu
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <FooterComponent />
         </PageWrapper>
       </>

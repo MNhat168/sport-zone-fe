@@ -25,8 +25,8 @@ export default function AmenitiesCard({ selectedAmenities, onAmenitiesChange, sp
         return typeof id === 'string' ? id : String(id);
     };
 
-    // Filter amenities by type OTHER từ tất cả amenities của sportType
-    const otherAmenities = useMemo(() => {
+    // Filter amenities by type DRINK và OTHER từ tất cả amenities của sportType
+    const drinkAndOtherAmenities = useMemo(() => {
         const amenitiesArray = (amenities as any)?.data || amenities;
 
         if (!amenitiesArray || !Array.isArray(amenitiesArray)) {
@@ -34,7 +34,7 @@ export default function AmenitiesCard({ selectedAmenities, onAmenitiesChange, sp
         }
 
         return amenitiesArray.filter(amenity =>
-            amenity.type === AmenityType.OTHER &&
+            (amenity.type === AmenityType.DRINK || amenity.type === AmenityType.OTHER) &&
             amenity.isActive
         );
     }, [amenities]);
@@ -82,7 +82,7 @@ export default function AmenitiesCard({ selectedAmenities, onAmenitiesChange, sp
     };
 
     return (
-        // type OTHER in amenities
+        // type DRINK và OTHER in amenities
         <Card className="bg-white shadow-md border-0">
             <CardHeader
                 onClick={toggleExpanded}
@@ -110,13 +110,13 @@ export default function AmenitiesCard({ selectedAmenities, onAmenitiesChange, sp
                             <div className="text-center py-4">
                                 <div className="text-gray-500">Đang tải tiện ích...</div>
                             </div>
-                        ) : otherAmenities.length === 0 ? (
+                        ) : drinkAndOtherAmenities.length === 0 ? (
                             <div className="text-center py-4">
                                 <div className="text-gray-500">Không có tiện ích nào cho loại sân này</div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {otherAmenities.map((amenity: Amenity) => {
+                                {drinkAndOtherAmenities.map((amenity: Amenity) => {
                                     const amenityId = getIdString(amenity._id);
                                     const isChecked = isAmenitySelected(amenityId);
                                     const currentPrice = getAmenityPrice(amenityId);
