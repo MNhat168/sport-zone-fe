@@ -23,4 +23,7 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
   },
+  define: {
+    global: 'window', 
+  },
 })
