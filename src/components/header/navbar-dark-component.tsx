@@ -79,10 +79,17 @@ export const NavbarDarkComponent = () => {
                 {/* Actions */}
                 <div className="flex items-center gap-4">
                     {/* Notification */}
-                    <Button variant="ghost" size="icon" className="hover:bg-transparent">
-                        <Bell className={iconClass} />
-                        <span className="sr-only">Thông báo</span>
-                    </Button>
+                    {auth.user && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-transparent"
+                            onClick={() => navigate("/notifications")}
+                        >
+                            <Bell className={iconClass} />
+                            <span className="sr-only">Thông báo</span>
+                        </Button>
+                    )}
 
                     {auth.user ? (
                         <DropdownMenu>

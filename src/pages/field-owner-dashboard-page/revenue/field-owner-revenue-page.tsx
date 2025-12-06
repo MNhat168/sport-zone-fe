@@ -5,24 +5,75 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { DollarSign, TrendingUp, Calendar, Download, Filter } from "lucide-react"
 import { useAppSelector } from "@/store/hook"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 export default function FieldOwnerRevenuePage() {
     const { fieldOwnerBookings } = useAppSelector((state) => state.field)
     const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month" | "year">("month")
 
-    // Tính toán doanh thu
-    const allRevenue = fieldOwnerBookings
-        ?.filter(b => b.transactionStatus === 'succeeded')
-        .reduce((sum, b) => sum + (b.bookingAmount || 0), 0) || 0
+    // Helper: lấy khoảng thời gian theo kỳ được chọn
+    const getPeriodRange = (period: "today" | "week" | "month" | "year") => {
+        const now = new Date()
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) // hết ngày hôm nay
+        let start: Date
 
-    // Lọc theo period (placeholder logic)
-    const filteredBookings = fieldOwnerBookings?.filter(b => b.transactionStatus === 'succeeded') || []
-    const periodRevenue = allRevenue // Simplified - should filter by date
+        switch (period) {
+            case "today":
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+                break
+            case "week": {
+                const day = now.getDay() || 7 // Chủ nhật = 0 -> 7
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (day - 1))
+                break
+            }
+            case "year":
+                start = new Date(now.getFullYear(), 0, 1)
+                break
+            case "month":
+            default:
+                start = new Date(now.getFullYear(), now.getMonth(), 1)
+                break
+        }
+        return { start, end }
+    }
 
-    // Tính toán thống kê
-    const totalTransactions = filteredBookings.length
-    const averageRevenue = totalTransactions > 0 ? periodRevenue / totalTransactions : 0
+    const { filteredBookings, periodRevenue, totalTransactions, averageRevenue } = useMemo(() => {
+        const bookings = (fieldOwnerBookings || []).filter(
+            (b: any) => b.transactionStatus === "succeeded"
+        )
+        if (!bookings.length) {
+            return {
+                filteredBookings: [] as any[],
+                periodRevenue: 0,
+                totalTransactions: 0,
+                averageRevenue: 0,
+            }
+        }
+
+        const { start, end } = getPeriodRange(selectedPeriod)
+
+        const inRange = bookings.filter((b: any) => {
+            const dateStr = b.bookingDate || b.createdAt
+            if (!dateStr) return false
+            const d = new Date(dateStr)
+            if (Number.isNaN(d.getTime())) return false
+            return d >= start && d < end
+        })
+
+        const revenue = inRange.reduce(
+            (sum: number, b: any) => sum + (b.bookingAmount || 0),
+            0
+        )
+        const txCount = inRange.length
+        const avg = txCount > 0 ? revenue / txCount : 0
+
+        return {
+            filteredBookings: inRange,
+            periodRevenue: revenue,
+            totalTransactions: txCount,
+            averageRevenue: avg,
+        }
+    }, [fieldOwnerBookings, selectedPeriod])
 
     const periods = [
         { value: "today", label: "Hôm nay" },
@@ -80,7 +131,7 @@ export default function FieldOwnerRevenuePage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-sm font-medium text-gray-600">
-                                Tổng doanh thu
+                                Tổng doanh thu ({periods.find(p => p.value === selectedPeriod)?.label.toLowerCase()})
                             </CardTitle>
                         </CardHeader>
                         <CardContent>

@@ -2,40 +2,45 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL; // hoặc URL backend
+const API_URL = import.meta.env.VITE_API_URL;
 
-export const useSocket = (userId: string) => {
+type SocketKind = 'chat' | 'notifications';
+
+/**
+ * Generic socket hook that can connect to different namespaces.
+ * - chat:    `${API_URL}/chat`
+ * - notifications: `${API_URL}/notifications`
+ */
+export const useSocket = (userId: string, kind: SocketKind = 'notifications') => {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    console.log("🔌 useSocket - userId:", userId);
-    if (!userId) {
-      console.log("🔌 useSocket - No userId provided");
-      return;
-    }
+    if (!userId || !API_URL) return;
 
-    console.log("🔌 useSocket - Creating socket connection...");
-    socketRef.current = io(SOCKET_SERVER_URL, {
-      query: { userId },
+    const namespacePath = kind === 'chat' ? '/chat' : '/notifications';
+    const url = `${API_URL.replace(/\/$/, '')}${namespacePath}`;
+
+    // For now we pass userId via auth payload; can be extended to JWT later
+    socketRef.current = io(url, {
+      auth: { userId },
     });
 
     socketRef.current.on('connect', () => {
-      console.log('✅ Connected to WebSocket with userId:', userId);
+      console.log(`✅ Connected to ${kind} socket as user`, userId);
     });
 
     socketRef.current.on('disconnect', () => {
-      console.log('❌ Disconnected from WebSocket');
+      console.log(`❌ Disconnected from ${kind} socket`);
     });
-    //Mark notifications as read when clicked
 
-    socketRef.current.on('error', (error) => {
-      console.error('🚨 Socket error:', error);
+    socketRef.current.on('connect_error', (error) => {
+      console.error(`🚨 ${kind} socket connect_error:`, error);
     });
 
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [userId]);
+  }, [userId, kind]);
 
   return socketRef.current;
 };
