@@ -16,6 +16,8 @@ import { dashboardApi } from './services/dashboardApi'
 import { fieldOwnersApi } from './services/fieldOwnersApi'
 import { usersApi } from './services/usersApi'
 import { transactionsApi } from './services/transactionsApi'
+import { reportsApi } from './services/reportsApi'
+import { bookingsApi } from './services/bookingsApi'
 import authReducer from './slices/authSlice'
 
 // Persist config
@@ -34,6 +36,8 @@ const rootReducer = combineReducers({
   [fieldOwnersApi.reducerPath]: fieldOwnersApi.reducer,
   [usersApi.reducerPath]: usersApi.reducer,
   [transactionsApi.reducerPath]: transactionsApi.reducer,
+  [reportsApi.reducerPath]: reportsApi.reducer,
+  [bookingsApi.reducerPath]: bookingsApi.reducer,
 })
 
 // Persisted reducer
@@ -53,6 +57,8 @@ export const store = configureStore({
       fieldOwnersApi.middleware,
       usersApi.middleware,
       transactionsApi.middleware,
+      reportsApi.middleware,
+      bookingsApi.middleware,
     ),
 })
 

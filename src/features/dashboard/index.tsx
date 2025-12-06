@@ -18,6 +18,7 @@ import { Analytics } from './components/analytics'
 import { BookingStats } from './components/booking-stats'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
+import { ReportsOverviewPanel } from './components/reports-overview'
 
 export function Dashboard() {
   return (
@@ -51,9 +52,7 @@ export function Dashboard() {
               <TabsTrigger value='overview'>Overview</TabsTrigger>
               <TabsTrigger value='bookings'>Bookings</TabsTrigger>
               <TabsTrigger value='analytics'>Analytics</TabsTrigger>
-              <TabsTrigger value='reports' disabled>
-                Reports
-              </TabsTrigger>
+              <TabsTrigger value='reports'>Reports</TabsTrigger>
               <TabsTrigger value='notifications' disabled>
                 Notifications
               </TabsTrigger>
@@ -190,6 +189,9 @@ export function Dashboard() {
           </TabsContent>
           <TabsContent value='analytics' className='space-y-4'>
             <Analytics />
+          </TabsContent>
+          <TabsContent value='reports' className='space-y-4'>
+            <ReportsOverviewPanel />
           </TabsContent>
         </Tabs>
       </Main>

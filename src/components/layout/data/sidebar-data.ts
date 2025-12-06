@@ -23,6 +23,8 @@ import {
   GalleryVerticalEnd,
   Building2,
   FileCheck,
+  Flag,
+  Calendar,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -83,6 +85,16 @@ export const sidebarData: SidebarData = {
           title: 'Transactions',
           url: '/transactions',
           icon: FileCheck,
+        },
+        {
+          title: 'Bookings',
+          url: '/bookings',
+          icon: Calendar,
+        },
+        {
+          title: 'Reports',
+          url: '/reports',
+          icon: Flag,
         },
         {
           title: 'Field Owners',
