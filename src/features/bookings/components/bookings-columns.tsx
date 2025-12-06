@@ -64,7 +64,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
       <DataTableColumnHeader column={column} title='Field' />
     ),
     cell: ({ row }) => {
-      const field = typeof row.field === 'string' ? null : row.field
+      const field = typeof row.original.field === 'string' ? null : row.original.field
       const fieldName = field?.name ?? '—'
       const sportType = field?.sportType
       return (
@@ -188,7 +188,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
       <DataTableColumnHeader column={column} title='Coach' />
     ),
     cell: ({ row }) => {
-      const coach = typeof row.requestedCoach === 'string' ? null : row.requestedCoach
+      const coach = typeof row.original.requestedCoach === 'string' ? null : row.original.requestedCoach
       return <div>{coach?.fullName ?? '—'}</div>
     },
     enableSorting: false,

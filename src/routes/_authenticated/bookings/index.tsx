@@ -29,7 +29,7 @@ const bookingsSearchSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional(),
 })
 
-export const Route = createFileRoute('/_authenticated/bookings/')({
+export const Route = createFileRoute('/_authenticated/bookings/' as any)({
   validateSearch: bookingsSearchSchema,
   component: Bookings,
 })

@@ -8,11 +8,11 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { useGetBookingsQuery } from '@/store/services/bookingsApi'
 import { BookingsTable } from './components/bookings-table'
 
-const route = getRouteApi('/_authenticated/bookings/')
+const route = getRouteApi('/_authenticated/bookings/' as any)
 
 export function Bookings() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = route.useSearch() as any
+  const navigate = route.useNavigate() as any
 
   const { data, isFetching } = useGetBookingsQuery({
     search: search.search || undefined,

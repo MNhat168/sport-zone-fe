@@ -78,12 +78,13 @@ export function createReportsColumns(
           (data.fullName as string | undefined) ||
           (data.email as string | undefined) ||
           (data.phoneNumber as string | undefined)
+        const email = typeof data.email === 'string' ? data.email : null
         return (
           <div className='flex flex-col text-sm'>
             <span className='font-medium'>{name ?? '—'}</span>
-            {data.email && typeof data.email === 'string' && (
+            {email && (
               <span className='text-muted-foreground text-xs'>
-                {data.email}
+                {email}
               </span>
             )}
           </div>
@@ -104,12 +105,13 @@ export function createReportsColumns(
           return <span className='font-mono text-xs'>{field}</span>
         }
         const fieldData = field as Record<string, unknown>
+        const address = typeof fieldData.address === 'string' ? fieldData.address : null
         return (
           <div className='flex flex-col text-sm'>
             <span>{String(fieldData.name ?? 'Không rõ')}</span>
-            {fieldData.address && typeof fieldData.address === 'string' && (
+            {address && (
               <span className='text-muted-foreground text-xs'>
-                {fieldData.address}
+                {address}
               </span>
             )}
           </div>
