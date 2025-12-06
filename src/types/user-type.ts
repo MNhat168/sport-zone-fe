@@ -27,7 +27,8 @@ export interface User {
     isActive: boolean
     googleId?: string
     favouriteSports?: string[]
-    favouriteField?: string[]
+    favouriteFields?: string[]
+    favouriteCoaches?: string[]
     createdAt: string
     updatedAt: string
 }

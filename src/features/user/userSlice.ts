@@ -6,6 +6,10 @@ import {
     resetPassword,
     changePassword,
     setFavouriteSports,
+    setFavouriteCoaches,
+    removeFavouriteCoaches,
+    setFavouriteFields,
+    removeFavouriteFields,
 } from "./userThunk";
 import type { User, ErrorResponse } from "../../types/user-type";
 
@@ -101,6 +105,22 @@ const userSlice = createSlice({
 
             // Set favourite sports
             .addCase(setFavouriteSports.fulfilled, (state, action) => {
+                state.user = action.payload;
+            })
+            // Set favourite coaches
+            .addCase(setFavouriteCoaches.fulfilled, (state, action) => {
+                state.user = action.payload;
+            })
+            // Remove favourite coaches
+            .addCase(removeFavouriteCoaches.fulfilled, (state, action) => {
+                state.user = action.payload;
+            })
+            // Set favourite fields
+            .addCase(setFavouriteFields.fulfilled, (state, action) => {
+                state.user = action.payload;
+            })
+            // Remove favourite fields
+            .addCase(removeFavouriteFields.fulfilled, (state, action) => {
                 state.user = action.payload;
             })
 
