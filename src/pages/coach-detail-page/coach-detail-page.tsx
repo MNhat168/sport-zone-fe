@@ -1,7 +1,7 @@
 "use client";
 import { useParams } from "react-router-dom";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,6 +48,7 @@ import {
   //   ChevronUp,
 } from "lucide-react";
 import { getCoachById, clearCurrentCoach } from "@/features/coach";
+import { setFavouriteCoaches, removeFavouriteCoaches } from "@/features/user";
 import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
 import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
 import {
@@ -106,6 +107,49 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const { currentCoach, detailLoading, detailError } = useSelector(
     (state: RootState) => state.coach
   );
+  const currentUser = useSelector((state: RootState) => state.user.user);
+
+  const [favLoading, setFavLoading] = useState(false);
+
+  const isFavourite = Boolean(
+    currentUser?.favouriteCoaches &&
+      effectiveCoachId &&
+      currentUser.favouriteCoaches.includes(effectiveCoachId as string),
+  );
+
+  const toggleFavourite = async () => {
+    if (!currentUser) {
+      return CustomFailedToast("Vui lòng đăng nhập để thêm huấn luyện viên vào yêu thích");
+    }
+    if (!effectiveCoachId) return;
+
+    try {
+      setFavLoading(true);
+      if (isFavourite) {
+        const action: any = await dispatch(
+          removeFavouriteCoaches({ favouriteCoaches: [effectiveCoachId as string] }),
+        );
+        if (action?.meta?.requestStatus === "fulfilled") {
+          CustomSuccessToast("Đã bỏ yêu thích");
+        } else {
+          CustomFailedToast(String(action?.payload || "Bỏ yêu thích thất bại"));
+        }
+      } else {
+        const action: any = await dispatch(
+          setFavouriteCoaches({ favouriteCoaches: [effectiveCoachId as string] }),
+        );
+        if (action?.meta?.requestStatus === "fulfilled") {
+          CustomSuccessToast("Đã thêm vào yêu thích");
+        } else {
+          CustomFailedToast(String(action?.payload || "Thêm yêu thích thất bại"));
+        }
+      }
+    } catch (err: any) {
+      CustomFailedToast(err?.message || "Thao tác thất bại");
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   const [activeTab, setActiveTab] = useState("bio");
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -122,6 +166,13 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const [reviewsPage, setReviewsPage] = useState(1);
   const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
   const REVIEW_PAGE_LIMIT = 5;
+  const [selectedRatingFilter, setSelectedRatingFilter] = useState<number | null>(null);
+
+  const filteredReviews = useMemo(() => {
+    const base = Array.isArray(coachReviews) ? coachReviews : [];
+    if (!selectedRatingFilter) return base;
+    return base.filter((rv) => Math.round(Number(rv.rating || 0)) === selectedRatingFilter);
+  }, [coachReviews, selectedRatingFilter]);
 
   // Get lesson types from real coach data or fallback to mock data
   const getLessonTypes = (): LessonType[] => {
@@ -433,10 +484,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                           </Badge>
                           <Button
                             size="sm"
-                            className="ml-auto bg-yellow-500 hover:bg-yellow-600 text-white border-0 flex items-center gap-2"
+                            onClick={toggleFavourite}
+                            disabled={favLoading}
+                            className={`ml-auto ${isFavourite ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white border-0 flex items-center gap-2`}
                           >
                             <Heart className="h-4 w-4" />
-                            Yêu thích
+                            {favLoading ? 'Đang xử lý...' : isFavourite ? 'Đã yêu thích' : 'Yêu thích'}
                           </Button>
                         </div>
                         <p className="text-base text-muted-foreground text-left">
@@ -761,65 +814,88 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   </div>
 
                   <div className="space-y-4">
+                    {/* Filter toolbar */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-semibold text-muted-foreground">Bộ lọc:</span>
+                      {[null, 5, 4, 3, 2, 1].map((val) => (
+                        <button
+                          key={String(val)}
+                          type="button"
+                          onClick={() => setSelectedRatingFilter(val as number | null)}
+                          className={`text-sm px-3 py-1 rounded-full border transition focus:outline-none ${
+                            (selectedRatingFilter === val || (val === null && selectedRatingFilter === null))
+                              ? 'bg-amber-300 border-amber-400'
+                              : 'bg-transparent border-muted hover:bg-muted/30'
+                          }`}
+                        >
+                          {val === null ? 'Tất cả' : `${val}★`}
+                        </button>
+                      ))}
+                    </div>
+
                     {reviewsLoading ? (
                       <div className="text-center text-muted-foreground">Loading reviews...</div>
-                    ) : coachReviews && coachReviews.length > 0 ? (
-                      coachReviews.map((r: any, idx: number) => {
-                        const author = r.user?.fullName || 'Anonymous';
-                        const rating = r.rating || 0;
-                        const comment = r.comment || '';
-                        const dateStr = r.createdAt || r.booking?.createdAt;
-                        const date = dateStr ? new Date(dateStr).toLocaleDateString() : '';
-                        return (
-                          <Card key={idx} className="shadow-md hover:shadow-lg transition-all duration-300 border border-border">
-                            <CardContent className="p-6">
-                              <div className="flex items-start gap-4">
-                                <Avatar className="h-12 w-12 flex-shrink-0">
-                                  <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                                    {author
-                                      .split(" ")
-                                      .map((n: string) => n[0])
-                                      .join("")
-                                      .toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 space-y-3">
-                                  <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                      <h4 className="font-semibold">{author}</h4>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <div className="flex gap-0.5">
-                                          {Array.from({ length: 5 }).map((_, s) => (
-                                            <Star
-                                              key={s}
-                                              className={`h-4 w-4 ${s < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                                            />
-                                          ))}
+                    ) : Array.isArray(coachReviews) && coachReviews.length > 0 ? (
+                      filteredReviews && filteredReviews.length > 0 ? (
+                        filteredReviews.map((r: any, idx: number) => {
+                          const author = r.user?.fullName || 'Anonymous';
+                          const rating = r.rating || 0;
+                          const comment = r.comment || '';
+                          const dateStr = r.createdAt || r.booking?.createdAt;
+                          const date = dateStr ? new Date(dateStr).toLocaleDateString() : '';
+                          return (
+                            <Card key={idx} className="shadow-md hover:shadow-lg transition-all duration-300 border border-border">
+                              <CardContent className="p-6">
+                                <div className="flex items-start gap-4">
+                                  <Avatar className="h-12 w-12 flex-shrink-0">
+                                    <AvatarImage src="/placeholder.svg?height=48&width=48" />
+                                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                                      {author
+                                        .split(" ")
+                                        .map((n: string) => n[0])
+                                        .join("")
+                                        .toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 space-y-3">
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div>
+                                        <h4 className="font-semibold">{author}</h4>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <div className="flex gap-0.5">
+                                            {Array.from({ length: 5 }).map((_, s) => (
+                                              <Star
+                                                key={s}
+                                                className={`h-4 w-4 ${s < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                              />
+                                            ))}
+                                          </div>
+                                          <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
                                         </div>
-                                        <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
                                       </div>
                                     </div>
-                                  </div>
 
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <Badge className={` ${r.rating >= 4 ? 'bg-green-600' : 'bg-red-600'} text-white font-medium`}>
-                                      Review Type
-                                    </Badge>
-                                  </div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                      <Badge className={` ${r.rating >= 4 ? 'bg-green-600' : 'bg-red-600'} text-white font-medium`}>
+                                        Review Type
+                                      </Badge>
+                                    </div>
 
-                                  <div>
-                                    <h5 className="font-bold text-base mb-2 text-left">{comment.slice(0, 120)}</h5>
-                                    <p className="text-muted-foreground leading-relaxed text-left">{comment}</p>
-                                  </div>
+                                    <div>
+                                      <h5 className="font-bold text-base mb-2 text-left">{comment.slice(0, 120)}</h5>
+                                      <p className="text-muted-foreground leading-relaxed text-left">{comment}</p>
+                                    </div>
 
-                                  <div className="text-xs text-muted-foreground text-left">{date}</div>
+                                    <div className="text-xs text-muted-foreground text-left">{date}</div>
+                                  </div>
                                 </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })
+                              </CardContent>
+                            </Card>
+                          );
+                        })
+                      ) : (
+                        <div className="text-muted-foreground">Không có đánh giá phù hợp.</div>
+                      )
                     ) : (
                       <div className="text-muted-foreground">Chưa có đánh giá.</div>
                     )}

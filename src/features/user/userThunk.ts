@@ -1,4 +1,4 @@
-import { SET_FAVOURITE_SPORTS_API } from "./userAPI";
+import { SET_FAVOURITE_SPORTS_API, SET_FAVOURITE_COACHES_API, REMOVE_FAVOURITE_COACHES_API } from "./userAPI";
 // Set favourite sports
 export interface SetFavouriteSportsPayload {
     favouriteSports: string[];
@@ -27,7 +27,9 @@ import {
     GET_PROFILE_API, 
     UPDATE_PROFILE_API, 
     FORGOT_PASSWORD_API, 
-    RESET_PASSWORD_API 
+    RESET_PASSWORD_API,
+    SET_FAVOURITE_FIELDS_API,
+    REMOVE_FAVOURITE_FIELDS_API
 } from "./userAPI";
 import type { 
     User, 
@@ -165,6 +167,96 @@ export const changePassword = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to change password",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Set favourite coaches
+export interface SetFavouriteCoachesPayload {
+    favouriteCoaches: string[];
+}
+
+export const setFavouriteCoaches = createAsyncThunk<
+    User,
+    SetFavouriteCoachesPayload,
+    { rejectValue: ErrorResponse }
+>("user/setFavouriteCoaches", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(SET_FAVOURITE_COACHES_API, payload);
+        // API returns updated user in response.data.data
+        return response.data.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to set favourite coaches",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Remove favourite coaches
+export interface RemoveFavouriteCoachesPayload {
+    favouriteCoaches: string[];
+}
+
+export const removeFavouriteCoaches = createAsyncThunk<
+    User,
+    RemoveFavouriteCoachesPayload,
+    { rejectValue: ErrorResponse }
+>("user/removeFavouriteCoaches", async (payload, thunkAPI) => {
+    try {
+        // axios delete with body needs `data` option
+        const response = await axiosPrivate.delete(REMOVE_FAVOURITE_COACHES_API, { data: payload });
+        return response.data.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to remove favourite coaches",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Set favourite fields
+export interface SetFavouriteFieldsPayload {
+    favouriteFields: string[];
+}
+
+export const setFavouriteFields = createAsyncThunk<
+    User,
+    SetFavouriteFieldsPayload,
+    { rejectValue: ErrorResponse }
+>("user/setFavouriteFields", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(SET_FAVOURITE_FIELDS_API, payload);
+        return response.data.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to set favourite fields",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Remove favourite fields
+export interface RemoveFavouriteFieldsPayload {
+    favouriteFields: string[];
+}
+
+export const removeFavouriteFields = createAsyncThunk<
+    User,
+    RemoveFavouriteFieldsPayload,
+    { rejectValue: ErrorResponse }
+>("user/removeFavouriteFields", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.delete(REMOVE_FAVOURITE_FIELDS_API, { data: payload });
+        return response.data.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to remove favourite fields",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

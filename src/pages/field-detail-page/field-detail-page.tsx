@@ -4,6 +4,8 @@ import type React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
+import { setFavouriteFields, removeFavouriteFields } from "@/features/user"
+import { CustomFailedToast, CustomSuccessToast } from "@/components/toast/notificiation-toast"
 import { getFieldById } from "@/features/field/fieldThunk"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { FooterComponent } from "@/components/footer/footer-component"
@@ -42,6 +44,42 @@ const FieldDetailPage: React.FC = () => {
     const [showChatWindow, setShowChatWindow] = useState(false);
 
     const { currentField, loading } = useAppSelector((s) => s.field)
+    const currentUser = useAppSelector((s) => s.user.user)
+    const [favLoading, setFavLoading] = useState(false)
+
+    const isFavourite = Boolean(
+        currentUser?.favouriteFields && id && currentUser.favouriteFields.includes(id),
+    )
+
+    const toggleFavourite = async () => {
+        if (!currentUser) {
+            return CustomFailedToast("Vui lòng đăng nhập để thêm sân vào yêu thích")
+        }
+        if (!id) return
+
+        try {
+            setFavLoading(true)
+            if (isFavourite) {
+                const action: any = await dispatch(removeFavouriteFields({ favouriteFields: [id] }))
+                if (action?.meta?.requestStatus === "fulfilled") {
+                    CustomSuccessToast("Đã bỏ yêu thích sân")
+                } else {
+                    CustomFailedToast(String(action?.payload || "Bỏ yêu thích thất bại"))
+                }
+            } else {
+                const action: any = await dispatch(setFavouriteFields({ favouriteFields: [id] }))
+                if (action?.meta?.requestStatus === "fulfilled") {
+                    CustomSuccessToast("Đã thêm sân vào yêu thích")
+                } else {
+                    CustomFailedToast(String(action?.payload || "Thêm yêu thích thất bại"))
+                }
+            }
+        } catch (err: any) {
+            CustomFailedToast(err?.message || "Thao tác thất bại")
+        } finally {
+            setFavLoading(false)
+        }
+    }
 
     useEffect(() => {
         if (id && (!currentField || currentField.id !== id)) {
@@ -430,9 +468,13 @@ const FieldDetailPage: React.FC = () => {
                                     <Share2 className="h-4 w-4" />
                                     <span>Share</span>
                                 </button>
-                                <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-                                    <Star className="h-4 w-4 text-yellow-500" />
-                                    <span>Add to favorites</span>
+                                <button
+                                    onClick={toggleFavourite}
+                                    disabled={favLoading}
+                                    className={`inline-flex items-center gap-2 text-sm ${isFavourite ? 'text-red-600 hover:text-red-800' : 'text-gray-600 hover:text-gray-900'}`}
+                                >
+                                    <Star className={`h-4 w-4 ${isFavourite ? 'text-red-500' : 'text-yellow-500'}`} />
+                                    <span>{favLoading ? 'Đang xử lý...' : isFavourite ? 'Đã yêu thích' : 'Add to favorites'}</span>
                                 </button>
                                 <button
                                     onClick={() => setShowChatWindow(true)}
