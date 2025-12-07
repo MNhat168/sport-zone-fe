@@ -3,6 +3,8 @@ import { Card, CardContent} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Edit, Eye, Settings } from "lucide-react";
+import { getSportDisplayNameVN } from "@/components/enums/ENUMS";
+import { getPinColor, getSportWhiteIconPath } from "@/utils/fieldPinIcon";
 
 interface OwnerFieldCardProps {
     id?: string;
@@ -50,6 +52,9 @@ const OwnerFieldCard: React.FC<OwnerFieldCardProps> = ({
         navigate(`/field-owner/fields/${id}/manage`);
     };
 
+    const sportIconPath = getSportWhiteIconPath(sportType);
+    const sportColor = getPinColor(sportType);
+
     return (
         <Card className="w-full overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow">
             <div className="flex">
@@ -79,8 +84,18 @@ const OwnerFieldCard: React.FC<OwnerFieldCardProps> = ({
                         <div>
                             <h3 className="text-xl font-bold mb-1">{name}</h3>
                             <p className="text-gray-600 text-sm mb-1">{location}</p>
-                            <div className="bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded-full inline-block mt-1">
-                                {sportType}
+                            <div 
+                                className="text-white text-xs font-semibold px-2 py-1 rounded-full inline-block mt-1 flex items-center gap-1"
+                                style={{ backgroundColor: sportColor }}
+                            >
+                                {sportIconPath && (
+                                    <img 
+                                        src={sportIconPath} 
+                                        alt={sportType}
+                                        className="w-4 h-4"
+                                    />
+                                )}
+                                {getSportDisplayNameVN(sportType)}
                             </div>
                         </div>
                         <div className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">

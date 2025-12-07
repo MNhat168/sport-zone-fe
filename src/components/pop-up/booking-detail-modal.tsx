@@ -14,6 +14,7 @@ import type { Booking } from '@/types/booking-type';
 import type { Field } from '@/types/field-type';
 import { PaymentMethod } from '@/types/payment-type';
 import { formatCurrency } from '@/utils/format-currency';
+import { getSportDisplayNameVN } from '@/components/enums/ENUMS';
 
 interface BookingDetailModalProps {
     isOpen: boolean;
@@ -201,7 +202,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                                         {fieldData?.name || 'Không có tên'}
                                     </h4>
                                     <p className="text-sm text-gray-600 mt-1">
-                                        {fieldData?.sportType || 'Không xác định'}
+                                        {fieldData?.sportType ? getSportDisplayNameVN(fieldData.sportType) : 'Không xác định'}
                                     </p>
                                     {fieldData?.location && (
                                         <p className="text-xs text-gray-500 mt-1 truncate">
