@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,12 +13,16 @@ import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
+import { startChat } from "../../features/chat/chatThunk"
+import { setCurrentRoom } from "../../features/chat/chatSlice"
+import { webSocketService } from "../../features/chat/websocket.service"
 import { getMyBookings, cancelFieldBooking } from "../../features/booking/bookingThunk"
 import type { Booking } from "../../types/booking-type"
 import BookingDetailModal from "@/components/pop-up/booking-detail-modal"
 
 export default function UserBookingsPage() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const bookingState = useAppSelector((state) => state?.booking)
   const bookings = bookingState?.bookings || []
   const pagination = bookingState?.pagination || null
@@ -159,6 +164,58 @@ export default function UserBookingsPage() {
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false)
     setSelectedBooking(null)
+  }
+
+  const handleChat = async (booking: Booking) => {
+    const token = localStorage.getItem("accessToken") || ""
+    if (!webSocketService.isConnected() && token) {
+      console.log("[Chat] connecting socket with token present")
+      webSocketService.connect(token)
+    }
+    const rawOwner =
+      (booking as any)?.fieldOwnerProfileId ||
+      (booking as any)?.field?.fieldOwnerProfileId ||
+      (booking as any)?.fieldOwnerId ||
+      (booking as any)?.field?.ownerProfileId ||
+      (booking as any)?.ownerProfileId ||
+      (booking as any)?.field?.owner
+    // Normalize to string ObjectId
+    const fieldOwnerProfileId = typeof rawOwner === "string"
+      ? rawOwner
+      : (rawOwner && typeof rawOwner === "object" && (rawOwner._id || rawOwner.id))
+        ? String(rawOwner._id || rawOwner.id)
+        : ""
+    if (!fieldOwnerProfileId) {
+      console.warn("Missing fieldOwnerProfileId in booking")
+      alert("Không tìm thấy ID chủ sân từ booking này. Vui lòng thử booking khác hoặc liên hệ hỗ trợ.")
+      return
+    }
+    console.log("[Chat] derived owner id", fieldOwnerProfileId)
+    const result = await dispatch(startChat({ fieldOwnerId: String(fieldOwnerProfileId) }))
+    console.log("[Chat] startChat result", result)
+    const newRoom: any = (result as any).payload?.data || (result as any).payload
+    if (newRoom?._id) {
+      try {
+        console.log("[Chat] joining room", newRoom._id)
+        webSocketService.joinChatRoom(newRoom._id)
+      } catch (e) {
+        console.warn("[Chat] join room failed, will navigate anyway", e)
+      }
+      // Fetch full room with messages before navigating
+      try {
+        const roomDetail: any = await dispatch(getChatRoom(newRoom._id))
+        const fullRoom = (roomDetail as any)?.payload?.data || (roomDetail as any)?.payload || newRoom
+        dispatch(setCurrentRoom(fullRoom))
+        console.log("[Chat] setCurrentRoom (full)", fullRoom._id)
+      } catch (e) {
+        dispatch(setCurrentRoom(newRoom))
+      }
+      navigate("/user-chat")
+    } else {
+      const err = (result as any)?.error || "Không thể tạo phòng chat"
+      console.error("[Chat] startChat error", err)
+      alert(typeof err === "string" ? err : "Không thể tạo phòng chat")
+    }
   }
 
   return (
@@ -363,6 +420,7 @@ export default function UserBookingsPage() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
+                                    onClick={() => handleChat(booking)}
                                     className="hover:bg-blue-500 hover:text-white transition-all duration-200 text-blue-500"
                                   >
                                     💬 Trò chuyện

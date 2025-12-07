@@ -14,7 +14,9 @@ export const startChat = createAsyncThunk(
     async (payload: StartChatPayload, { rejectWithValue }) => {
         try {
             const response = await axiosPrivate.post(START_CHAT_API, payload);
-            return response.data as ChatRoom;
+            // Backend wraps in { success, data }
+            const room = (response.data?.data ?? response.data) as ChatRoom;
+            return room;
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || error.message || "Failed to start chat"

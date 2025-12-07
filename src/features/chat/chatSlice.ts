@@ -26,13 +26,21 @@ const chatSlice = createSlice({
       state.currentRoom = action.payload;
     },
     addMessage: (state, action: PayloadAction<SocketMessageEvent>) => {
-      const { chatRoomId, message, chatRoom } = action.payload;
-      
+      const { chatRoomId, message, chatRoom, clientId } = action.payload as any;
+
       // Update current room if active
-      if (state.currentRoom?._id === chatRoomId) {
-        state.currentRoom.messages.push(message);
+      if (state.currentRoom && state.currentRoom._id === chatRoomId) {
+        // If we previously added an optimistic message, replace it with the persisted one
+        const tmpIndex = state.currentRoom.messages?.findIndex(
+          (m) => clientId ? m._id === clientId : (typeof m._id === "string" && m._id.startsWith("tmp-") && m.content === message.content)
+        );
+        if (typeof tmpIndex === 'number' && tmpIndex !== -1) {
+          state.currentRoom.messages[tmpIndex] = message as any;
+        } else {
+          (state.currentRoom.messages || (state.currentRoom.messages = [])).push(message as any);
+        }
         state.currentRoom.lastMessageAt = new Date().toISOString();
-        state.currentRoom.lastMessageBy = message.sender;
+        state.currentRoom.lastMessageBy = message.sender as any;
       }
 
       // Update rooms list
@@ -42,7 +50,7 @@ const chatSlice = createSlice({
           ...chatRoom,
           hasUnread: state.currentRoom?._id !== chatRoomId,
         };
-        
+
         // Move to top
         const updatedRoom = state.rooms.splice(roomIndex, 1)[0];
         state.rooms.unshift(updatedRoom);
@@ -52,9 +60,33 @@ const chatSlice = createSlice({
       }
 
       // Update unread count
-      if (state.currentRoom?._id !== chatRoomId) {
+      if (!state.currentRoom || state.currentRoom._id !== chatRoomId) {
         state.unreadCount += 1;
       }
+
+      // Persist history locally per room to avoid UI flicker
+      try {
+        const key = `chat_history_${chatRoomId}`;
+        const raw = localStorage.getItem(key);
+        console.log('[ChatSlice] persist history read', { key, raw });
+        const prev = JSON.parse(raw || '[]');
+        // Replace any optimistic copy in local storage that matches clientId/content
+        const updated = Array.isArray(prev)
+          ? prev.map((m: any) => {
+              const isOptimistic = m && typeof m._id === 'string' && m._id.startsWith('tmp-');
+              if (!isOptimistic) return m;
+              if (clientId ? m._id === clientId : m.content === message.content) {
+                return message;
+              }
+              return m;
+            })
+          : [];
+        // Ensure the persisted message exists once
+        const exists = updated.some((m: any) => String(m?._id) === String((message as any)?._id));
+        if (!exists) updated.push(message as any);
+        localStorage.setItem(key, JSON.stringify(updated));
+        console.log('[ChatSlice] persist history write', { key, count: updated.length });
+      } catch {}
     },
     setTyping: (state, action: PayloadAction<TypingEvent>) => {
       const { userId, isTyping, chatRoomId } = action.payload;
@@ -98,7 +130,41 @@ const chatSlice = createSlice({
       })
       .addCase(getChatRoom.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentRoom = action.payload;
+        const fetched = action.payload;
+        // Preserve any optimistic messages (e.g., temporary ids starting with 'tmp-')
+        if (state.currentRoom?._id === fetched._id && state.currentRoom?.messages?.length) {
+          const optimistic = state.currentRoom.messages.filter(m => typeof m._id === 'string' && m._id.startsWith('tmp-'));
+          // Merge and de-duplicate by _id
+          const byId = new Map<string, typeof fetched.messages[number]>();
+          for (const m of fetched.messages) {
+            if (m._id) byId.set(String(m._id), m);
+          }
+          for (const m of optimistic) {
+            byId.set(String(m._id), m);
+          }
+          // Also merge any locally persisted history
+          try {
+            const key = `chat_history_${fetched._id}`;
+            const stored = JSON.parse(localStorage.getItem(key) || '[]');
+            for (const m of stored) {
+              if (m && m._id) byId.set(String(m._id), m);
+            }
+          } catch {}
+          const mergedMessages = Array.from(byId.values());
+          state.currentRoom = { ...fetched, messages: mergedMessages };
+        } else {
+          // Merge persisted history for first load
+          try {
+            const key = `chat_history_${fetched._id}`;
+            const stored = JSON.parse(localStorage.getItem(key) || '[]');
+            const byId = new Map<string, typeof fetched.messages[number]>();
+            for (const m of fetched.messages) if (m._id) byId.set(String(m._id), m);
+            for (const m of stored) if (m && m._id) byId.set(String(m._id), m);
+            state.currentRoom = { ...fetched, messages: Array.from(byId.values()) };
+          } catch {
+            state.currentRoom = fetched;
+          }
+        }
       })
       .addCase(getChatRoom.rejected, (state, action) => {
         state.loading = false;
@@ -138,7 +204,7 @@ const chatSlice = createSlice({
           });
           state.currentRoom.hasUnread = false;
         }
-        
+
         // Update in rooms list
         const roomIndex = state.rooms.findIndex(room => room._id === chatRoomId);
         if (roomIndex !== -1) {
@@ -147,7 +213,7 @@ const chatSlice = createSlice({
             msg.isRead = true;
           });
         }
-        
+
         // Update unread count
         state.unreadCount = Math.max(0, state.unreadCount - 1);
       });
