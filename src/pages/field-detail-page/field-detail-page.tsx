@@ -28,6 +28,7 @@ import { getFieldPinIcon } from "@/utils/fieldPinIcon"
 import ReportDialog from "@/components/report/ReportDialog"
 import axiosPrivate from "@/utils/axios/axiosPrivate"
 import OwnerInfoCard from "./components/OwnerInfoCard"
+import { getSportDisplayNameVN } from "@/components/enums/ENUMS"
 import {
     AlertDialog,
     AlertDialogContent,
@@ -169,7 +170,7 @@ const FieldDetailPage: React.FC = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            const ids = ["overview", "rules", "amenities", "gallery", "pricing", "rating", "location"]
+            const ids = ["overview", "pricing", "rules", "amenities", "gallery", "rating", "location"]
             if (window.scrollY < 50) {
                 setActiveTab("overview")
                 return
@@ -573,7 +574,7 @@ const FieldDetailPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500">Môn Thể thao:</span>
                   <span className="font-medium">
-                    {String(currentField?.sportType || "-")}
+                    {currentField?.sportType ? getSportDisplayNameVN(currentField.sportType) : "-"}
                   </span>
                 </div>
                 {/* <div className="flex items-center gap-2">
@@ -592,10 +593,10 @@ const FieldDetailPage: React.FC = () => {
                       activeTab={activeTab}
                       pills={[
                         { k: "overview", label: "Overview" },
+                        { k: "pricing", label: "Bảng giá" },
                         { k: "rules", label: "Rules" },
                         { k: "amenities", label: "Amenities" },
                         { k: "gallery", label: "Gallery" },
-                        { k: "pricing", label: "Bảng giá" },
                         { k: "rating", label: "Rating" },
                         { k: "location", label: "Location" },
                       ]}
@@ -613,6 +614,14 @@ const FieldDetailPage: React.FC = () => {
                         }
                       />
 
+                      <PricingTableCard
+                        refObj={pricingRef}
+                        id="pricing"
+                        priceRanges={(currentField as any)?.priceRanges || []}
+                        basePrice={(currentField as any)?.basePrice || 0}
+                        sportType={currentField?.sportType}
+                      />
+
                       <RulesCard refObj={rulesRef} id="rules" rules={rules} />
 
                       <AmenitiesCard
@@ -627,14 +636,6 @@ const FieldDetailPage: React.FC = () => {
                         id="gallery"
                         images={(currentField.images as string[]) || []}
                         fallback={[]}
-                      />
-
-                      <PricingTableCard
-                        refObj={pricingRef}
-                        id="pricing"
-                        priceRanges={(currentField as any)?.priceRanges || []}
-                        basePrice={(currentField as any)?.basePrice || 0}
-                        sportType={currentField?.sportType}
                       />
 
                       <RatingCard

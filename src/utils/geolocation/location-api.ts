@@ -53,6 +53,15 @@ export interface NearbyFieldsResponse {
     sportType?: string;
     images?: string[];
     isActive?: boolean;
+    operatingHours?: Array<{
+      day: string;
+      start: string;
+      end: string;
+      duration: number;
+    }>;
+    description?: string;
+    totalReviews?: number;
+    amenities?: any[];
   }>;
   error?: string;
 }
