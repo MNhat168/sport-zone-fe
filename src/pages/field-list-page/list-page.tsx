@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getAllFields } from "../../features/field/fieldThunk"
 import { useGeolocation } from "../../hooks/useGeolocation"
 import { locationAPIService } from "../../utils/geolocation"
-import { Navigation, AlertCircle, Filter, Heart, DollarSign } from "lucide-react"
+import { Navigation, AlertCircle, Filter, Heart, DollarSign, Plus, Minus } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,7 @@ import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { FilterSidebar } from "./filter-sidebar"
 import { FavoriteSportsModal } from "@/components/common/favorite-sports-modal";
 import { getUserProfile, setFavouriteSports } from "@/features/user/userThunk";
+import { getFieldPinIconWithLabel } from "@/utils/fieldPinIcon";
 const FieldBookingPage = () => {
   const fieldsListRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
@@ -51,12 +52,24 @@ const FieldBookingPage = () => {
   const [locationFilter, setLocationFilter] = useState("");
   const [priceSort, setPriceSort] = useState<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // New filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [minRating, setMinRating] = useState<number | null>(null);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [currentZoom, setCurrentZoom] = useState<number>(12);
+  const isUserZoomingRef = useRef<boolean>(false);
+  const pendingZoomRef = useRef<number | null>(null); // THÊM dòng này
   const skipNextDebounceRef = useRef(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
   const mapContainerId = "fields-map-container";
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const markersMapRef = useRef<Map<string, any>>(new Map());
+  const fieldCardRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
   const [showFavoriteSportsModal, setShowFavoriteSportsModal] = useState(false);
   const [modalShownOnce, setModalShownOnce] = useState(false);
   const user = useAppSelector((state) => state.user.user);
@@ -299,7 +312,6 @@ const FieldBookingPage = () => {
       copy.page = 1;
       return copy;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [priceSort]);
 
   const location = useLocation();
@@ -455,7 +467,12 @@ const FieldBookingPage = () => {
 
   const hasActiveFilters = !!(
     nameFilter ||
+    searchQuery ||
     sportFilter !== "all" ||
+    minPrice !== null ||
+    maxPrice !== null ||
+    minRating !== null ||
+    selectedAmenities.length > 0 ||
     timeFilter !== "any" ||
     locationFilter ||
     (priceSort && priceSort !== "none") ||
@@ -542,9 +559,11 @@ const FieldBookingPage = () => {
       name: (field as any).name,
       location: locationText,
       description: (field as any).description || "Mô tả không có sẵn",
-      rating: (field as any).rating || 4.5,
-      reviews: (field as any).reviews || (field as any).totalBookings || 0,
+      rating: (field as any).rating ?? 0,
+      reviews: (field as any).totalReviews ?? 0,
       price: (field as any).price || "N/A",
+      basePrice: (field as any).basePrice || 0,
+      amenities: (field as any).amenities || [],
       nextAvailability:
         (field as any).isActive !== false ? "Có sẵn" : "Không có sẵn",
       sportType: (field as any).sportType || "unknown",
@@ -555,11 +574,15 @@ const FieldBookingPage = () => {
       latitude:
         (field as any).latitude ??
         (field as any).lat ??
+        (field as any)?.location?.geo?.coordinates?.[1] ?? // GeoJSON: [lng, lat]
+        (field as any)?.geo?.coordinates?.[1] ??
         (field as any)?.geo?.lat ??
         (field as any)?.geo?.latitude,
       longitude:
         (field as any).longitude ??
         (field as any).lng ??
+        (field as any)?.location?.geo?.coordinates?.[0] ?? // GeoJSON: [lng, lat]
+        (field as any)?.geo?.coordinates?.[0] ??
         (field as any)?.geo?.lng ??
         (field as any)?.geo?.longitude,
     };
@@ -574,16 +597,48 @@ const FieldBookingPage = () => {
     ""
   ).toLowerCase();
 
+  // Sử dụng cả URL params và state filters
+  const searchName = (qName || nameFilter.trim().toLowerCase()) || "";
+  const searchLocation = (qLocation || locationFilter.trim().toLowerCase()) || "";
+  const searchType = qType || (sportFilter !== "all" ? sportFilter.toLowerCase() : "");
+
   const filteredTransformedFields = transformedFields.filter((f) => {
-    if (qName) {
-      const inName = (f.name || "").toLowerCase().includes(qName);
-      const inLocation = (f.location || "").toLowerCase().includes(qName);
+    // Search by name/location
+    if (searchName) {
+      const inName = (f.name || "").toLowerCase().includes(searchName);
+      const inLocation = (f.location || "").toLowerCase().includes(searchName);
       if (!inName && !inLocation) return false;
     }
-    if (qType && !(f.sportType || "").toLowerCase().includes(qType))
+    // Filter by sport type
+    if (searchType && !(f.sportType || "").toLowerCase().includes(searchType))
       return false;
-    if (qLocation && !(f.location || "").toLowerCase().includes(qLocation))
+    // Filter by location
+    if (searchLocation && !(f.location || "").toLowerCase().includes(searchLocation))
       return false;
+    // Filter by price range
+    if (minPrice !== null || maxPrice !== null) {
+      const fieldPrice = (f as any).basePrice || 0;
+      if (minPrice !== null && fieldPrice < minPrice) return false;
+      if (maxPrice !== null && fieldPrice > maxPrice) return false;
+    }
+    // Filter by rating
+    if (minRating !== null) {
+      const fieldRating = f.rating || 0;
+      if (fieldRating < minRating) return false;
+    }
+    // Filter by amenities (if field has amenities data)
+    if (selectedAmenities.length > 0) {
+      const fieldAmenities = (f as any).amenities || [];
+      const fieldAmenityNames = fieldAmenities.map((a: any) => 
+        typeof a === 'string' ? a : a.name || a.amenity?.name || ''
+      );
+      const hasAllSelected = selectedAmenities.every(selected => 
+        fieldAmenityNames.some((name: string) => 
+          name.toLowerCase().includes(selected.toLowerCase())
+        )
+      );
+      if (!hasAllSelected) return false;
+    }
     return true;
   });
 
@@ -663,6 +718,7 @@ const FieldBookingPage = () => {
 
     markersRef.current.forEach((m) => m.remove && m.remove());
     markersRef.current = [];
+    markersMapRef.current.clear();
     const bounds = L.latLngBounds([]);
 
     if (userLocation?.lat && userLocation?.lng) {
@@ -677,36 +733,186 @@ const FieldBookingPage = () => {
       bounds.extend([userLocation.lat, userLocation.lng]);
     }
 
+    // Store field data in marker for later reference
+    const fieldDataMap = new Map<string, { name: string; sportType: string | undefined }>();
+    filteredTransformedFields.forEach((f) => {
+      fieldDataMap.set(f.id, { name: f.name, sportType: f.sportType });
+    });
+
+    // Update all marker labels when zoom changes
+    const updateMarkerLabels = () => {
+      if (!mapRef.current) return;
+      const currentZoom = mapRef.current.getZoom();
+      if (currentZoom === undefined) return;
+      
+      markersRef.current.forEach((marker) => {
+        // Find fieldId by matching marker
+        let fieldId: string | undefined;
+        for (const [id, m] of markersMapRef.current.entries()) {
+          if (m === marker) {
+            fieldId = id;
+            break;
+          }
+        }
+        
+        if (fieldId) {
+          const fieldData = fieldDataMap.get(fieldId);
+          if (fieldData) {
+            const newIcon = getFieldPinIconWithLabel(fieldData.name, fieldData.sportType, L, currentZoom);
+            marker.setIcon(newIcon);
+          }
+        }
+      });
+    };
+
+    // Remove old zoom listeners if they exist
+    if ((mapRef.current as any)._labelZoomListener) {
+      mapRef.current.off('zoom', (mapRef.current as any)._labelZoomListener);
+      mapRef.current.off('zoomend', (mapRef.current as any)._labelZoomListener);
+    }
+
+    // Add zoom event listeners (both zoom and zoomend for better responsiveness)
+    (mapRef.current as any)._labelZoomListener = updateMarkerLabels;
+    mapRef.current.on('zoom', updateMarkerLabels);
+    mapRef.current.on('zoomend', updateMarkerLabels);
+    
+    // Update zoom states when map zoom changes
+    const updateZoomState = () => {
+      if (mapRef.current) {
+        // Nếu có pending zoom từ user click, ưu tiên giá trị đó
+        if (pendingZoomRef.current !== null) {
+          setCurrentZoom(pendingZoomRef.current);
+          pendingZoomRef.current = null;
+        } else {
+          const zoom = mapRef.current.getZoom();
+          if (zoom !== undefined) {
+            setCurrentZoom(zoom);
+          }
+        }
+      }
+    };
+
+    const resetUserZoomFlag = () => {
+      isUserZoomingRef.current = false;
+    };
+
+    // Chỉ lắng nghe zoomend để tránh update quá nhiều lần
+    mapRef.current.on('zoomend', updateZoomState);
+    mapRef.current.on('zoomend', resetUserZoomFlag);
+
+    // KHÔNG set initial zoom ở đây nữa - để tránh reset zoom về 12 mỗi khi useEffect chạy lại
+    // updateZoomState sẽ tự động sync từ map khi zoomend event fire
+
     filteredTransformedFields.forEach((f) => {
       if (f.latitude != null && f.longitude != null) {
+        const currentZoom = mapRef.current?.getZoom() || 12;
         const marker = L.marker([f.latitude, f.longitude], {
-          icon: defaultIcon,
+          icon: getFieldPinIconWithLabel(f.name, f.sportType, L, currentZoom),
         }).addTo(mapRef.current);
-        const popupHtml = `
-                    <div style="min-width: 160px">
-                        <div style="font-weight:600;margin-bottom:4px">${
-                          f.name
-                        }</div>
-                        <div style="font-size:12px;color:#4b5563;">${
-                          f.location
-                        }</div>
-                        ${
-                          f.price
-                            ? `<div style="font-size:12px;margin-top:4px;color:#065f46">Giá: ${f.price}</div>`
-                            : ""
-                        }
-                    </div>
-                `;
-        marker.bindPopup(popupHtml);
+        
+        // Thay vì bind popup, thêm click handler để scroll đến field card
+        marker.on('click', () => {
+          const fieldCardElement = fieldCardRefsRef.current.get(f.id);
+          if (fieldCardElement && fieldsListRef.current) {
+            // Highlight field
+            setHighlightedFieldId(f.id);
+            // Remove highlight after 2 seconds
+            setTimeout(() => setHighlightedFieldId(null), 2000);
+            
+            // Scroll to field card
+            const containerRect = fieldsListRef.current.getBoundingClientRect();
+            const cardRect = fieldCardElement.getBoundingClientRect();
+            const scrollTop = fieldsListRef.current.scrollTop;
+            const targetScrollTop = scrollTop + cardRect.top - containerRect.top - 20; // 20px offset from top
+            
+            fieldsListRef.current.scrollTo({
+              top: targetScrollTop,
+              behavior: 'smooth'
+            });
+          }
+        });
+        
         markersRef.current.push(marker);
+        markersMapRef.current.set(f.id, marker);
         bounds.extend([f.latitude, f.longitude]);
       }
     });
 
-    if (bounds.isValid()) {
-      mapRef.current.fitBounds(bounds.pad(0.2));
+    // Logic để focus vào field được search
+    // Tính lại searchName và searchLocation trong useEffect để đảm bảo có giá trị mới nhất
+    const urlParamsForFocus = new URLSearchParams(location.search);
+    const qNameForFocus = (urlParamsForFocus.get("name") || "").toLowerCase();
+    const qLocationForFocus = (urlParamsForFocus.get("location") || urlParamsForFocus.get("loc") || "").toLowerCase();
+    const searchNameForFocus = (qNameForFocus || nameFilter.trim().toLowerCase()) || "";
+    const searchLocationForFocus = (qLocationForFocus || locationFilter.trim().toLowerCase()) || "";
+    const hasSearchQuery = (searchNameForFocus || searchLocationForFocus) && filteredTransformedFields.length > 0;
+    
+    if (hasSearchQuery) {
+      // Tìm field đầu tiên match với search query
+      const searchedField = filteredTransformedFields[0];
+      
+      // Đợi một chút để đảm bảo markers đã được tạo xong
+      setTimeout(() => {
+        if (searchedField.latitude != null && searchedField.longitude != null) {
+          // Zoom vào marker
+          mapRef.current.flyTo(
+            [searchedField.latitude, searchedField.longitude],
+            16, // Zoom level cao hơn để focus vào field
+            { duration: 1.0 }
+          );
+          
+          // Scroll đến field card trong danh sách
+          setTimeout(() => {
+            const fieldCardElement = fieldCardRefsRef.current.get(searchedField.id);
+            if (fieldCardElement && fieldsListRef.current) {
+              setHighlightedFieldId(searchedField.id);
+              setTimeout(() => setHighlightedFieldId(null), 2000);
+              
+              const containerRect = fieldsListRef.current.getBoundingClientRect();
+              const cardRect = fieldCardElement.getBoundingClientRect();
+              const scrollTop = fieldsListRef.current.scrollTop;
+              const targetScrollTop = scrollTop + cardRect.top - containerRect.top - 20;
+              
+              fieldsListRef.current.scrollTo({
+                top: targetScrollTop,
+                behavior: 'smooth'
+              });
+            }
+          }, 1000);
+        }
+      }, 100);
+    } else {
+      // Không có search query
+      // Chỉ fitBounds nếu có ít markers (<= 5) để tránh zoom out quá nhiều
+      const markersWithCoords = filteredTransformedFields.filter(
+        (f) => f.latitude != null && f.longitude != null
+      );
+      
+      if (bounds.isValid() && markersWithCoords.length > 0 && markersWithCoords.length <= 5) {
+        // Có ít markers, fitBounds để hiển thị tất cả
+        // Chỉ fitBounds nếu user không đang zoom (tránh reset zoom khi user đang tương tác)
+        if (!isUserZoomingRef.current) {
+          mapRef.current.fitBounds(bounds.pad(0.2));
+        }
+      } else {
+        // Không có markers hoặc quá nhiều markers
+        // KHÔNG reset zoom về 12 nữa - giữ zoom hiện tại của user
+        // Chỉ set view nếu map chưa có center (lần đầu tiên) và user không đang zoom
+        const mapCenter = mapRef.current.getCenter();
+        if ((!mapCenter || markersWithCoords.length === 0) && !isUserZoomingRef.current) {
+          mapRef.current.setView([16.0471, 108.2062], 12);
+        }
+      }
     }
-  }, [filteredTransformedFields, userLocation]);
+
+    // Cleanup function
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('zoomend', updateZoomState);
+        mapRef.current.off('zoomend', resetUserZoomFlag);
+      }
+    };
+  }, [filteredTransformedFields, userLocation, location.search, nameFilter, locationFilter]);
 
   return (
     <div className="min-h-screen">
@@ -740,10 +946,10 @@ const FieldBookingPage = () => {
       />
       <NavbarDarkComponent />
       <PageWrapper>
-        <div className="flex flex-row">
-          <div className="w-full flex-6">
-            <div className="items-start">
-              <div className="bg-background-secondary flex flex-col h-screen p-4">
+         <div className="flex flex-row">
+           <div className="flex-4">
+             <div className="items-start">
+               <div className="bg-background-secondary flex flex-col h-screen p-4">
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 flex items-center gap-3 flex-wrap">
@@ -943,8 +1149,22 @@ const FieldBookingPage = () => {
                 <FilterSidebar
                   isOpen={isSidebarOpen}
                   onOpenChange={setIsSidebarOpen}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  locationFilter={locationFilter}
+                  onLocationChange={setLocationFilter}
+                  minPrice={minPrice}
+                  maxPrice={maxPrice}
+                  onPriceRangeChange={(min, max) => {
+                    setMinPrice(min);
+                    setMaxPrice(max);
+                  }}
+                  minRating={minRating}
+                  onRatingChange={setMinRating}
                   timeFilter={timeFilter}
                   onTimeFilterChange={setTimeFilter}
+                  selectedAmenities={selectedAmenities}
+                  onAmenitiesChange={setSelectedAmenities}
                   hasActiveFilters={hasActiveFilters}
                   onResetFilters={() => {
                     setNameFilter("");
@@ -952,6 +1172,11 @@ const FieldBookingPage = () => {
                     setTimeFilter("any");
                     setLocationFilter("");
                     setPriceSort("");
+                    setSearchQuery("");
+                    setMinPrice(null);
+                    setMaxPrice(null);
+                    setMinRating(null);
+                    setSelectedAmenities([]);
                     setFilters((prev) => {
                       const copy: any = { ...prev };
                       delete copy.sortBy;
@@ -965,13 +1190,14 @@ const FieldBookingPage = () => {
                       };
                     });
                     setIsNearbyMode(false);
-                    setNearbyFields([]);
-                    setUserLocation(null);
-                    try {
-                      navigate(location.pathname, { replace: true });
-                    } catch (error: any) {
-                      console.error("Error navigating:", error);
+                  }}
+                  onSearch={() => {
+                    // Apply search query to nameFilter
+                    if (searchQuery.trim()) {
+                      setNameFilter(searchQuery.trim());
                     }
+                    // Close sidebar after search
+                    setIsSidebarOpen(false);
                   }}
                 />
 
@@ -1025,7 +1251,18 @@ const FieldBookingPage = () => {
                         {filteredTransformedFields.map((field, index) => (
                           <div
                             key={field.id || index}
-                            className="scroll-snap-start"
+                            ref={(el) => {
+                              if (el && field.id) {
+                                fieldCardRefsRef.current.set(field.id, el);
+                              } else if (!el && field.id) {
+                                fieldCardRefsRef.current.delete(field.id);
+                              }
+                            }}
+                            className={`scroll-snap-start transition-all duration-300 ${
+                              highlightedFieldId === field.id
+                                ? 'ring-4 ring-green-500 ring-offset-2 rounded-lg'
+                                : ''
+                            }`}
                           >
                             <FieldCard
                               id={field.id}
@@ -1088,10 +1325,81 @@ const FieldBookingPage = () => {
                 </div>
               </div>
             </div>
-          </div>
-          <div className="w-full flex-[4]">
-            <div id={mapContainerId} className="map-container w-full" />
-          </div>
+           </div>
+           <div className="flex-6 relative">
+             <div id={mapContainerId} className="map-container w-full h-screen" />
+             <div className="absolute top-24 right-4 z-1000 flex flex-col items-center gap-2">
+                    {/* Zoom In Button - Circular */}
+                    <button
+                      onClick={() => {
+                        if (mapRef.current) {
+                          isUserZoomingRef.current = true;
+                          const newZoom = Math.min(currentZoom + 1, 18);
+                          
+                          // Lưu giá trị zoom mới vào ref trước khi gọi setZoom
+                          pendingZoomRef.current = newZoom;
+                          setCurrentZoom(newZoom); // Update UI ngay lập tức
+                          
+                          // Gọi setZoom với animation
+                          mapRef.current.setZoom(newZoom, { animate: true });
+                        }
+                      }}
+                      disabled={currentZoom >= 18}
+                      className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+                      title="Phóng to"
+                    >
+                      <Plus className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
+                    </button>
+
+                    {/* Zoom Level Display Bar - Rounded Rectangle */}
+                    <div className="relative w-10 h-32 bg-white rounded-full shadow-lg border border-gray-300 overflow-hidden">
+                      {/* Background track */}
+                      <div className="absolute inset-0 flex items-end justify-center p-1">
+                        <div className="w-1 h-full bg-gray-200 rounded-full" />
+                      </div>
+                      
+                      {/* Active fill based on current zoom */}
+                      <div 
+                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 bg-green-600 rounded-full transition-all duration-300"
+                        style={{ 
+                          height: `calc(${((currentZoom - 8) / (18 - 8)) * 100}% - 8px)`, 
+                          margin: '4px 0' 
+                        }}
+                      />
+                      
+                      {/* Zoom level number indicator */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-[10px] font-bold text-gray-700 bg-white/90 px-1.5 py-0.5 rounded shadow-sm">
+                          {currentZoom.toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Zoom Out Button - Circular */}
+                    <button
+                      onClick={() => {
+                        if (mapRef.current) {
+                          isUserZoomingRef.current = true;
+                          const newZoom = Math.max(currentZoom - 1, 8);
+                          
+                          // Lưu giá trị zoom mới vào ref trước khi gọi setZoom
+                          pendingZoomRef.current = newZoom;
+                          setCurrentZoom(newZoom); // Update UI ngay lập tức
+                          
+                          // Gọi setZoom với animation
+                          mapRef.current.setZoom(newZoom, { animate: true });
+                        }
+                      }}
+                      disabled={currentZoom <= 8}
+                      className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+                      title="Thu nhỏ"
+                    >
+                      <Minus className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
+                    </button>
+                  </div>
+             
+             
+           </div>
         </div>
       </PageWrapper>
       <FooterComponent />
