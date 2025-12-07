@@ -20,9 +20,11 @@ import { AmenitiesCard } from "./components/AmenitiesCard"
 import { GalleryCard } from "./components/GalleryCard"
 import { RatingCard } from "./components/RatingCard"
 import { LocationCard } from "./components/LocationCard"
+import { PricingTableCard } from "./components/PricingTableCard"
 import { Button } from "@/components/ui/button"
 import { MessageCircle } from "lucide-react"
 import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow"
+import { getFieldPinIcon } from "@/utils/fieldPinIcon"
 import ReportDialog from "@/components/report/ReportDialog"
 import axiosPrivate from "@/utils/axios/axiosPrivate"
 import OwnerInfoCard from "./components/OwnerInfoCard"
@@ -133,6 +135,7 @@ const FieldDetailPage: React.FC = () => {
     const galleryRef = useRef<HTMLDivElement | null>(null)
     const ratingRef = useRef<HTMLDivElement | null>(null)
     const locationRef = useRef<HTMLDivElement | null>(null)
+    const pricingRef = useRef<HTMLDivElement | null>(null)
     // Leaflet map refs
     const mapContainerRef = useRef<HTMLDivElement | null>(null)
     const mapRef = useRef<L.Map | null>(null)
@@ -166,7 +169,7 @@ const FieldDetailPage: React.FC = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            const ids = ["overview", "rules", "amenities", "gallery", "rating", "location"]
+            const ids = ["overview", "rules", "amenities", "gallery", "pricing", "rating", "location"]
             if (window.scrollY < 50) {
                 setActiveTab("overview")
                 return
@@ -418,18 +421,9 @@ const FieldDetailPage: React.FC = () => {
                 }
                 if (cancelled || lat == null || lon == null) return
                 if (!markerRef.current) {
-                    // Get default icon from prototype or create new one
-                    const defaultIcon = (L as any).Marker.prototype.options.icon || L.icon({
-                        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-                        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-                        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    })
+                    const fieldIcon = getFieldPinIcon(currentField?.sportType, L)
                     markerRef.current = L.marker([lat, lon], {
-                        icon: defaultIcon
+                        icon: fieldIcon
                     }).addTo(map)
                 } else {
                     markerRef.current.setLatLng([lat, lon])
@@ -601,6 +595,7 @@ const FieldDetailPage: React.FC = () => {
                         { k: "rules", label: "Rules" },
                         { k: "amenities", label: "Amenities" },
                         { k: "gallery", label: "Gallery" },
+                        { k: "pricing", label: "Bảng giá" },
                         { k: "rating", label: "Rating" },
                         { k: "location", label: "Location" },
                       ]}
@@ -634,6 +629,14 @@ const FieldDetailPage: React.FC = () => {
                         fallback={[]}
                       />
 
+                      <PricingTableCard
+                        refObj={pricingRef}
+                        id="pricing"
+                        priceRanges={(currentField as any)?.priceRanges || []}
+                        basePrice={(currentField as any)?.basePrice || 0}
+                        sportType={currentField?.sportType}
+                      />
+
                       <RatingCard
                         refObj={ratingRef}
                         id="rating"
@@ -661,6 +664,7 @@ const FieldDetailPage: React.FC = () => {
                               : null;
                           })() as [number, number] | null
                         }
+                        sportType={currentField?.sportType}
                       />
                     </div>
                   </div>

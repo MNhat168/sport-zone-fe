@@ -71,13 +71,13 @@ const FieldCard: React.FC<FieldCardProps> = ({
                 </div>
 
                 {/* Content section */}
-                <CardContent className="p-4 flex-1">
+                <CardContent className="p-4 flex-1 text-start">
                     <div className="flex items-start justify-between mb-2">
-                        <div>
-                            <h3 className="text-xl font-bold mb-1">{name}</h3>
-                            <p className="text-gray-600 text-sm mb-1">{location}</p>
+                        <div className="text-start">
+                            <h3 className="text-xl font-bold mb-1 text-start">{name}</h3>
+                            <p className="text-gray-600 text-sm mb-1 text-start">{location}</p>
                             {distance && (
-                                <p className="text-green-600 text-xs font-medium flex items-center gap-1">
+                                <p className="text-green-600 text-xs font-medium flex items-center gap-1 text-start">
                                     📍 {distance} từ vị trí của bạn
                                 </p>
                             )}
@@ -87,17 +87,18 @@ const FieldCard: React.FC<FieldCardProps> = ({
                         </div>
                     </div>
 
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{description}</p>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 text-start">{description}</p>
 
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <span className="text-yellow-500 text-lg">★ {rating}</span>
-                            <span className="text-gray-600 text-sm ml-1">({reviews} reviews)</span>
-                            <div className="flex items-center text-gray-600 text-sm ml-4">
-                                <span className="mr-1">📅</span>
-                                <span>Available: </span>
-                                <span className="text-green-600 ml-1">{nextAvailability}</span>
-                            </div>
+                            {rating > 0 ? (
+                                <>
+                                    <span className="text-yellow-500 text-lg">★ {rating.toFixed(1)}</span>
+                                    <span className="text-gray-600 text-sm ml-1">({reviews} {reviews === 1 ? 'review' : 'reviews'})</span>
+                                </>
+                            ) : (
+                                <span className="text-gray-500 text-sm">Chưa có đánh giá</span>
+                            )}
                         </div>
                         <div className="flex gap-2">
                             <Button

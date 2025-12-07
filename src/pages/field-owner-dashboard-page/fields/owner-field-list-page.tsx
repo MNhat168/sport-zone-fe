@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "../../../store/hook"
 import { getMyFields } from "../../../features/field/fieldThunk"
 import { Filter } from "lucide-react"
 import { SportType } from "@/components/enums/ENUMS"
+import { getFieldPinIcon } from "@/utils/fieldPinIcon"
 
 // Constants
 const DEFAULT_FILTERS = {
@@ -225,14 +226,7 @@ const OwnerFieldListPage = () => {
                 !isNaN(field.latitude) && !isNaN(field.longitude)) {
                 try {
                     const marker = L.marker([field.latitude, field.longitude], {
-                        icon: L.icon({
-                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                            iconSize: [25, 41],
-                            iconAnchor: [12, 41],
-                            popupAnchor: [1, -34],
-                            shadowSize: [41, 41]
-                        })
+                        icon: getFieldPinIcon(field.sportType, L)
                     }).addTo(mapRef.current)
                     
                     const popupHtml = `

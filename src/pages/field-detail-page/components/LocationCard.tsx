@@ -3,15 +3,17 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Navigation, ChevronDown, MapPin } from "lucide-react"
 import L from "leaflet"
+import { getFieldPinIcon } from "@/utils/fieldPinIcon"
 
 interface LocationCardProps {
   refObj: React.RefObject<HTMLDivElement | null>
   id: string
   addressText: string
   geoCoords?: [number, number] | null // [lng, lat]
+  sportType?: string
 }
 
-export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressText, geoCoords }) => {
+export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressText, geoCoords, sportType }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.Marker | null>(null)
@@ -127,22 +129,14 @@ export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressT
     resizeTimeoutRef.current = setTimeout(() => {
       if (!map || (map as any)._destroyed) return
       
+      const fieldIcon = getFieldPinIcon(sportType, L)
       if (!markerRef.current) {
-        // Get default icon from prototype or create new one
-        const defaultIcon = (L as any).Marker.prototype.options.icon || L.icon({
-          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        })
         markerRef.current = L.marker([lat, lon], {
-          icon: defaultIcon
+          icon: fieldIcon
         }).addTo(map)
       } else {
         markerRef.current.setLatLng([lat, lon])
+        markerRef.current.setIcon(fieldIcon)
       }
       
       // Use setView instead of flyTo to prevent animation that can cause shaking
@@ -155,7 +149,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({ refObj, id, addressT
         clearTimeout(resizeTimeoutRef.current)
       }
     }
-  }, [geoCoords])
+  }, [geoCoords, sportType])
 
   const handleOpenMaps = () => {
     if (geoCoords) {
