@@ -101,7 +101,8 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
     return {
         id: booking.bookingId,
         academyName: booking.fieldName,
-        courtName: booking.fieldName, // Using fieldName as courtName
+        courtName: booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : booking.fieldName),
+        courtNumber: booking.courtNumber,
         academyImage: "/images/academies/default.jpg", // Default image
         date: formatDate(booking.date),
         time: `${startTime12h} - ${endTime12h}`,

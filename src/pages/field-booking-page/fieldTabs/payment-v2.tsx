@@ -67,7 +67,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                 date: bookingData.date || '',
                 startTime: bookingData.startTime || '',
                 endTime: bookingData.endTime || '',
-                court: bookingData.court || '',
+                courtId: bookingData.courtId || '',
+                courtName: bookingData.courtName || '',
                 name: bookingData.name || '',
                 email: bookingData.email || '',
                 phone: bookingData.phone || '',
@@ -82,7 +83,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                 date: parsed?.date || '',
                 startTime: parsed?.startTime || '',
                 endTime: parsed?.endTime || '',
-                court: parsed?.court || '',
+                courtId: parsed?.courtId || '',
+                courtName: parsed?.courtName || '',
                 name: parsed?.name || '',
                 email: parsed?.email || '',
                 phone: parsed?.phone || '',
@@ -742,6 +744,12 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                     <p className="text-sm text-gray-600">Sân</p>
                                     <p className="font-medium">{venue.name}</p>
                                 </div>
+                                {formData.courtName && (
+                                    <div>
+                                        <p className="text-sm text-gray-600">Sân con (court)</p>
+                                        <p className="font-medium">{formData.courtName}</p>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-sm text-gray-600">Ngày</p>
                                     <p className="font-medium">{formatDate(formData.date)}</p>

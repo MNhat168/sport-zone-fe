@@ -13,6 +13,15 @@ export interface FieldOwner {
     };
 }
 
+// Court interface for multi-court fields
+export interface Court {
+    id: string;
+    name: string;
+    courtNumber?: number;
+    isActive?: boolean;
+    field?: string;
+}
+
 // Main Field interface
 export interface Field {
     id: string;
@@ -37,6 +46,7 @@ export interface Field {
     owner: FieldOwner;
     ownerName?: string;
     ownerPhone?: string;
+    courts?: Court[]; // Multi-court support
     totalBookings?: number;
     createdAt?: string;
     updatedAt?: string;
@@ -174,6 +184,9 @@ export interface FieldAvailabilityData {
     date: string; // YYYY-MM-DD format
     isHoliday: boolean;
     slots: AvailabilitySlot[];
+    courtId?: string;
+    courtName?: string;
+    courtNumber?: number;
 }
 
 export interface AvailabilitySlot {
@@ -200,6 +213,7 @@ export interface CheckAvailabilityParams {
     id: string;
     startDate: string; // YYYY-MM-DD format
     endDate: string; // YYYY-MM-DD format
+    courtId?: string;
 }
 
 // Price Scheduling Interfaces
@@ -318,6 +332,8 @@ export interface FieldOwnerBooking {
     bookingId: string;
     fieldId: string;
     fieldName: string;
+    courtName?: string;
+    courtNumber?: number;
     date: string; // YYYY-MM-DD format
     startTime: string; // HH:mm format
     endTime: string; // HH:mm format

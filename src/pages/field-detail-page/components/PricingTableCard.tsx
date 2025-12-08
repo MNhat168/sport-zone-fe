@@ -29,16 +29,6 @@ const dayNames: Record<string, string> = {
   sunday: "CN",
 }
 
-const fullDayNames: Record<string, string> = {
-  monday: "Thứ 2",
-  tuesday: "Thứ 3",
-  wednesday: "Thứ 4",
-  thursday: "Thứ 5",
-  friday: "Thứ 6",
-  saturday: "Thứ 7",
-  sunday: "Chủ nhật",
-}
-
 export const PricingTableCard: React.FC<PricingTableCardProps> = ({
   refObj,
   id,

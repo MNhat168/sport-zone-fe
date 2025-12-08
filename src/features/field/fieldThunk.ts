@@ -67,6 +67,15 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         },
         ownerName: apiField?.ownerName,
         ownerPhone: apiField?.ownerPhone,
+        courts: Array.isArray(apiField?.courts)
+            ? apiField.courts.map((c: any) => ({
+                id: c?._id || c?.id || "",
+                name: c?.name || c?.courtName || "",
+                courtNumber: c?.courtNumber,
+                isActive: c?.isActive,
+                field: c?.field?._id || c?.field || "",
+            }))
+            : undefined,
         totalBookings: apiField?.totalBookings,
         createdAt: apiField?.createdAt,
         updatedAt: apiField?.updatedAt,
@@ -229,6 +238,7 @@ export const checkFieldAvailability = createAsyncThunk<
         const queryParams = new URLSearchParams();
         queryParams.append("startDate", params.startDate);
         queryParams.append("endDate", params.endDate);
+        if (params.courtId) queryParams.append("courtId", params.courtId);
 
         const url = `${FIELD_AVAILABILITY_API(params.id)}?${queryParams}`;
         const response = await axiosPublic.get(url);

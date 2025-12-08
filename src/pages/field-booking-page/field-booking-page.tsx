@@ -6,6 +6,7 @@ import { BookingStep } from "@/components/enums/ENUMS";
 import { BookCourtTab } from "./fieldTabs/bookCourt";
 import { AmenitiesTab } from "./fieldTabs/amenities";
 import { PersonalInfoTab } from "./fieldTabs/personalInfo";
+import type { BookingFormData } from "./fieldTabs/personalInfo";
 import { ConfirmCourtTab } from "./fieldTabs/confirmCourt";
 import { PaymentV2 } from "./fieldTabs/payment-v2";
 import { useLocation } from "react-router-dom";
@@ -14,19 +15,9 @@ import { getFieldById } from "@/features/field/fieldThunk";
 import { LoginBenefitsBanner } from "@/components/auth/login-benefits-banner";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
 import { useAuth } from "@/routes/auth-wrapper";
+import axiosPublic from "@/utils/axios/axiosPublic";
+import { FIELD_COURTS_API } from "@/features/field/fieldAPI";
  
-
-/**
- * Interface for booking form data shared between steps
- */
-interface BookingFormData {
-    date: string;
-    startTime: string;
-    endTime: string;
-    name?: string;
-    email?: string;
-    phone?: string;
-}
 
 const FieldBookingPage = () => {
     const breadcrumbs = [{ label: "Trang chủ", href: "/" }, { label: "Đặt sân" }];
@@ -42,10 +33,14 @@ const FieldBookingPage = () => {
         date: '',
         startTime: '',
         endTime: '',
+        courtId: '',
+        courtName: '',
         name: '',
         email: '',
         phone: '',
     });
+    const [courts, setCourts] = useState<Array<{ id: string; name: string; courtNumber?: number }>>([]);
+    const [courtsError, setCourtsError] = useState<string | null>(null);
     
 
     // State để quản lý banner khuyến khích đăng nhập
@@ -110,9 +105,12 @@ const FieldBookingPage = () => {
                     const parsed = JSON.parse(raw);
                     if (parsed && typeof parsed === 'object') {
                         setBookingData(prev => ({
+                            ...prev,
                             date: parsed.date ?? prev.date,
                             startTime: parsed.startTime ?? prev.startTime,
                             endTime: parsed.endTime ?? prev.endTime,
+                            courtId: parsed.courtId ?? prev.courtId,
+                            courtName: parsed.courtName ?? prev.courtName,
                             name: parsed.name ?? prev.name,
                             email: parsed.email ?? prev.email,
                             phone: parsed.phone ?? prev.phone,
@@ -137,13 +135,38 @@ const FieldBookingPage = () => {
         }
     }, [isAuthenticated]);
 
-    // Mock courts data - thay thế bằng data thật từ API
-    const mockCourts = [
-        { id: 'court-1', name: 'Standard Synthetic Court 1' },
-        { id: 'court-2', name: 'Standard Synthetic Court 2' },
-        { id: 'court-3', name: 'Premium Court A' },
-        { id: 'court-4', name: 'Premium Court B' },
-    ];
+    // Fetch courts for the field
+    useEffect(() => {
+        const fetchCourts = async () => {
+            if (!currentField?.id) return;
+            try {
+                setCourtsError(null);
+                const response = await axiosPublic.get(FIELD_COURTS_API(currentField.id));
+                const raw = response.data?.data || response.data || [];
+                const mapped = Array.isArray(raw)
+                    ? raw.map((c: any) => ({
+                        id: c?._id || c?.id || '',
+                        name: c?.name || c?.courtName || `Court ${c?.courtNumber ?? ''}`,
+                        courtNumber: c?.courtNumber,
+                    }))
+                    : [];
+                setCourts(mapped);
+                // Auto-pick first court if none selected
+                if (!bookingData.courtId && mapped.length > 0) {
+                    setBookingData(prev => ({
+                        ...prev,
+                        courtId: mapped[0].id,
+                        courtName: mapped[0].name,
+                    }));
+                }
+            } catch (error: any) {
+                console.error('Failed to fetch courts:', error);
+                setCourtsError('Không thể tải danh sách sân con. Vui lòng thử lại.');
+            }
+        };
+        fetchCourts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentField?.id]);
 
     const handleBookCourtSubmit = (formData: BookingFormData) => {
         console.log('BookCourt submitted:', formData);
@@ -222,7 +245,8 @@ const FieldBookingPage = () => {
                 {currentStep === BookingStep.BOOK_COURT && (
                     <BookCourtTab
                         onSubmit={handleBookCourtSubmit}
-                        courts={mockCourts}
+                        courts={courts}
+                        courtsError={courtsError}
                     />
                 )}
 
@@ -231,7 +255,7 @@ const FieldBookingPage = () => {
                         bookingData={bookingData}
                         onSubmit={handlePersonalInfoSubmit}
                         onBack={handleBackToConfirmStep}
-                        courts={mockCourts}
+                        courts={courts}
                     />
                 )}
 
@@ -246,7 +270,7 @@ const FieldBookingPage = () => {
                         })) || []}
                         onSubmit={(data) => { setBookingData(data); setCurrentStep(BookingStep.PERSONAL_INFO); }}
                         onBack={() => { setCurrentStep(BookingStep.AMENITIES); }}
-                        courts={mockCourts}
+                        courts={courts}
                     />
                 )}
 
@@ -269,6 +293,8 @@ const FieldBookingPage = () => {
                                 date: '',
                                 startTime: '',
                                 endTime: '',
+                                courtId: '',
+                                courtName: '',
                                 name: '',
                                 email: '',
                                 phone: '',

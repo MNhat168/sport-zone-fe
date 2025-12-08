@@ -80,6 +80,9 @@ const FieldCard: React.FC<FieldCardProps> = ({
     operatingHours,
     onBookNow,
 }) => {
+    // Unused props reserved for future UI
+    void description;
+    void nextAvailability;
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
