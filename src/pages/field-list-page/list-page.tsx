@@ -64,6 +64,7 @@ const FieldBookingPage = () => {
   const skipNextDebounceRef = useRef(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const lastFitBoundsMarkersRef = useRef<string>(""); // Track which markers we last called fitBounds for
   const mapContainerId = "fields-map-container";
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -106,6 +107,15 @@ const FieldBookingPage = () => {
       const coordinates = await getCoordinates();
       if (coordinates?.lat && coordinates?.lng) {
         setUserLocation(coordinates as { lat: number; lng: number });
+        
+        // Zoom map to user location with zoom level 14
+        if (mapRef.current) {
+          isUserZoomingRef.current = true;
+          pendingZoomRef.current = 14;
+          setCurrentZoom(14);
+          mapRef.current.setView([coordinates.lat, coordinates.lng], 14, { animate: true });
+        }
+        
         // Get current filters
         const currentSportType =
           sportFilter !== "all" ? sportFilter : undefined;
@@ -143,7 +153,12 @@ const FieldBookingPage = () => {
         location: location,
       });
       if (result.success && result.data) {
-        setNearbyFields(result.data);
+        // Ensure operatingHours is preserved in nearby fields data
+        const fieldsWithOperatingHours = result.data.map((field: any) => ({
+          ...field,
+          operatingHours: Array.isArray(field.operatingHours) ? field.operatingHours : [],
+        }));
+        setNearbyFields(fieldsWithOperatingHours);
         setIsNearbyMode(true);
       } else {
         setNearbyFields([]);
@@ -554,6 +569,11 @@ const FieldBookingPage = () => {
         fieldImages[0] ||
         "/general-img-portrait.png";
 
+    // Ensure operatingHours is properly extracted
+    const operatingHours = Array.isArray((field as any).operatingHours) 
+      ? (field as any).operatingHours 
+      : [];
+
     return {
       id: (field as any).id,
       name: (field as any).name,
@@ -571,6 +591,7 @@ const FieldBookingPage = () => {
       distance: (field as any).distance
         ? `${(field as any).distance.toFixed(1)} km`
         : undefined,
+      operatingHours: operatingHours,
       latitude:
         (field as any).latitude ??
         (field as any).lat ??
@@ -683,10 +704,11 @@ const FieldBookingPage = () => {
         if (!mapRef.current) {
           const container = document.getElementById(mapContainerId);
           if (!container) return;
-          mapRef.current = L.map(mapContainerId).setView(
-            [16.0471, 108.2062],
-            12
-          );
+          mapRef.current = L.map(mapContainerId, {
+            center: [16.0471, 108.2062],
+            zoom: 12,
+            scrollWheelZoom: true, // Ensure scroll wheel zoom is enabled
+          });
           L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors",
@@ -838,70 +860,41 @@ const FieldBookingPage = () => {
       }
     });
 
-    // Logic để focus vào field được search
-    // Tính lại searchName và searchLocation trong useEffect để đảm bảo có giá trị mới nhất
-    const urlParamsForFocus = new URLSearchParams(location.search);
-    const qNameForFocus = (urlParamsForFocus.get("name") || "").toLowerCase();
-    const qLocationForFocus = (urlParamsForFocus.get("location") || urlParamsForFocus.get("loc") || "").toLowerCase();
-    const searchNameForFocus = (qNameForFocus || nameFilter.trim().toLowerCase()) || "";
-    const searchLocationForFocus = (qLocationForFocus || locationFilter.trim().toLowerCase()) || "";
-    const hasSearchQuery = (searchNameForFocus || searchLocationForFocus) && filteredTransformedFields.length > 0;
+    // Không có search query
+    // Chỉ fitBounds nếu có ít markers (<= 5) để tránh zoom out quá nhiều
+    const markersWithCoords = filteredTransformedFields.filter(
+      (f) => f.latitude != null && f.longitude != null
+    );
     
-    if (hasSearchQuery) {
-      // Tìm field đầu tiên match với search query
-      const searchedField = filteredTransformedFields[0];
-      
-      // Đợi một chút để đảm bảo markers đã được tạo xong
-      setTimeout(() => {
-        if (searchedField.latitude != null && searchedField.longitude != null) {
-          // Zoom vào marker
-          mapRef.current.flyTo(
-            [searchedField.latitude, searchedField.longitude],
-            16, // Zoom level cao hơn để focus vào field
-            { duration: 1.0 }
-          );
-          
-          // Scroll đến field card trong danh sách
-          setTimeout(() => {
-            const fieldCardElement = fieldCardRefsRef.current.get(searchedField.id);
-            if (fieldCardElement && fieldsListRef.current) {
-              setHighlightedFieldId(searchedField.id);
-              setTimeout(() => setHighlightedFieldId(null), 2000);
-              
-              const containerRect = fieldsListRef.current.getBoundingClientRect();
-              const cardRect = fieldCardElement.getBoundingClientRect();
-              const scrollTop = fieldsListRef.current.scrollTop;
-              const targetScrollTop = scrollTop + cardRect.top - containerRect.top - 20;
-              
-              fieldsListRef.current.scrollTo({
-                top: targetScrollTop,
-                behavior: 'smooth'
-              });
-            }
-          }, 1000);
-        }
-      }, 100);
+    // Create a unique key for the current set of markers to prevent repeated fitBounds calls
+    const markersKey = markersWithCoords.map(f => f.id).sort().join(',');
+    
+    if (bounds.isValid() && markersWithCoords.length > 0 && markersWithCoords.length <= 5) {
+      // Có ít markers, fitBounds để hiển thị tất cả
+      // Chỉ fitBounds nếu:
+      // 1. User không đang zoom (tránh reset zoom khi user đang tương tác)
+      // 2. Markers đã thay đổi (tránh gọi fitBounds lặp lại)
+      if (!isUserZoomingRef.current && markersKey !== lastFitBoundsMarkersRef.current) {
+        // Mark that we've called fitBounds for these markers
+        lastFitBoundsMarkersRef.current = markersKey;
+        
+        // Use fitBounds with maxZoom to prevent zooming out too much
+        mapRef.current.fitBounds(bounds.pad(0.2), {
+          maxZoom: 15, // Prevent zooming out beyond level 15
+        });
+      }
     } else {
-      // Không có search query
-      // Chỉ fitBounds nếu có ít markers (<= 5) để tránh zoom out quá nhiều
-      const markersWithCoords = filteredTransformedFields.filter(
-        (f) => f.latitude != null && f.longitude != null
-      );
+      // Reset the last fitBounds markers when we have too many markers or no markers
+      if (markersWithCoords.length > 5 || markersWithCoords.length === 0) {
+        lastFitBoundsMarkersRef.current = "";
+      }
       
-      if (bounds.isValid() && markersWithCoords.length > 0 && markersWithCoords.length <= 5) {
-        // Có ít markers, fitBounds để hiển thị tất cả
-        // Chỉ fitBounds nếu user không đang zoom (tránh reset zoom khi user đang tương tác)
-        if (!isUserZoomingRef.current) {
-          mapRef.current.fitBounds(bounds.pad(0.2));
-        }
-      } else {
-        // Không có markers hoặc quá nhiều markers
-        // KHÔNG reset zoom về 12 nữa - giữ zoom hiện tại của user
-        // Chỉ set view nếu map chưa có center (lần đầu tiên) và user không đang zoom
-        const mapCenter = mapRef.current.getCenter();
-        if ((!mapCenter || markersWithCoords.length === 0) && !isUserZoomingRef.current) {
-          mapRef.current.setView([16.0471, 108.2062], 12);
-        }
+      // Không có markers hoặc quá nhiều markers
+      // KHÔNG reset zoom về 12 nữa - giữ zoom hiện tại của user
+      // Chỉ set view nếu map chưa có center (lần đầu tiên) và user không đang zoom
+      const mapCenter = mapRef.current.getCenter();
+      if ((!mapCenter || markersWithCoords.length === 0) && !isUserZoomingRef.current) {
+        mapRef.current.setView([16.0471, 108.2062], 12);
       }
     }
 
@@ -966,7 +959,11 @@ const FieldBookingPage = () => {
                         <button
                           onClick={handleGetLocation}
                           disabled={geolocationLoading || isLoadingNearby}
-                          className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+                          className={`flex items-center gap-2 px-3 py-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed text-sm ${
+                            isNearbyMode
+                              ? "bg-blue-600 text-white hover:bg-blue-700"
+                              : "bg-green-600 text-white hover:bg-green-700"
+                          }`}
                         >
                           {geolocationLoading || isLoadingNearby ? (
                             <>
@@ -1276,6 +1273,7 @@ const FieldBookingPage = () => {
                               sportType={field.sportType}
                               imageUrl={field.imageUrl}
                               distance={field.distance}
+                              operatingHours={field.operatingHours}
                               onBookNow={forceSyncFilters}
                             />
                           </div>

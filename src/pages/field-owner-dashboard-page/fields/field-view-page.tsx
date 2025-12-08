@@ -16,6 +16,7 @@ import { AmenitiesCard } from "@/pages/field-detail-page/components/AmenitiesCar
 import { GalleryCard } from "@/pages/field-detail-page/components/GalleryCard"
 import { RatingCard } from "@/pages/field-detail-page/components/RatingCard"
 import { LocationCard } from "@/pages/field-detail-page/components/LocationCard"
+import { getSportDisplayNameVN } from "@/components/enums/ENUMS"
 
 const mockDescription = "Sân cầu lông hiện đại với 4 sân tiêu chuẩn, máy đánh bóng tự động, tiện ích đầy đủ. Phù hợp tập luyện và thi đấu."
 const mockRules = ["Không mang giày ngoài vào sân", "Hủy trước 24h", "Mang theo vợt cá nhân"]
@@ -316,7 +317,7 @@ export default function FieldViewPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                             <div className="flex items-center gap-2">
                                 <span className="text-gray-500">Môn Thể thao:</span>
-                                <span className="font-medium">{String(currentField?.sportType || "-")}</span>
+                                <span className="font-medium">{currentField?.sportType ? getSportDisplayNameVN(currentField.sportType) : "-"}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-gray-500">Giá:</span>

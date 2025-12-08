@@ -99,17 +99,14 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         endTime: '',
         court: '',
     });
-    // === Thêm state cho giờ bắt đầu & kết thúc ===
-    const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null);
-    const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null);
+    // === Thêm state cho giờ bắt đầu & kết thúc (time strings HH:mm) ===
+    const [selectedStartTime, setSelectedStartTime] = useState<string | null>(null);
+    const [selectedEndTime, setSelectedEndTime] = useState<string | null>(null);
 
     // === State cho availability data ===
     const [availabilityData, setAvailabilityData] = useState<FieldAvailabilityData | null>(null);
     const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
     const [availabilityError, setAvailabilityError] = useState<string | null>(null);
-
-    // === Thêm danh sách các slot giờ ===
-    const timeSlots = Array.from({ length: 24 }, (_, i) => i); // 0 -> 23h
 
     // === Helper functions for operating hours ===
     const getOperatingDays = (): string[] => {
@@ -169,10 +166,17 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         return !isOperatingDay;
     };
 
-    const getAvailableTimeSlots = (selectedDate: Date): number[] => {
+    // Helper function to format minutes to HH:mm
+    const minutesToTimeString = (minutes: number): string => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    };
+
+    const getAvailableTimeSlots = (selectedDate: Date): string[] => {
         if (!selectedDate || !venue?.operatingHours) {
-            console.log('⏰ [TIME SLOTS] No date or operating hours, returning all slots');
-            return timeSlots;
+            console.log('⏰ [TIME SLOTS] No date or operating hours, returning empty');
+            return [];
         }
 
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -184,20 +188,38 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             return [];
         }
 
+        // Get slotDuration from venue (default to 60 minutes if not available)
+        const slotDuration = venue.slotDuration || 60;
+
+        // Parse operating hours to minutes
         const startHour = parseInt(operatingHour.start.split(':')[0]);
+        const startMinute = parseInt(operatingHour.start.split(':')[1] || '0');
         const endHour = parseInt(operatingHour.end.split(':')[0]);
-        // Tạo slots từ startHour đến endHour (bao gồm cả giờ cuối)
-        // Ví dụ: 7:00-12:00 sẽ tạo slots [7, 8, 9, 10, 11, 12]
-        const availableSlots = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
+        const endMinute = parseInt(operatingHour.end.split(':')[1] || '0');
+
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+
+        // Generate slots based on slotDuration (same logic as backend)
+        const slots: string[] = [];
+        for (let currentMinutes = startMinutes; currentMinutes < endMinutes; currentMinutes += slotDuration) {
+            const slotEndMinutes = currentMinutes + slotDuration;
+            if (slotEndMinutes > endMinutes) break;
+            
+            const startTime = minutesToTimeString(currentMinutes);
+            slots.push(startTime);
+        }
         
         console.log('⏰ [TIME SLOTS] Available slots for', dayName, ':', {
             operatingHour,
-            startHour,
-            endHour,
-            availableSlots
+            slotDuration,
+            startMinutes,
+            endMinutes,
+            slotsCount: slots.length,
+            slots
         });
         
-        return availableSlots;
+        return slots;
     };
 
     // === Function để fetch availability data ===
@@ -252,12 +274,11 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     }, [venue?.id, dispatch]);
 
     // === Function để check xem slot có available không ===
-    const isSlotAvailable = (hour: number): boolean => {
+    const isSlotAvailable = (timeString: string): boolean => {
         if (!availabilityData || !availabilityData.slots) {
             return true; // Nếu không có data, assume available
         }
 
-        const timeString = `${String(hour).padStart(2, '0')}:00`;
         const slot = availabilityData.slots.find(s => s.startTime === timeString);
         
         if (!slot) {
@@ -268,21 +289,80 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     };
 
 
-    // === Xử lý khi click giờ ===
-    const handleTimeSlotClick = (hour: number, type: "start" | "end") => {
-        if (type === "start") {
-            setSelectedStartHour(hour);
+    // Helper function to calculate endTime of a slot
+    const getSlotEndTime = (startTime: string): string => {
+        const slotDuration = venue?.slotDuration || 60;
+        const startTotal = toMinutes(startTime);
+        const endTotal = startTotal + slotDuration;
+        return minutesToTimeString(endTotal);
+    };
+
+    // === Xử lý khi click slot - chọn theo block ===
+    const handleSlotBlockClick = (slotTime: string) => {
+        const slotDuration = venue?.slotDuration || 60;
+        const slotEndTime = getSlotEndTime(slotTime);
+        
+        if (selectedStartTime === null) {
+            // Chọn block đầu tiên: set cả start và end của block đó
+            setSelectedStartTime(slotTime);
+            setSelectedEndTime(slotEndTime);
             setFormData((prev) => ({
                 ...prev,
-                startTime: `${String(hour).padStart(2, "0")}:00`,
-                endTime: prev.endTime && Number(prev.endTime.split(":")[0]) <= hour ? "" : prev.endTime,
+                startTime: slotTime,
+                endTime: slotEndTime,
             }));
-            setSelectedEndHour(null); // reset giờ kết thúc nếu chọn lại giờ bắt đầu
         } else {
-            setSelectedEndHour(hour);
+            // Đã có selection: extend range
+            const [currentStartHour, currentStartMin] = selectedStartTime.split(':').map(Number);
+            const [currentEndHour, currentEndMin] = (selectedEndTime || getSlotEndTime(selectedStartTime)).split(':').map(Number);
+            const [clickedHour, clickedMin] = slotTime.split(':').map(Number);
+            
+            const currentStartTotal = currentStartHour * 60 + currentStartMin;
+            const currentEndTotal = currentEndHour * 60 + currentEndMin;
+            const clickedTotal = clickedHour * 60 + clickedMin;
+            
+            // Determine new range based on clicked slot position
+            let newStartTime: string;
+            let newEndTime: string;
+            
+            if (clickedTotal < currentStartTotal) {
+                // Click vào slot trước start -> extend về trước
+                newStartTime = slotTime;
+                newEndTime = selectedEndTime || getSlotEndTime(selectedStartTime);
+            } else if (clickedTotal >= currentEndTotal) {
+                // Click vào slot sau end -> extend về sau
+                newStartTime = selectedStartTime;
+                newEndTime = slotEndTime;
+            } else {
+                // Click vào slot trong range -> reset về block đó
+                newStartTime = slotTime;
+                newEndTime = slotEndTime;
+            }
+            
+            // Validate range: check if all slots in range are available
+            const newStartTotal = toMinutes(newStartTime);
+            const newEndTotal = toMinutes(newEndTime);
+            let hasBookedSlotInRange = false;
+            
+            for (let currentMinutes = newStartTotal; currentMinutes < newEndTotal; currentMinutes += slotDuration) {
+                const checkSlotTime = minutesToTimeString(currentMinutes);
+                if (!isSlotAvailable(checkSlotTime)) {
+                    hasBookedSlotInRange = true;
+                    break;
+                }
+            }
+            
+            if (hasBookedSlotInRange) {
+                alert('Khoảng thời gian này có slot đã được đặt. Vui lòng chọn khoảng thời gian khác.');
+                return;
+            }
+            
+            setSelectedStartTime(newStartTime);
+            setSelectedEndTime(newEndTime);
             setFormData((prev) => ({
                 ...prev,
-                endTime: `${String(hour).padStart(2, "0")}:00`,
+                startTime: newStartTime,
+                endTime: newEndTime,
             }));
         }
     };
@@ -307,14 +387,12 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     phone: parsed.phone ?? prev.phone,
                 }));
 
-                // Cập nhật selectedStartHour và selectedEndHour từ localStorage
+                // Cập nhật selectedStartTime và selectedEndTime từ localStorage
                 if (parsed.startTime) {
-                    const startHour = parseInt(parsed.startTime.split(':')[0]);
-                    setSelectedStartHour(startHour);
+                    setSelectedStartTime(parsed.startTime);
                 }
                 if (parsed.endTime) {
-                    const endHour = parseInt(parsed.endTime.split(':')[0]);
-                    setSelectedEndHour(endHour);
+                    setSelectedEndTime(parsed.endTime);
                 }
 
                 // Fetch availability data if date is available
@@ -347,15 +425,23 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         if (!venue || !formData.date || !formData.startTime || !formData.endTime) return 0;
         try {
             const dayName = getDayName(new Date(formData.date + 'T00:00:00'));
-            const startHour = Number(formData.startTime.split(':')[0]);
-            const endHour = Number(formData.endTime.split(':')[0]);
-            if (endHour <= startHour) return 0;
+            const startTotal = toMinutes(formData.startTime);
+            const endTotal = toMinutes(formData.endTime);
+            if (endTotal <= startTotal) return 0;
+            
+            // Calculate based on slotDuration
+            const slotDuration = venue.slotDuration || 60;
             let total = 0;
-            for (let h = startHour; h < endHour; h++) {
-                const hh = String(h).padStart(2, '0');
-                const mult = getMultiplierFor(dayName, `${hh}:00`);
-                total += (venue.basePrice || 0) * mult;
+            
+            // Iterate through each slot in the booking range
+            for (let currentMinutes = startTotal; currentMinutes < endTotal; currentMinutes += slotDuration) {
+                const slotStartTime = minutesToTimeString(currentMinutes);
+                const mult = getMultiplierFor(dayName, slotStartTime);
+                // Price per slot = (slotDuration / 60) * basePrice * multiplier
+                const slotPrice = (slotDuration / 60) * (venue.basePrice || 0) * mult;
+                total += slotPrice;
             }
+            
             return Math.round(total);
         } catch {
             return 0;
@@ -385,21 +471,75 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         console.log('Form data:', formData);
         console.log('Subtotal:', calculateSubtotal());
 
-        // // Validate required fields
-        // if (!formData.date || !formData.startTime || !formData.endTime || !formData.court) {
-        //     alert('Vui lòng điền đầy đủ các trường bắt buộc');
-        //     return;
-        // }
+        // Validate required fields
+        if (!formData.date || !formData.startTime || !formData.endTime) {
+            alert('Vui lòng điền đầy đủ các trường bắt buộc');
+            return;
+        }
 
         // Validate time range
-        const [startHour, startMinute] = formData.startTime.split(':').map(Number);
-        const [endHour, endMinute] = formData.endTime.split(':').map(Number);
-        const startTotal = startHour * 60 + startMinute;
-        const endTotal = endHour * 60 + endMinute;
+        const startTotal = toMinutes(formData.startTime);
+        const endTotal = toMinutes(formData.endTime);
 
         if (endTotal <= startTotal) {
             alert('Vui lòng chọn khoảng thời gian hợp lệ (giờ bắt đầu phải trước giờ kết thúc)');
             return;
+        }
+
+        // Validate slots match boundaries and constraints
+        const slotDuration = venue?.slotDuration || 60;
+        const numSlots = (endTotal - startTotal) / slotDuration;
+
+        // Check if numSlots is an integer (slots must align with slotDuration)
+        if (!Number.isInteger(numSlots)) {
+            alert(`Khoảng thời gian phải là bội số của ${slotDuration} phút. Ví dụ: ${slotDuration} phút, ${slotDuration * 2} phút, ${slotDuration * 3} phút...`);
+            return;
+        }
+
+        // Check min/max slots constraints
+        if (venue?.minSlots && numSlots < venue.minSlots) {
+            alert(`Số lượng slot tối thiểu là ${venue.minSlots} slot (${(venue.minSlots * slotDuration) / 60} giờ)`);
+            return;
+        }
+
+        if (venue?.maxSlots && numSlots > venue.maxSlots) {
+            alert(`Số lượng slot tối đa là ${venue.maxSlots} slot (${(venue.maxSlots * slotDuration) / 60} giờ)`);
+            return;
+        }
+
+        // Validate that startTime and endTime match available slot boundaries
+        const selectedDate = formData.date ? new Date(formData.date + 'T00:00:00') : null;
+        if (selectedDate) {
+            const availableSlots = getAvailableTimeSlots(selectedDate);
+            const startTimeMatches = availableSlots.includes(formData.startTime);
+            // endTime should be a valid slot startTime (it represents the start of the next slot after booking ends)
+            const endTimeMatches = availableSlots.includes(formData.endTime);
+
+            if (!startTimeMatches) {
+                alert('Giờ bắt đầu không khớp với các slot khả dụng. Vui lòng chọn lại.');
+                return;
+            }
+
+            if (!endTimeMatches) {
+                alert('Giờ kết thúc không khớp với các slot khả dụng. Vui lòng chọn lại.');
+                return;
+            }
+
+            // ✅ CRITICAL: Validate that ALL slots in the booking range are available (not hold/booked)
+            // Generate all slots in the booking range
+            const bookingSlots: string[] = [];
+            for (let currentMinutes = startTotal; currentMinutes < endTotal; currentMinutes += slotDuration) {
+                const slotTime = minutesToTimeString(currentMinutes);
+                bookingSlots.push(slotTime);
+            }
+
+            // Check if any slot in the range is booked/hold
+            const unavailableSlots = bookingSlots.filter(slotTime => !isSlotAvailable(slotTime));
+            
+            if (unavailableSlots.length > 0) {
+                alert(`Các slot sau đã được đặt hoặc đang được giữ: ${unavailableSlots.join(', ')}. Vui lòng chọn khoảng thời gian khác.`);
+                return;
+            }
         }
 
         // Validate price
@@ -508,8 +648,8 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                         onChange={(day) => {
                                             if (!day) {
                                                 setFormData(prev => ({ ...prev, date: '' }));
-                                                setSelectedStartHour(null);
-                                                setSelectedEndHour(null);
+                                                setSelectedStartTime(null);
+                                                setSelectedEndTime(null);
                                                 setAvailabilityData(null);
                                                 return;
                                             }
@@ -520,8 +660,8 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                             setFormData(prev => ({ ...prev, date: ymd }));
                                             
                                             // Reset time selection when date changes
-                                            setSelectedStartHour(null);
-                                            setSelectedEndHour(null);
+                                            setSelectedStartTime(null);
+                                            setSelectedEndTime(null);
                                             
                                             // Fetch availability data for selected date
                                             fetchAvailabilityData(ymd);
@@ -578,7 +718,28 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                             </div>
                                         ) : (
                                             <>
-                                                <div className="flex flex-wrap gap-2">
+                                                {/* Legend */}
+                                                <div className="mb-4 flex items-center gap-4 flex-wrap text-sm font-['Outfit']">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
+                                                        <span>Trống</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-4 h-4 bg-red-500 rounded"></div>
+                                                        <span>Đã đặt</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-4 h-4 bg-gray-400 rounded"></div>
+                                                        <span>Khóa</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-4 h-4 bg-emerald-600 rounded"></div>
+                                                        <span>Đã chọn</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Grid Layout */}
+                                                <div className="overflow-x-auto">
                                                     {(() => {
                                                         const selectedDate = formData.date ? new Date(formData.date + 'T00:00:00') : null;
                                                         const availableSlots = selectedDate ? getAvailableTimeSlots(selectedDate) : [];
@@ -591,87 +752,140 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                             );
                                                         }
                                                         
-                                                        return availableSlots.map((hour) => {
-                                                            const isStartHour = selectedStartHour === hour;
-                                                            const isEndHour = selectedEndHour === hour;
-                                                            const isInRange = selectedStartHour !== null && selectedEndHour !== null
-                                                                && hour > selectedStartHour && hour < selectedEndHour;
-                                                            const isSlotBooked = !isSlotAvailable(hour);
-                                                            const dayName = formData.date ? getDayName(new Date(formData.date + 'T00:00:00')) : '';
-                                                            const multiplier = dayName ? getMultiplierFor(dayName, `${String(hour).padStart(2,'0')}:00`) : 1.0;
-
-                                                            return (
-                                                                <button
-                                                                    key={`time-${hour}`}
-                                                                    type="button"
-                                                                    disabled={isSlotBooked}
-                                                                    onClick={() => {
-                                                                        if (isSlotBooked) return; // Prevent click if slot is booked
-                                                                        
-                                                                        if (selectedStartHour === null) {
-                                                                            // Chọn giờ bắt đầu
-                                                                            handleTimeSlotClick(hour, "start");
-                                                                        } else if (selectedEndHour === null && hour > selectedStartHour) {
-                                                                            // Chọn giờ kết thúc
-                                                                            handleTimeSlotClick(hour, "end");
-                                                                        } else {
-                                                                            // Reset và chọn lại giờ bắt đầu
-                                                                            handleTimeSlotClick(hour, "start");
-                                                                        }
-                                                                    }}
-                                                                    className={`
-                                                                    w-14 h-14 rounded-lg border-2 font-semibold font-['Outfit'] text-base
-                                                                    transition-all duration-200
-                                                                    ${isSlotBooked
-                                                                        ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed opacity-60"
-                                                                        : isStartHour
-                                                                            ? "bg-emerald-600 border-emerald-600 text-white shadow-md hover:scale-105"
-                                                                            : isEndHour
-                                                                                ? "bg-emerald-500 border-emerald-500 text-white shadow-md hover:scale-105"
-                                                                                : isInRange
-                                                                                    ? "bg-emerald-100 border-emerald-300 text-emerald-700 hover:scale-105"
-                                                                                    : "bg-white border-gray-200 text-gray-700 hover:border-emerald-400 hover:scale-105"
-                                                                    }
-                                                                `}
-                                                                >
-                                                                    <div className="flex flex-col items-center leading-none">
-                                                                        <span>{hour}</span>
-                                                                        {formData.date && (
-                                                                            <span className="text-[10px] opacity-70">x{Number(multiplier).toFixed(1)}</span>
-                                                                        )}
+                                                        return (
+                                                            <div className="inline-block min-w-full">
+                                                                {/* Time Header Row - Time labels on vertical lines */}
+                                                                <div className="flex border-b-2 border-gray-300 bg-blue-50 relative pt-6">
+                                                                    <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-semibold font-['Outfit'] text-center">
+                                                                        Giờ
                                                                     </div>
-                                                                    {isSlotBooked && (
-                                                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                                                                    )}
-                                                                </button>
-                                                            );
-                                                        });
+                                                                    <div className="flex flex-1 relative">
+                                                                        {/* First vertical line with time label (start of first slot) */}
+                                                                        {availableSlots.length > 0 && (
+                                                                            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
+                                                                                <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium font-['Outfit'] text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                                                    {(() => {
+                                                                                        const [displayHour, displayMin] = availableSlots[0].split(':');
+                                                                                        return displayMin === '00' ? `${displayHour}:00` : availableSlots[0];
+                                                                                    })()}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                        
+                                                                        {/* Slot cells with time labels on right border */}
+                                                                        {availableSlots.map((slotTime) => {
+                                                                            const slotEndTime = getSlotEndTime(slotTime);
+                                                                            const [displayHour, displayMin] = slotEndTime.split(':');
+                                                                            const displayText = displayMin === '00' ? `${displayHour}:00` : slotEndTime;
+                                                                            
+                                                                            return (
+                                                                                <div
+                                                                                    key={`header-${slotTime}`}
+                                                                                    className="flex-1 min-w-[60px] relative"
+                                                                                >
+                                                                                    {/* Vertical line on the right with time label */}
+                                                                                    <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
+                                                                                        <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium font-['Outfit'] text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                                                            {displayText}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Slot Row */}
+                                                                <div className="flex border-b-2 border-gray-300 bg-white">
+                                                                    <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-medium font-['Outfit'] text-center bg-gray-50">
+                                                                        {venue.name}
+                                                                    </div>
+                                                                    <div className="flex flex-1">
+                                                                        {availableSlots.map((slotTime) => {
+                                                                            const slotDuration = venue?.slotDuration || 60;
+                                                                            const slotEndTime = getSlotEndTime(slotTime);
+                                                                            
+                                                                            // Check if this slot is the start of selected range
+                                                                            const isStartSlot = selectedStartTime === slotTime;
+                                                                            // Check if this slot's end matches the selected end time
+                                                                            const isEndSlot = selectedEndTime === slotEndTime;
+                                                                            
+                                                                            // Check if slot is within selected range
+                                                                            const isInRange = selectedStartTime !== null && selectedEndTime !== null
+                                                                                && (() => {
+                                                                                    const [startHour, startMin] = selectedStartTime.split(':').map(Number);
+                                                                                    const [endHour, endMin] = selectedEndTime.split(':').map(Number);
+                                                                                    const [slotHour, slotMin] = slotTime.split(':').map(Number);
+                                                                                    const startTotal = startHour * 60 + startMin;
+                                                                                    const endTotal = endHour * 60 + endMin;
+                                                                                    const slotTotal = slotHour * 60 + slotMin;
+                                                                                    const slotEndTotal = slotTotal + slotDuration;
+                                                                                    // Slot is in range if it overlaps with selected range
+                                                                                    return slotTotal < endTotal && slotEndTotal > startTotal;
+                                                                                })();
+                                                                            
+                                                                            const isSlotBooked = !isSlotAvailable(slotTime);
+                                                                            
+                                                                            // Determine cell style
+                                                                            let cellStyle = "bg-white border-r border-gray-200 cursor-pointer hover:bg-emerald-50 transition-colors";
+                                                                            if (isSlotBooked) {
+                                                                                cellStyle = "bg-red-500 border-r border-gray-200 cursor-not-allowed opacity-80";
+                                                                            } else if (isInRange) {
+                                                                                if (isStartSlot) {
+                                                                                    cellStyle = "bg-emerald-600 border-r border-gray-200 cursor-pointer text-white font-semibold";
+                                                                                } else if (isEndSlot) {
+                                                                                    cellStyle = "bg-emerald-600 border-r border-gray-200 cursor-pointer text-white font-semibold";
+                                                                                } else {
+                                                                                    cellStyle = "bg-emerald-400 border-r border-gray-200 cursor-pointer text-white";
+                                                                                }
+                                                                            }
+
+                                                                            return (
+                                                                                <div
+                                                                                    key={`slot-${slotTime}`}
+                                                                                    className={`flex-1 min-w-[60px] h-12 flex items-center justify-center text-xs font-['Outfit'] relative ${cellStyle}`}
+                                                                                    onClick={() => {
+                                                                                        if (isSlotBooked) return; // Prevent click if slot is booked
+                                                                                        handleSlotBlockClick(slotTime);
+                                                                                    }}
+                                                                                    title={isSlotBooked ? "Đã đặt" : `${slotTime} - ${slotEndTime}`}
+                                                                                >
+                                                                                    {isStartSlot && selectedStartTime && "Bắt đầu"}
+                                                                                    {isEndSlot && selectedEndTime && !isStartSlot && "Kết thúc"}
+                                                                                    {isSlotBooked && "✕"}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
                                                     })()}
                                                 </div>
                                                 <div className="mt-3 space-y-1">
-                                                    {selectedStartHour !== null && (
+                                                    {selectedStartTime !== null && (
                                                         <p className="text-sm text-emerald-600 font-['Outfit']">
-                                                            Giờ bắt đầu: {String(selectedStartHour).padStart(2, "0")}:00
+                                                            Giờ bắt đầu: {selectedStartTime}
                                                         </p>
                                                     )}
-                                                    {selectedEndHour !== null && (
+                                                    {selectedEndTime !== null && (
                                                         <p className="text-sm text-emerald-600 font-['Outfit']">
-                                                            Giờ kết thúc: {String(selectedEndHour).padStart(2, "0")}:00
+                                                            Giờ kết thúc: {selectedEndTime}
                                                         </p>
                                                     )}
-                                                    {selectedStartHour === null && (
+                                                    {selectedStartTime === null && (
                                                         <p className="text-sm text-gray-500 font-['Outfit']">
                                                             Nhấn vào ô để chọn giờ bắt đầu
                                                         </p>
                                                     )}
-                                                    {selectedStartHour !== null && selectedEndHour === null && (
+                                                    {selectedStartTime !== null && selectedEndTime === null && (
                                                         <p className="text-sm text-gray-500 font-['Outfit']">
                                                             Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
                                                         </p>
                                                     )}
                                                     
                                                     {/* Availability status info */}
-                                                    {availabilityData && (
+                                                    {/* {availabilityData && (
                                                         <div className="mt-2 pt-2 border-t border-gray-200">
                                                             <div className="flex items-center gap-2 text-xs text-gray-600">
                                                                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -683,7 +897,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                                 {availabilityData.slots.filter(slot => slot.available).length} / {availabilityData.slots.length} khung giờ có thể đặt
                                                             </p>
                                                         </div>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                             </>
                                         )}
@@ -707,7 +921,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
                                 {/* Date */}
                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
                                         <CalendarIcon className="w-5 h-5 text-emerald-600" />
                                     </div>
                                     <span className="text-base text-[#6b7280] font-['Outfit']">
@@ -717,7 +931,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
                                 {/* Time */}
                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
                                         <Clock className="w-5 h-5 text-emerald-600" />
                                     </div>
                                     <div className="flex flex-col">

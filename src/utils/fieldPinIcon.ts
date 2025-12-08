@@ -2,7 +2,7 @@
  * Get the primary color of a pin icon based on sportType
  * Colors extracted from SVG files
  */
-function getPinColor(sportType: string | undefined): string {
+export function getPinColor(sportType: string | undefined): string {
   const sportTypeToColor: Record<string, string> = {
     football: '#0cc0df',    // Cyan
     tennis: '#7ed957',      // Green
@@ -15,6 +15,28 @@ function getPinColor(sportType: string | undefined): string {
   };
   
   return sportType ? (sportTypeToColor[sportType.toLowerCase()] || '#065f46') : '#065f46';
+}
+
+/**
+ * Get the white icon path for a sport type (for use in badges/cards)
+ * @param sportType - The sport type (e.g., 'football', 'tennis', etc.)
+ * @returns The path to the white icon, or null if not found
+ */
+export function getSportWhiteIconPath(sportType: string | undefined): string | null {
+  if (!sportType) return null;
+  
+  const sportTypeToIcon: Record<string, string> = {
+    football: '/icons/icons/footbal.white.icon.svg',
+    tennis: '/icons/icons/tennis.white.icon.svg',
+    badminton: '/icons/icons/batminton.white.icon.svg',
+    basketball: '/icons/icons/basketball.white.icon.svg',
+    volleyball: '/icons/icons/volleyball.white.icon.svg',
+    swimming: '/icons/icons/swimming.white.icon.svg',
+    gym: '/icons/icons/gym.white.icon.svg',
+    // Note: pickleball doesn't have a white icon, will return null
+  };
+  
+  return sportTypeToIcon[sportType.toLowerCase()] || null;
 }
 
 /**

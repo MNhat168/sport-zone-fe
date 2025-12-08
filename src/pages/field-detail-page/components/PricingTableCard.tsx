@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ChevronDown } from "lucide-react"
+import { getSportDisplayNameVN } from "@/components/enums/ENUMS"
 
 interface PriceRange {
   day: string
@@ -162,7 +163,7 @@ export const PricingTableCard: React.FC<PricingTableCardProps> = ({
           <CardContent className="pt-6">
             {sportType && (
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-green-700 capitalize">{sportType}</h3>
+                <h3 className="text-lg font-semibold text-green-700">{getSportDisplayNameVN(sportType)}</h3>
               </div>
             )}
             <div className="overflow-x-auto">
