@@ -20,6 +20,7 @@ export function Bookings() {
     type: search.type && search.type.length > 0 ? search.type : undefined,
     paymentStatus: search.paymentStatus && search.paymentStatus.length > 0 ? search.paymentStatus : undefined,
     approvalStatus: search.approvalStatus && search.approvalStatus.length > 0 ? search.approvalStatus : undefined,
+    courtId: search.courtId || undefined,
     startDate: search.startDate || undefined,
     endDate: search.endDate || undefined,
     page: search.page,

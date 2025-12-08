@@ -78,6 +78,30 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
     meta: { className: 'min-w-[180px]' },
   },
   {
+    id: 'court',
+    accessorFn: (row) => {
+      const court = typeof (row as any).court === 'string' ? null : (row as any).court
+      return court?.name ?? (court?.courtNumber ? `Court ${court.courtNumber}` : '')
+    },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Court' />
+    ),
+    cell: ({ row }) => {
+      const court = typeof (row.original as any).court === 'string' ? null : (row.original as any).court
+      if (!court) return <div>—</div>
+      return (
+        <div className='flex flex-col gap-0.5'>
+          <span className='font-medium'>{court.name ?? (court.courtNumber ? `Court ${court.courtNumber}` : '—')}</span>
+          {court.courtNumber !== undefined && (
+            <span className='text-muted-foreground text-xs'>#{court.courtNumber}</span>
+          )}
+        </div>
+      )
+    },
+    enableSorting: false,
+    meta: { className: 'min-w-[140px]' },
+  },
+  {
     id: 'user',
     accessorFn: (row) => (typeof row.user === 'string' ? row.user : (row.user as any)?.email ?? (row.user as any)?.fullName ?? ''),
     header: ({ column }) => (

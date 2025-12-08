@@ -53,6 +53,14 @@ export const bookingSchema = z.object({
       address: z.string().optional(),
     }).passthrough(),
   ]),
+  court: z.union([
+    z.string(),
+    z.object({
+      _id: z.string(),
+      name: z.string().optional(),
+      courtNumber: z.number().optional(),
+    }).passthrough(),
+  ]).optional(),
   requestedCoach: z.union([
     z.string(),
     z.object({

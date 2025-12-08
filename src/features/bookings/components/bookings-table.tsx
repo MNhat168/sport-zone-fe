@@ -69,6 +69,7 @@ export function BookingsTable({
       { columnId: 'type', searchKey: 'type', type: 'array' },
       { columnId: 'paymentStatus', searchKey: 'paymentStatus', type: 'array' },
       { columnId: 'approvalStatus', searchKey: 'approvalStatus', type: 'array' },
+      { columnId: 'court', searchKey: 'courtId', type: 'string' },
     ],
   })
 

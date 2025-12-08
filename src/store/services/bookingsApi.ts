@@ -9,6 +9,7 @@ export type GetBookingsParams = {
   type?: string[]
   paymentStatus?: string[]
   approvalStatus?: string[]
+  courtId?: string
   startDate?: string
   endDate?: string
   page?: number
@@ -41,6 +42,7 @@ export const bookingsApi = createApi({
         if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder)
         if (params.startDate) searchParams.set('startDate', params.startDate)
         if (params.endDate) searchParams.set('endDate', params.endDate)
+        if (params.courtId) searchParams.set('courtId', params.courtId)
         params.status?.forEach((v) => searchParams.append('status', v))
         params.type?.forEach((v) => searchParams.append('type', v))
         params.paymentStatus?.forEach((v) => searchParams.append('paymentStatus', v))

@@ -7,6 +7,7 @@ const bookingsSearchSchema = z.object({
   page: z.coerce.number().optional().catch(1),
   limit: z.number().optional().catch(20),
   search: z.string().optional().catch(''),
+  courtId: z.string().optional().catch(''),
   status: z
     .array(z.enum(bookingStatuses.map((o) => o.value) as [string, ...string[]]))
     .optional()
