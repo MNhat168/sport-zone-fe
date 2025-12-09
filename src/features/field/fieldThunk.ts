@@ -342,7 +342,12 @@ export const createFieldWithImages = createAsyncThunk<
         formData.append("location", JSON.stringify(locationObject));
 
         // Add operating hours as JSON string
-        formData.append("operatingHours", JSON.stringify(payload.operatingHours));
+        // Convert duration from number to string to match backend schema (schema chung yêu cầu string)
+        const operatingHoursForAPI = payload.operatingHours.map(oh => ({
+            ...oh,
+            duration: oh.duration.toString()
+        }));
+        formData.append("operatingHours", JSON.stringify(operatingHoursForAPI));
 
         // Add slot configuration as strings (required for multipart/form-data)
         formData.append("slotDuration", payload.slotDuration.toString());
@@ -353,13 +358,23 @@ export const createFieldWithImages = createAsyncThunk<
         formData.append("basePrice", payload.basePrice.toString());
 
         // Add price ranges as JSON string (OPTIONAL)
+        // Convert multiplier from number to string to match backend schema (schema chung yêu cầu string)
         if (payload.priceRanges && payload.priceRanges.length > 0) {
-            formData.append("priceRanges", JSON.stringify(payload.priceRanges));
+            const priceRangesForAPI = payload.priceRanges.map(range => ({
+                ...range,
+                multiplier: range.multiplier.toString()
+            }));
+            formData.append("priceRanges", JSON.stringify(priceRangesForAPI));
         }
 
         // Add amenities as JSON string (OPTIONAL)
+        // Convert price from number to string to match backend schema (schema chung yêu cầu string)
         if (payload.amenities && payload.amenities.length > 0) {
-            formData.append("amenities", JSON.stringify(payload.amenities));
+            const amenitiesForAPI = payload.amenities.map(amenity => ({
+                ...amenity,
+                price: amenity.price.toString()
+            }));
+            formData.append("amenities", JSON.stringify(amenitiesForAPI));
         }
 
         // Add image files (OPTIONAL)
