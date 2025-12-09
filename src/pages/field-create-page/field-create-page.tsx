@@ -36,7 +36,8 @@ export default function FieldCreatePage() {
         minSlots: 1,
         maxSlots: 4,
         priceRanges: [],
-        basePrice: ''
+        basePrice: '',
+        numberOfCourts: 1
     });
 
     // Location coordinates state
@@ -275,7 +276,8 @@ export default function FieldCreatePage() {
                 basePrice: Number(formData.basePrice),
                 operatingHours: filteredOperatingHours,
                 priceRanges: filteredPriceRanges,
-                amenities: amenitiesForAPI
+                amenities: amenitiesForAPI,
+                numberOfCourts: formData.numberOfCourts ?? 1
             };
 
             // Debug: log payload prior to submit
@@ -340,7 +342,8 @@ export default function FieldCreatePage() {
                 minSlots: 1,
                 maxSlots: 4,
                 priceRanges: [],
-                basePrice: ''
+                basePrice: '',
+                numberOfCourts: 1
             });
             if (avatarPreview) URL.revokeObjectURL(avatarPreview);
             galleryPreviews.forEach(url => URL.revokeObjectURL(url));
