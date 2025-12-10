@@ -57,3 +57,11 @@ export interface CreateFieldReviewForm {
    */
   bookingId: string;
 }
+
+/**
+ * Aggregated stats for a field or coach
+ */
+export interface FieldStats {
+  totalReviews: number;
+  averageRating: number;
+}
