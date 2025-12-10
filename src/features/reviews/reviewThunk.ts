@@ -1,6 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import type { CreateCoachReviewForm, CreateFieldReviewForm } from "../../types/reviewTypes";
 import { createCoachReviewAPI, createFieldReviewAPI } from "./reviewAPI";
+import { getFieldStatsAPI } from './reviewAPI';
+import type { FieldStats } from '../../types/reviewTypes';
 
 /**
  * Thunk for creating a coach review
@@ -30,6 +32,21 @@ export const createFieldReviewThunk = createAsyncThunk(
       return await createFieldReviewAPI(data);
     } catch (err: any) {
       return rejectWithValue(err.message || "Failed to create field review");
+    }
+  }
+);
+
+/**
+ * Thunk to fetch field aggregated stats (totalReviews, averageRating)
+ */
+export const getFieldStatsThunk = createAsyncThunk(
+  'reviews/getFieldStats',
+  async (fieldId: string, { rejectWithValue }) => {
+    try {
+      const res: FieldStats = await getFieldStatsAPI(fieldId);
+      return res;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Failed to fetch field stats');
     }
   }
 );
