@@ -5,6 +5,7 @@ import type { Payment } from "@/types/payment-type"
 
 export interface CreateFieldBookingPayload {
     fieldId: string;
+    courtId: string;
     date: string; // YYYY-MM-DD
     startTime: string; // HH:mm
     endTime: string; // HH:mm
@@ -27,6 +28,7 @@ export interface CreateSessionBookingPayload {
 
 export interface CancelBookingPayload {
     cancellationReason?: string;
+    courtId?: string;
 }
 
 export interface CancelSessionBookingPayload {
@@ -47,6 +49,7 @@ export interface Booking {
     _id: string;
     user: string | UserProfile;
     field?: Field; // field id for FIELD bookings
+    court?: string | { _id?: string; name?: string; courtNumber?: number };
     requestedCoach?: string; // coach id for COACH bookings
     date: string; // YYYY-MM-DD
     startTime: string; // HH:mm
@@ -115,6 +118,9 @@ export interface Invoice {
     bookingId: string;
     name: string;
     court?: string;
+    courtId?: string;
+    courtName?: string;
+    courtNumber?: number;
     date: string; // YYYY-MM-DD
     time: string; // e.g. "08:00 - 09:00"
     payment: number;
@@ -130,6 +136,8 @@ export interface UpcomingBooking {
     bookingId: string;
     academyName?: string;
     fieldName?: string;
+    courtName?: string;
+    courtNumber?: number;
     date?: string; // YYYY-MM-DD
     time?: string; // e.g. "08:00 - 09:00"
 }

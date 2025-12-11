@@ -13,7 +13,8 @@ import {
 interface Booking {
     id: string;
     academyName: string;
-    courtName: string;
+    courtName?: string;
+    courtNumber?: number;
     academyImage: string;
     date: string;
     time: string;
@@ -85,6 +86,9 @@ export function BookingTable({
                             <TableHead className="w-80 font-semibold text-gray-900 text-left py-4">
                                 Tên Sân
                             </TableHead>
+                            <TableHead className="w-48 font-semibold text-gray-900 text-left py-4">
+                                Sân con
+                            </TableHead>
                             <TableHead className="w-96 font-semibold text-gray-900 text-left py-4">
                                 Ngày & Giờ
                             </TableHead>
@@ -120,6 +124,13 @@ export function BookingTable({
                                         </span>
                                         <span className="text-sm text-gray-900 pt-1 text-left">
                                             {convertTo24Hour(booking.time)}
+                                        </span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="py-3.5 text-left">
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-sm text-gray-900 text-left">
+                                            {booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : '—')}
                                         </span>
                                     </div>
                                 </TableCell>

@@ -15,7 +15,8 @@ export interface BookingFormData {
     date: string;
     startTime: string;
     endTime: string;
-    court?: string;
+    courtId?: string;
+    courtName?: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -44,7 +45,7 @@ interface PersonalInfoTabProps {
     /**
      * Available courts list
      */
-    courts?: Array<{ id: string; name: string }>;
+    courts?: Array<{ id: string; name: string; courtNumber?: number }>;
 }
 
 /**
@@ -69,7 +70,8 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         date: bookingData?.date || '',
         startTime: bookingData?.startTime || '',
         endTime: bookingData?.endTime || '',
-        court: bookingData?.court || '',
+        courtId: bookingData?.courtId || '',
+        courtName: bookingData?.courtName || '',
         name: bookingData?.name || currentUser?.fullName || '',
         email: bookingData?.email || currentUser?.email || '',
         phone: bookingData?.phone || currentUser?.phone || '',
@@ -132,8 +134,8 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         }
 
         // Call booking hold API before moving to payment
-        if (!venue?.id || !formData.date || !formData.startTime || !formData.endTime) {
-            setHoldError('Thiếu thông tin đặt sân. Vui lòng quay lại và kiểm tra.');
+        if (!venue?.id || !formData.date || !formData.startTime || !formData.endTime || !formData.courtId) {
+            setHoldError('Thiếu thông tin đặt sân (court, ngày, giờ). Vui lòng quay lại và kiểm tra.');
             return;
         }
 
@@ -160,6 +162,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
             const payload: any = {
                 fieldId: venue.id,
+                courtId: formData.courtId,
                 date: formData.date,
                 startTime: formData.startTime,
                 endTime: formData.endTime,

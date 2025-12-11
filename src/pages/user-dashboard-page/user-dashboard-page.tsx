@@ -44,13 +44,27 @@ export default function UserDashboardPage() {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
+    const getCourtIdFromBooking = (booking?: Booking) => {
+        const court = (booking as any)?.court
+        if (!court) return undefined
+        return typeof court === 'string' ? court : court?._id
+    }
+
     const handleMoreClick = (itemId: string) => {
         setOpenDropdown(openDropdown === itemId ? null : itemId)
     }
 
     const handleCancel = async (bookingId: string) => {
         try {
-            await dispatch(cancelFieldBooking({ id: bookingId })).unwrap()
+            const booking = bookings.find((b) => b._id === bookingId)
+            const courtId = getCourtIdFromBooking(booking)
+
+            await dispatch(
+                cancelFieldBooking({
+                    id: bookingId,
+                    payload: courtId ? { courtId } : undefined,
+                })
+            ).unwrap()
             setOpenDropdown(null)
             // Refresh bookings after cancellation
             dispatch(getMyBookings({ type: selectedTab === 'court' ? 'field' : 'coach' }))
@@ -91,7 +105,13 @@ export default function UserDashboardPage() {
     // Helper function to format booking data for display
     const formatBookingData = (booking: Booking) => {
         const field = typeof booking.field === 'object' ? booking.field : null
-        
+        const court = (booking as any).court
+        const courtName =
+            (court && typeof court === 'object' && (court as any).name)
+            || (court && typeof court === 'object' && (court as any).courtNumber ? `Court ${(court as any).courtNumber}` : '')
+            || (typeof court === 'string' ? court : '')
+            || ''
+
         // Format date - handle both ISO string and date string formats
         const bookingDate = new Date(booking.date)
         const formattedDate = bookingDate.toLocaleDateString('vi-VN', {
@@ -110,7 +130,7 @@ export default function UserDashboardPage() {
         return {
             id: booking._id,
             name: field?.name || 'Unknown Field',
-            court: field?.sportType || 'Unknown Sport',
+            court: courtName || '—',
             date: formattedDate,
             time: `${booking.startTime} - ${booking.endTime}`,
             price: formattedPrice,
@@ -661,7 +681,9 @@ export default function UserDashboardPage() {
                                                     const mapped = {
                                                         id: invoice.bookingId || invoice._id || invoice.bookingId,
                                                         name: invoice.name || invoice.fieldName || 'Unknown Field',
-                                                        court: invoice.court || '',
+                                                        court: invoice.courtName
+                                                            || invoice.court
+                                                            || (invoice.courtNumber ? `Court ${invoice.courtNumber}` : ''),
                                                         date: invoice.date || '',
                                                         time: invoice.time || '',
                                                         image: invoice.fieldImage || invoice.image || "-",

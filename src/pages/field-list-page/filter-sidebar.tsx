@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Filter, X, Search, MapPin, DollarSign, Star, Calendar, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Filter, X, Search, DollarSign, Star, Calendar, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,10 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onResetFilters,
     onSearch,
 }) => {
+    // Location filters currently unused in UI; keep props for future implementation
+    void locationFilter;
+    void onLocationChange;
+
     const amenitiesOptions = [
         "Bãi đỗ xe",
         "Nhà vệ sinh",

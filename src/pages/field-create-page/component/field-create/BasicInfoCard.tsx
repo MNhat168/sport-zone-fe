@@ -16,6 +16,7 @@ interface BasicInfoCardProps {
     formData: {
         name: string;
         sportType: string;
+        numberOfCourts?: number;
     };
     onInputChange: (field: string, value: any) => void;
 }
@@ -88,6 +89,26 @@ export default function BasicInfoCard({ formData, onInputChange }: BasicInfoCard
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </div>
+                            <div className="space-y-2.5">
+                                <Label>
+                                    Số lượng court
+                                </Label>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    placeholder="1"
+                                    value={formData.numberOfCourts ?? 1}
+                                    onChange={(e) => {
+                                        const value = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
+                                        const clampedValue = Math.max(0, Math.min(10, isNaN(value) ? 1 : value));
+                                        onInputChange('numberOfCourts', clampedValue);
+                                    }}
+                                />
+                                <p className="text-sm text-gray-500">
+                                    Số lượng court sẽ được tạo tự động (0-10, mặc định: 1)
+                                </p>
                             </div>
                         </div>
                     </CardContent>
