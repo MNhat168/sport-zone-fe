@@ -152,152 +152,170 @@ export const TeamSizeMap: Record<string, Record<string, number>> = {
 };
 
 export interface SportRules {
-    sportType: SportType;
-    minTeams: number;
-    maxTeams: number;
-    minParticipants: number;
-    maxParticipants: number;
-    minFieldsRequired: number;
-    maxFieldsRequired: number;
-    typicalDuration: number;
-    description: string;
-    displayName: string;
-    availableCategories: string[];
-    availableFormats: CompetitionFormat[];
-    defaultFormat: CompetitionFormat;
-    teamSize?: number; // Optional for individual sports
-    supportsTeamSizeOverride?: boolean; // Whether user can override team size
+  sportType: SportType;
+  minTeams: number;
+  maxTeams: number;
+  minParticipants: number;
+  maxParticipants: number;
+  // Keep both field and court properties for backward compatibility
+  minFieldsRequired: number;
+  maxFieldsRequired: number;
+  minCourtsRequired: number; // Add this
+  maxCourtsRequired: number; // Add this
+  typicalDuration: number;
+  description: string;
+  displayName: string;
+  availableCategories: string[];
+  availableFormats: CompetitionFormat[];
+  defaultFormat: CompetitionFormat;
+  supportsTeamSizeOverride?: boolean;
 }
 
 export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
-    [SportType.FOOTBALL]: {
-        sportType: SportType.FOOTBALL,
-        minTeams: 4,
-        maxTeams: 16,
-        minParticipants: 20, // 4 teams × 5 players (5-a-side default)
-        maxParticipants: 176, // 16 teams × 11 players
-        minFieldsRequired: 1,
-        maxFieldsRequired: 2,
-        typicalDuration: 2,
-        description: 'Giải đấu bóng đá với đội hình linh hoạt',
-        displayName: 'Bóng đá',
-        availableCategories: Object.values(SportCategories.FOOTBALL),
-        availableFormats: [CompetitionFormat.GROUP_STAGE, CompetitionFormat.KNOCKOUT, CompetitionFormat.LEAGUE],
-        defaultFormat: CompetitionFormat.GROUP_STAGE,
-        supportsTeamSizeOverride: true
-    },
-    [SportType.TENNIS]: {
-        sportType: SportType.TENNIS,
-        minTeams: 8,
-        maxTeams: 32,
-        minParticipants: 8, // 8 players for singles
-        maxParticipants: 64, // 32 teams × 2 players for doubles
-        minFieldsRequired: 1,
-        maxFieldsRequired: 8,
-        typicalDuration: 4,
-        description: 'Giải đấu quần vợt',
-        displayName: 'Quần vợt',
-        availableCategories: Object.values(SportCategories.NET_SPORTS),
-        availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.DOUBLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
-        supportsTeamSizeOverride: false
-    },
-    [SportType.BADMINTON]: {
-        sportType: SportType.BADMINTON,
-        minTeams: 8,
-        maxTeams: 32,
-        minParticipants: 8, // 8 players for singles
-        maxParticipants: 64, // 32 teams × 2 players for doubles
-        minFieldsRequired: 2,
-        maxFieldsRequired: 8,
-        typicalDuration: 4,
-        description: 'Giải đấu cầu lông',
-        displayName: 'Cầu lông',
-        availableCategories: Object.values(SportCategories.NET_SPORTS),
-        availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.DOUBLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
-        supportsTeamSizeOverride: false
-    },
-    [SportType.PICKLEBALL]: {
-        sportType: SportType.PICKLEBALL,
-        minTeams: 8,
-        maxTeams: 32,
-        minParticipants: 8, // 8 players for singles
-        maxParticipants: 64, // 32 teams × 2 players for doubles
-        minFieldsRequired: 2,
-        maxFieldsRequired: 6,
-        typicalDuration: 3,
-        description: 'Giải đấu pickleball',
-        displayName: 'Pickleball',
-        availableCategories: Object.values(SportCategories.NET_SPORTS),
-        availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.ROUND_ROBIN,
-        supportsTeamSizeOverride: false
-    },
-    [SportType.BASKETBALL]: {
-        sportType: SportType.BASKETBALL,
-        minTeams: 4,
-        maxTeams: 16,
-        minParticipants: 12, // 4 teams × 3 players (3x3 default)
-        maxParticipants: 80, // 16 teams × 5 players
-        minFieldsRequired: 1,
-        maxFieldsRequired: 3,
-        typicalDuration: 3,
-        description: 'Giải đấu bóng rổ',
-        displayName: 'Bóng rổ',
-        availableCategories: Object.values(SportCategories.BASKETBALL),
-        availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN, CompetitionFormat.LEAGUE],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
-        supportsTeamSizeOverride: true
-    },
-    [SportType.VOLLEYBALL]: {
-        sportType: SportType.VOLLEYBALL,
-        minTeams: 4,
-        maxTeams: 16,
-        minParticipants: 8, // 4 teams × 2 players (beach default)
-        maxParticipants: 96, // 16 teams × 6 players
-        minFieldsRequired: 1,
-        maxFieldsRequired: 4,
-        typicalDuration: 3,
-        description: 'Giải đấu bóng chuyền',
-        displayName: 'Bóng chuyền',
-        availableCategories: Object.values(SportCategories.VOLLEYBALL),
-        availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.ROUND_ROBIN,
-        supportsTeamSizeOverride: true
-    },
-    [SportType.SWIMMING]: {
-        sportType: SportType.SWIMMING,
-        minTeams: 1,
-        maxTeams: 50,
-        minParticipants: 4, // 4 individuals for relay or 4 solo
-        maxParticipants: 200, // 50 teams × 4 for relay or 50 solo
-        minFieldsRequired: 1,
-        maxFieldsRequired: 2,
-        typicalDuration: 2,
-        description: 'Giải thi đấu bơi lội',
-        displayName: 'Bơi lội',
-        availableCategories: Object.values(SportCategories.SWIMMING),
-        availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
-        supportsTeamSizeOverride: true
-    },
-    [SportType.GYM]: {
-        sportType: SportType.GYM,
-        minTeams: 1,
-        maxTeams: 40,
-        minParticipants: 4, // 4 individuals
-        maxParticipants: 120, // 40 teams × 3 for crossfit or 40 solo
-        minFieldsRequired: 1,
-        maxFieldsRequired: 1,
-        typicalDuration: 2,
-        description: 'Cuộc thi thể hình hoặc workshop',
-        displayName: 'Gym/Fitness',
-        availableCategories: Object.values(SportCategories.GYM),
-        availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
-        defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
-        supportsTeamSizeOverride: true
-    },
+  [SportType.FOOTBALL]: {
+    sportType: SportType.FOOTBALL,
+    minTeams: 4,
+    maxTeams: 16,
+    minParticipants: 20,
+    maxParticipants: 176,
+    minFieldsRequired: 1,
+    maxFieldsRequired: 2,
+    minCourtsRequired: 1, // Same as fields for football
+    maxCourtsRequired: 2, // Same as fields for football
+    typicalDuration: 2,
+    description: 'Football tournament with flexible team sizes',
+    displayName: 'Football',
+    availableCategories: Object.values(SportCategories.FOOTBALL),
+    availableFormats: [CompetitionFormat.GROUP_STAGE, CompetitionFormat.KNOCKOUT, CompetitionFormat.LEAGUE],
+    defaultFormat: CompetitionFormat.GROUP_STAGE,
+    supportsTeamSizeOverride: true
+  },
+  [SportType.TENNIS]: {
+    sportType: SportType.TENNIS,
+    minTeams: 8,
+    maxTeams: 32,
+    minParticipants: 8,
+    maxParticipants: 64,
+    minFieldsRequired: 1,
+    maxFieldsRequired: 8,
+    minCourtsRequired: 1, // Could be different
+    maxCourtsRequired: 8, // Same as fields
+    typicalDuration: 4,
+    description: 'Tennis tournament',
+    displayName: 'Tennis',
+    availableCategories: Object.values(SportCategories.NET_SPORTS),
+    availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.DOUBLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
+    defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+    supportsTeamSizeOverride: false
+  },
+  [SportType.BADMINTON]: {
+    sportType: SportType.BADMINTON,
+    minTeams: 8,
+    maxTeams: 32,
+    minParticipants: 8,
+    maxParticipants: 64,
+    minFieldsRequired: 2,
+    maxFieldsRequired: 8,
+    minCourtsRequired: 2, // Same as fields
+    maxCourtsRequired: 8, // Same as fields
+    typicalDuration: 4,
+    description: 'Badminton tournament',
+    displayName: 'Badminton',
+    availableCategories: Object.values(SportCategories.NET_SPORTS),
+    availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.DOUBLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
+    defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+    supportsTeamSizeOverride: false
+  },
+  [SportType.PICKLEBALL]: {
+    sportType: SportType.PICKLEBALL,
+    minTeams: 8,
+    maxTeams: 32,
+    minParticipants: 8,
+    maxParticipants: 64,
+    minFieldsRequired: 2,
+    maxFieldsRequired: 6,
+    minCourtsRequired: 2, // Same as fields
+    maxCourtsRequired: 6, // Same as fields
+    typicalDuration: 3,
+    description: 'Pickleball tournament',
+    displayName: 'Pickleball',
+    availableCategories: Object.values(SportCategories.NET_SPORTS),
+    availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
+    defaultFormat: CompetitionFormat.ROUND_ROBIN,
+    supportsTeamSizeOverride: false
+  },
+  [SportType.BASKETBALL]: {
+    sportType: SportType.BASKETBALL,
+    minTeams: 4,
+    maxTeams: 16,
+    minParticipants: 12,
+    maxParticipants: 80,
+    minFieldsRequired: 1,
+    maxFieldsRequired: 3,
+    minCourtsRequired: 1, // Same as fields
+    maxCourtsRequired: 3, // Same as fields
+    typicalDuration: 3,
+    description: 'Basketball tournament with 5 players per team',
+    displayName: 'Basketball',
+    availableCategories: Object.values(SportCategories.BASKETBALL),
+    availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN, CompetitionFormat.LEAGUE],
+    defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+    supportsTeamSizeOverride: true
+  },
+  [SportType.VOLLEYBALL]: {
+    sportType: SportType.VOLLEYBALL,
+    minTeams: 4,
+    maxTeams: 16,
+    minParticipants: 8,
+    maxParticipants: 96,
+    minFieldsRequired: 1,
+    maxFieldsRequired: 4,
+    minCourtsRequired: 1, // Same as fields
+    maxCourtsRequired: 4, // Same as fields
+    typicalDuration: 3,
+    description: 'Volleyball tournament with 6 players per team',
+    displayName: 'Volleyball',
+    availableCategories: Object.values(SportCategories.VOLLEYBALL),
+    availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
+    defaultFormat: CompetitionFormat.ROUND_ROBIN,
+    supportsTeamSizeOverride: true
+  },
+  [SportType.SWIMMING]: {
+    sportType: SportType.SWIMMING,
+    minTeams: 1,
+    maxTeams: 50,
+    minParticipants: 4,
+    maxParticipants: 200,
+    minFieldsRequired: 1,
+    maxFieldsRequired: 2,
+    minCourtsRequired: 1, // Same as fields (lanes)
+    maxCourtsRequired: 2, // Same as fields (lanes)
+    typicalDuration: 2,
+    description: 'Individual swimming competition',
+    displayName: 'Swimming',
+    availableCategories: Object.values(SportCategories.SWIMMING),
+    availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
+    defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+    supportsTeamSizeOverride: true
+  },
+  [SportType.GYM]: {
+    sportType: SportType.GYM,
+    minTeams: 1,
+    maxTeams: 40,
+    minParticipants: 4,
+    maxParticipants: 120,
+    minFieldsRequired: 1,
+    maxFieldsRequired: 1,
+    minCourtsRequired: 1, // Same as fields
+    maxCourtsRequired: 1, // Same as fields
+    typicalDuration: 2,
+    description: 'Fitness competition or workshop',
+    displayName: 'Gym/Fitness',
+    availableCategories: Object.values(SportCategories.GYM),
+    availableFormats: [CompetitionFormat.SINGLE_ELIMINATION, CompetitionFormat.ROUND_ROBIN],
+    defaultFormat: CompetitionFormat.SINGLE_ELIMINATION,
+    supportsTeamSizeOverride: true
+  },
 };
 
 // Helper function to calculate participants based on teams and team size

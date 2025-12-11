@@ -19,7 +19,9 @@ import {
   addTournament,
   updateTournament,
   setSelectedTeam,
+  setAvailableCourts,
 } from './tournamentSlice';
+import { BASE_URL } from '@/utils/constant-value/constant';
 
 
 
@@ -283,3 +285,38 @@ export const selectTeam = createAsyncThunk(
     return teamNumber;
   }
 );
+
+// Add new thunk for fetching available courts
+export const fetchAvailableCourts = createAsyncThunk(
+  'tournament/fetchAvailableCourts',
+  async (params: { sportType: string; location: string; date: string }, { dispatch, rejectWithValue }) => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+
+    try {
+      const queryString = buildAvailableCourtsQuery(params); // New function
+      const response = await axiosPublic.get(`${AVAILABLE_COURTS_API}?${queryString}`);
+
+      // Extract courts from the response structure
+      const courts = response.data.data || response.data || [];
+
+      console.log('Extracted courts:', courts);
+      dispatch(setAvailableCourts(courts));
+      return courts;
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || 'Failed to fetch available courts';
+      dispatch(setError(errorMsg));
+      return rejectWithValue(errorMsg);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+);
+
+// Add API endpoint
+export const AVAILABLE_COURTS_API = `${BASE_URL}/tournaments/available-courts`;
+
+export const buildAvailableCourtsQuery = (params: { sportType: string; location: string; date: string }) => {
+  const queryParams = new URLSearchParams(params);
+  return queryParams.toString();
+};
