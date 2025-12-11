@@ -6,6 +6,7 @@ import {
     getMyOwnerProfile,
     updateMyOwnerProfile,
     getOwnerProfileById,
+    fetchFieldOwnerProfile,
 } from "./ownerProfileThunk";
 
 interface OwnerProfileState {
@@ -54,8 +55,18 @@ const ownerProfileSlice = createSlice({
             .addCase(getMyOwnerProfile.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || null;
+            })
+            .addCase(fetchFieldOwnerProfile.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchFieldOwnerProfile.fulfilled, (state, action) => {
+                state.loading = false;
+                state.myProfile = action.payload;
+            })
+            .addCase(fetchFieldOwnerProfile.rejected, (state, action) => {
+                state.loading = false;
             });
-
         // Create
         builder
             .addCase(createOwnerProfile.pending, (state) => {

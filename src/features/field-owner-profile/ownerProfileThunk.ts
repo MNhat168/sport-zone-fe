@@ -82,4 +82,19 @@ export const getOwnerProfileById = createAsyncThunk<
     }
 });
 
+// ownerProfileThunks.ts
+export const fetchFieldOwnerProfile = createAsyncThunk(
+  "ownerProfile/fetchProfile",
+  async (_, { rejectWithValue }) => { // Note the underscore (_) indicating no parameter needed
+    try {
+      const response = await axiosPrivate.get(`/field-owner/profile/`);
+      return response.data.data; // Assuming your API returns { success: true, data: {...} }
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Failed to fetch profile"
+      );
+    }
+  }
+);
+
 

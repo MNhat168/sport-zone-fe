@@ -6,6 +6,7 @@ import {
     GET_CHAT_ROOM_API,
     MARK_AS_READ_API,
     UNREAD_COUNT_API,
+    GET_FIELD_OWNER_CHAT_ROOMS_API,
 } from "./chatAPI";
 import type { ChatRoom, StartChatPayload } from "./chat-type";
 
@@ -80,4 +81,21 @@ export const getUnreadCount = createAsyncThunk(
             );
         }
     }
+);
+
+// In chatThunk.ts, add this new thunk:
+
+export const getFieldOwnerChatRooms = createAsyncThunk(
+  "chat/getFieldOwnerChatRooms",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosPrivate.get(GET_FIELD_OWNER_CHAT_ROOMS_API);
+      const rooms = Array.isArray(response.data) ? response.data : [];
+      return rooms as ChatRoom[];
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Failed to get field owner chat rooms"
+      );
+    }
+  }
 );
