@@ -1,10 +1,8 @@
-"use client"
-
 import type React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
-import { setFavouriteFields, removeFavouriteFields } from "@/features/user"
+import { setFavouriteFields, removeFavouriteFields, syncUserFromAuth } from "@/features/user"
 import { CustomFailedToast, CustomSuccessToast } from "@/components/toast/notificiation-toast"
 import { getFieldById } from "@/features/field/fieldThunk"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
@@ -52,36 +50,62 @@ const FieldDetailPage: React.FC = () => {
 
     const { currentField, loading } = useAppSelector((s) => s.field)
     const currentUser = useAppSelector((s) => s.user.user)
+    const authUser = useAppSelector((s) => s.auth.user)
     const [favLoading, setFavLoading] = useState(false)
 
+    // Use user from either store, prioritizing user store for favourites
+    const activeUser = currentUser || authUser
+
+    // Sync user to user store if auth user exists but user store is empty
+    useEffect(() => {
+        if (authUser && !currentUser && authUser.favouriteFields) {
+            // If auth user has favouriteFields, sync to user store
+            dispatch(syncUserFromAuth(authUser))
+        }
+    }, [authUser, currentUser, dispatch])
+
     const isFavourite = Boolean(
-        currentUser?.favouriteFields && id && currentUser.favouriteFields.includes(id),
+        activeUser?.favouriteFields && id && activeUser.favouriteFields.includes(id),
     )
 
     const toggleFavourite = async () => {
-        if (!currentUser) {
+        console.log("🔥 toggleFavourite called", { activeUser: !!activeUser, currentUser: !!currentUser, authUser: !!authUser });
+        
+        if (!activeUser) {
+            console.log("❌ No active user found");
             return CustomFailedToast("Vui lòng đăng nhập để thêm sân vào yêu thích")
         }
-        if (!id) return
+        
+        if (!id) {
+            console.log("❌ No field id");
+            return;
+        }
+
+        console.log("✅ Starting favourite toggle", { isFavourite, fieldId: id });
 
         try {
             setFavLoading(true)
             if (isFavourite) {
                 const action: any = await dispatch(removeFavouriteFields({ favouriteFields: [id] }))
+                console.log("removeFavouriteFields result:", action);
                 if (action?.meta?.requestStatus === "fulfilled") {
                     CustomSuccessToast("Đã bỏ yêu thích sân")
                 } else {
-                    CustomFailedToast(String(action?.payload || "Bỏ yêu thích thất bại"))
+                    console.error("removeFavouriteFields failed:", action);
+                    CustomFailedToast(String(action?.payload?.message || action?.payload || "Bỏ yêu thích thất bại"))
                 }
             } else {
                 const action: any = await dispatch(setFavouriteFields({ favouriteFields: [id] }))
+                console.log("setFavouriteFields result:", action);
                 if (action?.meta?.requestStatus === "fulfilled") {
                     CustomSuccessToast("Đã thêm sân vào yêu thích")
                 } else {
-                    CustomFailedToast(String(action?.payload || "Thêm yêu thích thất bại"))
+                    console.error("setFavouriteFields failed:", action);
+                    CustomFailedToast(String(action?.payload?.message || action?.payload || "Thêm yêu thích thất bại"))
                 }
             }
         } catch (err: any) {
+            console.error("toggleFavourite error:", err);
             CustomFailedToast(err?.message || "Thao tác thất bại")
         } finally {
             setFavLoading(false)
@@ -97,7 +121,7 @@ const FieldDetailPage: React.FC = () => {
     useEffect(() => {
         if (!id) return
         // Chỉ fetch reports nếu user đã đăng nhập (API yêu cầu authentication)
-        if (!currentUser) {
+        if (!activeUser) {
             setFieldReports([])
             return
         }
@@ -121,7 +145,7 @@ const FieldDetailPage: React.FC = () => {
         return () => {
             cancelled = true
         }
-    }, [id, currentUser])
+    }, [id, activeUser])
 
     // Hiển thị popup cảnh báo khi field chưa được admin verify
     useEffect(() => {
