@@ -16,7 +16,8 @@ interface BookingFormData {
     date: string;
     startTime: string;
     endTime: string;
-    court: string;
+    courtId: string;
+    courtName?: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -41,7 +42,8 @@ interface BookCourtTabProps {
     /**
      * Available courts list
      */
-    courts?: Array<{ id: string; name: string }>;
+    courts?: Array<{ id: string; name: string; courtNumber?: number }>;
+    courtsError?: string | null;
 }
 
 /**
@@ -51,6 +53,8 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     venue: venueProp,
     onSubmit,
     onBack,
+    courts = [],
+    courtsError,
 }) => {
     const location = useLocation();
     const dispatch = useAppDispatch();
@@ -97,7 +101,8 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         date: '',
         startTime: '',
         endTime: '',
-        court: '',
+        courtId: '',
+        courtName: '',
     });
     // === Thêm state cho giờ bắt đầu & kết thúc (time strings HH:mm) ===
     const [selectedStartTime, setSelectedStartTime] = useState<string | null>(null);
@@ -223,9 +228,9 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     };
 
     // === Function để fetch availability data ===
-    const fetchAvailabilityData = useCallback(async (selectedDate: string) => {
-        if (!venue?.id || !selectedDate) {
-            console.log('🚫 [AVAILABILITY] No venue ID or date provided');
+    const fetchAvailabilityData = useCallback(async (selectedDate: string, courtId?: string) => {
+        if (!venue?.id || !selectedDate || !courtId) {
+            console.log('🚫 [AVAILABILITY] Missing venue, date, or courtId');
             return;
         }
 
@@ -235,13 +240,15 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         try {
             console.log('🔄 [AVAILABILITY] Fetching availability for:', {
                 fieldId: venue.id,
-                date: selectedDate
+                date: selectedDate,
+                courtId
             });
 
             const result = await dispatch(checkFieldAvailability({
                 id: venue.id,
                 startDate: selectedDate,
-                endDate: selectedDate
+                endDate: selectedDate,
+                courtId,
             })).unwrap();
 
             console.log('✅ [AVAILABILITY] Data received:', result);
@@ -372,20 +379,21 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             const raw = localStorage.getItem('bookingFormData');
             if (!raw) return;
             const parsed = JSON.parse(raw);
-            if (
-                parsed &&
-                typeof parsed === 'object' &&
-                ('date' in parsed || 'startTime' in parsed || 'endTime' in parsed || 'court' in parsed)
-            ) {
-                setFormData(prev => ({
-                    date: parsed.date ?? prev.date,
-                    startTime: parsed.startTime ?? prev.startTime,
-                    endTime: parsed.endTime ?? prev.endTime,
-                    court: parsed.court ?? prev.court,
-                    name: parsed.name ?? prev.name,
-                    email: parsed.email ?? prev.email,
-                    phone: parsed.phone ?? prev.phone,
-                }));
+        if (
+            parsed &&
+            typeof parsed === 'object' &&
+            ('date' in parsed || 'startTime' in parsed || 'endTime' in parsed || 'courtId' in parsed)
+        ) {
+            setFormData(prev => ({
+                date: parsed.date ?? prev.date,
+                startTime: parsed.startTime ?? prev.startTime,
+                endTime: parsed.endTime ?? prev.endTime,
+                courtId: parsed.courtId ?? prev.courtId,
+                courtName: parsed.courtName ?? prev.courtName,
+                name: parsed.name ?? prev.name,
+                email: parsed.email ?? prev.email,
+                phone: parsed.phone ?? prev.phone,
+            }));
 
                 // Cập nhật selectedStartTime và selectedEndTime từ localStorage
                 if (parsed.startTime) {
@@ -395,16 +403,33 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     setSelectedEndTime(parsed.endTime);
                 }
 
-                // Fetch availability data if date is available
-                if (parsed.date && venue?.id) {
-                    fetchAvailabilityData(parsed.date);
+            // Fetch availability data if date is available
+            if (parsed.date && venue?.id && (parsed.courtId || courts[0]?.id)) {
+                const targetCourtId = parsed.courtId || courts[0]?.id;
+                setFormData(prev => ({
+                    ...prev,
+                    courtId: targetCourtId,
+                    courtName: prev.courtName || courts.find(c => c.id === targetCourtId)?.name || prev.courtName,
+                }));
+                fetchAvailabilityData(parsed.date, targetCourtId);
                 }
             }
         } catch {
             // Ignore malformed storage
             console.warn('Failed to parse bookingFormData from localStorage');
         }
-    }, [venue?.id, fetchAvailabilityData]); // Add dependencies
+    }, [venue?.id, courts, fetchAvailabilityData]); // Add dependencies
+
+    // Default select first court when list is available
+    useEffect(() => {
+        if (courts.length > 0 && !formData.courtId) {
+            setFormData(prev => ({
+                ...prev,
+                courtId: courts[0].id,
+                courtName: courts[0].name,
+            }));
+        }
+    }, [courts, formData.courtId]);
 
     if (!venue) {
         return (
@@ -462,6 +487,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             formData.date &&
             formData.startTime &&
             formData.endTime &&
+            formData.courtId &&
             venue?.basePrice &&
             venue.basePrice > 0
         );
@@ -474,6 +500,11 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         // Validate required fields
         if (!formData.date || !formData.startTime || !formData.endTime) {
             alert('Vui lòng điền đầy đủ các trường bắt buộc');
+            return;
+        }
+
+        if (!formData.courtId) {
+            alert('Vui lòng chọn sân con (court)');
             return;
         }
 
@@ -640,6 +671,47 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6 space-y-4">
+                                {/* Court Selector */}
+                                <div className="space-y-2.5">
+                                    <Label className="text-base font-normal font-['Outfit']">Chọn sân con (court)</Label>
+                                    {courtsError && (
+                                        <p className="text-sm text-red-600 font-['Outfit']">{courtsError}</p>
+                                    )}
+                                    {courts.length === 0 ? (
+                                        <p className="text-sm text-gray-500 font-['Outfit']">
+                                            Chưa có sân con khả dụng. Vui lòng thử lại sau.
+                                        </p>
+                                    ) : (
+                                        <select
+                                            className="w-full h-12 border border-gray-300 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white"
+                                            value={formData.courtId}
+                                            onChange={(e) => {
+                                                const newCourtId = e.target.value;
+                                                const court = courts.find(c => c.id === newCourtId);
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    courtId: newCourtId,
+                                                    courtName: court?.name || prev.courtName,
+                                                    // Reset time selection when switching court
+                                                    startTime: '',
+                                                    endTime: '',
+                                                }));
+                                                setSelectedStartTime(null);
+                                                setSelectedEndTime(null);
+                                                setAvailabilityData(null);
+                                                if (formData.date && newCourtId) {
+                                                    fetchAvailabilityData(formData.date, newCourtId);
+                                                }
+                                            }}
+                                        >
+                                            {courts.map(court => (
+                                                <option key={court.id} value={court.id}>
+                                                    {court.name || `Court ${court.courtNumber ?? ''}`}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
                                 {/* Date Picker (popup) */}
                                 <div className="space-y-2.5">
                                     <DatePicker
@@ -664,7 +736,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                             setSelectedEndTime(null);
                                             
                                             // Fetch availability data for selected date
-                                            fetchAvailabilityData(ymd);
+                                            fetchAvailabilityData(ymd, formData.courtId || courts[0]?.id);
                                         }}
                                         disabled={(d) => {
                                             // past dates => disabled
@@ -927,6 +999,21 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     <span className="text-base text-[#6b7280] font-['Outfit']">
                                         {formData.date || 'Chưa chọn ngày'}
                                     </span>
+                                </div>
+
+                                {/* Court */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
+                                        <div className="w-5 h-5 text-emerald-600 font-semibold">#</div>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-base text-[#6b7280] font-['Outfit']">
+                                            {(() => {
+                                                const court = courts.find(c => c.id === formData.courtId);
+                                                return court?.name || formData.courtName || 'Chưa chọn sân con';
+                                            })()}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {/* Time */}

@@ -136,9 +136,23 @@ export default function UserBookingsPage() {
     }
   }
 
+  const getCourtIdFromBooking = (booking?: Booking) => {
+    const court = (booking as any)?.court
+    if (!court) return undefined
+    return typeof court === 'string' ? court : court?._id
+  }
+
   const handleCancelBooking = async (bookingId: string) => {
     try {
-      await dispatch(cancelFieldBooking({ id: bookingId })).unwrap()
+      const booking = bookings.find((b) => b._id === bookingId)
+      const courtId = getCourtIdFromBooking(booking)
+
+      await dispatch(
+        cancelFieldBooking({
+          id: bookingId,
+          payload: courtId ? { courtId } : undefined,
+        })
+      ).unwrap()
       // Refresh bookings after cancellation
       dispatch(getMyBookings({
         page: currentPage,

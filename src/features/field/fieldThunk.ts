@@ -67,6 +67,15 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         },
         ownerName: apiField?.ownerName,
         ownerPhone: apiField?.ownerPhone,
+        courts: Array.isArray(apiField?.courts)
+            ? apiField.courts.map((c: any) => ({
+                id: c?._id || c?.id || "",
+                name: c?.name || c?.courtName || "",
+                courtNumber: c?.courtNumber,
+                isActive: c?.isActive,
+                field: c?.field?._id || c?.field || "",
+            }))
+            : undefined,
         totalBookings: apiField?.totalBookings,
         createdAt: apiField?.createdAt,
         updatedAt: apiField?.updatedAt,
@@ -229,6 +238,7 @@ export const checkFieldAvailability = createAsyncThunk<
         const queryParams = new URLSearchParams();
         queryParams.append("startDate", params.startDate);
         queryParams.append("endDate", params.endDate);
+        if (params.courtId) queryParams.append("courtId", params.courtId);
 
         const url = `${FIELD_AVAILABILITY_API(params.id)}?${queryParams}`;
         const response = await axiosPublic.get(url);
@@ -332,7 +342,12 @@ export const createFieldWithImages = createAsyncThunk<
         formData.append("location", JSON.stringify(locationObject));
 
         // Add operating hours as JSON string
-        formData.append("operatingHours", JSON.stringify(payload.operatingHours));
+        // Convert duration from number to string to match backend schema (schema chung yêu cầu string)
+        const operatingHoursForAPI = payload.operatingHours.map(oh => ({
+            ...oh,
+            duration: oh.duration.toString()
+        }));
+        formData.append("operatingHours", JSON.stringify(operatingHoursForAPI));
 
         // Add slot configuration as strings (required for multipart/form-data)
         formData.append("slotDuration", payload.slotDuration.toString());
@@ -343,13 +358,23 @@ export const createFieldWithImages = createAsyncThunk<
         formData.append("basePrice", payload.basePrice.toString());
 
         // Add price ranges as JSON string (OPTIONAL)
+        // Convert multiplier from number to string to match backend schema (schema chung yêu cầu string)
         if (payload.priceRanges && payload.priceRanges.length > 0) {
-            formData.append("priceRanges", JSON.stringify(payload.priceRanges));
+            const priceRangesForAPI = payload.priceRanges.map(range => ({
+                ...range,
+                multiplier: range.multiplier.toString()
+            }));
+            formData.append("priceRanges", JSON.stringify(priceRangesForAPI));
         }
 
         // Add amenities as JSON string (OPTIONAL)
+        // Convert price from number to string to match backend schema (schema chung yêu cầu string)
         if (payload.amenities && payload.amenities.length > 0) {
-            formData.append("amenities", JSON.stringify(payload.amenities));
+            const amenitiesForAPI = payload.amenities.map(amenity => ({
+                ...amenity,
+                price: amenity.price.toString()
+            }));
+            formData.append("amenities", JSON.stringify(amenitiesForAPI));
         }
 
         // Add image files (OPTIONAL)

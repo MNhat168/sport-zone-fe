@@ -13,6 +13,8 @@ export const DELETE_FIELD_API = (id: string) => `${FIELD_OWNER_FIELDS_BASE}/${id
 
 // Availability endpoints (Pure Lazy Creation)
 export const FIELD_AVAILABILITY_API = (id: string) => `${BASE_URL}/fields/${id}/availability`;
+// Public courts listing for user booking flow (owner/admin CRUD uses auth route)
+export const FIELD_COURTS_API = (id: string) => `${BASE_URL}/public/fields/${id}/courts`;
 
 // Price scheduling endpoints
 export const SCHEDULE_PRICE_UPDATE_API = (id: string) => `${FIELD_OWNER_FIELDS_BASE}/${id}/schedule-price-update`;

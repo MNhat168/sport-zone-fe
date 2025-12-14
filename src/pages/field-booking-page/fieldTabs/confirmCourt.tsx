@@ -25,7 +25,8 @@ interface BookingFormData {
     date: string
     startTime: string
     endTime: string
-    court?: string
+    courtId?: string
+    courtName?: string
     name?: string
     email?: string
     phone?: string
@@ -54,7 +55,7 @@ interface ConfirmCourtTabProps {
     /**
      * Available courts list
      */
-    courts?: Array<{ id: string; name: string }>
+    courts?: Array<{ id: string; name: string; courtNumber?: number }>
     /**
      * Added amenities props
      */
@@ -70,7 +71,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
     bookingData,
     onSubmit,
     onBack,
-    // courts = [],
+    courts = [],
     amenities = [],
     selectedAmenityIds = [],
 }) => {
@@ -117,7 +118,8 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                 date: bookingData.date,
                 startTime: bookingData.startTime,
                 endTime: bookingData.endTime,
-                court: bookingData.court,
+                courtId: bookingData.courtId,
+                courtName: bookingData.courtName,
             }
             : null,
     })
@@ -126,7 +128,8 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
         date: bookingData?.date || "",
         startTime: bookingData?.startTime || "",
         endTime: bookingData?.endTime || "",
-        court: bookingData?.court || "",
+        courtId: bookingData?.courtId || "",
+        courtName: bookingData?.courtName || "",
         name: bookingData?.name || "",
         email: bookingData?.email || "",
         phone: bookingData?.phone || "",
@@ -169,6 +172,11 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
         return amenities
             .filter((amenity) => selectedAmenityIds.includes(amenity.id))
             .reduce((total, amenity) => total + amenity.price, 0)
+    }
+
+    const getCourtName = (): string => {
+        const court = courts.find(c => c.id === formData.courtId)
+        return court?.name || formData.courtName || "Chưa chọn sân con"
     }
 
     const calculateSubtotal = (): number => {
@@ -236,6 +244,10 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                                 <div>
                                     <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">Tên sân</h4>
                                     <p className="text-sm font-medium text-gray-900">{venue.name || "Chưa cập nhật"}</p>
+                                </div>
+                                <div className="border-t border-gray-100 pt-3">
+                                    <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">Sân con (court)</h4>
+                                    <p className="text-sm font-medium text-gray-900">{getCourtName()}</p>
                                 </div>
                                 <div className="border-t border-gray-100 pt-3">
                                     <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">Ngày</h4>
