@@ -73,3 +73,12 @@ export const getReviewsForFieldAPI = async (
   const response = await axiosPublic.get(`${REVIEWS_API}/field/${fieldId}?${params.toString()}`);
   return response.data;
 };
+
+/**
+ * Fetch aggregated stats for a field (totalReviews and averageRating)
+ * @param fieldId - Field id
+ */
+export const getFieldStatsAPI = async (fieldId: string) => {
+  const response = await axiosPublic.get(`${REVIEWS_API}/field/${fieldId}/stats`);
+  return response.data;
+};

@@ -231,8 +231,11 @@ export const setFavouriteFields = createAsyncThunk<
 >("user/setFavouriteFields", async (payload, thunkAPI) => {
     try {
         const response = await axiosPrivate.post(SET_FAVOURITE_FIELDS_API, payload);
-        return response.data.data;
+        console.log("setFavouriteFields API response:", response.data);
+        // Handle different response structures
+        return response.data.data || response.data;
     } catch (error: any) {
+        console.error("setFavouriteFields API error:", error.response?.data || error.message);
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to set favourite fields",
             status: error.response?.status || "500",
@@ -253,8 +256,11 @@ export const removeFavouriteFields = createAsyncThunk<
 >("user/removeFavouriteFields", async (payload, thunkAPI) => {
     try {
         const response = await axiosPrivate.delete(REMOVE_FAVOURITE_FIELDS_API, { data: payload });
-        return response.data.data;
+        console.log("removeFavouriteFields API response:", response.data);
+        // Handle different response structures
+        return response.data.data || response.data;
     } catch (error: any) {
+        console.error("removeFavouriteFields API error:", error.response?.data || error.message);
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to remove favourite fields",
             status: error.response?.status || "500",

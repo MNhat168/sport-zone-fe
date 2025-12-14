@@ -116,12 +116,26 @@ const userSlice = createSlice({
                 state.user = action.payload;
             })
             // Set favourite fields
+            .addCase(setFavouriteFields.pending, () => {
+                console.log("setFavouriteFields pending");
+            })
             .addCase(setFavouriteFields.fulfilled, (state, action) => {
+                console.log("setFavouriteFields fulfilled:", action.payload);
                 state.user = action.payload;
             })
+            .addCase(setFavouriteFields.rejected, (_state, action) => {
+                console.log("setFavouriteFields rejected:", action.payload);
+            })
             // Remove favourite fields
+            .addCase(removeFavouriteFields.pending, () => {
+                console.log("removeFavouriteFields pending");
+            })
             .addCase(removeFavouriteFields.fulfilled, (state, action) => {
+                console.log("removeFavouriteFields fulfilled:", action.payload);
                 state.user = action.payload;
+            })
+            .addCase(removeFavouriteFields.rejected, (_state, action) => {
+                console.log("removeFavouriteFields rejected:", action.payload);
             })
 
             // Forgot password

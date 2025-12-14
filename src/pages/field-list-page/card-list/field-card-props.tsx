@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch } from "@/store/hook";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
+import { getFieldStatsThunk, selectFieldStats } from "@/features/reviews";
 import { getFieldById } from "@/features/field/fieldThunk";
 import { getSportDisplayNameVN } from "@/components/enums/ENUMS";
 import { getPinColor, getSportWhiteIconPath } from "@/utils/fieldPinIcon";
@@ -85,6 +86,18 @@ const FieldCard: React.FC<FieldCardProps> = ({
     void nextAvailability;
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const stats = useAppSelector((s) => (id ? selectFieldStats(s, String(id)) : null));
+
+    const displayRating = typeof stats?.averageRating === 'number' ? stats!.averageRating : rating;
+    const displayReviews = typeof stats?.totalReviews === 'number' ? stats!.totalReviews : reviews;
+
+    useEffect(() => {
+        if (!id) return;
+        // fetch stats if we don't have them yet (null means stale or not present)
+        if (stats === null || typeof stats === 'undefined') {
+            dispatch(getFieldStatsThunk(String(id)));
+        }
+    }, [id, stats, dispatch]);
 
     const handleBooking = async () => {
         if (!id) return;
@@ -161,10 +174,10 @@ const FieldCard: React.FC<FieldCardProps> = ({
 
                     <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center">
-                            {rating > 0 ? (
+                            {displayRating > 0 ? (
                                 <>
-                                    <span className="text-yellow-500 text-lg">★ {rating.toFixed(1)}</span>
-                                    <span className="text-gray-600 text-sm ml-1">({reviews} {reviews === 1 ? 'review' : 'reviews'})</span>
+                                    <span className="text-yellow-500 text-lg">★ {displayRating.toFixed(1)}</span>
+                                    <span className="text-gray-600 text-sm ml-1">({displayReviews} {displayReviews === 1 ? 'review' : 'reviews'})</span>
                                 </>
                             ) : (
                                 <span className="text-gray-500 text-sm">Chưa có đánh giá</span>
