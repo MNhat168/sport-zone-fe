@@ -1,6 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../features/authentication/authSlice";
-import userReducer from "../features/user/userSlice";
 import fieldReducer from "../features/field/fieldSlice";
 import bookingReducer from "../features/booking/bookingSlice";
 import coachReducer from "../features/coach/coachSlice";
@@ -17,14 +16,13 @@ import { reviewReducer } from "@/features/reviews";
 export const store = configureStore({
     reducer: {
         auth: authReducer,
-        user: userReducer,
         field: fieldReducer,
         booking: bookingReducer,
         coach: coachReducer,
         transactions: transactionsReducer,
         amenities: amenitiesReducer,
         ownerProfile: ownerProfileReducer,
-        tournament : tournamentReducer,
+        tournament: tournamentReducer,
         wallet: walletReducer,
         registration: registrationReducer,
         bankAccount: bankAccountReducer,

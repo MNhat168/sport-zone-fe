@@ -45,7 +45,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     const location = useLocation();
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
-    const user = useAppSelector((state) => state.user.user);
+    const user = useAppSelector((state) => state.auth.user);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
 
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
@@ -168,19 +168,19 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
         try {
             const storedBookingId = localStorage.getItem('heldBookingId');
             const storedHoldTime = localStorage.getItem('heldBookingTime');
-            
-            console.log('[PAYMENT V2] Checking localStorage for held booking:', { 
-                storedBookingId, 
-                storedHoldTime 
+
+            console.log('[PAYMENT V2] Checking localStorage for held booking:', {
+                storedBookingId,
+                storedHoldTime
             });
-            
+
             // Validate stored booking ID
             if (!storedBookingId || storedBookingId.trim() === '' || storedBookingId === 'undefined' || storedBookingId === 'null') {
                 console.warn('⚠️ [PAYMENT V2] Invalid or missing heldBookingId in localStorage:', storedBookingId);
                 setHoldError('Chưa có booking được giữ chỗ. Vui lòng quay lại bước trước.');
                 return;
             }
-            
+
             if (storedHoldTime) {
                 const holdTime = parseInt(storedHoldTime);
                 if (isNaN(holdTime)) {
@@ -188,11 +188,11 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                     setHoldError('Dữ liệu booking không hợp lệ. Vui lòng quay lại bước trước.');
                     return;
                 }
-                
+
                 const now = Date.now();
                 const elapsed = Math.floor((now - holdTime) / 1000);
                 const remaining = 300 - elapsed; // 5 minutes = 300 seconds
-                
+
                 if (remaining > 0) {
                     setHeldBookingId(storedBookingId);
                     setCountdown(remaining);
@@ -424,7 +424,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
 
         try {
             console.log('[PaymentV2] Submitting payment proof for booking:', heldBookingId);
-            
+
             // Create FormData with payment proof
             const formDataToSend = new FormData();
             formDataToSend.append('paymentProof', proofImage);
@@ -439,7 +439,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             // Submit payment proof for existing booking
             const url = `${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/submit-payment-proof`;
             console.log('[PaymentV2] Submitting to URL:', url);
-            
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers,
@@ -458,7 +458,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             console.log('[PaymentV2] Payment proof submitted successfully:', booking);
             setBookingId(booking._id || booking.id);
             setPaymentStatus('success');
-            
+
             // Clear localStorage
             clearBookingLocal();
             localStorage.removeItem('heldBookingId');
@@ -523,18 +523,16 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                     )}
                     {/* Booking Hold Status - removed since hold happens in PersonalInfo step */}
                     {heldBookingId && countdown > 0 && (
-                        <div className={`p-4 border rounded-lg mt-4 flex items-center justify-between ${
-                            countdown < 120 
-                                ? 'bg-red-50 border-red-200 text-red-800' 
+                        <div className={`p-4 border rounded-lg mt-4 flex items-center justify-between ${countdown < 120
+                                ? 'bg-red-50 border-red-200 text-red-800'
                                 : 'bg-green-50 border-green-200 text-green-800'
-                        }`}>
+                            }`}>
                             <div className="flex items-center gap-2">
                                 <CheckCircle className="w-5 h-5" />
                                 <span>Chỗ đã được giữ. Vui lòng upload ảnh chứng minh trong thời gian còn lại.</span>
                             </div>
-                            <div className={`font-bold text-lg ${
-                                countdown < 120 ? 'text-red-600' : 'text-green-600'
-                            }`}>
+                            <div className={`font-bold text-lg ${countdown < 120 ? 'text-red-600' : 'text-green-600'
+                                }`}>
                                 {formatCountdown(countdown)}
                             </div>
                         </div>
@@ -702,8 +700,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                 <Button
                                     onClick={handlePayment}
                                     disabled={
-                                        !isBookingDataValid || 
-                                        !proofImage || 
+                                        !isBookingDataValid ||
+                                        !proofImage ||
                                         paymentStatus === 'processing' ||
                                         !!holdError
                                     }

@@ -5,17 +5,17 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
-import { changePassword } from "@/features/user/userThunk"
-import { clearSuccessStates } from "@/features/user/userSlice"
+import { changePassword } from "@/features/authentication/authThunk"
+import { clearSuccessStates } from "@/features/authentication/authSlice"
 import { toast } from "sonner"
 
 export default function ChangePassword() {
     const dispatch = useAppDispatch()
-    const { 
-        changePasswordLoading, 
-        changePasswordSuccess, 
-        changePasswordError 
-    } = useAppSelector((state) => state.user)
+    const {
+        changePasswordLoading,
+        changePasswordSuccess,
+        changePasswordError
+    } = useAppSelector((state) => state.auth)
 
     const [formData, setFormData] = useState({
         oldPassword: "",
@@ -105,9 +105,9 @@ export default function ChangePassword() {
 
         try {
             await dispatch(changePassword({
-                old_password: formData.oldPassword,
-                new_password: formData.newPassword,
-                confirm_password: formData.confirmPassword,
+                oldPassword: formData.oldPassword,
+                newPassword: formData.newPassword,
+                confirmPassword: formData.confirmPassword,
             })).unwrap()
         } catch {
             // Error is handled by useEffect
@@ -151,15 +151,14 @@ export default function ChangePassword() {
                             onChange={(e) => handleInputChange('oldPassword', e.target.value)}
                             placeholder="Nhập mật khẩu cũ"
                             disabled={!isEditMode}
-                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${
-                                validationErrors.oldPassword ? 'border-red-500 border' : ''
-                            }`}
+                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${validationErrors.oldPassword ? 'border-red-500 border' : ''
+                                }`}
                         />
                         {validationErrors.oldPassword && (
                             <p className="text-red-500 text-sm">{validationErrors.oldPassword}</p>
                         )}
                     </div>
-                    
+
                     <div className="space-y-2.5">
                         <Label className="text-base font-normal text-start">
                             Mật khẩu mới
@@ -170,15 +169,14 @@ export default function ChangePassword() {
                             onChange={(e) => handleInputChange('newPassword', e.target.value)}
                             placeholder="Nhập mật khẩu mới"
                             disabled={!isEditMode}
-                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${
-                                validationErrors.newPassword ? 'border-red-500 border' : ''
-                            }`}
+                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${validationErrors.newPassword ? 'border-red-500 border' : ''
+                                }`}
                         />
                         {validationErrors.newPassword && (
                             <p className="text-red-500 text-sm">{validationErrors.newPassword}</p>
                         )}
                     </div>
-                    
+
                     <div className="space-y-2.5">
                         <Label className="text-base font-normal text-start">
                             Xác nhận mật khẩu
@@ -189,9 +187,8 @@ export default function ChangePassword() {
                             onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                             placeholder="Nhập lại mật khẩu mới"
                             disabled={!isEditMode}
-                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${
-                                validationErrors.confirmPassword ? 'border-red-500 border' : ''
-                            }`}
+                            className={`h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] disabled:opacity-50 disabled:cursor-not-allowed ${validationErrors.confirmPassword ? 'border-red-500 border' : ''
+                                }`}
                         />
                         {validationErrors.confirmPassword && (
                             <p className="text-red-500 text-sm">{validationErrors.confirmPassword}</p>
@@ -215,7 +212,7 @@ export default function ChangePassword() {
                             Nhấn nút để vô hiệu hóa tài khoản
                         </p>
                     </div>
-                    
+
                     <div className="flex justify-end gap-5 pt-5">
                         <Button
                             type="button"

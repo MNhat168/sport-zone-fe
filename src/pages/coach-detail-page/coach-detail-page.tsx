@@ -82,14 +82,14 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const { currentCoach, detailLoading, detailError } = useSelector(
     (state: RootState) => state.coach
   );
-  const currentUser = useSelector((state: RootState) => state.user.user);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [favLoading, setFavLoading] = useState(false);
 
   const isFavourite = Boolean(
     currentUser?.favouriteCoaches &&
-      effectiveCoachId &&
-      currentUser.favouriteCoaches.includes(effectiveCoachId as string),
+    effectiveCoachId &&
+    currentUser.favouriteCoaches.includes(effectiveCoachId as string),
   );
 
   const toggleFavourite = async () => {
@@ -133,7 +133,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
-  
+
   const [reviewComment, setReviewComment] = useState<string>("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [coachReviews, setCoachReviews] = useState<any[]>([]);
@@ -148,7 +148,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const currentCoachRef = useRef(currentCoach);
-  
+
   // Keep ref in sync with currentCoach
   useEffect(() => {
     currentCoachRef.current = currentCoach;
@@ -434,176 +434,176 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     <>
       <NavbarDarkComponent />
       <PageWrapper className="bg-background">
-      {/* Hero Background Section */}
-      <div className="relative bg-[#1a2332] overflow-hidden h-[400px]">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img
-            src="/badminton-player-action-shot-dark.jpg"
-            alt="Background"
-            className="w-full h-full object-cover opacity-40"
-          />
-          {/* Overlay solid thay vì gradient để giảm rối mắt */}
-          <div className="absolute inset-0 bg-[#0b1020]/80" />
+        {/* Hero Background Section */}
+        <div className="relative bg-[#1a2332] overflow-hidden h-[400px]">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img
+              src="/badminton-player-action-shot-dark.jpg"
+              alt="Background"
+              className="w-full h-full object-cover opacity-40"
+            />
+            {/* Overlay solid thay vì gradient để giảm rối mắt */}
+            <div className="absolute inset-0 bg-[#0b1020]/80" />
+          </div>
         </div>
-      </div>
 
         {/* Main Content */}
         <div className="container mx-auto px-4 lg:px-8 -mt-48 relative z-20 pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {/* Left Column - Coach Info Card and Content Sections */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Coach Information Card */}
-            <CoachInfoCard
-              coachData={coachData}
-              coachReviews={coachReviews}
-              isFavourite={isFavourite}
-              favLoading={favLoading}
-              onToggleFavourite={toggleFavourite}
-            />
-
-            {/* Navigation Tabs */}
-            <CoachTabs
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabClick={scrollToSection}
-            />
-
-            {/* Content Sections */}
-            <div className="space-y-6">
-              <BioSection coachData={coachData} />
-              
-              <LessonsSection
-                lessonTypes={lessonTypes}
-                onLessonClick={setSelectedLesson}
-              />
-              
-              <CoachingSection />
-              
-              <GallerySection
-                images={galleryImages}
-                currentIndex={currentGalleryIndex}
-                onNext={nextGallerySlide}
-                onPrev={prevGallerySlide}
-              />
-
-              <ReviewsSection
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            {/* Left Column - Coach Info Card and Content Sections */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Coach Information Card */}
+              <CoachInfoCard
                 coachData={coachData}
                 coachReviews={coachReviews}
-                filteredReviews={filteredReviews}
-                reviewsLoading={reviewsLoading}
-                reviewsPage={reviewsPage}
-                reviewsTotalPages={reviewsTotalPages}
-                selectedRatingFilter={selectedRatingFilter}
-                onFilterChange={setSelectedRatingFilter}
-                onLoadMore={async () => {
-                  if (reviewsLoading) return;
-                  if (reviewsPage >= reviewsTotalPages) return;
-                  await fetchReviews(reviewsPage + 1, true);
-                }}
-                onWriteReview={() => setShowReviewModal(true)}
+                isFavourite={isFavourite}
+                favLoading={favLoading}
+                onToggleFavourite={toggleFavourite}
               />
 
-              <LocationSection
-                coachData={coachData}
-                currentCoach={currentCoach}
-                mapContainerRef={mapContainerRef}
-                mapRef={mapRef}
-                markerRef={markerRef}
+              {/* Navigation Tabs */}
+              <CoachTabs
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabClick={scrollToSection}
               />
+
+              {/* Content Sections */}
+              <div className="space-y-6">
+                <BioSection coachData={coachData} />
+
+                <LessonsSection
+                  lessonTypes={lessonTypes}
+                  onLessonClick={setSelectedLesson}
+                />
+
+                <CoachingSection />
+
+                <GallerySection
+                  images={galleryImages}
+                  currentIndex={currentGalleryIndex}
+                  onNext={nextGallerySlide}
+                  onPrev={prevGallerySlide}
+                />
+
+                <ReviewsSection
+                  coachData={coachData}
+                  coachReviews={coachReviews}
+                  filteredReviews={filteredReviews}
+                  reviewsLoading={reviewsLoading}
+                  reviewsPage={reviewsPage}
+                  reviewsTotalPages={reviewsTotalPages}
+                  selectedRatingFilter={selectedRatingFilter}
+                  onFilterChange={setSelectedRatingFilter}
+                  onLoadMore={async () => {
+                    if (reviewsLoading) return;
+                    if (reviewsPage >= reviewsTotalPages) return;
+                    await fetchReviews(reviewsPage + 1, true);
+                  }}
+                  onWriteReview={() => setShowReviewModal(true)}
+                />
+
+                <LocationSection
+                  coachData={coachData}
+                  currentCoach={currentCoach}
+                  mapContainerRef={mapContainerRef}
+                  mapRef={mapRef}
+                  markerRef={markerRef}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Right Column - Booking and Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6 animate-slide-in-right">
-              <BookingCard
-                coachData={coachData}
-                onBookNow={handleBookNow}
-              />
-              
-              <RequestFormCard
-                showForm={showRequestForm}
-                onToggleForm={() => setShowRequestForm(!showRequestForm)}
-              />
+            {/* Right Column - Booking and Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-8 space-y-6 animate-slide-in-right">
+                <BookingCard
+                  coachData={coachData}
+                  onBookNow={handleBookNow}
+                />
+
+                <RequestFormCard
+                  showForm={showRequestForm}
+                  onToggleForm={() => setShowRequestForm(!showRequestForm)}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <SimilarCoachesSection coaches={similarCoaches} />
+        <SimilarCoachesSection coaches={similarCoaches} />
 
-      {/* Modals */}
-      <LessonDetailModal
-        lesson={selectedLesson}
-        onClose={() => setSelectedLesson(null)}
-      />
+        {/* Modals */}
+        <LessonDetailModal
+          lesson={selectedLesson}
+          onClose={() => setSelectedLesson(null)}
+        />
 
-      <ReviewModal
-        open={showReviewModal}
-        onOpenChange={setShowReviewModal}
-        coachName={coachData?.name || "HLV này"}
-        reviewRating={reviewRating}
-        hoveredRating={hoveredRating}
-        reviewComment={reviewComment}
-        isSubmitting={isSubmittingReview}
-        onRatingChange={setReviewRating}
-        onHoveredRatingChange={setHoveredRating}
-        onCommentChange={setReviewComment}
-        onSubmit={async (e) => {
-          e.preventDefault();
-          // Simple client-side validation
-          if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
-            return CustomFailedToast("Vui lòng chọn điểm đánh giá từ 1 đến 5");
-          }
-          if (!reviewComment || reviewComment.trim().length < 10) {
-            return CustomFailedToast("Vui lòng nhập bình luận (tối thiểu 10 ký tự)");
-          }
-
-          setIsSubmittingReview(true);
-          try {
-            const payload = {
-              type: "coach" as const,
-              rating: reviewRating,
-              comment: reviewComment.trim(),
-              coachId: effectiveCoachId ?? "",
-              bookingId: "",
-            };
-
-            const action: any = await dispatch(
-              createCoachReviewThunk(payload as any)
-            );
-
-            if (action?.meta?.requestStatus === "fulfilled") {
-              // reset and close
-              setShowReviewModal(false);
-              setReviewRating(0);
-              setHoveredRating(0);
-              setReviewComment("");
-              
-              CustomSuccessToast("Cảm ơn bạn — đánh giá đã được gửi.");
-              // Refresh reviews immediately after successful submission
-              try {
-                await fetchReviews();
-              } catch (err) {
-                console.error('Failed to refresh reviews after submit', err);
-              }
-            } else {
-              const message = action?.payload || "Gửi đánh giá thất bại";
-              CustomFailedToast(String(message));
+        <ReviewModal
+          open={showReviewModal}
+          onOpenChange={setShowReviewModal}
+          coachName={coachData?.name || "HLV này"}
+          reviewRating={reviewRating}
+          hoveredRating={hoveredRating}
+          reviewComment={reviewComment}
+          isSubmitting={isSubmittingReview}
+          onRatingChange={setReviewRating}
+          onHoveredRatingChange={setHoveredRating}
+          onCommentChange={setReviewComment}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            // Simple client-side validation
+            if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+              return CustomFailedToast("Vui lòng chọn điểm đánh giá từ 1 đến 5");
             }
-          } catch (err: any) {
-            CustomFailedToast(err?.message || "Gửi đánh giá thất bại");
-          } finally {
-            setIsSubmittingReview(false);
-          }
-        }}
-        onCancel={() => {
-          setShowReviewModal(false);
-          setReviewRating(0);
-          setHoveredRating(0);
-        }}
-      />
+            if (!reviewComment || reviewComment.trim().length < 10) {
+              return CustomFailedToast("Vui lòng nhập bình luận (tối thiểu 10 ký tự)");
+            }
+
+            setIsSubmittingReview(true);
+            try {
+              const payload = {
+                type: "coach" as const,
+                rating: reviewRating,
+                comment: reviewComment.trim(),
+                coachId: effectiveCoachId ?? "",
+                bookingId: "",
+              };
+
+              const action: any = await dispatch(
+                createCoachReviewThunk(payload as any)
+              );
+
+              if (action?.meta?.requestStatus === "fulfilled") {
+                // reset and close
+                setShowReviewModal(false);
+                setReviewRating(0);
+                setHoveredRating(0);
+                setReviewComment("");
+
+                CustomSuccessToast("Cảm ơn bạn — đánh giá đã được gửi.");
+                // Refresh reviews immediately after successful submission
+                try {
+                  await fetchReviews();
+                } catch (err) {
+                  console.error('Failed to refresh reviews after submit', err);
+                }
+              } else {
+                const message = action?.payload || "Gửi đánh giá thất bại";
+                CustomFailedToast(String(message));
+              }
+            } catch (err: any) {
+              CustomFailedToast(err?.message || "Gửi đánh giá thất bại");
+            } finally {
+              setIsSubmittingReview(false);
+            }
+          }}
+          onCancel={() => {
+            setShowReviewModal(false);
+            setReviewRating(0);
+            setHoveredRating(0);
+          }}
+        />
       </PageWrapper>
     </>
   );
