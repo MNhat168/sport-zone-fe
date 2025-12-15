@@ -1,3 +1,4 @@
-// Export all user-related features
 export * from './userThunk';
 export * from './userAPI';
+export { default as userReducer } from './userSlice';
+export * from './userSlice';

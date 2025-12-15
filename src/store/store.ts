@@ -12,6 +12,7 @@ import { registrationReducer } from "../features/field-owner-registration";
 import { bankAccountReducer } from "../features/bank-account";
 import chatReducer from "@/features/chat/chatSlice";
 import { reviewReducer } from "@/features/reviews";
+import { userReducer } from "../features/user";
 
 export const store = configureStore({
     reducer: {
@@ -28,6 +29,7 @@ export const store = configureStore({
         bankAccount: bankAccountReducer,
         chat: chatReducer,
         reviews: reviewReducer,
+        user: userReducer,
     },
 });
 
