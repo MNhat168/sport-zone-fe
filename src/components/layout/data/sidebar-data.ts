@@ -25,6 +25,7 @@ import {
   FileCheck,
   Flag,
   Calendar,
+  CreditCard,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -95,6 +96,11 @@ export const sidebarData: SidebarData = {
           title: 'Reports',
           url: '/reports',
           icon: Flag,
+        },
+        {
+          title: 'Billing',
+          url: '/billing',
+          icon: CreditCard,
         },
         {
           title: 'Field Owners',
