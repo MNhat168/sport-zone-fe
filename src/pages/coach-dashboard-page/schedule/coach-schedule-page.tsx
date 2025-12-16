@@ -12,18 +12,13 @@ import {
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Booking } from "@/types/booking-type"
-import { CoachDashboardTabs } from "@/components/tabs/coach-dashboard-tabs"
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
-import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
-import { PageWrapper } from '@/components/layouts/page-wrapper'
+import { CoachDashboardLayout } from '@/components/layouts/coach-dashboard-layout'
 
 export default function CoachSchedulePage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [_userId, setUserId] = useState<string | null>(null)
-  const [_coachId, setCoachId] = useState<string | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
 
   const hourHeight = 45
@@ -39,12 +34,9 @@ export default function CoachSchedulePage() {
         const id = user._id || user.id
         if (!id) return
 
-        setUserId(id)
-
         // ✅ fetch coach profile by user ID
         const response = await axiosPublic.get(`/profiles/coach-id/${id}`)
         const coachId = response.data?.data?.coachId
-        setCoachId(coachId)
 
         // ✅ fetch accepted bookings for that coach
         if (coachId) {
@@ -79,13 +71,8 @@ export default function CoachSchedulePage() {
   }
 
   return (
-    <>
-      <NavbarDarkComponent />
-      <PageWrapper>
-        <CoachDashboardHeader />
-        <CoachDashboardTabs />
-
-        <main className="max-w-[1320px] mx-auto px-6 py-10">
+    <CoachDashboardLayout>
+      <main className="max-w-[1600px] mx-auto px-6 py-10">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div className="flex items-center gap-3">
@@ -119,7 +106,7 @@ export default function CoachSchedulePage() {
 
           {/* Schedule Table */}
           <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full min-w-[1400px] border-collapse text-sm">
               <thead>
                 <tr>
                   <th className="border p-2 bg-gray-100 w-20 text-center">Time</th>
@@ -209,7 +196,6 @@ export default function CoachSchedulePage() {
             </div>
           </div>
         )}
-      </PageWrapper>
-    </>
+    </CoachDashboardLayout>
   )
 }

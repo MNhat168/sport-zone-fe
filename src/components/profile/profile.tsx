@@ -24,13 +24,14 @@ export default function Profile() {
     const [avatarPreview, setAvatarPreview] = useState<string>("")
     const [isEditMode, setIsEditMode] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [hasFetchedProfile, setHasFetchedProfile] = useState(false)
 
-    // Fetch profile on component mount
+    // Fetch profile at most once when component is mounted and user is authenticated
     useEffect(() => {
-        if (authUser?._id) {
-            dispatch(getUserProfile())
-        }
-    }, [authUser?._id, dispatch])
+        if (!authUser || hasFetchedProfile) return
+        dispatch(getUserProfile())
+        setHasFetchedProfile(true)
+    }, [authUser, hasFetchedProfile, dispatch])
 
     // Update form data when user data is loaded
     useEffect(() => {

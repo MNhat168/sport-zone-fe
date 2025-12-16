@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Clock, DollarSign, MoreHorizontal, Building2, Rocket as Racquet, User, Edit, ChevronDown } from "lucide-react"
-import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
 import { useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import type { Booking } from "@/types/booking-type"
@@ -344,7 +343,6 @@ export default function CoachDashboardPage() {
   return (
     <CoachDashboardLayout>
       <div className="min-h-screen">
-        <CoachDashboardHeader />
         {/* <CoachDashboardTabs /> */}
 
         <div className="max-w-[1320px] mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">

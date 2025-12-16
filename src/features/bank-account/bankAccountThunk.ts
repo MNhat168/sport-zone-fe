@@ -7,6 +7,8 @@ import {
     DELETE_BANK_ACCOUNT_API,
     SET_DEFAULT_BANK_ACCOUNT_API,
     GET_VERIFICATION_STATUS_API,
+    getBankAccountBasePath,
+    getBankAccountListPath,
 } from "./bankAccountAPI";
 
 export type CreateBankAccountPayload = {
@@ -82,7 +84,13 @@ export const addBankAccount = createAsyncThunk<
     { rejectValue: ErrorResponse }
 >("bankAccount/add", async (payload, thunkAPI) => {
     try {
-        const response = await axiosPrivate.post(ADD_BANK_ACCOUNT_API, payload);
+        // Get user role from Redux state
+        const state = thunkAPI.getState() as any;
+        const userRole = state?.auth?.user?.role;
+        
+        // Use appropriate API endpoint based on role
+        const apiUrl = getBankAccountBasePath(userRole);
+        const response = await axiosPrivate.post(apiUrl, payload);
         return response.data?.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -103,7 +111,13 @@ export const getMyBankAccounts = createAsyncThunk<
     { rejectValue: ErrorResponse }
 >("bankAccount/getMyAccounts", async (_, thunkAPI) => {
     try {
-        const response = await axiosPrivate.get(GET_MY_BANK_ACCOUNTS_API);
+        // Get user role from Redux state
+        const state = thunkAPI.getState() as any;
+        const userRole = state?.auth?.user?.role;
+        
+        // Use appropriate API endpoint based on role
+        const apiUrl = getBankAccountListPath(userRole);
+        const response = await axiosPrivate.get(apiUrl);
         return response.data?.data || [];
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -125,7 +139,11 @@ export const updateBankAccount = createAsyncThunk<
 >("bankAccount/update", async (payload, thunkAPI) => {
     try {
         const { id, ...updateData } = payload;
-        const response = await axiosPrivate.patch(UPDATE_BANK_ACCOUNT_API(id), updateData);
+        // Get user role from Redux state
+        const state = thunkAPI.getState() as any;
+        const userRole = state?.auth?.user?.role;
+        const basePath = getBankAccountBasePath(userRole);
+        const response = await axiosPrivate.patch(`${basePath}/${id}`, updateData);
         return response.data?.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -146,7 +164,11 @@ export const deleteBankAccount = createAsyncThunk<
     { rejectValue: ErrorResponse }
 >("bankAccount/delete", async (accountId, thunkAPI) => {
     try {
-        await axiosPrivate.delete(DELETE_BANK_ACCOUNT_API(accountId));
+        // Get user role from Redux state
+        const state = thunkAPI.getState() as any;
+        const userRole = state?.auth?.user?.role;
+        const basePath = getBankAccountBasePath(userRole);
+        await axiosPrivate.delete(`${basePath}/${accountId}`);
         return accountId;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -166,7 +188,11 @@ export const setDefaultBankAccount = createAsyncThunk<
     { rejectValue: ErrorResponse }
 >("bankAccount/setDefault", async (accountId, thunkAPI) => {
     try {
-        const response = await axiosPrivate.patch(SET_DEFAULT_BANK_ACCOUNT_API(accountId));
+        // Get user role from Redux state
+        const state = thunkAPI.getState() as any;
+        const userRole = state?.auth?.user?.role;
+        const basePath = getBankAccountBasePath(userRole);
+        const response = await axiosPrivate.patch(`${basePath}/${accountId}/set-default`);
         return response.data?.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -186,7 +212,11 @@ export const getVerificationStatus = createAsyncThunk<
     { rejectValue: ErrorResponse }
 >("bankAccount/getVerificationStatus", async (accountId, thunkAPI) => {
     try {
-        const response = await axiosPrivate.get(GET_VERIFICATION_STATUS_API(accountId));
+        // Get user role from Redux state
+        const state = thunkAPI.getState() as any;
+        const userRole = state?.auth?.user?.role;
+        const basePath = getBankAccountBasePath(userRole);
+        const response = await axiosPrivate.get(`${basePath}/${accountId}/verification-status`);
         return response.data?.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {

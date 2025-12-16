@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
 import {
     Sidebar,
@@ -19,7 +18,8 @@ import {
     User,
     MessageSquare,
     LogOut,
-    CheckSquare
+    CheckSquare,
+    Eye
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -71,9 +71,16 @@ const menuItems: MenuItem[] = [
         icon: MessageSquare,
     },
     {
-        title: "Profile",
+        // Trang cài đặt tài khoản coach (user profile / settings)
+        title: "Account Settings",
         url: "/coach/profile",
         icon: User,
+    },
+    {
+        // Trang hồ sơ coach công khai / self detail page
+        title: "My Profile Page",
+        url: "/coach/profile/details",
+        icon: Eye,
     },
 ]
 
@@ -91,6 +98,10 @@ export function CoachSidebar() {
 
     const isActive = (path: string) => {
         if (path === "/coach/dashboard") {
+            return location.pathname === path
+        }
+        // Phân biệt rõ giữa trang cài đặt tài khoản và trang hồ sơ chi tiết
+        if (path === "/coach/profile" || path === "/coach/profile/details") {
             return location.pathname === path
         }
         return location.pathname.startsWith(path)
