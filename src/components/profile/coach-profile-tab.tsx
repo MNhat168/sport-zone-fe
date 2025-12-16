@@ -11,9 +11,9 @@ import { Trophy, Star } from "lucide-react"
 
 export default function CoachProfileTab() {
     const dispatch = useAppDispatch()
-    const { user } = useAppSelector((state) => state.user)
+    const { user } = useAppSelector((state) => state.auth)
     const authUser = useAppSelector((state) => state.auth.user)
-    
+
     const [formData, setFormData] = useState({
         specialization: "",
         experience: "",
@@ -66,7 +66,7 @@ export default function CoachProfileTab() {
             //     coachId: authUser._id,
             //     ...formData,
             // })).unwrap()
-            
+
             toast.success("Coach profile updated successfully!")
         } catch (error: any) {
             toast.error(error?.message || "Failed to update coach profile")

@@ -73,7 +73,7 @@ const FieldBookingPage = () => {
   const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
   const [showFavoriteSportsModal, setShowFavoriteSportsModal] = useState(false);
   const [modalShownOnce, setModalShownOnce] = useState(false);
-  const user = useAppSelector((state) => state.user.user);
+  const user = useAppSelector((state) => state.auth.user);
   const isLoggedIn = !!user;
 
   // Show modal if user is logged in and has no favouriteSports
@@ -107,7 +107,7 @@ const FieldBookingPage = () => {
       const coordinates = await getCoordinates();
       if (coordinates?.lat && coordinates?.lng) {
         setUserLocation(coordinates as { lat: number; lng: number });
-        
+
         // Zoom map to user location with zoom level 14
         if (mapRef.current) {
           isUserZoomingRef.current = true;
@@ -115,7 +115,7 @@ const FieldBookingPage = () => {
           setCurrentZoom(14);
           mapRef.current.setView([coordinates.lat, coordinates.lng], 14, { animate: true });
         }
-        
+
         // Get current filters
         const currentSportType =
           sportFilter !== "all" ? sportFilter : undefined;
@@ -198,11 +198,11 @@ const FieldBookingPage = () => {
       setIsFilteringByFavorites(true);
       setFilters(
         (prev) =>
-          ({
-            ...prev,
-            sportTypes: favouriteSports,
-            page: 1,
-          } as any)
+        ({
+          ...prev,
+          sportTypes: favouriteSports,
+          page: 1,
+        } as any)
       );
     }
   }, [
@@ -235,11 +235,11 @@ const FieldBookingPage = () => {
         setSportFilter("all");
         setFilters(
           (prev) =>
-            ({
-              ...prev,
-              sportTypes: favouriteSports,
-              page: 1,
-            } as any)
+          ({
+            ...prev,
+            sportTypes: favouriteSports,
+            page: 1,
+          } as any)
         );
       }
     }
@@ -566,12 +566,12 @@ const FieldBookingPage = () => {
     const imageUrl = !hasValidImages
       ? "/general-img-portrait.png"
       : (field as any).imageUrl ||
-        fieldImages[0] ||
-        "/general-img-portrait.png";
+      fieldImages[0] ||
+      "/general-img-portrait.png";
 
     // Ensure operatingHours is properly extracted
-    const operatingHours = Array.isArray((field as any).operatingHours) 
-      ? (field as any).operatingHours 
+    const operatingHours = Array.isArray((field as any).operatingHours)
+      ? (field as any).operatingHours
       : [];
 
     return {
@@ -650,11 +650,11 @@ const FieldBookingPage = () => {
     // Filter by amenities (if field has amenities data)
     if (selectedAmenities.length > 0) {
       const fieldAmenities = (f as any).amenities || [];
-      const fieldAmenityNames = fieldAmenities.map((a: any) => 
+      const fieldAmenityNames = fieldAmenities.map((a: any) =>
         typeof a === 'string' ? a : a.name || a.amenity?.name || ''
       );
-      const hasAllSelected = selectedAmenities.every(selected => 
-        fieldAmenityNames.some((name: string) => 
+      const hasAllSelected = selectedAmenities.every(selected =>
+        fieldAmenityNames.some((name: string) =>
           name.toLowerCase().includes(selected.toLowerCase())
         )
       );
@@ -766,7 +766,7 @@ const FieldBookingPage = () => {
       if (!mapRef.current) return;
       const currentZoom = mapRef.current.getZoom();
       if (currentZoom === undefined) return;
-      
+
       markersRef.current.forEach((marker) => {
         // Find fieldId by matching marker
         let fieldId: string | undefined;
@@ -776,7 +776,7 @@ const FieldBookingPage = () => {
             break;
           }
         }
-        
+
         if (fieldId) {
           const fieldData = fieldDataMap.get(fieldId);
           if (fieldData) {
@@ -797,7 +797,7 @@ const FieldBookingPage = () => {
     (mapRef.current as any)._labelZoomListener = updateMarkerLabels;
     mapRef.current.on('zoom', updateMarkerLabels);
     mapRef.current.on('zoomend', updateMarkerLabels);
-    
+
     // Update zoom states when map zoom changes
     const updateZoomState = () => {
       if (mapRef.current) {
@@ -831,7 +831,7 @@ const FieldBookingPage = () => {
         const marker = L.marker([f.latitude, f.longitude], {
           icon: getFieldPinIconWithLabel(f.name, f.sportType, L, currentZoom),
         }).addTo(mapRef.current);
-        
+
         // Thay vì bind popup, thêm click handler để scroll đến field card
         marker.on('click', () => {
           const fieldCardElement = fieldCardRefsRef.current.get(f.id);
@@ -840,20 +840,20 @@ const FieldBookingPage = () => {
             setHighlightedFieldId(f.id);
             // Remove highlight after 2 seconds
             setTimeout(() => setHighlightedFieldId(null), 2000);
-            
+
             // Scroll to field card
             const containerRect = fieldsListRef.current.getBoundingClientRect();
             const cardRect = fieldCardElement.getBoundingClientRect();
             const scrollTop = fieldsListRef.current.scrollTop;
             const targetScrollTop = scrollTop + cardRect.top - containerRect.top - 20; // 20px offset from top
-            
+
             fieldsListRef.current.scrollTo({
               top: targetScrollTop,
               behavior: 'smooth'
             });
           }
         });
-        
+
         markersRef.current.push(marker);
         markersMapRef.current.set(f.id, marker);
         bounds.extend([f.latitude, f.longitude]);
@@ -865,10 +865,10 @@ const FieldBookingPage = () => {
     const markersWithCoords = filteredTransformedFields.filter(
       (f) => f.latitude != null && f.longitude != null
     );
-    
+
     // Create a unique key for the current set of markers to prevent repeated fitBounds calls
     const markersKey = markersWithCoords.map(f => f.id).sort().join(',');
-    
+
     if (bounds.isValid() && markersWithCoords.length > 0 && markersWithCoords.length <= 5) {
       // Có ít markers, fitBounds để hiển thị tất cả
       // Chỉ fitBounds nếu:
@@ -877,7 +877,7 @@ const FieldBookingPage = () => {
       if (!isUserZoomingRef.current && markersKey !== lastFitBoundsMarkersRef.current) {
         // Mark that we've called fitBounds for these markers
         lastFitBoundsMarkersRef.current = markersKey;
-        
+
         // Use fitBounds with maxZoom to prevent zooming out too much
         mapRef.current.fitBounds(bounds.pad(0.2), {
           maxZoom: 15, // Prevent zooming out beyond level 15
@@ -888,7 +888,7 @@ const FieldBookingPage = () => {
       if (markersWithCoords.length > 5 || markersWithCoords.length === 0) {
         lastFitBoundsMarkersRef.current = "";
       }
-      
+
       // Không có markers hoặc quá nhiều markers
       // KHÔNG reset zoom về 12 nữa - giữ zoom hiện tại của user
       // Chỉ set view nếu map chưa có center (lần đầu tiên) và user không đang zoom
@@ -939,10 +939,10 @@ const FieldBookingPage = () => {
       />
       <NavbarDarkComponent />
       <PageWrapper>
-         <div className="flex flex-row">
-           <div className="flex-4">
-             <div className="items-start">
-               <div className="bg-background-secondary flex flex-col h-screen p-4">
+        <div className="flex flex-row">
+          <div className="flex-4">
+            <div className="items-start">
+              <div className="bg-background-secondary flex flex-col h-screen p-4">
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 flex items-center gap-3 flex-wrap">
@@ -959,11 +959,10 @@ const FieldBookingPage = () => {
                         <button
                           onClick={handleGetLocation}
                           disabled={geolocationLoading || isLoadingNearby}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed text-sm ${
-                            isNearbyMode
+                          className={`flex items-center gap-2 px-3 py-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed text-sm ${isNearbyMode
                               ? "bg-blue-600 text-white hover:bg-blue-700"
                               : "bg-green-600 text-white hover:bg-green-700"
-                          }`}
+                            }`}
                         >
                           {geolocationLoading || isLoadingNearby ? (
                             <>
@@ -990,9 +989,8 @@ const FieldBookingPage = () => {
                           className="flex items-center gap-2"
                         >
                           <Heart
-                            className={`w-4 h-4 ${
-                              isFilteringByFavorites ? "fill-current" : ""
-                            }`}
+                            className={`w-4 h-4 ${isFilteringByFavorites ? "fill-current" : ""
+                              }`}
                           />
                           {isFilteringByFavorites
                             ? "Đang hiển thị sân yêu thích"
@@ -1255,11 +1253,10 @@ const FieldBookingPage = () => {
                                 fieldCardRefsRef.current.delete(field.id);
                               }
                             }}
-                            className={`scroll-snap-start transition-all duration-300 ${
-                              highlightedFieldId === field.id
+                            className={`scroll-snap-start transition-all duration-300 ${highlightedFieldId === field.id
                                 ? 'ring-4 ring-green-500 ring-offset-2 rounded-lg'
                                 : ''
-                            }`}
+                              }`}
                           >
                             <FieldCard
                               id={field.id}
@@ -1323,81 +1320,81 @@ const FieldBookingPage = () => {
                 </div>
               </div>
             </div>
-           </div>
-           <div className="flex-6 relative">
-             <div id={mapContainerId} className="map-container w-full h-screen" />
-             <div className="absolute top-24 right-4 z-1000 flex flex-col items-center gap-2">
-                    {/* Zoom In Button - Circular */}
-                    <button
-                      onClick={() => {
-                        if (mapRef.current) {
-                          isUserZoomingRef.current = true;
-                          const newZoom = Math.min(currentZoom + 1, 18);
-                          
-                          // Lưu giá trị zoom mới vào ref trước khi gọi setZoom
-                          pendingZoomRef.current = newZoom;
-                          setCurrentZoom(newZoom); // Update UI ngay lập tức
-                          
-                          // Gọi setZoom với animation
-                          mapRef.current.setZoom(newZoom, { animate: true });
-                        }
-                      }}
-                      disabled={currentZoom >= 18}
-                      className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-                      title="Phóng to"
-                    >
-                      <Plus className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
-                    </button>
+          </div>
+          <div className="flex-6 relative">
+            <div id={mapContainerId} className="map-container w-full h-screen" />
+            <div className="absolute top-24 right-4 z-1000 flex flex-col items-center gap-2">
+              {/* Zoom In Button - Circular */}
+              <button
+                onClick={() => {
+                  if (mapRef.current) {
+                    isUserZoomingRef.current = true;
+                    const newZoom = Math.min(currentZoom + 1, 18);
 
-                    {/* Zoom Level Display Bar - Rounded Rectangle */}
-                    <div className="relative w-10 h-32 bg-white rounded-full shadow-lg border border-gray-300 overflow-hidden">
-                      {/* Background track */}
-                      <div className="absolute inset-0 flex items-end justify-center p-1">
-                        <div className="w-1 h-full bg-gray-200 rounded-full" />
-                      </div>
-                      
-                      {/* Active fill based on current zoom */}
-                      <div 
-                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 bg-green-600 rounded-full transition-all duration-300"
-                        style={{ 
-                          height: `calc(${((currentZoom - 8) / (18 - 8)) * 100}% - 8px)`, 
-                          margin: '4px 0' 
-                        }}
-                      />
-                      
-                      {/* Zoom level number indicator */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <span className="text-[10px] font-bold text-gray-700 bg-white/90 px-1.5 py-0.5 rounded shadow-sm">
-                          {currentZoom.toFixed(0)}
-                        </span>
-                      </div>
-                    </div>
+                    // Lưu giá trị zoom mới vào ref trước khi gọi setZoom
+                    pendingZoomRef.current = newZoom;
+                    setCurrentZoom(newZoom); // Update UI ngay lập tức
 
-                    {/* Zoom Out Button - Circular */}
-                    <button
-                      onClick={() => {
-                        if (mapRef.current) {
-                          isUserZoomingRef.current = true;
-                          const newZoom = Math.max(currentZoom - 1, 8);
-                          
-                          // Lưu giá trị zoom mới vào ref trước khi gọi setZoom
-                          pendingZoomRef.current = newZoom;
-                          setCurrentZoom(newZoom); // Update UI ngay lập tức
-                          
-                          // Gọi setZoom với animation
-                          mapRef.current.setZoom(newZoom, { animate: true });
-                        }
-                      }}
-                      disabled={currentZoom <= 8}
-                      className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-                      title="Thu nhỏ"
-                    >
-                      <Minus className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
-                    </button>
-                  </div>
-             
-             
-           </div>
+                    // Gọi setZoom với animation
+                    mapRef.current.setZoom(newZoom, { animate: true });
+                  }
+                }}
+                disabled={currentZoom >= 18}
+                className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+                title="Phóng to"
+              >
+                <Plus className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
+              </button>
+
+              {/* Zoom Level Display Bar - Rounded Rectangle */}
+              <div className="relative w-10 h-32 bg-white rounded-full shadow-lg border border-gray-300 overflow-hidden">
+                {/* Background track */}
+                <div className="absolute inset-0 flex items-end justify-center p-1">
+                  <div className="w-1 h-full bg-gray-200 rounded-full" />
+                </div>
+
+                {/* Active fill based on current zoom */}
+                <div
+                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 bg-green-600 rounded-full transition-all duration-300"
+                  style={{
+                    height: `calc(${((currentZoom - 8) / (18 - 8)) * 100}% - 8px)`,
+                    margin: '4px 0'
+                  }}
+                />
+
+                {/* Zoom level number indicator */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="text-[10px] font-bold text-gray-700 bg-white/90 px-1.5 py-0.5 rounded shadow-sm">
+                    {currentZoom.toFixed(0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Zoom Out Button - Circular */}
+              <button
+                onClick={() => {
+                  if (mapRef.current) {
+                    isUserZoomingRef.current = true;
+                    const newZoom = Math.max(currentZoom - 1, 8);
+
+                    // Lưu giá trị zoom mới vào ref trước khi gọi setZoom
+                    pendingZoomRef.current = newZoom;
+                    setCurrentZoom(newZoom); // Update UI ngay lập tức
+
+                    // Gọi setZoom với animation
+                    mapRef.current.setZoom(newZoom, { animate: true });
+                  }
+                }}
+                disabled={currentZoom <= 8}
+                className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+                title="Thu nhỏ"
+              >
+                <Minus className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
+              </button>
+            </div>
+
+
+          </div>
         </div>
       </PageWrapper>
       <FooterComponent />

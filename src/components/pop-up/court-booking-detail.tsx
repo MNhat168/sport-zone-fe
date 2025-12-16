@@ -21,6 +21,7 @@ interface BookingData {
     transactionId?: string;
     paymentType?: string;
     note?: string;
+    paymentProofImageUrl?: string;
 }
 
 interface CourtBookingDetailsProps {
@@ -44,7 +45,8 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
         paidOn = '—',
         transactionId = '—',
         paymentType = '—',
-        note = ''
+        note = '',
+        paymentProofImageUrl
     } = bookingData || {};
 
     return (
@@ -255,6 +257,26 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                     </div>
                                 </div>
                             </div>
+                            
+                            {/* Payment Proof Image */}
+                            {paymentProofImageUrl && (
+                                <div className="px-4 pt-3.5 pb-4 border border-[#EDEDED] mt-3.5">
+                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit'] mb-3">
+                                        Ảnh Chứng Minh Thanh Toán
+                                    </h4>
+                                    <div className="relative w-full max-w-md border-2 border-gray-200 rounded-lg overflow-hidden">
+                                        <img
+                                            src={paymentProofImageUrl}
+                                            alt="Payment proof"
+                                            className="w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                                            onClick={() => window.open(paymentProofImageUrl, '_blank')}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-[#6B7280] mt-2 font-['Outfit']">
+                                        Nhấp vào ảnh để xem kích thước đầy đủ
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

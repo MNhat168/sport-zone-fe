@@ -5,21 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Clock, DollarSign, MoreHorizontal, Building2, Rocket as Racquet, User, Edit, ChevronDown } from "lucide-react"
-import { CoachDashboardTabs } from "@/components/tabs/coach-dashboard-tabs"
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
-import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
 import { useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import type  { Booking } from "@/types/booking-type"
+import type { Booking } from "@/types/booking-type"
 import axiosPublic from "@/utils/axios/axiosPublic";
-import { PageWrapper } from '@/components/layouts/page-wrapper'
+import { CoachDashboardLayout } from '@/components/layouts/coach-dashboard-layout'
 import { getCoachById, clearCurrentCoach } from "@/features/coach"
 import type { RootState, AppDispatch } from "@/store/store"
 
 export default function CoachDashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { currentCoach, detailLoading, detailError } = useSelector((state: RootState) => state.coach);
-  
+
   const [selectedTab, setSelectedTab] = useState<"court" | "coaching">("court")
   const [coachId, setCoachId] = useState<string | null>(null);
   const [bookingRequests, setBookingRequests] = useState<Booking[]>([]);
@@ -27,148 +24,148 @@ export default function CoachDashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 3;
 
-useEffect(() => {
-  const loadCoachData = async () => {
-    const storedUser = sessionStorage.getItem("user");
-    if (!storedUser) {
-      console.warn("[useEffect] No user found in sessionStorage");
-      return;
-    }
-
-    let user;
-    try {
-      user = JSON.parse(storedUser);
-    } catch (error) {
-      console.error("[useEffect] Error parsing user from sessionStorage:", error);
-      return;
-    }
-
-    const userId = user?._id;
-    if (!userId) {
-      console.warn("[useEffect] user._id not found");
-      return;
-    }
-
-    console.log("[useEffect] Loading coach data for userId:", userId);
-
-    try {
-      const response = await axiosPublic.get(`/profiles/coach-id/${userId}`);
-      const coachId = response.data?.data?.coachId;
-      console.log("[loadCoachData] Fetched coachId:", coachId);
-      setCoachId(coachId);
-
-      if (coachId) {
-        // Fetch coach details via Redux
-        dispatch(getCoachById(coachId));
-
-        // Fetch related bookings
-        const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`);
-        console.log("[loadCoachData] Fetched bookings:", bookingRes.data);
-        setBookingRequests(bookingRes.data.data);
+  useEffect(() => {
+    const loadCoachData = async () => {
+      const storedUser = sessionStorage.getItem("user");
+      if (!storedUser) {
+        console.warn("[useEffect] No user found in sessionStorage");
+        return;
       }
-    } catch (err) {
-      console.error("[loadCoachData] Error fetching coachId or bookings:", err);
-    }
+
+      let user;
+      try {
+        user = JSON.parse(storedUser);
+      } catch (error) {
+        console.error("[useEffect] Error parsing user from sessionStorage:", error);
+        return;
+      }
+
+      const userId = user?._id;
+      if (!userId) {
+        console.warn("[useEffect] user._id not found");
+        return;
+      }
+
+      console.log("[useEffect] Loading coach data for userId:", userId);
+
+      try {
+        const response = await axiosPublic.get(`/profiles/coach-id/${userId}`);
+        const coachId = response.data?.data?.coachId;
+        console.log("[loadCoachData] Fetched coachId:", coachId);
+        setCoachId(coachId);
+
+        if (coachId) {
+          // Fetch coach details via Redux
+          dispatch(getCoachById(coachId));
+
+          // Fetch related bookings
+          const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`);
+          console.log("[loadCoachData] Fetched bookings:", bookingRes.data);
+          setBookingRequests(bookingRes.data.data);
+        }
+      } catch (err) {
+        console.error("[loadCoachData] Error fetching coachId or bookings:", err);
+      }
+    };
+
+    loadCoachData();
+  }, [dispatch]);
+
+
+  // Cleanup coach data when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearCurrentCoach());
+    };
+  }, [dispatch]);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to midnight
+
+  const isToday = (dateStr: string | undefined) => {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return date.getTime() === today.getTime();
   };
 
-  loadCoachData();
-}, [dispatch]);
-
-
-// Cleanup coach data when component unmounts
-useEffect(() => {
-  return () => {
-    dispatch(clearCurrentCoach());
+  const isFuture = (dateStr: string | undefined) => {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return date.getTime() > today.getTime();
   };
-}, [dispatch]);
 
-const today = new Date();
-today.setHours(0, 0, 0, 0); // Reset time to midnight
+  const filteredBookings = bookingRequests.filter(
+    (c) => c.coachStatus === "pending" || c.coachStatus === "declined"
+  );
 
-const isToday = (dateStr: string | undefined) => {
-  if (!dateStr) return false;
-  const date = new Date(dateStr);
-  date.setHours(0, 0, 0, 0);
-  return date.getTime() === today.getTime();
-};
+  const totalPages = Math.ceil(filteredBookings.length / ITEMS_PER_PAGE);
 
-const isFuture = (dateStr: string | undefined) => {
-  if (!dateStr) return false;
-  const date = new Date(dateStr);
-  date.setHours(0, 0, 0, 0);
-  return date.getTime() > today.getTime();
-};
-
-const filteredBookings = bookingRequests.filter(
-  (c) => c.coachStatus === "pending" || c.coachStatus === "declined"
-);
-
-const totalPages = Math.ceil(filteredBookings.length / ITEMS_PER_PAGE);
-
-const paginatedBookings = filteredBookings.slice(
-  (currentPage - 1) * ITEMS_PER_PAGE,
-  currentPage * ITEMS_PER_PAGE
-);
+  const paginatedBookings = filteredBookings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
 
   // --- Handle More Dropdown ---
-// const handleMoreClick = (itemId: string) => {
-//     setOpenDropdown(openDropdown === itemId ? null : itemId);
-// };
+  // const handleMoreClick = (itemId: string) => {
+  //     setOpenDropdown(openDropdown === itemId ? null : itemId);
+  // };
 
   // --- Accept / Decline Handlers ---
-const normalizeId = (id: any): string => {
-  if (!id) return "";
-  if (typeof id === "string") return id;
-  if (id._bsontype === "ObjectID" && id.id) {
-    return Buffer.from(id.id).toString("hex");
-  }
-  if (id.buffer) {
-    return Object.values(id.buffer)
-      .map((b) => Number(b).toString(16).padStart(2, "0"))
-      .join("");
-  }
-  return "";
-};
+  const normalizeId = (id: any): string => {
+    if (!id) return "";
+    if (typeof id === "string") return id;
+    if (id._bsontype === "ObjectID" && id.id) {
+      return Buffer.from(id.id).toString("hex");
+    }
+    if (id.buffer) {
+      return Object.values(id.buffer)
+        .map((b) => Number(b).toString(16).padStart(2, "0"))
+        .join("");
+    }
+    return "";
+  };
 
-const handleAccept = async (bookingId: any) => {
-  if (!coachId) return;
-  try {
-    const normalizedId = normalizeId(bookingId);
-    await axiosPublic.patch(`/bookings/accept`, {
-      coachId,
-      bookingId: normalizedId,
-    });
+  const handleAccept = async (bookingId: any) => {
+    if (!coachId) return;
+    try {
+      const normalizedId = normalizeId(bookingId);
+      await axiosPublic.patch(`/bookings/accept`, {
+        coachId,
+        bookingId: normalizedId,
+      });
 
-    setBookingRequests((prev) =>
-      prev.map((b) =>
-        normalizeId(b._id) === normalizedId ? { ...b, coachStatus: "accepted" } : b
-      )
-    );
-  } catch (error) {
-    console.error("[handleAccept]", error);
-  }
-};
+      setBookingRequests((prev) =>
+        prev.map((b) =>
+          normalizeId(b._id) === normalizedId ? { ...b, coachStatus: "accepted" } : b
+        )
+      );
+    } catch (error) {
+      console.error("[handleAccept]", error);
+    }
+  };
 
-const handleDecline = async (bookingId: any, reason?: string) => {
-  if (!coachId) return;
-  try {
-    const normalizedId = normalizeId(bookingId);
-    await axiosPublic.patch(`/bookings/decline`, {
-      coachId,
-      bookingId: normalizedId,
-      reason: reason || "No reason provided",
-    });
+  const handleDecline = async (bookingId: any, reason?: string) => {
+    if (!coachId) return;
+    try {
+      const normalizedId = normalizeId(bookingId);
+      await axiosPublic.patch(`/bookings/decline`, {
+        coachId,
+        bookingId: normalizedId,
+        reason: reason || "No reason provided",
+      });
 
-    setBookingRequests((prev) =>
-      prev.map((b) =>
-        normalizeId(b._id) === normalizedId ? { ...b, coachStatus: "declined" } : b
-      )
-    );
-  } catch (error) {
-    console.error("[handleDecline]", error);
-  }
-};
+      setBookingRequests((prev) =>
+        prev.map((b) =>
+          normalizeId(b._id) === normalizedId ? { ...b, coachStatus: "declined" } : b
+        )
+      );
+    } catch (error) {
+      console.error("[handleDecline]", error);
+    }
+  };
 
   // --- Close dropdown when clicking outside ---
   // useEffect(() => {
@@ -222,7 +219,7 @@ const handleDecline = async (bookingId: any, reason?: string) => {
     },
   ]
   // Use real coach availability data if available, fallback to mock data
-  const weeklyAvailability = currentCoach?.availableSlots?.length ? 
+  const weeklyAvailability = currentCoach?.availableSlots?.length ?
     currentCoach.availableSlots.map((slot, index) => ({
       date: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -314,50 +311,41 @@ const handleDecline = async (bookingId: any, reason?: string) => {
   // Show loading state while fetching coach data
   if (detailLoading) {
     return (
-      <>
-        <NavbarDarkComponent />
-        <PageWrapper>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-              <p className="text-muted-foreground">
-                Loading coach dashboard...
-              </p>
-            </div>
+      <CoachDashboardLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-muted-foreground">
+              Loading coach dashboard...
+            </p>
           </div>
-        </PageWrapper>
-      </>
+        </div>
+      </CoachDashboardLayout>
     );
   }
 
   // Show error state if coach data failed to load
   if (detailError) {
     return (
-      <>
-        <NavbarDarkComponent />
-        <PageWrapper>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-red-600 mb-4">Error loading coach data: {detailError.message}</p>
-              <Button onClick={() => coachId && dispatch(getCoachById(coachId))}>
-                Retry
-              </Button>
-            </div>
+      <CoachDashboardLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading coach data: {detailError.message}</p>
+            <Button onClick={() => coachId && dispatch(getCoachById(coachId))}>
+              Retry
+            </Button>
           </div>
-        </PageWrapper>
-      </>
+        </div>
+      </CoachDashboardLayout>
     );
   }
 
   return (
-    <>
-      <NavbarDarkComponent />
-      <PageWrapper>
+    <CoachDashboardLayout>
       <div className="min-h-screen">
-        <CoachDashboardHeader />
-        <CoachDashboardTabs />
+        {/* <CoachDashboardTabs /> */}
 
-        <div className="max-w-[1320px] mx-auto py-8 space-y-8">
+        <div className="max-w-[1320px] mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Statistics Section - Left side, takes 1/2 width */}
             <div className="lg:col-span-1">
@@ -502,81 +490,81 @@ const handleDecline = async (bookingId: any, reason?: string) => {
             </CardHeader>
             <div className="border-t border-gray-100" />
             <CardContent>
-            {ongoingTodayBookings.length === 0 ? (
-              <p className="text-muted-foreground text-center">No ongoing appointments today</p>
-            ) : (
-              ongoingTodayBookings.map((booking: Booking) => {
-                    // User name & initials
-                    const userName =
-                      typeof booking.user === "string"
-                        ? "Unknown User"
-                        : booking.user.fullName || "Unknown User";
-                    const initials = userName
-                      .split(" ")
-                      .map((w) => w[0])
-                      .join("")
-                      .toUpperCase();
+              {ongoingTodayBookings.length === 0 ? (
+                <p className="text-muted-foreground text-center">No ongoing appointments today</p>
+              ) : (
+                ongoingTodayBookings.map((booking: Booking) => {
+                  // User name & initials
+                  const userName =
+                    typeof booking.user === "string"
+                      ? "Unknown User"
+                      : booking.user.fullName || "Unknown User";
+                  const initials = userName
+                    .split(" ")
+                    .map((w) => w[0])
+                    .join("")
+                    .toUpperCase();
 
-                    // Field info
-                    const fieldName = booking.field?.name || "Unknown Field";
+                  // Field info
+                  const fieldName = booking.field?.name || "Unknown Field";
 
-                    // Booking date
-                    const bookingDate = booking.date
-                      ? new Date(booking.date).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "N/A";
+                  // Booking date
+                  const bookingDate = booking.date
+                    ? new Date(booking.date).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })
+                    : "N/A";
 
-                    return (
-                      <div
-                        key={booking._id}
-                        className="flex items-center p-4 bg-gray-50 rounded-lg mb-2"
-                      >
-                        {/* Left - Field info */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-start">{fieldName}</p>
-                          </div>
+                  return (
+                    <div
+                      key={booking._id}
+                      className="flex items-center p-4 bg-gray-50 rounded-lg mb-2"
+                    >
+                      {/* Left - Field info */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Building2 className="w-6 h-6 text-blue-600" />
                         </div>
+                        <div>
+                          <p className="font-semibold text-start">{fieldName}</p>
+                        </div>
+                      </div>
 
-                        {/* Center - Avatar */}
-                        <div className="flex items-center gap-3 ml-4">
-                          <Avatar className="h-10 w-10">
-                            {typeof booking.user !== "string" && booking.user.avatarUrl ? (
-                              <AvatarImage src={booking.user.avatarUrl} alt={userName} />
-                            ) : (
-                              <AvatarFallback className="bg-orange-100 text-orange-600">{initials}</AvatarFallback>
-                            )}
-                          </Avatar>
-                          <span className="font-medium text-start">{userName}</span>
+                      {/* Center - Avatar */}
+                      <div className="flex items-center gap-3 ml-4">
+                        <Avatar className="h-10 w-10">
+                          {typeof booking.user !== "string" && booking.user.avatarUrl ? (
+                            <AvatarImage src={booking.user.avatarUrl} alt={userName} />
+                          ) : (
+                            <AvatarFallback className="bg-orange-100 text-orange-600">{initials}</AvatarFallback>
+                          )}
+                        </Avatar>
+                        <span className="font-medium text-start">{userName}</span>
+                      </div>
+                      {/* Right - Appointment details */}
+                      <div className="flex-1 grid grid-cols-4 gap-6 text-sm ml-4">
+                        <div>
+                          <p className="font-medium text-muted-foreground text-start">Appointment Date</p>
+                          <p className="text-start">{bookingDate}</p>
                         </div>
-                        {/* Right - Appointment details */}
-                        <div className="flex-1 grid grid-cols-4 gap-6 text-sm ml-4">
-                          <div>
-                            <p className="font-medium text-muted-foreground text-start">Appointment Date</p>
-                            <p className="text-start">{bookingDate}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium text-muted-foreground text-start">Start Time</p>
-                            <p className="text-start">{booking.startTime}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium text-muted-foreground text-start">End Time</p>
-                            <p className="text-start">{booking.endTime}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium text-muted-foreground text-start">Location</p>
-                            <p className="text-start">{booking.field?.location || "Unknown Location"}</p>
-                          </div>
+                        <div>
+                          <p className="font-medium text-muted-foreground text-start">Start Time</p>
+                          <p className="text-start">{booking.startTime}</p>
                         </div>
-                      </div>                    
-                    );
-                  })
+                        <div>
+                          <p className="font-medium text-muted-foreground text-start">End Time</p>
+                          <p className="text-start">{booking.endTime}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-muted-foreground text-start">Location</p>
+                          <p className="text-start">{booking.field?.location || "Unknown Location"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </CardContent>
 
@@ -657,101 +645,100 @@ const handleDecline = async (bookingId: any, reason?: string) => {
                           ? request.user
                           : request.user?.fullName || "Unknown User";
 
-                        const initials = userName
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .toUpperCase();
+                      const initials = userName
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")
+                        .toUpperCase();
 
-                        const bookingDate = request.date
-                          ? new Date(request.date).toLocaleDateString()
-                          : "N/A";
+                      const bookingDate = request.date
+                        ? new Date(request.date).toLocaleDateString()
+                        : "N/A";
 
-                        const isDeclined = request.coachStatus === "declined";
+                      const isDeclined = request.coachStatus === "declined";
 
-                        return (
-                          <div key={normalizeId(request._id)}>
-                            <div className="flex items-center gap-4 p-4">
-                              <Avatar className="h-12 w-12">
-                                {typeof request.user === "object" && request.user.avatarUrl ? (
-                                  <AvatarImage src={request.user.avatarUrl} alt={userName} />
-                                ) : (
-                                  <AvatarFallback className="bg-green-500 text-white font-semibold text-xs">{initials}</AvatarFallback>
-                                )}
-                              </Avatar>
+                      return (
+                        <div key={normalizeId(request._id)}>
+                          <div className="flex items-center gap-4 p-4">
+                            <Avatar className="h-12 w-12">
+                              {typeof request.user === "object" && request.user.avatarUrl ? (
+                                <AvatarImage src={request.user.avatarUrl} alt={userName} />
+                              ) : (
+                                <AvatarFallback className="bg-green-500 text-white font-semibold text-xs">{initials}</AvatarFallback>
+                              )}
+                            </Avatar>
 
-                              <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
-                                <div>
-                                  <p className="font-medium">{userName}</p>
-                                  <p className="text-muted-foreground capitalize">{request.type || "-"}</p>
-                                  <p className="text-muted-foreground">
-                                    {bookingDate} — {request.startTime || "N/A"} - {request.endTime || "N/A"}
-                                  </p>
-                                </div>
+                            <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
+                              <div>
+                                <p className="font-medium">{userName}</p>
+                                <p className="text-muted-foreground capitalize">{request.type || "-"}</p>
+                                <p className="text-muted-foreground">
+                                  {bookingDate} — {request.startTime || "N/A"} - {request.endTime || "N/A"}
+                                </p>
+                              </div>
 
-                                <div>
-                                  <p className="font-medium">Trạng thái</p>
-                                  <p
-                                    className={`capitalize font-semibold ${
-                                      request.coachStatus === "pending"
-                                        ? "text-yellow-600"
-                                        : request.coachStatus === "declined"
-                                        ? "text-red-600"
-                                        : "text-gray-500"
+                              <div>
+                                <p className="font-medium">Trạng thái</p>
+                                <p
+                                  className={`capitalize font-semibold ${request.coachStatus === "pending"
+                                    ? "text-yellow-600"
+                                    : request.coachStatus === "declined"
+                                      ? "text-red-600"
+                                      : "text-gray-500"
                                     }`}
-                                  >
-                                    {request.coachStatus}
-                                  </p>
-                                </div>
+                                >
+                                  {request.coachStatus}
+                                </p>
+                              </div>
 
-                                <div className="flex items-center justify-between">
-                                  {/* Only show buttons if status is pending */}
-                                  {!isDeclined && (
-                                    <div className="flex space-x-2">
-                                      <Button
-                                        size="sm"
-                                        className="bg-green-600 hover:bg-green-700"
-                                        onClick={() => handleAccept(request._id)}
-                                      >
-                                        Accept
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleDecline(request._id)}
-                                      >
-                                        Decline
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
+                              <div className="flex items-center justify-between">
+                                {/* Only show buttons if status is pending */}
+                                {!isDeclined && (
+                                  <div className="flex space-x-2">
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700"
+                                      onClick={() => handleAccept(request._id)}
+                                    >
+                                      Accept
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDecline(request._id)}
+                                    >
+                                      Decline
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <div className="border-t border-gray-100 mx-4" />
                           </div>
-                        );
-                      })}
-                      {totalPages > 1 && (
-                        <div className="flex justify-center mt-4 space-x-2">
-                          <Button
-                            variant="outline"
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                          >
-                            Previous
-                          </Button>
-                          <span className="self-center">
-                            Page {currentPage} of {totalPages}
-                          </span>
-                          <Button
-                            variant="outline"
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                          >
-                            Next
-                          </Button>
+                          <div className="border-t border-gray-100 mx-4" />
                         </div>
-                      )}
+                      );
+                    })}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-4 space-x-2">
+                      <Button
+                        variant="outline"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      >
+                        Previous
+                      </Button>
+                      <span className="self-center">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
 
               </Card>
@@ -819,10 +806,10 @@ const handleDecline = async (bookingId: any, reason?: string) => {
 
                         const bookingDate = booking.date
                           ? new Date(booking.date).toLocaleDateString("en-US", {
-                              weekday: "short",
-                              month: "short",
-                              day: "numeric",
-                            })
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })
                           : "N/A";
 
                         return (
@@ -833,7 +820,7 @@ const handleDecline = async (bookingId: any, reason?: string) => {
                               ) : (
                                 <AvatarFallback className="bg-blue-500 text-white font-semibold text-xs">{initials}</AvatarFallback>
                               )}
-                            </Avatar>   
+                            </Avatar>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-gray-900 text-sm">{userName}</p>
                               <p className="text-sm text-gray-600 truncate">{fieldName}</p>
@@ -962,7 +949,6 @@ const handleDecline = async (bookingId: any, reason?: string) => {
           </Card>
         </div>
       </div>
-      </PageWrapper>
-    </>
+    </CoachDashboardLayout>
   )
 }

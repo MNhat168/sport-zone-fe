@@ -142,11 +142,18 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
         return 'Địa chỉ đang cập nhật';
     };
 
+    // Helper function to truncate booking ID
+    const truncateBookingId = (id: string, maxLength: number = 10): string => {
+        if (!id) return '';
+        if (id.length <= maxLength) return id;
+        return id.substring(0, maxLength) + '...';
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent
                 showCloseButton={false}
-                className="max-w-4xl w-[95vw] max-h-[90vh] p-0 gap-0 bg-white rounded-lg border border-gray-200 overflow-hidden"
+                className="!max-w-7xl sm:!max-w-7xl md:!max-w-7xl lg:!max-w-7xl xl:!max-w-7xl w-[95vw] max-h-[90vh] p-0 gap-0 bg-white rounded-lg border border-gray-200 overflow-hidden"
             >
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50">
@@ -176,7 +183,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                 </div>
 
                 {/* Content - Scrollable */}
-                <div className="px-6 py-6 space-y-6 max-h-[calc(90vh-180px)] overflow-y-auto">
+                <div className="px-6 py-6 max-h-[calc(90vh-180px)] overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Field Information */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -266,7 +273,9 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
 
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-gray-700">Mã đặt sân</p>
-                                <p className="text-sm text-gray-600 font-mono">{booking._id}</p>
+                                <p className="text-sm text-gray-600 font-mono" title={booking._id}>
+                                    {truncateBookingId(booking._id)}
+                                </p>
                             </div>
                         </div>
 
@@ -384,7 +393,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                     )}
 
                     {/* Booking Metadata */}
-                    <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-200">
+                    <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-200 lg:col-span-2">
                         {booking.createdAt && (
                             <p>Đặt vào: {new Date(booking.createdAt).toLocaleString('vi-VN')}</p>
                         )}
