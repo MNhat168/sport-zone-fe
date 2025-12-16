@@ -24,7 +24,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { suspendUser, unsuspendUser } from '../../billingThunk'
+import { suspendUser, unsuspendUser } from '../billingThunk'
 import { toast } from 'sonner'
 import { type OverdueAccount } from '../../../types/billing-type'
 

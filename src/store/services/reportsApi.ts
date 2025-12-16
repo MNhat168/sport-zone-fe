@@ -96,7 +96,15 @@ const unwrap = <T>(
 
 export const reportsApi = createApi({
   reducerPath: 'reportsApi',
-  baseQuery: fetchBaseQuery({ baseUrl: API_BASE_URL, credentials: 'include' }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: API_BASE_URL,
+    credentials: 'include',
+    prepareHeaders: (headers) => {
+      headers.set('Content-Type', 'application/json')
+      headers.set('X-Client-Type', 'admin') // Phân biệt FE admin với FE user
+      return headers
+    },
+  }),
   tagTypes: ['Reports', 'Report', 'Messages'],
   endpoints: (builder) => ({
     getReports: builder.query<ReportList, GetReportsParams>({

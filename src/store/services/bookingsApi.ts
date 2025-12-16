@@ -27,6 +27,7 @@ export const bookingsApi = createApi({
     credentials: 'include',
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json')
+      headers.set('X-Client-Type', 'admin') // Phân biệt FE admin với FE user
       return headers
     },
   }),
