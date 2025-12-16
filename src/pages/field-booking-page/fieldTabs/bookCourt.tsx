@@ -295,6 +295,31 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         return slot.available;
     };
 
+    // === Function để check xem slot có đã qua chưa (nếu là ngày hôm nay) ===
+    const isSlotInPast = (slotTime: string, selectedDate: string): boolean => {
+        if (!selectedDate) return false;
+
+        const today = new Date();
+        const selected = new Date(selectedDate + 'T00:00:00');
+        
+        // So sánh ngày (không tính giờ)
+        const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const selectedDateOnly = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+        
+        // Nếu không phải ngày hôm nay, không disable
+        if (selectedDateOnly.getTime() !== todayDateOnly.getTime()) {
+            return false;
+        }
+
+        // Nếu là ngày hôm nay, check xem slot có đã qua chưa
+        const [slotHour, slotMinute] = slotTime.split(':').map(Number);
+        const slotTotal = slotHour * 60 + slotMinute;
+        const nowTotal = today.getHours() * 60 + today.getMinutes();
+        
+        // Disable nếu slot đã qua (slot start time < current time)
+        return slotTotal < nowTotal;
+    };
+
 
     // Helper function to calculate endTime of a slot
     const getSlotEndTime = (startTime: string): string => {
@@ -306,6 +331,12 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
     // === Xử lý khi click slot - chọn theo block ===
     const handleSlotBlockClick = (slotTime: string) => {
+        // Check if slot is in the past
+        if (isSlotInPast(slotTime, formData.date)) {
+            alert('Không thể chọn khung giờ đã qua. Vui lòng chọn khung giờ khác.');
+            return;
+        }
+
         const slotDuration = venue?.slotDuration || 60;
         const slotEndTime = getSlotEndTime(slotTime);
 
@@ -571,6 +602,12 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                 alert(`Các slot sau đã được đặt hoặc đang được giữ: ${unavailableSlots.join(', ')}. Vui lòng chọn khoảng thời gian khác.`);
                 return;
             }
+
+            // ✅ Validate that startTime is not in the past (if booking for today)
+            if (isSlotInPast(formData.startTime, formData.date)) {
+                alert('Không thể đặt khung giờ đã qua. Vui lòng chọn khung giờ khác.');
+                return;
+            }
         }
 
         // Validate price
@@ -801,7 +838,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                     <span>Đã đặt</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-4 h-4 bg-gray-400 rounded"></div>
+                                                    <div className="w-4 h-4 bg-gray-400 rounded opacity-60"></div>
                                                     <span>Khóa</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -897,11 +934,17 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                                             })();
 
                                                                         const isSlotBooked = !isSlotAvailable(slotTime);
+                                                                        const isSlotPast = isSlotInPast(slotTime, formData.date);
+                                                                        const isSlotDisabled = isSlotBooked || isSlotPast;
 
                                                                         // Determine cell style
                                                                         let cellStyle = "bg-white border-r border-gray-200 cursor-pointer hover:bg-emerald-50 transition-colors";
-                                                                        if (isSlotBooked) {
-                                                                            cellStyle = "bg-red-500 border-r border-gray-200 cursor-not-allowed opacity-80";
+                                                                        if (isSlotDisabled) {
+                                                                            if (isSlotPast) {
+                                                                                cellStyle = "bg-gray-400 border-r border-gray-200 cursor-not-allowed opacity-60";
+                                                                            } else {
+                                                                                cellStyle = "bg-red-500 border-r border-gray-200 cursor-not-allowed opacity-80";
+                                                                            }
                                                                         } else if (isInRange) {
                                                                             if (isStartSlot) {
                                                                                 cellStyle = "bg-emerald-600 border-r border-gray-200 cursor-pointer text-white font-semibold";
@@ -917,14 +960,15 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                                                 key={`slot-${slotTime}`}
                                                                                 className={`flex-1 min-w-[60px] h-12 flex items-center justify-center text-xs font-['Outfit'] relative ${cellStyle}`}
                                                                                 onClick={() => {
-                                                                                    if (isSlotBooked) return; // Prevent click if slot is booked
+                                                                                    if (isSlotDisabled) return; // Prevent click if slot is booked or past
                                                                                     handleSlotBlockClick(slotTime);
                                                                                 }}
-                                                                                title={isSlotBooked ? "Đã đặt" : `${slotTime} - ${slotEndTime}`}
+                                                                                title={isSlotPast ? "Đã qua" : isSlotBooked ? "Đã đặt" : `${slotTime} - ${slotEndTime}`}
                                                                             >
                                                                                 {isStartSlot && selectedStartTime && "Bắt đầu"}
                                                                                 {isEndSlot && selectedEndTime && !isStartSlot && "Kết thúc"}
-                                                                                {isSlotBooked && "✕"}
+                                                                                {isSlotBooked}
+                                                                                {isSlotPast && !isSlotBooked}
                                                                             </div>
                                                                         );
                                                                     })}
