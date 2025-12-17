@@ -43,7 +43,7 @@ export default function CoachSchedulePage() {
 
         // ✅ fetch coach profile by user ID
         const response = await axiosPublic.get(`/profiles/coach-id/${id}`)
-        const coachId = response.data?.data?.coachId
+        const coachId = response.data?.data?.id
         setCoachId(coachId)
 
         // ✅ fetch accepted bookings for that coach
@@ -73,10 +73,21 @@ export default function CoachSchedulePage() {
   const getBookingsForDay = (day: Date) =>
     bookings.filter((b) => isSameDay(new Date(b.date), day))
 
-  const getShortLocation = (location?: string) => {
-    if (!location) return "No location"
-    return location.split(",").slice(0, 2).join(",")
-  }
+  const getShortLocation = (
+    location?: string | { address?: string }
+  ) => {
+    if (!location) return "No location";
+
+    if (typeof location === "string") {
+      return location.split(",").slice(0, 2).join(",");
+    }
+
+    if (typeof location === "object" && location.address) {
+      return location.address.split(",").slice(0, 2).join(",");
+    }
+
+    return "No location";
+  };
 
   return (
     <>

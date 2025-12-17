@@ -17,7 +17,7 @@ import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
 import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 
 // Coach Pages
-import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page.tsx";
+import CoachDashboardPage from "../pages/coach-dashboard-page/dashboard/coach-dashboard-page.tsx";
 import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page.tsx";
 import CoachWalletPage from "../pages/coach-dashboard-page/coach-wallet-page.tsx";
 import CoachVerifyPaymentsPage from "../pages/coach-dashboard-page/verify-payments.tsx";
