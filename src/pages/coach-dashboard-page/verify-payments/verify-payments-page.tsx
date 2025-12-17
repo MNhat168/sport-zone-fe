@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
-import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header";
-import { CoachDashboardTabs } from "@/components/tabs/coach-dashboard-tabs";
-import { PageWrapper } from "@/components/layouts/page-wrapper";
+import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -183,12 +180,8 @@ export default function CoachVerifyPaymentsPage() {
     };
 
     return (
-        <>
-            <NavbarDarkComponent />
-            <PageWrapper>
-                <CoachDashboardHeader />
-                <CoachDashboardTabs />
-                <div className="max-w-[1320px] mx-auto py-8 px-4">
+        <CoachDashboardLayout>
+            <div className="max-w-[1320px] mx-auto py-8 px-4">
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -385,8 +378,7 @@ export default function CoachVerifyPaymentsPage() {
                         </Dialog>
                     </div>
                 </div>
-            </PageWrapper>
-        </>
+        </CoachDashboardLayout>
     );
 }
 

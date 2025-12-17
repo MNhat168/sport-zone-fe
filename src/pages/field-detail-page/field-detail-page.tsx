@@ -2,7 +2,7 @@ import type React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
-import { setFavouriteFields, removeFavouriteFields, syncUserFromAuth } from "@/features/user"
+import { setFavouriteFields, removeFavouriteFields } from "@/features/user"
 import { CustomFailedToast, CustomSuccessToast } from "@/components/toast/notificiation-toast"
 import { getFieldById } from "@/features/field/fieldThunk"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
@@ -49,30 +49,18 @@ const FieldDetailPage: React.FC = () => {
     const [loadingReports, setLoadingReports] = useState(false);
 
     const { currentField, loading } = useAppSelector((s) => s.field)
-    const currentUser = useAppSelector((s) => s.user.user)
     const authUser = useAppSelector((s) => s.auth.user)
     const [favLoading, setFavLoading] = useState(false)
 
-    // Use user from either store, prioritizing user store for favourites
-    const activeUser = currentUser || authUser
-
-    // Sync user to user store if auth user exists but user store is empty
-    useEffect(() => {
-        if (authUser && !currentUser && authUser.favouriteFields) {
-            // If auth user has favouriteFields, sync to user store
-            dispatch(syncUserFromAuth(authUser))
-        }
-    }, [authUser, currentUser, dispatch])
-
     const isFavourite = Boolean(
-        activeUser?.favouriteFields && id && activeUser.favouriteFields.includes(id),
+        authUser?.favouriteFields && id && authUser.favouriteFields.includes(id),
     )
 
     const toggleFavourite = async () => {
-        console.log("🔥 toggleFavourite called", { activeUser: !!activeUser, currentUser: !!currentUser, authUser: !!authUser });
+        console.log("🔥 toggleFavourite called", { authUser: !!authUser });
         
-        if (!activeUser) {
-            console.log("❌ No active user found");
+        if (!authUser) {
+            console.log("❌ No auth user found");
             return CustomFailedToast("Vui lòng đăng nhập để thêm sân vào yêu thích")
         }
         
@@ -121,7 +109,7 @@ const FieldDetailPage: React.FC = () => {
     useEffect(() => {
         if (!id) return
         // Chỉ fetch reports nếu user đã đăng nhập (API yêu cầu authentication)
-        if (!activeUser) {
+        if (!authUser) {
             setFieldReports([])
             return
         }
@@ -145,7 +133,7 @@ const FieldDetailPage: React.FC = () => {
         return () => {
             cancelled = true
         }
-    }, [id, activeUser])
+    }, [id, authUser])
 
     // Hiển thị popup cảnh báo khi field chưa được admin verify
     useEffect(() => {

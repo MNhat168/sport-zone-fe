@@ -17,12 +17,16 @@ import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
 import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 
 // Coach Pages
-import CoachDashboardPage from "../pages/coach-dashboard-page/coach-dashboard-page.tsx";
-import CoachSchedulePage from "../pages/coach-dashboard-page/coach-schedule-page.tsx";
-import CoachWalletPage from "../pages/coach-dashboard-page/coach-wallet-page.tsx";
-import CoachVerifyPaymentsPage from "../pages/coach-dashboard-page/verify-payments.tsx";
+// Coach dashboard pages
+import CoachDashboardPage from "../pages/coach-dashboard-page/dashboard/coach-dashboard-page.tsx";
+import CoachSchedulePage from "../pages/coach-dashboard-page/schedule/coach-schedule-page.tsx";
+import CoachWalletPage from "../pages/coach-dashboard-page/wallet/coach-wallet-page.tsx";
+import CoachVerifyPaymentsPage from "../pages/coach-dashboard-page/verify-payments/verify-payments-page.tsx";
+import CoachBookingsPage from "../pages/coach-dashboard-page/bookings/coach-bookings-page.tsx";
 // Coach profile self-page for coaches only
-import CoachSelfDetailPage from "../pages/coach-profile-page/coach-profile-page";
+import CoachSelfDetailPage from "../pages/coach-dashboard-page/coach-self-detail-page/coach-profile-page";
+// Coach profile settings page
+import CoachProfileSettingsPage from "../pages/coach-dashboard-page/profile/coach-profile-page";
 
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachBookingFlow from "../pages/coach-booking-page/coach-booking-flow";
@@ -251,27 +255,27 @@ export const userRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-    {
+  {
     path: "/tournaments",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <TournamentListPage  />
+        <TournamentListPage />
       </ProtectedRoute>
     ),
   },
-    {
+  {
     path: "/tournaments/create",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <CreateTournamentPage  />
+        <CreateTournamentPage />
       </ProtectedRoute>
     ),
   },
-    {
+  {
     path: "/tournaments/:id",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <TournamentDetailPage  />
+        <TournamentDetailPage />
       </ProtectedRoute>
     ),
   },
@@ -293,6 +297,14 @@ export const coachRoutes: RouteObject[] = [
   },
   {
     path: "/coach/profile",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachProfileSettingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/coach/profile/details",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <CoachSelfDetailPage />
@@ -320,7 +332,7 @@ export const coachRoutes: RouteObject[] = [
     path: "/coach/bookings",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <BookingPage />
+        <CoachBookingsPage />
       </ProtectedRoute>
     ),
   },

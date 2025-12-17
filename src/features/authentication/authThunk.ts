@@ -112,14 +112,14 @@ export const validateSession = createAsyncThunk<
 >("auth/validateSession", async (_, thunkAPI) => {
     try {
         const response = await axiosPrivate.get(VALIDATE_SESSION_API);
-        
+
         const raw = response?.data?.data ?? response?.data;
         const user = raw?.user ?? raw?.data?.user ?? raw?.result?.user ?? null;
-        
+
         if (!user) {
             throw new Error("Invalid session: missing user");
         }
-        
+
         return { user } as Pick<AuthResponse, "user">;
     } catch (error: any) {
         return thunkAPI.rejectWithValue({
@@ -137,14 +137,14 @@ export const refreshToken = createAsyncThunk<
 >("auth/refreshToken", async (_, thunkAPI) => {
     try {
         const response = await axiosPublic.post(REFRESH_TOKEN_API);
-        
+
         const raw = response?.data?.data ?? response?.data;
         const user = raw?.user ?? raw?.data?.user ?? raw?.result?.user ?? null;
-        
+
         if (!user) {
             throw new Error("Failed to refresh token: missing user");
         }
-        
+
         return { user } as Pick<AuthResponse, "user">;
     } catch (error: any) {
         return thunkAPI.rejectWithValue({
@@ -154,6 +154,59 @@ export const refreshToken = createAsyncThunk<
     }
 });
 
+import type { ForgotPasswordPayload, ResetPasswordPayload, ChangePasswordPayload } from "../../types/user-type";
+import { FORGOT_PASSWORD_API, RESET_PASSWORD_API, CHANGE_PASSWORD_API } from "./authAPI";
 
-// update
-// delete
+// Forgot password
+export const forgotPassword = createAsyncThunk<
+    { message: string },
+    ForgotPasswordPayload,
+    { rejectValue: ErrorResponse }
+>("auth/forgotPassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPublic.post(FORGOT_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to send reset email",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Reset password
+export const resetPassword = createAsyncThunk<
+    { message: string },
+    ResetPasswordPayload,
+    { rejectValue: ErrorResponse }
+>("auth/resetPassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPublic.post(RESET_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to reset password",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Change password (for logged in users) - uses axiosPrivate
+export const changePassword = createAsyncThunk<
+    { message: string },
+    ChangePasswordPayload,
+    { rejectValue: ErrorResponse }
+>("auth/changePassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(CHANGE_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to change password",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
