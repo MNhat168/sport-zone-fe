@@ -15,7 +15,7 @@ import {
 export function CoachDashboardTabs() {
     const navigate = useNavigate()
     const location = useLocation()
-    
+
     const baseTabClasses = (isActive: boolean) =>
         `flex flex-col items-center gap-2 rounded-2xl border border-gray-200 min-w-[140px] p-[20px] h-[90px] transition-all duration-200 ${isActive
             ? "bg-[#097f53] text-white hover:bg-[#097f53] hover:text-white"
@@ -34,72 +34,64 @@ export function CoachDashboardTabs() {
             <div className="max-w-[1320px] mx-auto">
                 <div className="flex justify-center gap-3 overflow-x-auto rounded-lg">
                     <div className="flex justify-between items-center w-full">
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/coach/dashboard"))}
                             onClick={() => handleNavigation("/coach/dashboard")}
                         >
                             <LayoutDashboard className="w-5 h-5" />
                             <span className="text-xs font-medium">Dashboard</span>
                         </Button>
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/user-profile"))}
                             onClick={() => handleNavigation("/user-profile")}
                         >
                             <User className="w-5 h-5" />
                             <span className="text-xs font-medium">Profile</span>
                         </Button>
-                        <Button 
-                            variant="ghost" 
-                            className={baseTabClasses(isActive("/coach-courts"))}
-                            onClick={() => handleNavigation("/coach-courts")}
-                        >
-                            <MapPin className="w-5 h-5" />
-                            <span className="text-xs font-medium">Courts</span>
-                        </Button>
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/coach-requests"))}
                             onClick={() => handleNavigation("/coach-requests")}
                         >
                             <UserCheck className="w-5 h-5" />
                             <span className="text-xs font-medium">Requests</span>
                         </Button>
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/coach/schedule"))}
                             onClick={() => handleNavigation("/coach/schedule")}
                         >
                             <Calendar className="w-5 h-5" />
                             <span className="text-xs font-medium">Schedule</span>
                         </Button>
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/coach-chat"))}
                             onClick={() => handleNavigation("/coach-chat")}
                         >
                             <MessageSquare className="w-5 h-5" />
                             <span className="text-xs font-medium">Chat</span>
                         </Button>
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/coach-earnings"))}
                             onClick={() => handleNavigation("/coach-earnings")}
                         >
                             <DollarSign className="w-5 h-5" />
                             <span className="text-xs font-medium">Earnings</span>
                         </Button>
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/coach-wallet"))}
                             onClick={() => handleNavigation("/coach-wallet")}
                         >
                             <Wallet className="w-5 h-5" />
                             <span className="text-xs font-medium">Wallet</span>
                         </Button>
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             className={baseTabClasses(isActive("/coach/verify-payments"))}
                             onClick={() => handleNavigation("/coach/verify-payments")}
                         >

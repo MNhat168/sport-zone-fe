@@ -8,18 +8,13 @@ interface HeaderInfo {
 
 export function CoachDashboardHeader() {
     const location = useLocation()
-    
+
     const getHeaderInfo = (pathname: string): HeaderInfo => {
         switch (pathname) {
             case "/coach/dashboard":
                 return {
                     title: "Coach Dashboard",
                     breadcrumb: ["Home", "Coach Dashboard"]
-                }
-            case "/coach-courts":
-                return {
-                    title: "Courts",
-                    breadcrumb: ["Home", "Coach Dashboard", "Courts"]
                 }
             case "/coach-requests":
                 return {
@@ -58,9 +53,9 @@ export function CoachDashboardHeader() {
                 }
         }
     }
-    
+
     const headerInfo = getHeaderInfo(location.pathname)
-    
+
     return (
         <div className="bg-gradient-to-r from-teal-800 via-blue-800 to-purple-800 text-white">
             <div className="max-w-[1320px] mx-auto px-12 py-12">
