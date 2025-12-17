@@ -31,6 +31,7 @@ import {
     SET_FAVOURITE_FIELDS_API,
     REMOVE_FAVOURITE_FIELDS_API
 } from "./userAPI";
+import { GET_FAVOURITE_FIELDS_API, GET_FAVOURITE_COACHES_API } from './userAPI';
 import type { 
     User, 
     UpdateProfilePayload, 
@@ -263,6 +264,47 @@ export const removeFavouriteFields = createAsyncThunk<
         console.error("removeFavouriteFields API error:", error.response?.data || error.message);
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to remove favourite fields",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get favourite fields
+import type { FavouriteField, FavouriteFieldsResponse } from '../../types/favourite-field';
+export const getFavouriteFields = createAsyncThunk<
+    FavouriteField[],
+    void,
+    { rejectValue: ErrorResponse }
+>("user/getFavouriteFields", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(GET_FAVOURITE_FIELDS_API);
+        // support both { data: [...] } and { data: { data: [...] } }
+        const data = response.data?.data ?? response.data;
+        return data as FavouriteField[];
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch favourite fields",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get favourite coaches
+import type { FavouriteCoach } from '../../types/favourite-coach';
+export const getFavouriteCoaches = createAsyncThunk<
+    FavouriteCoach[],
+    void,
+    { rejectValue: ErrorResponse }
+>("user/getFavouriteCoaches", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(GET_FAVOURITE_COACHES_API);
+        const data = response.data?.data ?? response.data;
+        return data as FavouriteCoach[];
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch favourite coaches",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

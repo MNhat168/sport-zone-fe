@@ -10,6 +10,8 @@ import {
     removeFavouriteCoaches,
     setFavouriteFields,
     removeFavouriteFields,
+    getFavouriteFields,
+    getFavouriteCoaches,
 } from "./userThunk";
 import type { User, ErrorResponse } from "../../types/user-type";
 
@@ -17,6 +19,7 @@ interface UserState {
     user: User | null;
     loading: boolean;
     error: ErrorResponse | null;
+    favouriteFields?: import('../../types/favourite-field').FavouriteField[] | null;
     updateLoading: boolean;
     updateError: ErrorResponse | null;
     forgotPasswordLoading: boolean;
@@ -34,6 +37,7 @@ const initialState: UserState = {
     user: null,
     loading: false,
     error: null,
+    favouriteFields: null,
     updateLoading: false,
     updateError: null,
     forgotPasswordLoading: false,
@@ -137,6 +141,29 @@ const userSlice = createSlice({
             .addCase(removeFavouriteFields.rejected, (_state, action) => {
                 console.log("removeFavouriteFields rejected:", action.payload);
             })
+
+            // Get favourite fields
+            .addCase((getFavouriteFields as any)?.pending, (state) => {
+                // no-op or set a loading flag if desired
+            })
+            .addCase((getFavouriteFields as any)?.fulfilled, (state, action) => {
+                state.favouriteFields = action.payload;
+            })
+            .addCase((getFavouriteFields as any)?.rejected, (_state, action) => {
+                console.error('getFavouriteFields failed', action.payload);
+            })
+
+                    // Get favourite coaches
+                    .addCase((getFavouriteCoaches as any)?.pending, (state) => {
+                        // no-op or set loading
+                    })
+                    .addCase((getFavouriteCoaches as any)?.fulfilled, (state, action) => {
+                        // store under a new key on state.user to avoid changing existing shape
+                        (state as any).favouriteCoaches = action.payload;
+                    })
+                    .addCase((getFavouriteCoaches as any)?.rejected, (_state, action) => {
+                        console.error('getFavouriteCoaches failed', action.payload);
+                    })
 
             // Forgot password
             .addCase(forgotPassword.pending, (state) => {
