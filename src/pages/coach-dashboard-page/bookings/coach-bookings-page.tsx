@@ -77,7 +77,7 @@ export default function CoachBookingsPage() {
 
     return (
         <CoachDashboardLayout>
-            <div className="max-w-[1600px] mx-auto px-6 py-8">
+            <div className="w-full mx-auto px-6 py-8">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-gray-900">Quản lý đặt lịch</h1>
                     <p className="text-sm text-gray-500">Xem và quản lý các lịch đặt của bạn</p>
