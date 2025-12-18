@@ -1324,26 +1324,6 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   </div>
                 )}
 
-                {/* Registration Fee */}
-                <div>
-                  <Label htmlFor="registrationFee" className="text-gray-700 font-semibold mb-2 block">
-                    Phí Đăng Ký (VNĐ)
-                  </Label>
-                  <Input
-                    id="registrationFee"
-                    type="number"
-                    min={0}
-                    value={formData.registrationFee || 0}
-                    onChange={(e) => handleChange("registrationFee", Number.parseInt(e.target.value) || 0)}
-                    className={`border-2 ${errors.registrationFee ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500 rounded-lg`}
-                    placeholder="Nhập phí đăng ký (0 nếu miễn phí)"
-                  />
-                  {errors.registrationFee && <p className="text-red-500 text-sm mt-2">{errors.registrationFee}</p>}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Phí đăng ký có thể được điều chỉnh ở bước xác nhận
-                  </p>
-                </div>
-
                 {/* Description */}
                 <div>
                   <Label htmlFor="description" className="text-gray-700 font-semibold mb-2 block">
