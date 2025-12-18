@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 //redux + navigation
 import { useAppDispatch } from "../../store/hook";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,10 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 //axios
 import axios from "axios";
-import { 
-  signInWithEmailAndPassword, 
-  signUpWithEmailAndPassword, 
-  signInWithGoogle 
+import {
+  signInWithEmailAndPassword,
+  signUpWithEmailAndPassword,
+  signInWithGoogle
 } from "../../features/authentication/authThunk";
 
 export default function AuthenticationPage() {
@@ -28,7 +28,7 @@ export default function AuthenticationPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   // Login banner images
   const loginBanners = [
     "/login.banner.img/login_banner.jpeg",
@@ -39,7 +39,7 @@ export default function AuthenticationPage() {
   // Auto-rotate carousel every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => 
+      setCurrentImageIndex((prevIndex) =>
         (prevIndex + 1) % loginBanners.length
       );
     }, 5000);
@@ -67,13 +67,13 @@ export default function AuthenticationPage() {
       if (stateRedirectUrl) {
         return stateRedirectUrl;
       }
-      
+
       // Then check localStorage
       const storedRedirectUrl = localStorage.getItem('bookingRedirectUrl');
       if (storedRedirectUrl) {
         return storedRedirectUrl;
       }
-      
+
       return null;
     } catch (error) {
       console.warn('Failed to get redirect URL:', error);
@@ -93,19 +93,21 @@ export default function AuthenticationPage() {
   // Helper function to handle redirect after successful login
   const handleRedirectAfterLogin = (user: any) => {
     const redirectUrl = getRedirectUrl();
-    
+
     // Clear redirect URL from localStorage
     clearRedirectUrl();
-    
+
     // If we have a redirect URL and it's a valid booking page, redirect there
     if (redirectUrl && (redirectUrl.includes('/field-booking') || redirectUrl.includes('/fields'))) {
       navigate(redirectUrl, { replace: true });
       return;
     }
-    
+
     // Otherwise, use default redirect logic
     if (user.role === "field_owner") {
       navigate("/field-owner-dashboard", { replace: true });
+    } else if (user.role === "coach") {
+      navigate("/coach/dashboard", { replace: true });
     } else {
       navigate("/", { replace: true });
     }
@@ -148,8 +150,8 @@ export default function AuthenticationPage() {
         return false;
       }
       if (formData.password.length < 6) {
-          toast.error("Mật khẩu phải có ít nhất 6 ký tự");
-          return false;
+        toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+        return false;
       }
       if (formData.password !== formData.confirmPassword) {
         toast.error("Mật khẩu không khớp");
@@ -174,7 +176,7 @@ export default function AuthenticationPage() {
     }
     return true;
   };
-  
+
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -196,9 +198,9 @@ export default function AuthenticationPage() {
             rememberMe,
           })
         ).unwrap();
-        
+
         CustomSuccessToast("Đăng nhập Google thành công!");
-        
+
         // Handle redirect after successful Google login
         if (result?.user) {
           handleRedirectAfterLogin(result.user);
@@ -258,7 +260,7 @@ export default function AuthenticationPage() {
           }
 
           CustomSuccessToast("Đăng nhập thành công!");
-          
+
           // Handle redirect after successful login
           handleRedirectAfterLogin(user);
         }
@@ -280,7 +282,7 @@ export default function AuthenticationPage() {
       }
     } catch (error: any) {
       let errorMessage = "Có lỗi xảy ra";
-      
+
       if (error?.message) {
         errorMessage = error.message;
       } else if (error?.response?.data?.message) {
@@ -288,7 +290,7 @@ export default function AuthenticationPage() {
       } else if (error?.payload?.message) {
         errorMessage = error.payload.message;
       }
-      
+
       CustomFailedToast(errorMessage);
     } finally {
       setIsLoading(false);
@@ -302,9 +304,8 @@ export default function AuthenticationPage() {
         {loginBanners.map((banner, index) => (
           <div
             key={index}
-            className={`absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
-              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+              }`}
             style={{
               backgroundImage: `url('${banner}')`,
             }}
@@ -322,9 +323,9 @@ export default function AuthenticationPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto  flex items-center justify-center mb-6">
-              <img 
-                src="/SportZone.png" 
-                alt="SportZone Logo" 
+              <img
+                src="/SportZone.png"
+                alt="SportZone Logo"
                 className="w-full h-full object-contain"
               />
             </div>

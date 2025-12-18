@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Upload, User as  Loader2 } from "lucide-react"
+import { Upload, User as Loader2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
@@ -12,9 +12,9 @@ import { toast } from "sonner"
 
 export default function Profile() {
     const dispatch = useAppDispatch()
-    const { user, loading, updateLoading, updateError } = useAppSelector((state) => state.user)
+    const { loading, updateLoading, updateError } = useAppSelector((state) => state.auth)
     const authUser = useAppSelector((state) => state.auth.user)
-    
+
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -24,25 +24,26 @@ export default function Profile() {
     const [avatarPreview, setAvatarPreview] = useState<string>("")
     const [isEditMode, setIsEditMode] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [hasFetchedProfile, setHasFetchedProfile] = useState(false)
 
-    // Fetch profile on component mount
+    // Fetch profile at most once when component is mounted and user is authenticated
     useEffect(() => {
-        if (authUser?._id) {
-            dispatch(getUserProfile())
-        }
-    }, [authUser?._id, dispatch])
+        if (!authUser || hasFetchedProfile) return
+        dispatch(getUserProfile())
+        setHasFetchedProfile(true)
+    }, [authUser, hasFetchedProfile, dispatch])
 
     // Update form data when user data is loaded
     useEffect(() => {
-        if (user) {
+        if (authUser) {
             setFormData({
-                fullName: user.fullName || "",
-                email: user.email || "",
-                phone: user.phone || "",
+                fullName: authUser.fullName || "",
+                email: authUser.email || "",
+                phone: authUser.phone || "",
             })
-            setAvatarPreview(user.avatarUrl || "")
+            setAvatarPreview(authUser.avatarUrl || "")
         }
-    }, [user])
+    }, [authUser])
 
     // Handle input changes
     const handleInputChange = (field: string, value: string) => {
@@ -58,7 +59,7 @@ export default function Profile() {
                 toast.error("Vui lòng chọn file ảnh")
                 return
             }
-            
+
             // Validate file size (e.g., max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 toast.error("Kích thước file phải nhỏ hơn 5MB")
@@ -101,13 +102,13 @@ export default function Profile() {
     const handleToggleEdit = () => {
         if (isEditMode) {
             // Cancel edit mode - reset to original values
-            if (user) {
+            if (authUser) {
                 setFormData({
-                    fullName: user.fullName || "",
-                    email: user.email || "",
-                    phone: user.phone || "",
+                    fullName: authUser.fullName || "",
+                    email: authUser.email || "",
+                    phone: authUser.phone || "",
                 })
-                setAvatarPreview(user.avatarUrl || "")
+                setAvatarPreview(authUser.avatarUrl || "")
                 setSelectedAvatar(null)
             }
         }
@@ -132,9 +133,9 @@ export default function Profile() {
                     <div className="flex flex-col gap-5">
                         <div className="relative w-44 h-40 p-5 bg-white rounded-[10px] border border-gray-300 flex flex-col justify-center items-center gap-2 overflow-hidden">
                             {avatarPreview ? (
-                                <img 
-                                    src={avatarPreview} 
-                                    alt="Xem trước ảnh đại diện" 
+                                <img
+                                    src={avatarPreview}
+                                    alt="Xem trước ảnh đại diện"
                                     className="w-full h-full object-cover rounded-[5px]"
                                 />
                             ) : (

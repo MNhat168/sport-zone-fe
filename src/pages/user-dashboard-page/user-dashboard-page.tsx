@@ -19,6 +19,7 @@ import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { mockFavorites /* keep mockFavorites for now */ } from "@/components/mock-data/mock-data"
+import { getFavouriteFields, getFavouriteCoaches } from "../../features/user/userThunk"
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
@@ -30,6 +31,8 @@ export default function UserDashboardPage() {
     const dispatch = useAppDispatch()
     const bookingState = useAppSelector((state) => state?.booking)
     const authUser = useAppSelector((state) => state.auth.user)
+    const favouriteFields = useAppSelector((state) => (state as any)?.user?.favouriteFields)
+    const favouriteCoaches = useAppSelector((state) => (state as any)?.user?.favouriteCoaches)
     const bookings = bookingState?.bookings || []
     const pagination = bookingState?.pagination || null
     const loadingBookings = bookingState?.loadingBookings || false
@@ -37,6 +40,7 @@ export default function UserDashboardPage() {
     const error = bookingState?.error || null
     
     const [selectedTab, setSelectedTab] = useState<'court' | 'coaching'>('court')
+    const [favouriteTab, setFavouriteTab] = useState<'court' | 'coaching'>('court')
     // Local pagination state for invoices; data is loaded into Redux via `getMyInvoices`
     const [invoicesPage, setInvoicesPage] = useState<number>(1)
     const [invoicesLimit, setInvoicesLimit] = useState<number>(5)
@@ -87,6 +91,15 @@ export default function UserDashboardPage() {
     useEffect(() => {
         dispatch(getUpcomingBooking())
     }, [dispatch])
+
+    // Fetch favourites when favourite tab changes (separate from bookings tab)
+    useEffect(() => {
+        if (favouriteTab === 'court') {
+            dispatch(getFavouriteFields())
+        } else {
+            dispatch(getFavouriteCoaches())
+        }
+    }, [dispatch, favouriteTab])
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -577,37 +590,50 @@ export default function UserDashboardPage() {
                                 <CardHeader className="flex flex-row items-center justify-between">
                                     <div className="flex flex-col space-y-2">
                                         <CardTitle className="text-start">Yêu thích của tôi</CardTitle>
-                                        <p className="text-sm text-muted-foreground text-start">Danh sách sân yêu thích của tôi</p>
+                                        <p className="text-sm text-muted-foreground text-start">{favouriteTab === 'court' ? 'Danh sách sân yêu thích của tôi' : 'Danh sách huấn luyện viên yêu thích của tôi'}</p>
                                     </div>
                                     <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
-                                        <Badge variant="default" className="px-4 py-2 text-sm font-medium bg-green-600">
+                                        <Badge
+                                            variant={favouriteTab === 'court' ? 'default' : 'outline'}
+                                            className={`px-4 py-2 text-sm font-medium ${favouriteTab === 'court' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white'}`}
+                                            onClick={() => setFavouriteTab('court')}
+                                        >
                                             Court
                                         </Badge>
-                                        <Badge variant="outline" className="px-4 py-2 text-sm font-medium border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200">
+                                        <Badge
+                                            variant={favouriteTab === 'coaching' ? 'default' : 'outline'}
+                                            className={`px-4 py-2 text-sm font-medium ${favouriteTab === 'coaching' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white'}`}
+                                            onClick={() => setFavouriteTab('coaching')}
+                                        >
                                             Coaching
                                         </Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="border-t border-gray-100 pt-4">
-                                        {mockFavorites.map((favorite, index) => (
-                                            <div key={`favorite-${index}`}>
+                                        {(
+                                            favouriteTab === 'court'
+                                            ? (Array.isArray(favouriteFields) && favouriteFields.length > 0 ? favouriteFields : mockFavorites)
+                                            : (Array.isArray(favouriteCoaches) && favouriteCoaches.length > 0 ? favouriteCoaches : mockFavorites)
+                                        ).map((favorite: any, index: number) => (
+                                            <div key={favorite.id || `favorite-${index}`}>
                                                 <div className="flex items-center gap-3 p-3 rounded-lg">
-                                                    <div
-                                                        className={`w-8 h-8 bg-linear-to-br ${favorite.color} rounded-lg flex items-center justify-center`}
-                                                    >
-                                                        <span className="text-white font-semibold text-xs">
-                                                            {favorite.name
-                                                                .split(" ")
-                                                                .map((w) => w[0])
-                                                                .join("")}
-                                                        </span>
-                                                    </div>
+                                                    {favorite.avatar ? (
+                                                        <img src={favorite.avatar} alt={favorite.name} className="w-8 h-8 rounded-lg object-cover" />
+                                                    ) : (
+                                                        <div className={`w-8 h-8 bg-linear-to-br ${favorite.color || 'from-gray-500 to-gray-600'} rounded-lg flex items-center justify-center`}>
+                                                            <span className="text-white font-semibold text-xs">
+                                                                {(favorite.name || '').split(" ").map((w: string) => w[0]).join("")}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                     <div className="flex-1 text-start">
                                                         <p className="font-medium text-sm">{favorite.name}</p>
-                                                        <p className="text-xs text-muted-foreground">{favorite.bookings}</p>
+                                                        <p className="text-xs text-muted-foreground">{favorite.totalBookings !== undefined ? `${favorite.totalBookings} bookings` : favorite.bookings}</p>
                                                     </div>
-                                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                                    <button onClick={() => navigate(favouriteTab === 'court' ? `/fields/${favorite.id || favorite._id}` : `/coach/${favorite.id || favorite._id}`)}>
+                                                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                                    </button>
                                                 </div>
                                                 {index < 2 && <div className="border-t border-gray-100 mx-3" />}
                                             </div>

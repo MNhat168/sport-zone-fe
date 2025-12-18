@@ -36,8 +36,7 @@ import {
 import { getCoachIdByUserId, clearCurrentCoach } from "@/features/coach";
 import { CustomSuccessToast } from "@/components/toast/notificiation-toast";
 import type { RootState, AppDispatch } from "@/store/store";
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
-import { PageWrapper } from "@/components/layouts/page-wrapper";
+import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
 import { BioSection } from "./components/BioSection";
 import { LessonsSection } from "./components/LessonsSection";
 import { CoachingSection } from "./components/CoachingSection";
@@ -262,7 +261,11 @@ export default function CoachSelfDetailPage() {
     const summary = (currentCoach?.description || resolvedCoachRaw?.bio || "").trim();
     setEditableSummary(summary);
     // Initialize editable location
-    const location = (currentCoach?.location || resolvedCoachRaw?.location || "").trim();
+    // Handle location as string or object with {address, geo}
+    const rawLocation = currentCoach?.location || resolvedCoachRaw?.location || "";
+    const location = typeof rawLocation === 'string' 
+      ? rawLocation.trim() 
+      : (rawLocation?.address || "").trim();
     setEditableLocation(location);
   }, [currentCoach, resolvedCoachRaw]);
 
@@ -714,7 +717,18 @@ export default function CoachSelfDetailPage() {
   }
 
   // Ưu tiên dữ liệu CoachDetail nếu đã có; nếu không, map từ resolvedCoachRaw (CoachProfile)
-  const coachData = currentCoach || (resolvedCoachRaw ? {
+  // Normalize location to string for both currentCoach and resolvedCoachRaw
+  const normalizeLocation = (loc: any): string => {
+    if (!loc) return "";
+    if (typeof loc === 'string') return loc;
+    if (loc?.address) return loc.address;
+    return "";
+  };
+
+  const coachData = currentCoach ? {
+    ...currentCoach,
+    location: normalizeLocation(currentCoach.location),
+  } : (resolvedCoachRaw ? {
     id: resolvedCoachRaw._id || "",
     name: resolvedCoachRaw.user?.fullName || "",
     profileImage: "",
@@ -722,7 +736,7 @@ export default function CoachSelfDetailPage() {
     description: resolvedCoachRaw.bio || "",
     rating: Number(resolvedCoachRaw.rating ?? 0),
     reviewCount: Number(resolvedCoachRaw.totalReviews ?? 0),
-    location: resolvedCoachRaw.location || "",
+    location: normalizeLocation(resolvedCoachRaw.location),
     level: resolvedCoachRaw.rank || "",
     completedSessions: Number(resolvedCoachRaw.completedSessions ?? 0),
     createdAt: resolvedCoachRaw.createdAt || "",
@@ -738,9 +752,7 @@ export default function CoachSelfDetailPage() {
 
 
   return (
-    <>
-      <NavbarDarkComponent />
-      <PageWrapper className="bg-background">
+    <CoachDashboardLayout>
       {/* Hero Background Section */}
       <div className="relative bg-[#1a2332] overflow-hidden h-[400px]">
         {/* Background Image */}
@@ -842,7 +854,7 @@ export default function CoachSelfDetailPage() {
 
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin className="h-4 w-4" />
-                          <span>{coachData.location}</span>
+                          <span>{coachData.location || 'Chưa có địa chỉ'}</span>
                         </div>
                       </div>
 
@@ -1160,7 +1172,6 @@ export default function CoachSelfDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
-      </PageWrapper>
-    </>
+    </CoachDashboardLayout>
   );
 }

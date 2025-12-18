@@ -31,7 +31,11 @@ import { useAuth } from './auth-wrapper';
 
 // Simple role checking utility
 const hasUserRole = (user: User | null, role: UserRole): boolean => {
-  return (user?.role as UserRole | undefined) === role;
+  if (!user || !user.role) return false;
+  // Normalize role comparison (case-insensitive, handle both string and UserRole type)
+  const userRole = String(user.role).toLowerCase();
+  const targetRole = String(role).toLowerCase();
+  return userRole === targetRole;
 };
 
 const ProtectedRoute = ({
@@ -41,6 +45,16 @@ const ProtectedRoute = ({
   const location = useLocation();
   const { user, isAuthenticated } = useAuth();
 
+  // Wait for auth to be determined (check loading state)
+  const authLoading = useSelector((state: any) => state.auth.loading);
+  if (authLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
@@ -48,6 +62,11 @@ const ProtectedRoute = ({
   if (allowedRoles && allowedRoles.length > 0) {
     const hasAllowedRole = allowedRoles.some((role) => hasUserRole(user, role));
     if (!hasAllowedRole) {
+      console.warn('ProtectedRoute - User role mismatch:', {
+        userRole: user?.role,
+        allowedRoles,
+        path: location.pathname
+      });
       return <Navigate to="/unauthorized" replace />;
     }
   }
@@ -99,7 +118,7 @@ export const AuthenticatedRedirect = ({
   children: React.ReactNode;
 }) => {
   const loading = useSelector((state: any) => state.auth.loading) as boolean;
-  
+
   // Đợi auth loading complete trước khi render
   if (loading) {
     console.log("⏳ Auth loading, showing spinner...");

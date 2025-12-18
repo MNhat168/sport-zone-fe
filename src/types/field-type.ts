@@ -340,6 +340,8 @@ export interface FieldOwnerBooking {
     endTime: string; // HH:mm format
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     transactionStatus?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'refunded';
+    // Trạng thái duyệt của chủ sân (cho flow ghi chú / yêu cầu)
+    approvalStatus?: 'pending' | 'approved' | 'rejected';
     totalPrice: number;
     bookingAmount?: number; // Amount that goes to field owner (after platform fee)
     customer: {

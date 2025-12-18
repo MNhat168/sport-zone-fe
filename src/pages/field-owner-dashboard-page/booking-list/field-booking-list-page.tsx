@@ -10,7 +10,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { ownerAcceptNote, ownerDenyNote, ownerGetBookingDetail, getMyFieldsBookings } from "@/features/field/fieldThunk";
+import {
+    ownerAcceptBooking,
+    ownerRejectBooking,
+    ownerGetBookingDetail,
+    getMyFieldsBookings,
+} from "@/features/field/fieldThunk";
 import type { FieldOwnerBooking } from "@/types/field-type";
 import { formatCurrency } from "@/utils/format-currency";
 import { format, parseISO } from "date-fns";
@@ -46,8 +51,26 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
     const startTime12h = formatTime(booking.startTime);
     const endTime12h = formatTime(booking.endTime);
 
-    // Map transaction status from API to UI format (prefer transactionStatus over status)
-    const transactionStatus = booking.transactionStatus || booking.status;
+  // Ưu tiên trạng thái duyệt của chủ sân: nếu approvalStatus đang pending
+  // thì luôn coi là "Đang chờ" để hiển thị nút hành động chấp nhận / từ chối
+  if (booking.approvalStatus === 'pending') {
+    return {
+      id: booking.bookingId,
+      academyName: booking.fieldName,
+      courtName: booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : booking.fieldName),
+      courtNumber: booking.courtNumber,
+      academyImage: "/images/academies/default.jpg",
+      date: formatDate(booking.date),
+      time: `${startTime12h} - ${endTime12h}`,
+      payment: formatCurrency(booking.totalPrice, "VND"),
+      status: "awaiting" as const,
+      statusText: "Đang Chờ Duyệt",
+      originalBooking: booking,
+    };
+  }
+
+  // Nếu không có approvalStatus pending thì map theo transactionStatus / status
+  const transactionStatus = booking.transactionStatus || booking.status;
     let status: "awaiting" | "accepted" | "rejected" = "awaiting";
     let statusText = "Chờ Xác Nhận";
 
@@ -198,14 +221,18 @@ export default function FieldHistoryBookingPage() {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed)) setHiddenIds(parsed);
             }
-        } catch { }
+        } catch (error) {
+            console.error("Error loading hidden booking IDs from localStorage", error);
+        }
     }, []);
 
     // Persist hidden IDs whenever they change
     useEffect(() => {
         try {
             localStorage.setItem('ownerHiddenBookingIds', JSON.stringify(hiddenIds));
-        } catch { }
+        } catch (error) {
+            console.error("Error persisting hidden booking IDs to localStorage", error);
+        }
     }, [hiddenIds]);
 
     // Listen for tab changes from sidebar
@@ -242,11 +269,22 @@ export default function FieldHistoryBookingPage() {
     const handleViewDetails = async (bookingId: string) => {
         const booking = fieldOwnerBookings?.find(b => b.bookingId === bookingId);
         if (!booking) return;
-        // Try to fetch owner booking detail to get user note if exists
+        // Try to fetch owner booking detail to get user note, transaction info, and court info
         let note: string | undefined;
+        let paymentProofImageUrl: string | undefined;
+        let courtName: string | undefined;
         try {
             const res: any = await dispatch(ownerGetBookingDetail(bookingId)).unwrap();
             note = res?.note;
+            // Get payment proof image URL from transaction
+            if (res?.transaction?.paymentProofImageUrl) {
+                paymentProofImageUrl = res.transaction.paymentProofImageUrl;
+            }
+            // Get court name from populated court or from booking data
+            if (res?.court) {
+                const court = typeof res.court === 'string' ? null : res.court;
+                courtName = court?.name || (court?.courtNumber ? `Sân ${court.courtNumber}` : undefined);
+            }
         } catch {
             // ignore detail fetch error; proceed with list data
         }
@@ -255,9 +293,12 @@ export default function FieldHistoryBookingPage() {
         const endTime12h = formatTime(booking.endTime);
         const bookingDate = formatDate(booking.date);
 
+        // Use courtName from API, fallback to booking.courtName or booking.courtNumber, then fieldName
+        const displayCourt = courtName || booking.courtName || (booking.courtNumber ? `Sân ${booking.courtNumber}` : booking.fieldName);
+
         setSelectedBooking({
             academy: booking.fieldName,
-            court: booking.fieldName,
+            court: displayCourt,
             bookedOn: bookingDate,
             bookingDate: bookingDate,
             bookingTime: `${startTime12h} - ${endTime12h}`,
@@ -267,13 +308,14 @@ export default function FieldHistoryBookingPage() {
             amenitiesFee: booking.amenitiesFee ? formatCurrency(booking.amenitiesFee, "VND") : "0 đ",
             originalBooking: booking,
             note,
+            paymentProofImageUrl,
         });
         setIsDetailsOpen(true);
     };
 
     const handleAccept = async (bookingId: string) => {
         try {
-            await dispatch(ownerAcceptNote(bookingId)).unwrap();
+            await dispatch(ownerAcceptBooking(bookingId)).unwrap();
             // Hide the acted booking immediately and refresh in background
             setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
             const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
@@ -288,13 +330,13 @@ export default function FieldHistoryBookingPage() {
                 })
             );
         } catch (e) {
-            console.error("Accept note failed", e);
+            console.error("Accept booking failed", e);
         }
     };
 
     const handleDeny = async (bookingId: string) => {
         try {
-            await dispatch(ownerDenyNote({ bookingId })).unwrap();
+            await dispatch(ownerRejectBooking({ bookingId })).unwrap();
             // Hide the acted booking immediately and refresh in background
             setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
             const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
@@ -309,7 +351,7 @@ export default function FieldHistoryBookingPage() {
                 })
             );
         } catch (e) {
-            console.error("Deny note failed", e);
+            console.error("Reject booking failed", e);
         }
     };
 

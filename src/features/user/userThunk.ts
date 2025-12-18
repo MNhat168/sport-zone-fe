@@ -21,23 +21,24 @@ export const setFavouriteSports = createAsyncThunk<
     }
 });
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axiosPublic from "../../utils/axios/axiosPublic";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
-import { 
-    GET_PROFILE_API, 
-    UPDATE_PROFILE_API, 
-    FORGOT_PASSWORD_API, 
-    RESET_PASSWORD_API,
+import {
+    GET_PROFILE_API,
+    UPDATE_PROFILE_API,
     SET_FAVOURITE_FIELDS_API,
-    REMOVE_FAVOURITE_FIELDS_API
+    REMOVE_FAVOURITE_FIELDS_API,
+    FORGOT_PASSWORD_API,
+    RESET_PASSWORD_API,
+    CHANGE_PASSWORD_API,
 } from "./userAPI";
-import type { 
-    User, 
-    UpdateProfilePayload, 
-    ForgotPasswordPayload, 
+import { GET_FAVOURITE_FIELDS_API, GET_FAVOURITE_COACHES_API } from './userAPI';
+import type {
+    User,
+    UpdateProfilePayload,
+    ForgotPasswordPayload,
     ResetPasswordPayload,
     ChangePasswordPayload,
-    ErrorResponse 
+    ErrorResponse
 } from "../../types/user-type";
 
 // Get user profile
@@ -51,7 +52,7 @@ export const getUserProfile = createAsyncThunk<
         console.log("-----------------------------------------------------");
         console.log("Dữ liệu profile trả về:", response.data);
         console.log("-----------------------------------------------------");
-    return response.data.data;
+        return response.data.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to get profile",
@@ -69,19 +70,19 @@ export const updateUserProfile = createAsyncThunk<
 >("user/updateProfile", async (payload, thunkAPI) => {
     try {
         const formData = new FormData();
-        
+
         // Append text fields
         if (payload.fullName) formData.append('fullName', payload.fullName);
         if (payload.email) formData.append('email', payload.email);
         if (payload.phone) formData.append('phone', payload.phone);
-        
+
         // Append file if exists
         if (payload.avatar) {
             formData.append('avatar', payload.avatar);
         }
 
         const response = await axiosPrivate.patch(
-            UPDATE_PROFILE_API, 
+            UPDATE_PROFILE_API,
             formData,
             {
                 headers: {
@@ -93,7 +94,7 @@ export const updateUserProfile = createAsyncThunk<
         console.log("-----------------------------------------------------");
         console.log("Dữ liệu update profile trả về:", response.data);
         console.log("-----------------------------------------------------");
-        
+
         return response.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -104,74 +105,7 @@ export const updateUserProfile = createAsyncThunk<
     }
 });
 
-// Forgot password
-export const forgotPassword = createAsyncThunk<
-    { message: string },
-    ForgotPasswordPayload,
-    { rejectValue: ErrorResponse }
->("user/forgotPassword", async (payload, thunkAPI) => {
-    try {
-        const response = await axiosPublic.post(FORGOT_PASSWORD_API, payload);
-        
-        console.log("-----------------------------------------------------");
-        console.log("Dữ liệu forgot password trả về:", response.data);
-        console.log("-----------------------------------------------------");
-        
-        return response.data;
-    } catch (error: any) {
-        const errorResponse: ErrorResponse = {
-            message: error.response?.data?.message || error.message || "Failed to send reset email",
-            status: error.response?.status || "500",
-        };
-        return thunkAPI.rejectWithValue(errorResponse);
-    }
-});
-
-// Reset password
-export const resetPassword = createAsyncThunk<
-    { message: string },
-    ResetPasswordPayload,
-    { rejectValue: ErrorResponse }
->("user/resetPassword", async (payload, thunkAPI) => {
-    try {
-        const response = await axiosPublic.post(RESET_PASSWORD_API, payload);
-        
-        console.log("-----------------------------------------------------");
-        console.log("Dữ liệu reset password trả về:", response.data);
-        console.log("-----------------------------------------------------");
-        
-        return response.data;
-    } catch (error: any) {
-        const errorResponse: ErrorResponse = {
-            message: error.response?.data?.message || error.message || "Failed to reset password",
-            status: error.response?.status || "500",
-        };
-        return thunkAPI.rejectWithValue(errorResponse);
-    }
-});
-
-// Change password (for logged in users)
-export const changePassword = createAsyncThunk<
-    { message: string },
-    ChangePasswordPayload,
-    { rejectValue: ErrorResponse }
->("user/changePassword", async (payload, thunkAPI) => {
-    try {
-        const response = await axiosPrivate.post(`${UPDATE_PROFILE_API}/change-password`, payload);
-        
-        console.log("-----------------------------------------------------");
-        console.log("Dữ liệu change password trả về:", response.data);
-        console.log("-----------------------------------------------------");
-        
-        return response.data;
-    } catch (error: any) {
-        const errorResponse: ErrorResponse = {
-            message: error.response?.data?.message || error.message || "Failed to change password",
-            status: error.response?.status || "500",
-        };
-        return thunkAPI.rejectWithValue(errorResponse);
-    }
-});
+// Set favourite coaches
 
 // Set favourite coaches
 export interface SetFavouriteCoachesPayload {
@@ -263,6 +197,101 @@ export const removeFavouriteFields = createAsyncThunk<
         console.error("removeFavouriteFields API error:", error.response?.data || error.message);
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to remove favourite fields",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get favourite fields
+import type { FavouriteField, FavouriteFieldsResponse } from '../../types/favourite-field';
+export const getFavouriteFields = createAsyncThunk<
+    FavouriteField[],
+    void,
+    { rejectValue: ErrorResponse }
+>("user/getFavouriteFields", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(GET_FAVOURITE_FIELDS_API);
+        // support both { data: [...] } and { data: { data: [...] } }
+        const data = response.data?.data ?? response.data;
+        return data as FavouriteField[];
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch favourite fields",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get favourite coaches
+import type { FavouriteCoach } from '../../types/favourite-coach';
+export const getFavouriteCoaches = createAsyncThunk<
+    FavouriteCoach[],
+    void,
+    { rejectValue: ErrorResponse }
+>("user/getFavouriteCoaches", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(GET_FAVOURITE_COACHES_API);
+        const data = response.data?.data ?? response.data;
+        return data as FavouriteCoach[];
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch favourite coaches",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Forgot Password
+export const forgotPassword = createAsyncThunk<
+    any,
+    ForgotPasswordPayload,
+    { rejectValue: ErrorResponse }
+>("user/forgotPassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(FORGOT_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to send reset email",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Reset Password
+export const resetPassword = createAsyncThunk<
+    any,
+    ResetPasswordPayload,
+    { rejectValue: ErrorResponse }
+>("user/resetPassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(RESET_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to reset password",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Change Password
+export const changePassword = createAsyncThunk<
+    any,
+    ChangePasswordPayload,
+    { rejectValue: ErrorResponse }
+>("user/changePassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(CHANGE_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to change password",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

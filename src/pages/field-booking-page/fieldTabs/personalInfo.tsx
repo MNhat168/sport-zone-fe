@@ -204,22 +204,39 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Có lỗi xảy ra' }));
-                let errorMessage = errorData.message || 'Không thể giữ chỗ. Vui lòng thử lại.';
-                if (errorData.details && Array.isArray(errorData.details)) {
-                    const validationErrors = errorData.details
-                        .map((detail: any) => {
-                            if (detail.constraints) {
-                                return Object.values(detail.constraints).join(', ');
-                            }
-                            return detail.message || detail;
-                        })
-                        .filter(Boolean)
-                        .join('; ');
-                    if (validationErrors) {
-                        errorMessage = `${errorMessage}: ${validationErrors}`;
+                let errorMessage = 'Không thể giữ chỗ. Vui lòng thử lại.';
+                try {
+                    const errorData = await response.json();
+                    // Handle different error response formats
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    } else if (errorData.error) {
+                        errorMessage = typeof errorData.error === 'string' 
+                            ? errorData.error 
+                            : errorData.error.message || errorMessage;
                     }
+                    
+                    // Add validation errors if present
+                    if (errorData.details && Array.isArray(errorData.details)) {
+                        const validationErrors = errorData.details
+                            .map((detail: any) => {
+                                if (detail.constraints) {
+                                    return Object.values(detail.constraints).join(', ');
+                                }
+                                return detail.message || detail;
+                            })
+                            .filter(Boolean)
+                            .join('; ');
+                        if (validationErrors) {
+                            errorMessage = `${errorMessage}: ${validationErrors}`;
+                        }
+                    }
+                } catch (parseError) {
+                    // If JSON parsing fails, use status text or default message
+                    errorMessage = response.statusText || errorMessage;
+                    console.error('❌ [PERSONAL INFO] Failed to parse error response:', parseError);
                 }
+                console.error('❌ [PERSONAL INFO] Booking hold error:', { status: response.status, errorMessage });
                 throw new Error(errorMessage);
             }
 
