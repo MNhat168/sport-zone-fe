@@ -13,6 +13,7 @@ import { bankAccountReducer } from "../features/bank-account";
 import chatReducer from "@/features/chat/chatSlice";
 import { reviewReducer } from "@/features/reviews";
 import { userReducer } from "../features/user";
+import { lessonTypesReducer } from "../features/lesson-types";
 
 export const store = configureStore({
     reducer: {
@@ -30,6 +31,7 @@ export const store = configureStore({
         chat: chatReducer,
         reviews: reviewReducer,
         user: userReducer,
+        lessonTypes: lessonTypesReducer,
     },
 });
 

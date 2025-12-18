@@ -16,6 +16,11 @@ interface ReviewsSectionProps {
   onFilterChange: (rating: number | null) => void;
   onLoadMore: () => void;
   onWriteReview: () => void;
+  /**
+   * Whether to show the "Viết đánh giá" button. Defaults to true.
+   * Set to false when the parent page should hide the write-review CTA.
+   */
+  showWriteReview?: boolean;
 }
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
@@ -29,6 +34,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   onFilterChange,
   onLoadMore,
   onWriteReview,
+  showWriteReview = true,
 }) => {
   return (
     <Card
@@ -38,12 +44,14 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
       <CardHeader>
         <div className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl">Đánh giá</CardTitle>
-          <Button
-            onClick={onWriteReview}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            Viết đánh giá
-          </Button>
+          {showWriteReview && (
+            <Button
+              onClick={onWriteReview}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Viết đánh giá
+            </Button>
+          )}
         </div>
         <hr className="my-2 border-gray-200 w-full" />
       </CardHeader>

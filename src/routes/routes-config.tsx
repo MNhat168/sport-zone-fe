@@ -30,6 +30,9 @@ import CoachSelfDetailPage from "../pages/coach-dashboard-page/coach-self-detail
 // Coach profile settings page
 import CoachProfileSettingsPage from "../pages/coach-dashboard-page/profile/coach-profile-page";
 
+// Coach lessons page
+import CoachLessonsPage from "../pages/coach-dashboard-page/coach-lessons/coach-lessons-page";
+
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachBookingFlow from "../pages/coach-booking-page/coach-booking-flow";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
@@ -320,6 +323,15 @@ export const coachRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <CoachSchedulePage />
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/coach/lessons",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachLessonsPage />
       </ProtectedRoute>
     ),
   },

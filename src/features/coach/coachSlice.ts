@@ -5,6 +5,7 @@ import {
     getCoachById,
     getAllCoaches,
     getCoachIdByUserId,
+    updateCoach,
 } from "./coachThunk";
 
 interface CoachState {
@@ -132,6 +133,22 @@ const coachSlice = createSlice({
             .addCase(getCoachIdByUserId.rejected, (state, action) => {
                 state.resolveCoachIdLoading = false;
                 state.resolveCoachIdError = action.payload || { message: "Unknown error", status: "500" };
+            });
+        
+        // Handle updateCoach
+        builder
+            .addCase(updateCoach.pending, (state) => {
+                state.detailLoading = true;
+                state.detailError = null;
+            })
+            .addCase(updateCoach.fulfilled, (state, action) => {
+                state.detailLoading = false;
+                state.currentCoach = action.payload.data;
+                state.detailError = null;
+            })
+            .addCase(updateCoach.rejected, (state, action) => {
+                state.detailLoading = false;
+                state.detailError = action.payload || { message: "Unknown error", status: "500" };
             });
     },
 });

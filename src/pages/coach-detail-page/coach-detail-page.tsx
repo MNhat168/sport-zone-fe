@@ -478,7 +478,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   onLessonClick={setSelectedLesson}
                 />
 
-                <CoachingSection />
+                {/* <CoachingSection /> */}
 
                 <GallerySection
                   images={galleryImages}

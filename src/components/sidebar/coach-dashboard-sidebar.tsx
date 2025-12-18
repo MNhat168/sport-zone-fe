@@ -17,6 +17,7 @@ import {
     Wallet,
     User,
     MessageSquare,
+    Book,
     LogOut,
     CheckSquare,
     Eye
@@ -49,6 +50,11 @@ const menuItems: MenuItem[] = [
         title: "Schedule",
         url: "/coach/schedule",
         icon: Calendar,
+    },
+    {
+        title: "Lessons",
+        url: "/coach/lessons",
+        icon: Book,
     },
     {
         title: "Bookings",
