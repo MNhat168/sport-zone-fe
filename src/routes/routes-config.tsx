@@ -6,6 +6,8 @@ import ProtectedRoute, { UnauthorizedPage, UserRole } from "./protected-routes-c
 // Auth & Landing Pages
 import AuthenticationPage from "../pages/auth/authentication-page";
 import VerifyTokenPage from "../pages/auth/verify-token-page";
+import ForgotPasswordPage from "../pages/auth/forgot-password-page";
+import ResetPasswordPage from "../pages/auth/reset-password-page";
 import LandingPage from "../pages/landing/landing-page";
 
 // User Pages
@@ -92,6 +94,8 @@ export const publicRoutes: RouteObject[] = [
   { path: "/auth/verify-token", element: <VerifyTokenPage /> },
   { path: "/verify-email/success", element: <VerifyTokenPage /> },
   { path: "/verify-email/failed", element: <VerifyTokenPage /> },
+  { path: "/forgot-password", element: <ForgotPasswordPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
   { path: "/coach/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
