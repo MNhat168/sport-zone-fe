@@ -12,12 +12,9 @@ import {
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Booking } from "@/types/booking-type"
-import { CoachDashboardTabs } from "@/components/tabs/coach-dashboard-tabs"
-import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
-import { CoachDashboardHeader } from "@/components/header/coach-dashboard-header"
+import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
-import { PageWrapper } from '@/components/layouts/page-wrapper'
 
 export default function CoachSchedulePage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -90,102 +87,102 @@ export default function CoachSchedulePage() {
   };
 
   return (
-    <>
-      <NavbarDarkComponent />
-      <PageWrapper>
-        <CoachDashboardHeader />
-        <CoachDashboardTabs />
+    <CoachDashboardLayout>
+      <div className="w-full mx-auto px-6 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Lịch đặt</h1>
+          <p className="text-sm text-gray-500">Xem và quản lý lịch huấn luyện của bạn</p>
+        </div>
 
-        <main className="max-w-[1320px] mx-auto px-6 py-10">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-6 h-6 text-blue-700" />
-              <h1 className="text-2xl font-semibold text-gray-800">Booking Schedule</h1>
-            </div>
-
-            <div>
-              <DatePicker
-                selected={currentDate}
-                onChange={(date: Date | null) => date && setCurrentDate(date)}
-                dateFormat="MMMM d, yyyy"
-                className="border rounded px-2 py-1 w-52 cursor-pointer"
-              />
-            </div>
+        {/* Calendar Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-6 h-6 text-blue-700" />
+            <span className="text-lg font-semibold text-gray-800">Chọn ngày</span>
           </div>
 
-          {/* Week Navigation */}
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="outline" onClick={handlePrevWeek} className="flex items-center gap-1">
-              <ChevronLeft className="w-4 h-4" /> Previous
-            </Button>
-            <div className="text-center font-medium text-gray-700">
-              {format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM dd")} -{" "}
-              {format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM dd, yyyy")}
-            </div>
-            <Button variant="outline" onClick={handleNextWeek} className="flex items-center gap-1">
-              Next <ChevronRight className="w-4 h-4" />
-            </Button>
+          <div>
+            <DatePicker
+              selected={currentDate}
+              onChange={(date: Date | null) => date && setCurrentDate(date)}
+              dateFormat="MMMM d, yyyy"
+              className="border rounded px-2 py-1 w-52 cursor-pointer"
+            />
           </div>
+        </div>
 
-          {/* Schedule Table */}
-          <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border p-2 bg-gray-100 w-20 text-center">Time</th>
-                  {days.map((day, idx) => (
-                    <th key={idx} className="border p-2 bg-gray-100 text-center">
-                      {format(day, "EEE dd/MM")}
-                    </th>
+        {/* Week Navigation */}
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="outline" onClick={handlePrevWeek} className="flex items-center gap-1">
+            <ChevronLeft className="w-4 h-4" /> Previous
+          </Button>
+          <div className="text-center font-medium text-gray-700">
+            {format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM dd")} -{" "}
+            {format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM dd, yyyy")}
+          </div>
+          <Button variant="outline" onClick={handleNextWeek} className="flex items-center gap-1">
+            Next <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Schedule Table */}
+        <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="border p-2 bg-gray-100 w-20 text-center">Time</th>
+                {days.map((day, idx) => (
+                  <th key={idx} className="border p-2 bg-gray-100 text-center">
+                    {format(day, "EEE dd/MM")}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {/* Time Column */}
+                <td className="border p-0">
+                  {hours.map((hour) => (
+                    <div
+                      key={hour}
+                      className="border-b flex items-center justify-center text-xs bg-gray-50"
+                      style={{ height: `${hourHeight}px` }}
+                    >
+                      {hour <= 12 ? `${hour}:00 AM` : `${hour - 12}:00 PM`}
+                    </div>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  {/* Time Column */}
-                  <td className="border p-0">
-                    {hours.map((hour) => (
-                      <div
-                        key={hour}
-                        className="border-b flex items-center justify-center text-xs bg-gray-50"
-                        style={{ height: `${hourHeight}px` }}
-                      >
-                        {hour <= 12 ? `${hour}:00 AM` : `${hour - 12}:00 PM`}
-                      </div>
-                    ))}
-                  </td>
+                </td>
 
-                  {/* Day Columns */}
-                  {days.map((day, dayIdx) => {
-                    const dayBookings = getBookingsForDay(day)
-                    return (
-                      <td key={dayIdx} className="border p-0 relative" style={{ height: `${hours.length * hourHeight}px` }}>
-                        {dayBookings.map((b) => {
-                          const [startH, startM] = b.startTime.split(":").map(Number)
-                          const [endH, endM] = b.endTime.split(":").map(Number)
-                          const top = (startH + startM / 60 - firstHour) * hourHeight
-                          const height = (endH + endM / 60 - startH - startM / 60) * hourHeight
-                          return (
-                            <div
-                              key={b._id}
-                              className="absolute left-1 right-1 bg-blue-50 border border-blue-200 rounded-lg shadow-sm text-xs overflow-hidden flex flex-col justify-center items-center text-center p-1 cursor-pointer hover:bg-blue-100"
-                              style={{ top, height }}
-                              onClick={() => setSelectedBooking(b)}
-                            >
-                              <p className="font-medium">{b.field?.name || "Unknown Field"}</p>
-                              <p className="text-gray-500">{getShortLocation(b.field?.location)}</p>
-                            </div>
-                          )
-                        })}
-                      </td>
-                    )
-                  })}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </main>
+                {/* Day Columns */}
+                {days.map((day, dayIdx) => {
+                  const dayBookings = getBookingsForDay(day)
+                  return (
+                    <td key={dayIdx} className="border p-0 relative" style={{ height: `${hours.length * hourHeight}px` }}>
+                      {dayBookings.map((b) => {
+                        const [startH, startM] = b.startTime.split(":").map(Number)
+                        const [endH, endM] = b.endTime.split(":").map(Number)
+                        const top = (startH + startM / 60 - firstHour) * hourHeight
+                        const height = (endH + endM / 60 - startH - startM / 60) * hourHeight
+                        return (
+                          <div
+                            key={b._id}
+                            className="absolute left-1 right-1 bg-blue-50 border border-blue-200 rounded-lg shadow-sm text-xs overflow-hidden flex flex-col justify-center items-center text-center p-1 cursor-pointer hover:bg-blue-100"
+                            style={{ top, height }}
+                            onClick={() => setSelectedBooking(b)}
+                          >
+                            <p className="font-medium">{b.field?.name || "Unknown Field"}</p>
+                            <p className="text-gray-500">{getShortLocation(b.field?.location)}</p>
+                          </div>
+                        )
+                      })}
+                    </td>
+                  )
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         {/* Booking Modal */}
         {selectedBooking && (
@@ -220,7 +217,7 @@ export default function CoachSchedulePage() {
             </div>
           </div>
         )}
-      </PageWrapper>
-    </>
+      </div>
+    </CoachDashboardLayout>
   )
 }

@@ -181,7 +181,7 @@ export default function CoachVerifyPaymentsPage() {
 
     return (
         <CoachDashboardLayout>
-            <div className="max-w-[1320px] mx-auto py-8 px-4">
+            <div className="w-full mx-auto py-8 px-4">
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div>

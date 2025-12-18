@@ -26,16 +26,19 @@ import {
     GET_PROFILE_API,
     UPDATE_PROFILE_API,
     SET_FAVOURITE_FIELDS_API,
-    REMOVE_FAVOURITE_FIELDS_API
+    REMOVE_FAVOURITE_FIELDS_API,
+    FORGOT_PASSWORD_API,
+    RESET_PASSWORD_API,
+    CHANGE_PASSWORD_API,
 } from "./userAPI";
 import { GET_FAVOURITE_FIELDS_API, GET_FAVOURITE_COACHES_API } from './userAPI';
-import type { 
-    User, 
-    UpdateProfilePayload, 
-    ForgotPasswordPayload, 
+import type {
+    User,
+    UpdateProfilePayload,
+    ForgotPasswordPayload,
     ResetPasswordPayload,
     ChangePasswordPayload,
-    ErrorResponse 
+    ErrorResponse
 } from "../../types/user-type";
 
 // Get user profile
@@ -235,6 +238,60 @@ export const getFavouriteCoaches = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch favourite coaches",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Forgot Password
+export const forgotPassword = createAsyncThunk<
+    any,
+    ForgotPasswordPayload,
+    { rejectValue: ErrorResponse }
+>("user/forgotPassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(FORGOT_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to send reset email",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Reset Password
+export const resetPassword = createAsyncThunk<
+    any,
+    ResetPasswordPayload,
+    { rejectValue: ErrorResponse }
+>("user/resetPassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(RESET_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to reset password",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Change Password
+export const changePassword = createAsyncThunk<
+    any,
+    ChangePasswordPayload,
+    { rejectValue: ErrorResponse }
+>("user/changePassword", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(CHANGE_PASSWORD_API, payload);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to change password",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

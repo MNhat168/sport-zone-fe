@@ -9,6 +9,9 @@ import {
     removeFavouriteFields,
     getFavouriteFields,
     getFavouriteCoaches,
+    forgotPassword,
+    resetPassword,
+    changePassword,
 } from "./userThunk";
 import type { User, ErrorResponse } from "../../types/user-type";
 
@@ -95,30 +98,36 @@ const userSlice = createSlice({
             state.user = action.payload;
         });
 
-            // Get favourite fields
-            .addCase((getFavouriteFields as any)?.pending, (state) => {
+        // Get favourite fields
+        builder
+            .addCase(getFavouriteFields.pending, (state) => {
                 // no-op or set a loading flag if desired
             })
-            .addCase((getFavouriteFields as any)?.fulfilled, (state, action) => {
+            .addCase(getFavouriteFields.fulfilled, (state, action) => {
                 state.favouriteFields = action.payload;
             })
-            .addCase((getFavouriteFields as any)?.rejected, (_state, action) => {
+            .addCase(getFavouriteFields.rejected, (_state, action) => {
                 console.error('getFavouriteFields failed', action.payload);
+            });
+
+        // Get favourite coaches
+        builder
+            .addCase(getFavouriteCoaches.pending, (state) => {
+                // no-op or set loading
             })
+            .addCase(getFavouriteCoaches.fulfilled, (state, action) => {
+                // store under a new key on state.user to avoid changing existing shape
+                // We don't have favouriteCoaches on UserState root, maybe on User? 
+                // But previously it cast state as any. 
+                // Let's keep the logic but clean up syntax.
+                (state as any).favouriteCoaches = action.payload;
+            })
+            .addCase(getFavouriteCoaches.rejected, (_state, action) => {
+                console.error('getFavouriteCoaches failed', action.payload);
+            });
 
-                    // Get favourite coaches
-                    .addCase((getFavouriteCoaches as any)?.pending, (state) => {
-                        // no-op or set loading
-                    })
-                    .addCase((getFavouriteCoaches as any)?.fulfilled, (state, action) => {
-                        // store under a new key on state.user to avoid changing existing shape
-                        (state as any).favouriteCoaches = action.payload;
-                    })
-                    .addCase((getFavouriteCoaches as any)?.rejected, (_state, action) => {
-                        console.error('getFavouriteCoaches failed', action.payload);
-                    })
-
-            // Forgot password
+        // Forgot password
+        builder
             .addCase(forgotPassword.pending, (state) => {
                 state.forgotPasswordLoading = true;
                 state.forgotPasswordError = null;
@@ -133,7 +142,7 @@ const userSlice = createSlice({
                 state.forgotPasswordLoading = false;
                 state.forgotPasswordError = action.payload || { message: "Failed to send reset email", status: "500" };
                 state.forgotPasswordSuccess = false;
-            })
+            });
 
         // Remove Favourite Coaches
         builder.addCase(removeFavouriteCoaches.fulfilled, (state, action) => {
