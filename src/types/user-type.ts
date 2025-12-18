@@ -46,8 +46,10 @@ export interface ForgotPasswordPayload {
 }
 
 export interface ResetPasswordPayload {
-    token: string
+    email: string
+    resetPasswordToken: string
     newPassword: string
+    confirmPassword: string
 }
 
 export interface ChangePasswordPayload {
