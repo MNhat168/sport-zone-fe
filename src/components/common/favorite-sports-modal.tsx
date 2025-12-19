@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,7 @@ interface FavoriteSportsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAccept: (selectedSports: string[]) => void;
+  initialSelected?: string[];
 }
 
 const SPORTS_OPTIONS = [
@@ -89,8 +90,14 @@ export function FavoriteSportsModal({
   isOpen,
   onClose,
   onAccept,
+  initialSelected = [],
 }: FavoriteSportsModalProps) {
-  const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [selectedSports, setSelectedSports] = useState<string[]>(() => initialSelected ?? []);
+
+  // When opened, initialize selection from initialSelected
+  useEffect(() => {
+    if (isOpen) setSelectedSports(initialSelected ?? []);
+  }, [isOpen, initialSelected]);
 
   const handleToggleSport = (sportId: string) => {
     setSelectedSports((prev) =>

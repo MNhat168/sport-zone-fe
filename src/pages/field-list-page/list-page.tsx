@@ -72,30 +72,48 @@ const FieldBookingPage = () => {
   const fieldCardRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
   const [showFavoriteSportsModal, setShowFavoriteSportsModal] = useState(false);
+  // Track whether we've shown the modal for the current user in this session
   const [modalShownOnce, setModalShownOnce] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
   const isLoggedIn = !!user;
 
   // Show modal if user is logged in and has no favouriteSports
   useEffect(() => {
-    if (
-      isLoggedIn &&
-      !modalShownOnce &&
-      (!user?.favouriteSports || user.favouriteSports.length === 0)
-    ) {
-      setShowFavoriteSportsModal(true);
-      setModalShownOnce(true);
+    if (!isLoggedIn || modalShownOnce) return;
+
+    // Use a per-user key so different accounts get independent behavior
+    const userKey = user?.email || (user as any)?._id || null;
+    const storageKey = userKey ? `favoriteSportsModalShown:${userKey}` : `favoriteSportsModalShown:anon`;
+
+    try {
+      const alreadyShown = sessionStorage.getItem(storageKey) === '1';
+      if (alreadyShown) {
+        setModalShownOnce(true);
+        return;
+      }
+
+      if (!user?.favouriteSports || user.favouriteSports.length === 0) {
+        setShowFavoriteSportsModal(true);
+        setModalShownOnce(true);
+        try { sessionStorage.setItem(storageKey, '1'); } catch {}
+      }
+    } catch (e) {
+      // ignore storage errors
     }
   }, [isLoggedIn, user, modalShownOnce]);
 
   const handleFavoriteSportsAccept = (selectedSports: string[]) => {
     if (!user) return;
+    const userKey = user?.email || (user as any)?._id || null;
+    const storageKey = userKey ? `favoriteSportsModalShown:${userKey}` : `favoriteSportsModalShown:anon`;
+
     dispatch(setFavouriteSports({ favouriteSports: selectedSports }))
       .unwrap()
       .then(() => {
-        // Refetch profile to update Redux state
+        // Refetch profile to update Redux state (defensive)
         dispatch(getUserProfile());
         setShowFavoriteSportsModal(false);
+        try { sessionStorage.setItem(storageKey, '1'); } catch {}
       })
       .catch(() => {
         setShowFavoriteSportsModal(false);
@@ -936,6 +954,7 @@ const FieldBookingPage = () => {
         isOpen={showFavoriteSportsModal}
         onClose={() => setShowFavoriteSportsModal(false)}
         onAccept={handleFavoriteSportsAccept}
+        initialSelected={authUser?.favouriteSports || []}
       />
       <NavbarDarkComponent />
       <PageWrapper>

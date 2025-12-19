@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User } from "lucide-react";
+import { User, Trash2 } from "lucide-react";
 
 interface LessonType {
   id: string;
@@ -17,11 +17,15 @@ interface LessonType {
 interface LessonsSectionProps {
   lessonTypes: LessonType[];
   onLessonClick: (lesson: LessonType) => void;
+  isEditMode?: boolean;
+  onDelete?: (id: string) => void;
 }
 
 export const LessonsSection: React.FC<LessonsSectionProps> = ({
   lessonTypes,
   onLessonClick,
+  isEditMode = false,
+  onDelete,
 }) => {
   return (
     <Card
@@ -42,7 +46,7 @@ export const LessonsSection: React.FC<LessonsSectionProps> = ({
           {lessonTypes.map((lesson) => {
             const IconComponent = lesson.icon;
             return (
-              <div key={lesson.id} className="group">
+              <div key={lesson.id} className="group relative">
                 <Button
                   variant="outline"
                   onClick={() => onLessonClick(lesson)}
@@ -64,6 +68,20 @@ export const LessonsSection: React.FC<LessonsSectionProps> = ({
                     </Badge>
                   </div>
                 </Button>
+
+                {isEditMode && onDelete && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(lesson.id);
+                    }}
+                    className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 shadow-md flex items-center justify-center"
+                    aria-label={`Delete lesson ${lesson.name}`}
+                    title="Xoá buổi học"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             );
           })}

@@ -34,7 +34,8 @@ import {
   User,
   //   ChevronUp,
 } from "lucide-react";
-import { getCoachIdByUserId, clearCurrentCoach } from "@/features/coach";
+import { getCoachById, getCoachIdByUserId, clearCurrentCoach, updateCoach } from "@/features/coach";
+import { deleteLessonType } from "@/features/lesson-types/lessonTypesThunk";
 import { CustomSuccessToast, CustomFailedToast } from "@/components/toast/notificiation-toast";
 import type { RootState, AppDispatch } from "@/store/store";
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
@@ -206,6 +207,40 @@ export default function CoachSelfDetailPage() {
   const [editableLocation, setEditableLocation] = useState<string>("");
   const [locationCoordinates, setLocationCoordinates] = useState<[number, number] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [editableRank, setEditableRank] = useState<string>("");
+  const [editableSports, setEditableSports] = useState<string[]>([]);
+
+  // Local copy of lessonTypes to support optimistic UI updates (deletion)
+  const [localLessonTypes, setLocalLessonTypes] = useState<LessonType[]>([]);
+  useEffect(() => {
+    const fromCurrent = (currentCoach?.lessonTypes && currentCoach.lessonTypes.length)
+      ? currentCoach.lessonTypes.map((lesson: any) => ({
+          id: lesson.id || lesson._id || "",
+          type: lesson.type as "single" | "pair" | "group",
+          name: lesson.name,
+          description: lesson.description,
+          icon: lesson.type === "single" ? User : Users,
+          iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
+          iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
+          badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+        }))
+      : null;
+
+    const fromResolved = (resolvedCoachRaw?.lessonTypes && resolvedCoachRaw.lessonTypes.length)
+      ? resolvedCoachRaw.lessonTypes.map((lesson: any) => ({
+          id: lesson.id || lesson._id || "",
+          type: lesson.type as "single" | "pair" | "group",
+          name: lesson.name,
+          description: lesson.description,
+          icon: lesson.type === "single" ? User : Users,
+          iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
+          iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
+          badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+        }))
+      : null;
+
+    setLocalLessonTypes(fromCurrent ?? fromResolved ?? mockLessonTypes);
+  }, [currentCoach, resolvedCoachRaw]);
 
   // Leaflet map refs
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -315,7 +350,7 @@ export default function CoachSelfDetailPage() {
       // ignore parse errors
     }
     if (userId) {
-      dispatch(getCoachIdByUserId(userId));
+      dispatch(getCoachById(userId));
     }
   }, [initialCoachId, dispatch]);
 
@@ -349,6 +384,11 @@ export default function CoachSelfDetailPage() {
     // Remove specific undesired combined phrase (e.g. '10 years coaching experience with ITF certification — ITF Level 3 Coach')
     const filteredSummary = combinedSummary.replace(/10 years coaching experience with ITF certification\s*—\s*ITF Level 3 Coach/gi, "").trim();
     setEditableCoachingSummary(filteredSummary);
+    // Initialize rank and specializations
+    const initRank = currentCoach?.level ?? resolvedCoachRaw?.rank ?? "";
+    setEditableRank(initRank);
+    const initSpecs = currentCoach?.sports ?? resolvedCoachRaw?.sports ?? [];
+    setEditableSports(Array.isArray(initSpecs) ? initSpecs : []);
     // Initialize editable location
     // Handle location as string or object with {address, geo}
     const rawLocation = currentCoach?.location || resolvedCoachRaw?.location || "";
@@ -395,9 +435,9 @@ export default function CoachSelfDetailPage() {
 
   // Initialize Leaflet map
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (mapRef.current) return;
 
-    // Wait for container to have proper dimensions
+    // Wait for container to have proper dimensions (we will retry until container exists)
     const checkContainerSize = () => {
       if (!mapContainerRef.current) return false;
       const rect = mapContainerRef.current.getBoundingClientRect();
@@ -406,16 +446,23 @@ export default function CoachSelfDetailPage() {
 
     // Retry initialization with longer delay and size check
     const initTimeout = setTimeout(() => {
-      if (!mapContainerRef.current || mapRef.current) return;
-      
-      // Check if container has dimensions
-      if (!checkContainerSize()) {
-        console.warn('[Leaflet] Container has no dimensions, retrying...');
-        setTimeout(() => {
-          if (!mapContainerRef.current || mapRef.current || !checkContainerSize()) return;
-          initializeMap();
+      if (mapRef.current) return;
+
+      // If container not yet available or has no size, retry shortly
+      if (!mapContainerRef.current || !checkContainerSize()) {
+        console.warn('[Leaflet] Container not ready, retrying initialization...');
+        const retry = setTimeout(() => {
+          if (mapRef.current) return;
+          if (mapContainerRef.current && checkContainerSize()) {
+            initializeMap();
+          } else {
+            // one more retry after a bit
+            setTimeout(() => {
+              if (!mapRef.current && mapContainerRef.current && checkContainerSize()) initializeMap();
+            }, 300);
+          }
         }, 300);
-        return;
+        return () => clearTimeout(retry);
       }
 
       initializeMap();
@@ -753,29 +800,29 @@ export default function CoachSelfDetailPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Lỗi tải dữ liệu huấn luyện viên: {detailError.message}</p>
-          <Button
-            onClick={() => {
-              let uid = "";
-              try {
-                const cookieUserStr = document.cookie.match(/user=([^;]+)/)?.[1];
-                const storageUserStr = sessionStorage.getItem("user");
-                const raw = cookieUserStr ? decodeURIComponent(cookieUserStr) : storageUserStr;
-                if (raw) {
-                  const user = JSON.parse(raw);
-                  if (typeof user?._id === "string") uid = user._id;
-                  else if (user?._id?.buffer) {
-                    const arr = Object.values(user._id.buffer) as number[];
-                    uid = arr.map((b) => b.toString(16).padStart(2, "0")).join("");
-                  } else if (user?.id) uid = String(user.id);
-                }
-              } catch {
-                // ignore parse errors
-              }
-              if (uid) dispatch(getCoachIdByUserId(uid));
-            }}
-          >
-            Thử lại
-          </Button>
+              <Button
+                onClick={() => {
+                  let uid = "";
+                  try {
+                    const cookieUserStr = document.cookie.match(/user=([^;]+)/)?.[1];
+                    const storageUserStr = sessionStorage.getItem("user");
+                    const raw = cookieUserStr ? decodeURIComponent(cookieUserStr) : storageUserStr;
+                    if (raw) {
+                      const user = JSON.parse(raw);
+                      if (typeof user?._id === "string") uid = user._id;
+                      else if (user?._id?.buffer) {
+                        const arr = Object.values(user._id.buffer) as number[];
+                        uid = arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+                      } else if (user?.id) uid = String(user.id);
+                    }
+                  } catch {
+                    // ignore parse errors
+                  }
+                  if (uid) dispatch(getCoachById(uid));
+                }}
+              >
+                Thử lại
+              </Button>
         </div>
       </div>
     );
@@ -883,6 +930,8 @@ export default function CoachSelfDetailPage() {
       }))
     : mockLessonTypes;
 
+  
+
   // DEBUG: log lessonTypes received from normalized coachData/store
   console.log("DEBUG [CoachProfilePage] lessonTypes:", lessonTypes);
 
@@ -954,16 +1003,48 @@ export default function CoachSelfDetailPage() {
                               <Button
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => {
-                                  console.log("Saving changes:", {
-                                    summary: editableSummary,
-                                    coachingSummary: editableCoachingSummary,
-                                    location: editableLocation,
-                                    coordinates: locationCoordinates,
-                                    price: editablePrice,
-                                    isActive: isCoachActive,
-                                  });
-                                  CustomSuccessToast("Đã lưu thay đổi (UI) — sẽ gọi API sau");
+                                onClick={async () => {
+                                  const coachId = initialCoachId || currentCoach?.id || resolvedCoachRaw?._id;
+                                  if (!coachId) return CustomFailedToast('Không tìm thấy HLV để lưu');
+
+                                  // Try to parse coaching summary into experience and certification if possible
+                                  let experience = '';
+                                  let certification = '';
+                                  if (editableCoachingSummary && editableCoachingSummary.trim()) {
+                                    const parts = editableCoachingSummary.split('—').map(p => p.trim()).filter(Boolean);
+                                    if (parts.length === 1) {
+                                      // Ambiguous — prefer as experience
+                                      experience = parts[0];
+                                    } else if (parts.length >= 2) {
+                                      experience = parts[0];
+                                      certification = parts.slice(1).join(' — ');
+                                    }
+                                  } else {
+                                    experience = currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? '';
+                                    certification = currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? '';
+                                  }
+
+                                  const payload: any = {
+                                    bio: editableSummary,
+                                    sports: editableSports,
+                                    certification,
+                                    experience,
+                                    rank: editableRank,
+                                  };
+
+                                  try {
+                                    const action: any = await dispatch(updateCoach({ id: coachId, data: payload }));
+                                    if (action?.meta?.requestStatus === 'fulfilled') {
+                                      CustomSuccessToast('Lưu thông tin huấn luyện viên thành công');
+                                      // refresh data
+                                      dispatch(getCoachById(coachId));
+                                    } else {
+                                      CustomFailedToast(String(action?.payload?.message || 'Lưu thất bại'));
+                                    }
+                                  } catch (err) {
+                                    console.error('Update coach failed', err);
+                                    CustomFailedToast('Lưu thất bại');
+                                  }
                                 }}
                               >
                                 Lưu
@@ -1061,8 +1142,30 @@ export default function CoachSelfDetailPage() {
 
               {/* Phần: Buổi học cùng tôi */}
               <LessonsSection
-                lessonTypes={lessonTypes}
+                lessonTypes={localLessonTypes}
                 onLessonClick={setSelectedLesson}
+                isEditMode={isEditMode}
+                onDelete={async (lessonId: string) => {
+                  // optimistic removal
+                  const prev = localLessonTypes;
+                  setLocalLessonTypes((cur) => cur.filter((l) => l.id !== lessonId));
+
+                  try {
+                    const action: any = await dispatch(deleteLessonType({ id: lessonId }));
+                    if (action?.meta?.requestStatus === 'fulfilled') {
+                      CustomSuccessToast('Xoá buổi học thành công');
+                      // kept optimistic UI; no full refresh to keep UX snappy
+                    } else {
+                      // revert
+                      setLocalLessonTypes(prev);
+                      CustomFailedToast(String(action?.payload?.message || 'Xoá thất bại'));
+                    }
+                  } catch (err) {
+                    console.error('Delete lesson failed', err);
+                    setLocalLessonTypes(prev);
+                    CustomFailedToast('Xoá buổi học thất bại');
+                  }
+                }}
               />
 
               {/* Phần: Coaching summary */}
@@ -1072,6 +1175,10 @@ export default function CoachSelfDetailPage() {
                 onCoachingSummaryChange={setEditableCoachingSummary}
                 certification={currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? resolvedCoachRaw?.certification}
                 experienceText={currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? resolvedCoachRaw?.experience}
+                rank={editableRank}
+                sports={editableSports}
+                onRankChange={setEditableRank}
+                onSportsChange={setEditableSports}
               />
 
               {/* Phần: Thư viện ảnh */}
