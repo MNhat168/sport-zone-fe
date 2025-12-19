@@ -998,22 +998,37 @@ const FieldBookingPage = () => {
                           )}
                         </button>
                       )}
-                      {authUser && favouriteSports.length > 0 && (
+                      {authUser && (
                         <Button
                           variant={
                             isFilteringByFavorites ? "default" : "outline"
                           }
                           size="sm"
-                          onClick={handleToggleFavoriteFilter}
+                          onClick={() => {
+                            if (!favouriteSports || favouriteSports.length === 0) {
+                              // Open modal to choose favourite sports when none set
+                              setShowFavoriteSportsModal(true);
+                              return;
+                            }
+                            handleToggleFavoriteFilter();
+                          }}
                           className="flex items-center gap-2"
+                          title={
+                            !favouriteSports || favouriteSports.length === 0
+                              ? "Chọn môn thể thao yêu thích"
+                              : isFilteringByFavorites
+                                ? "Tắt bộ lọc sân yêu thích"
+                                : "Bật bộ lọc sân yêu thích"
+                          }
                         >
                           <Heart
-                            className={`w-4 h-4 ${isFilteringByFavorites ? "fill-current" : ""
-                              }`}
+                            className={`w-4 h-4 ${isFilteringByFavorites ? "fill-current" : ""}`}
                           />
                           {isFilteringByFavorites
                             ? "Đang hiển thị sân yêu thích"
-                            : "Sân yêu thích của tôi"}
+                            : (!favouriteSports || favouriteSports.length === 0
+                              ? "Thiết lập sân yêu thích"
+                              : "Sân yêu thích của tôi")}
                         </Button>
                       )}
                       <Input

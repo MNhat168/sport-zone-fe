@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { useAppDispatch } from "@/store/hook";
+import { removeAllFavouriteSports, getUserProfile } from "@/features/user/userThunk";
 import {
   Dialog,
   DialogContent,
@@ -93,6 +96,8 @@ export function FavoriteSportsModal({
   initialSelected = [],
 }: FavoriteSportsModalProps) {
   const [selectedSports, setSelectedSports] = useState<string[]>(() => initialSelected ?? []);
+  const dispatch = useAppDispatch();
+  const [clearing, setClearing] = useState(false);
 
   // When opened, initialize selection from initialSelected
   useEffect(() => {
@@ -116,6 +121,28 @@ export function FavoriteSportsModal({
   const handleCancel = () => {
     setSelectedSports([]);
     onClose();
+  };
+
+  const handleClear = () => {
+    // Clear local selection first for immediate feedback
+    setSelectedSports([]);
+
+    // Also clear server-side favourites and refresh profile
+    (async () => {
+      try {
+        setClearing(true);
+        await dispatch(removeAllFavouriteSports() as any).unwrap();
+        // Refresh profile to update global auth user
+        await dispatch(getUserProfile() as any).unwrap();
+        toast.success("Favourite sports cleared");
+      } catch (e: any) {
+        console.error("Failed to clear favourite sports on server", e);
+        const message = e?.message || e?.response?.data?.message || "Failed to clear favourite sports";
+        toast.error(message);
+      } finally {
+        setClearing(false);
+      }
+    })();
   };
 
   return (
@@ -195,11 +222,22 @@ export function FavoriteSportsModal({
             <Button
               variant="outline"
               onClick={handleCancel}
-              className="px-6 font-semibold bg-transparent text-sm"
+              className="px-4 font-semibold bg-transparent text-sm"
               size="sm"
             >
               Cancel
             </Button>
+
+            <Button
+              variant="ghost"
+              onClick={handleClear}
+              className="px-4 font-semibold text-sm"
+              size="sm"
+              disabled={selectedSports.length === 0}
+            >
+              Clear
+            </Button>
+
             <Button
               onClick={handleAccept}
               className="px-6 font-semibold bg-primary hover:bg-primary/90 transition-colors shadow-lg text-sm"
