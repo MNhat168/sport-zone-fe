@@ -204,12 +204,35 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       if (!effectiveCoachId) return;
       try {
         setReviewsLoading(true);
+        console.log('fetchReviews called', { effectiveCoachId, page, limit: REVIEW_PAGE_LIMIT });
         const resp = await getReviewsForCoachAPI(effectiveCoachId, page, REVIEW_PAGE_LIMIT);
-        const items = Array.isArray(resp?.data) ? resp.data : resp?.data ?? [];
+        console.log('fetchReviews response', { effectiveCoachId, page, resp });
+
+        // Normalize possible API shapes:
+        // 1) { data: [...], pagination: { ... } }
+        // 2) { success: true, data: { data: [...], pagination: { ... } } }
+        // 3) direct array (unlikely)
+        let body: any = resp;
+        if (resp && typeof resp === 'object' && 'success' in resp && 'data' in resp) {
+          body = resp.data;
+        }
+
+        const items = Array.isArray(body?.data)
+          ? body.data
+          : Array.isArray(body)
+          ? body
+          : [];
+
+        const pageFromResp = body?.pagination?.page ?? resp?.pagination?.page ?? page;
+        const totalPagesFromResp = body?.pagination?.totalPages ?? resp?.pagination?.totalPages ?? 1;
+
+        console.log('fetchReviews normalized', { itemsLength: items.length, pageFromResp, totalPagesFromResp });
+
         if (append) setCoachReviews((prev) => [...prev, ...items]);
         else setCoachReviews(items);
-        setReviewsPage(resp?.pagination?.page ?? page);
-        setReviewsTotalPages(resp?.pagination?.totalPages ?? 1);
+
+        setReviewsPage(pageFromResp ?? page);
+        setReviewsTotalPages(totalPagesFromResp ?? 1);
       } catch (err) {
         console.error('Failed to load coach reviews', err);
       } finally {

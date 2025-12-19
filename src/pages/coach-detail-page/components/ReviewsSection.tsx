@@ -36,6 +36,13 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   onWriteReview,
   showWriteReview = true,
 }) => {
+  console.log('ReviewsSection props', {
+    coachReviewsLength: Array.isArray(coachReviews) ? coachReviews.length : 0,
+    reviewsLoading,
+    reviewsPage,
+    reviewsTotalPages,
+    selectedRatingFilter,
+  });
   return (
     <Card
       id="reviews"
@@ -169,7 +176,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                         <div className="flex-1 space-y-3">
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <h4 className="font-semibold">{author}</h4>
+                              <h4 className="font-semibold text-left">{author}</h4>
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="flex gap-0.5">
                                   {Array.from({ length: 5 }).map((_, s) => (
@@ -182,16 +189,17 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                                 <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
                               </div>
                             </div>
+                            <div className="flex items-start">
+                              <Badge className={` ${r.rating >= 4 ? 'bg-green-600' : 'bg-red-600'} text-white font-medium`}>
+                                Coach Review
+                              </Badge>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 text-sm">
-                            <Badge className={` ${r.rating >= 4 ? 'bg-green-600' : 'bg-red-600'} text-white font-medium`}>
-                              Review Type
-                            </Badge>
-                          </div>
+                          {/* badge moved to header */}
 
                           <div>
-                            <h5 className="font-bold text-base mb-2 text-left">{comment.slice(0, 120)}</h5>
+                            {/* <h5 className="font-bold text-base mb-2 text-left">{comment.slice(0, 120)}</h5> */}
                             <p className="text-muted-foreground leading-relaxed text-left">{comment}</p>
                           </div>
 

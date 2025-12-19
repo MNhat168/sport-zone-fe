@@ -6,6 +6,10 @@ interface BioSectionProps {
 }
 
 export const BioSection: React.FC<BioSectionProps> = ({ coachData }) => {
+  const rawSports = coachData?.sports ?? coachData?.coachingDetails?.sports ?? [];
+  const sportsList: string[] = Array.isArray(rawSports)
+    ? rawSports.map((s: any) => (typeof s === 'string' ? s : s?.label ?? s?.name ?? String(s)))
+    : [];
   return (
     <Card
       id="bio"
@@ -25,6 +29,19 @@ export const BioSection: React.FC<BioSectionProps> = ({ coachData }) => {
           </p>
           <p className="text-left">
             Chứng chỉ: {coachData?.coachingDetails?.certification ?? "-"}
+          </p>
+          <p className="text-left">
+            Chuyên môn: {sportsList && sportsList.length > 0 ? (
+              <span className="inline-flex flex-wrap gap-2">
+                {sportsList.map((s) => (
+                  <span key={s} className="px-2 py-1 bg-muted rounded-full text-sm">
+                    {s}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              "-"
+            )}
           </p>
         </div>
         <Button

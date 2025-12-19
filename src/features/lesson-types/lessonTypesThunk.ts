@@ -66,3 +66,22 @@ export const deleteLessonType = createAsyncThunk<
         return thunkAPI.rejectWithValue(err);
     }
 });
+
+export const getLessonType = createAsyncThunk<
+    LessonTypeResponse,
+    { id: string },
+    { rejectValue: ErrorResponse }
+>("lessonTypes/getById", async (payload, thunkAPI) => {
+    try {
+        const url = LESSON_TYPE_BY_ID_API(payload.id);
+        const response = await axiosPrivate.get(url);
+        return response.data?.data || response.data;
+    } catch (error: any) {
+        const err: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch lesson type",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(err);
+    }
+});

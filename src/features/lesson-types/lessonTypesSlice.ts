@@ -1,11 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createLessonType, deleteLessonType } from "./lessonTypesThunk";
+import { createLessonType, deleteLessonType, getLessonType } from "./lessonTypesThunk";
+import type { LessonTypeResponse } from "./lessonTypesThunk";
 
 type State = {
     creating: boolean;
     createError: string | null;
     deleting: boolean;
     deleteError: string | null;
+    fetching: boolean;
+    fetchError: string | null;
+    fetchedItem?: LessonTypeResponse | null;
 };
 
 const initialState: State = {
@@ -13,6 +17,9 @@ const initialState: State = {
     createError: null,
     deleting: false,
     deleteError: null,
+    fetching: false,
+    fetchError: null,
+    fetchedItem: null,
 };
 
 const lessonTypesSlice = createSlice({
@@ -44,6 +51,23 @@ const lessonTypesSlice = createSlice({
         builder.addCase(deleteLessonType.rejected, (state, action) => {
             state.deleting = false;
             state.deleteError = action.payload?.message || action.error.message || "Failed to delete";
+        });
+
+        // get by id
+        builder.addCase(getLessonType.pending, (state) => {
+            state.fetching = true;
+            state.fetchError = null;
+            state.fetchedItem = null;
+        });
+        builder.addCase(getLessonType.fulfilled, (state, action) => {
+            state.fetching = false;
+            state.fetchError = null;
+            state.fetchedItem = action.payload;
+        });
+        builder.addCase(getLessonType.rejected, (state, action) => {
+            state.fetching = false;
+            state.fetchError = action.payload?.message || action.error.message || "Failed to fetch";
+            state.fetchedItem = null;
         });
     },
 });
