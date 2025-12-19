@@ -12,6 +12,7 @@ interface LessonType {
   iconBg: string;
   iconColor: string;
   badge: string;
+  lessonPrice?: number | string;
 }
 
 interface LessonsSectionProps {
@@ -62,6 +63,11 @@ export const LessonsSection: React.FC<LessonsSectionProps> = ({
                   <div className="text-center">
                     <div className="font-semibold text-base">
                       {lesson.name}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Price: {typeof lesson.lessonPrice === 'number'
+                        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(lesson.lessonPrice)
+                        : lesson.lessonPrice ?? '—'}
                     </div>
                     <Badge variant="secondary" className="mt-2">
                       {lesson.badge}

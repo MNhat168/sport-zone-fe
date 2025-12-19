@@ -58,6 +58,7 @@ interface LessonType {
   iconBg: string;
   iconColor: string;
   badge: string;
+  lessonPrice?: number | string;
 }
 
 // Mock lesson types - sẽ được thay thế bằng dữ liệu thật từ API khi có
@@ -72,6 +73,7 @@ const mockLessonTypes: LessonType[] = [
     iconBg: "bg-green-100",
     iconColor: "text-green-600",
     badge: "1 kèm 1",
+    lessonPrice: 200000,
   },
   {
     id: "2",
@@ -83,6 +85,7 @@ const mockLessonTypes: LessonType[] = [
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
     badge: "2-4 người",
+    lessonPrice: 120000,
   },
 ];
 
@@ -223,6 +226,7 @@ export default function CoachSelfDetailPage() {
           iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
           iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
           badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+          lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? (lesson as any).hourlyRate ?? undefined,
         }))
       : null;
 
@@ -236,6 +240,7 @@ export default function CoachSelfDetailPage() {
           iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
           iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
           badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+          lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? (lesson as any).hourlyRate ?? undefined,
         }))
       : null;
 
@@ -264,11 +269,30 @@ export default function CoachSelfDetailPage() {
       try {
         setReviewsLoading(true);
         const resp = await getReviewsForCoachAPI(coachId as string, page, REVIEW_PAGE_LIMIT);
-        const items = Array.isArray(resp?.data) ? resp.data : resp?.data ?? [];
+
+        // Normalize possible API shapes:
+        // 1) { data: [...], pagination: { ... } }
+        // 2) { success: true, data: { data: [...], pagination: { ... } } }
+        // 3) direct array (unlikely)
+        let body: any = resp;
+        if (resp && typeof resp === 'object' && 'success' in resp && 'data' in resp) {
+          body = resp.data;
+        }
+
+        const items = Array.isArray(body?.data)
+          ? body.data
+          : Array.isArray(body)
+          ? body
+          : body.data ?? [];
+
+        const pageFromResp = body?.pagination?.page ?? resp?.pagination?.page ?? page;
+        const totalPagesFromResp = body?.pagination?.totalPages ?? resp?.pagination?.totalPages ?? 1;
+
         if (append) setCoachReviews((prev) => [...prev, ...items]);
         else setCoachReviews(items);
-        setReviewsPage(resp?.pagination?.page ?? page);
-        setReviewsTotalPages(resp?.pagination?.totalPages ?? 1);
+
+        setReviewsPage(pageFromResp ?? page);
+        setReviewsTotalPages(totalPagesFromResp ?? 1);
       } catch (err) {
         console.error('Failed to load coach reviews', err);
       } finally {
