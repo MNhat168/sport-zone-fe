@@ -38,12 +38,10 @@ export default function CoachSchedulePage() {
 
         setUserId(id)
 
-        // ✅ fetch coach profile by user ID
         const response = await axiosPublic.get(`/profiles/coach-id/${id}`)
         const coachId = response.data?.data?.id
         setCoachId(coachId)
 
-        // ✅ fetch accepted bookings for that coach
         if (coachId) {
           const bookingRes = await axiosPublic.get(`/bookings/coach/${coachId}`)
           const allBookings: Booking[] = bookingRes.data?.data || []
@@ -57,7 +55,11 @@ export default function CoachSchedulePage() {
 
     loadUserAndFetchData()
   }, [])
-
+  const bookingUser =
+    selectedBooking?.user !== null &&
+      typeof selectedBooking?.user === "object"
+      ? selectedBooking.user
+      : null
   // --- Navigation ---
   const handlePrevWeek = () => setCurrentDate((d) => subWeeks(d, 1))
   const handleNextWeek = () => setCurrentDate((d) => addWeeks(d, 1))
@@ -194,18 +196,12 @@ export default function CoachSchedulePage() {
 
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src={typeof selectedBooking.user !== "string"
-                    ? selectedBooking.user.avatarUrl
-                    : "/default-avatar.png"}
-                  alt={typeof selectedBooking.user !== "string"
-                    ? selectedBooking.user.fullName
-                    : "User"}
+                  src={bookingUser?.avatarUrl ?? "/default-avatar.png"}
+                  alt={bookingUser?.fullName ?? "User"}
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <p className="font-medium">
-                  {typeof selectedBooking.user !== "string"
-                    ? selectedBooking.user.fullName
-                    : "Unknown User"}
+                  {bookingUser?.fullName ?? "Unknown User"}
                 </p>
               </div>
 
@@ -213,7 +209,7 @@ export default function CoachSchedulePage() {
               <p className="mb-2"><strong>Location:</strong> {getShortLocation(selectedBooking.field?.location)}</p>
               <p className="mb-2"><strong>Date:</strong> {format(new Date(selectedBooking.date), "MMM dd, yyyy")}</p>
               <p className="mb-2"><strong>Time:</strong> {selectedBooking.startTime} - {selectedBooking.endTime}</p>
-              <p className="mb-2"><strong>Total Price:</strong> ${selectedBooking.totalPrice}</p>
+              <p className="mb-2"><strong>Total Price:</strong> ${selectedBooking.bookingAmount}</p>
             </div>
           </div>
         )}
