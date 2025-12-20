@@ -6,6 +6,7 @@ import {
   startChat,
   markAsRead,
   getUnreadCount,
+  getFieldOwnerChatRooms,
 } from "./chatThunk";
 
 const initialState: ChatState = {
@@ -27,7 +28,7 @@ const chatSlice = createSlice({
     },
     addMessage: (state, action: PayloadAction<SocketMessageEvent>) => {
       const { chatRoomId, message, chatRoom } = action.payload;
-      
+
       // Update current room if active
       if (state.currentRoom?._id === chatRoomId) {
         state.currentRoom.messages.push(message);
@@ -42,7 +43,7 @@ const chatSlice = createSlice({
           ...chatRoom,
           hasUnread: state.currentRoom?._id !== chatRoomId,
         };
-        
+
         // Move to top
         const updatedRoom = state.rooms.splice(roomIndex, 1)[0];
         state.rooms.unshift(updatedRoom);
@@ -104,6 +105,20 @@ const chatSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      // In chatSlice.ts, add this case in extraReducers:
+
+      .addCase(getFieldOwnerChatRooms.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getFieldOwnerChatRooms.fulfilled, (state, action) => {
+        state.loading = false;
+        state.rooms = action.payload;
+      })
+      .addCase(getFieldOwnerChatRooms.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       .addCase(startChat.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -138,7 +153,7 @@ const chatSlice = createSlice({
           });
           state.currentRoom.hasUnread = false;
         }
-        
+
         // Update in rooms list
         const roomIndex = state.rooms.findIndex(room => room._id === chatRoomId);
         if (roomIndex !== -1) {
@@ -147,7 +162,7 @@ const chatSlice = createSlice({
             msg.isRead = true;
           });
         }
-        
+
         // Update unread count
         state.unreadCount = Math.max(0, state.unreadCount - 1);
       });

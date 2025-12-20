@@ -3,9 +3,13 @@ import { BASE_URL } from "../../utils/constant-value/constant";
 // Base tournament endpoints
 export const TOURNAMENTS_API = `${BASE_URL}/tournaments`;
 export const TOURNAMENT_BY_ID_API = (id: string) => `${BASE_URL}/tournaments/${id}`;
+export const MY_TOURNAMENTS_API = `${BASE_URL}/tournaments/my-tournaments`; // Add this
 export const CREATE_TOURNAMENT_API = `${BASE_URL}/tournaments`;
+export const UPDATE_TOURNAMENT_API = (id: string) => `${BASE_URL}/tournaments/${id}`; // Add this
+export const CANCEL_TOURNAMENT_API = (id: string) => `${BASE_URL}/tournaments/${id}`; // Add this
 export const REGISTER_FOR_TOURNAMENT_API = `${BASE_URL}/tournaments/register`;
 export const AVAILABLE_FIELDS_API = `${BASE_URL}/tournaments/available-fields`;
+export const AVAILABLE_COURTS_API = `${BASE_URL}/tournaments/available-courts`;
 
 export const buildTournamentsQuery = (filters: { sportType?: string; location?: string; status?: string }) => {
   const params = new URLSearchParams();
@@ -16,6 +20,11 @@ export const buildTournamentsQuery = (filters: { sportType?: string; location?: 
 };
 
 export const buildAvailableFieldsQuery = (params: { sportType: string; location: string; date: string }) => {
+  const queryParams = new URLSearchParams(params);
+  return queryParams.toString();
+};
+
+export const buildAvailableCourtsQuery = (params: { sportType: string; location: string; date: string }) => {
   const queryParams = new URLSearchParams(params);
   return queryParams.toString();
 };

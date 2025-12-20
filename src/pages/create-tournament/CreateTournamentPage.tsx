@@ -34,6 +34,9 @@ export default function CreateTournamentPage() {
     minParticipants: 0, // Calculated based on teams
     registrationFee: 0,
     description: "",
+    courtsNeeded: 2, // Changed from fieldsNeeded
+    selectedCourtIds: [], // Changed from selectedFieldIds
+    totalCourtCost: 0,
     fieldsNeeded: 2,
     selectedFieldIds: [],
     totalFieldCost: 0,

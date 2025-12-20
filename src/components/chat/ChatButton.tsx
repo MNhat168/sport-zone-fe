@@ -31,12 +31,12 @@ const ChatButton = forwardRef<ChatButtonRef>((_props, ref) => {
 
   useEffect(() => {
     // Get token from sessionStorage
-    const storedToken = sessionStorage.getItem("access_token");
+    const storedToken = sessionStorage.getItem("user");
     setToken(storedToken);
 
     if (storedToken) {
-      // Connect to WebSocket
-      webSocketService.connect(storedToken);
+      // Connect to WebSocket with user data from sessionStorage
+      webSocketService.connect();
       
       // Get unread count
       dispatch(getUnreadCount());

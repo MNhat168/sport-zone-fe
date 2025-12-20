@@ -1,35 +1,49 @@
 import React, { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
-import { getChatRooms, getChatRoom, markAsRead } from "@/features/chat/chatThunk";
+import { getChatRooms, getChatRoom, markAsRead, getFieldOwnerChatRooms } from "@/features/chat/chatThunk";
 import { setCurrentRoom } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, MessageCircle, User, Calendar, MapPin } from "lucide-react";
+import { Search, MessageCircle, User, Calendar, MapPin, Send, X, Building } from "lucide-react";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import type { Message } from "@/features/chat/chat-type";
+import axiosPrivate from "@/utils/axios/axiosPrivate";
+import { fetchFieldOwnerProfile } from "@/features/field-owner-profile/ownerProfileThunk";
 
 const FieldOwnerChatDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState<"all" | "unread" | "with-bookings">("all");
+    const [message, setMessage] = useState("");
+    const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
-    const { rooms, currentRoom, loading, unreadCount } = useAppSelector((state) => state.chat);
+     const [fieldOwnerProfile, setFieldOwnerProfile] = useState<any>(null); // Local state
+    const { rooms, currentRoom, loading, unreadCount, typingUsers } = useAppSelector((state) => state.chat);
     const dispatch = useAppDispatch();
-    const fieldOwnerProfile = useAppSelector((state) => state.ownerProfile.myProfile);
+    const fieldOwnerData = sessionStorage.getItem("user");
+    const fieldOwner = fieldOwnerData ? JSON.parse(fieldOwnerData) : null;
+    const fieldOwnerId = fieldOwner?.id || fieldOwner?._id;
 
+    // Update the filteredRooms function
     const filteredRooms = Array.isArray(rooms)
         ? rooms.filter(room => {
-            // Add null checks
+            // Basic validation
+            if (!room || !room.fieldOwner) return false;
+
+            // The backend should have already filtered rooms for this field owner
+            // So we can trust all rooms in the array belong to the current user
+
+            // Rest of filtering...
             const userName = room?.user?.fullName || "";
             const fieldName = room?.field?.name || "";
 
-            // Search filter
             const matchesSearch =
                 userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 fieldName.toLowerCase().includes(searchQuery.toLowerCase());
 
-            // Status filter
             if (activeFilter === "unread" && !room.hasUnread) return false;
             if (activeFilter === "with-bookings" && !room.bookingId) return false;
 
@@ -37,29 +51,152 @@ const FieldOwnerChatDashboard: React.FC = () => {
         })
         : [];
 
+    // After fetching rooms, add this:
     useEffect(() => {
-        dispatch(getChatRooms());
-    }, [dispatch]);
+        console.log('Rooms fetched:', rooms);
+        console.log('Field Owner Profile:', fieldOwnerProfile);
+        console.log('Field Owner ID from session:', fieldOwnerId);
+
+        // Log each room's fieldOwner ID
+        rooms.forEach((room, index) => {
+            console.log(`Room ${index}: fieldOwner._id = ${room.fieldOwner?._id}`);
+        });
+    }, [rooms, fieldOwnerProfile, fieldOwnerId]);
+
+    const fetchFieldOwnerProfile = async (userId: string) => {
+        try {
+            // Use axiosPrivate since this requires authentication
+            const response = await axiosPrivate.get(`/field-owner/profile/`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching field owner profile:", error);
+            return null;
+        }
+    };
 
     useEffect(() => {
-        if (fieldOwnerProfile) {
-            // Connect to WebSocket with field owner's token
-            const token = sessionStorage.getItem("access_token");
-            if (token) {
-                webSocketService.connect(token);
+        const userData = sessionStorage.getItem("user");
+        if (!userData) return;
+
+        const user = JSON.parse(userData);
+        const userId = user.id || user._id;
+
+        fetchFieldOwnerProfile(userId).then(profile => {
+            if (profile) {
+                // You might want to store this in state or context
+                console.log("Field owner profile:", profile);
             }
+        });
+    }, []);
+
+// In FieldOwnerChatPage.tsx, update the useEffect for fetching profile:
+
+useEffect(() => {
+    // Get user data from sessionStorage
+    const userData = sessionStorage.getItem("user");
+    if (!userData) {
+        console.error("No user data found in sessionStorage");
+        return;
+    }
+
+    const user = JSON.parse(userData);
+    const userId = user.id || user._id;
+
+    if (!userId) {
+        console.error("No user ID found in sessionStorage");
+        return;
+    }
+
+    // Connect to WebSocket
+    webSocketService.connect();
+
+    // Fetch field owner profile first
+    const fetchProfileAndRooms = async () => {
+        try {
+            const response = await axiosPrivate.get(`/field-owner/profile/`);
+            if (response.data.success) {
+                const profile = response.data.data;
+                setFieldOwnerProfile(profile);
+                console.log('Field Owner Profile loaded:', profile);
+                
+                // Now fetch chat rooms using the profile ID
+                // We need to dispatch an action that uses the profile ID
+                // Since getFieldOwnerChatRooms doesn't take parameters, we need to adjust
+                
+                // Temporary solution: Refetch the endpoint directly
+                const roomsResponse = await axiosPrivate.get('/chat/field-owner/rooms');
+                if (roomsResponse.data) {
+                    // Dispatch to Redux manually or update state
+                    console.log('Chat rooms fetched:', roomsResponse.data);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching field owner profile:", error);
         }
-    }, [fieldOwnerProfile]);
+    };
+
+    fetchProfileAndRooms();
+
+    // Also try the standard dispatch
+    dispatch(getFieldOwnerChatRooms());
+}, [dispatch]);
+
+
+    useEffect(() => {
+        if (currentRoom?.messages) {
+            setLocalMessages(currentRoom.messages);
+        } else {
+            setLocalMessages([]);
+        }
+    }, [currentRoom?.messages]);
 
     const handleRoomClick = (room: any) => {
         dispatch(setCurrentRoom(room));
         dispatch(getChatRoom(room._id));
-        dispatch(markAsRead(room._id));
+        if (room.hasUnread) {
+            dispatch(markAsRead(room._id));
+        }
+        // Join WebSocket room
+        webSocketService.joinChatRoom(room._id);
     };
 
     const getUnreadCountForRoom = (roomId: string) => {
         const room = rooms.find(r => r._id === roomId);
-        return room?.messages.filter(msg => !msg.isRead && msg.sender !== fieldOwnerProfile?.id).length || 0;
+        if (!room || !room.messages) return 0;
+
+        // Count unread messages sent by the user (not field owner)
+        return room.messages.filter(msg =>
+            !msg.isRead &&
+            msg.sender !== fieldOwnerProfile?.id
+        ).length || 0;
+    };
+
+    const handleSendMessage = async () => {
+        if (!message.trim() || !currentRoom) return;
+
+        // Send message via WebSocket
+        webSocketService.sendMessage({
+            fieldOwnerId: currentRoom.fieldOwner._id,
+            fieldId: currentRoom.field?._id || "",
+            content: message.trim(),
+            type: "text",
+        });
+
+        // Add message locally for immediate display
+        const newMessage: Message = {
+            sender: fieldOwnerProfile?.id || "",
+            type: 'text',
+            content: message.trim(),
+            isRead: false,
+            sentAt: new Date().toISOString(),
+        };
+
+        setLocalMessages(prev => [...prev, newMessage]);
+        setMessage("");
+    };
+
+    const isUserMessage = (senderId: string) => {
+        return senderId !== fieldOwnerProfile?.id;
     };
 
     const formatTime = (dateString: string | Date) => {
@@ -82,6 +219,15 @@ const FieldOwnerChatDashboard: React.FC = () => {
         }
     };
 
+    const formatMessageTime = (dateString: string | Date) => {
+        try {
+            const date = new Date(dateString);
+            return format(date, "HH:mm");
+        } catch {
+            return "";
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
@@ -96,8 +242,13 @@ const FieldOwnerChatDashboard: React.FC = () => {
                             {unreadCount} unread messages
                         </Badge>
                         <Badge variant="outline" className="text-green-600 border-green-600">
-                            {rooms.filter(r => r.status === "active").length} active conversations
+                            {filteredRooms.filter(r => r.status === "active").length} active conversations
                         </Badge>
+                        {fieldOwnerProfile && (
+                            <Badge variant="outline" className="text-gray-600">
+                                Field Owner: {fieldOwnerProfile.facilityName}
+                            </Badge>
+                        )}
                     </div>
                 </div>
 
@@ -122,8 +273,8 @@ const FieldOwnerChatDashboard: React.FC = () => {
                                         key={filter}
                                         onClick={() => setActiveFilter(filter as any)}
                                         className={`px-3 py-1.5 text-sm rounded-full ${activeFilter === filter
-                                                ? "bg-blue-500 text-white"
-                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            ? "bg-blue-500 text-white"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                             }`}
                                     >
                                         {filter === "all" && "All Chats"}
@@ -145,11 +296,16 @@ const FieldOwnerChatDashboard: React.FC = () => {
                                     <p className="text-gray-500">
                                         When customers message you, conversations will appear here
                                     </p>
+                                    {searchQuery && (
+                                        <p className="text-sm text-gray-400 mt-2">
+                                            Try clearing your search to see all conversations
+                                        </p>
+                                    )}
                                 </div>
                             ) : (
                                 filteredRooms.map((room) => {
                                     const unreadCount = getUnreadCountForRoom(room._id);
-                                    const lastMessage = room.messages[room.messages.length - 1];
+                                    const lastMessage = room.messages?.[room.messages.length - 1];
 
                                     return (
                                         <div
@@ -160,16 +316,16 @@ const FieldOwnerChatDashboard: React.FC = () => {
                                         >
                                             <div className="flex items-start gap-3">
                                                 <Avatar>
-                                                    <AvatarImage src={room.user.avatarUrl} />
+                                                    <AvatarImage src={room.user?.avatarUrl} />
                                                     <AvatarFallback>
-                                                        {room.user.fullName.charAt(0)}
+                                                        {room.user?.fullName?.charAt(0) || "U"}
                                                     </AvatarFallback>
                                                 </Avatar>
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between items-start">
                                                         <h4 className="font-semibold text-gray-900 truncate">
-                                                            {room.user.fullName}
+                                                            {room.user?.fullName || "Unknown User"}
                                                         </h4>
                                                         <span className="text-xs text-gray-500 whitespace-nowrap">
                                                             {formatTime(room.lastMessageAt)}
@@ -225,19 +381,19 @@ const FieldOwnerChatDashboard: React.FC = () => {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <Avatar>
-                                                <AvatarImage src={currentRoom.user.avatarUrl} />
+                                                <AvatarImage src={currentRoom.user?.avatarUrl} />
                                                 <AvatarFallback>
-                                                    {currentRoom.user.fullName.charAt(0)}
+                                                    {currentRoom.user?.fullName?.charAt(0) || "U"}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <div>
                                                 <h3 className="font-semibold text-gray-900">
-                                                    {currentRoom.user.fullName}
+                                                    {currentRoom.user?.fullName || "Unknown User"}
                                                 </h3>
                                                 <div className="flex items-center gap-4 text-sm text-gray-600">
                                                     <span className="flex items-center gap-1">
                                                         <User className="w-3 h-3" />
-                                                        {currentRoom.user.phone || "No phone"}
+                                                        {currentRoom.user?.phone || "No phone"}
                                                     </span>
                                                     {currentRoom.field && (
                                                         <span className="flex items-center gap-1">
@@ -262,31 +418,90 @@ const FieldOwnerChatDashboard: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Messages area - You can reuse the ChatWindow message rendering logic */}
-                                <div className="flex-1 p-4 overflow-y-auto">
-                                    <div className="text-center text-gray-500 py-8">
-                                        {/* Reuse the message rendering from ChatWindow.tsx here */}
-                                        <p>Chat interface would go here</p>
-                                        <p className="text-sm mt-2">
-                                            (Reuse the message rendering logic from ChatWindow component)
-                                        </p>
-                                    </div>
-                                </div>
+                                {/* Messages area */}
+                                <ScrollArea className="flex-1 p-4">
+                                    {localMessages.length === 0 ? (
+                                        <div className="text-center text-gray-500 mt-10">
+                                            <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                                            <h4 className="font-medium mb-2">Start the conversation</h4>
+                                            <p className="text-sm">Send your first message to {currentRoom.user?.fullName || "the customer"}</p>
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Ask about their needs, provide information, or answer questions
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {localMessages.map((msg: Message, index: number) => {
+                                                const isCustomerMessage = isUserMessage(msg.sender);
+                                                const isRead = msg.isRead;
+
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`flex ${isCustomerMessage ? "justify-start" : "justify-end"
+                                                            }`}
+                                                    >
+                                                        <div
+                                                            className={`max-w-[70%] rounded-lg p-3 ${isCustomerMessage
+                                                                ? "bg-gray-100 text-gray-800 rounded-bl-none"
+                                                                : "bg-blue-500 text-white rounded-br-none"
+                                                                }`}
+                                                        >
+                                                            <p className="text-sm">{msg.content}</p>
+                                                            <div className={`text-xs mt-1 flex justify-end ${isCustomerMessage ? "text-gray-500" : "text-blue-200"
+                                                                }`}>
+                                                                {formatMessageTime(msg.sentAt)}
+                                                                {!isCustomerMessage && isRead && (
+                                                                    <span className="ml-1">✓</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {/* Typing indicator */}
+                                            {Object.entries(typingUsers).some(([userId, isTyping]) =>
+                                                isTyping && userId !== fieldOwnerProfile?.id
+                                            ) && (
+                                                    <div className="flex justify-start">
+                                                        <div className="max-w-[70%] rounded-lg p-3 bg-gray-100 text-gray-800 rounded-bl-none">
+                                                            <div className="flex space-x-1">
+                                                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                        </div>
+                                    )}
+                                </ScrollArea>
 
                                 {/* Message input */}
                                 <div className="p-4 border-t">
                                     <div className="flex items-center gap-2">
                                         <Input
                                             placeholder="Type your message..."
+                                            value={message}
+                                            onChange={(e) => setMessage(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    handleSendMessage();
+                                                }
+                                            }}
                                             className="flex-1"
-                                            disabled
                                         />
-                                        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50">
-                                            Send
-                                        </button>
+                                        <Button
+                                            onClick={handleSendMessage}
+                                            disabled={!message.trim()}
+                                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2 text-center">
-                                        Full messaging functionality available in main chat widget
+                                        Respond within 24 hours for best customer service
                                     </p>
                                 </div>
                             </div>
@@ -315,9 +530,9 @@ const FieldOwnerChatDashboard: React.FC = () => {
                                     <div className="p-4 border rounded-lg bg-green-50">
                                         <h4 className="font-medium text-green-700 mb-2">Stats</h4>
                                         <div className="text-sm text-gray-600 space-y-1">
-                                            <p>• {rooms.length} total conversations</p>
-                                            <p>• {unreadCount} unread messages</p>
-                                            <p>• {rooms.filter(r => r.bookingId).length} with bookings</p>
+                                            <p>• {filteredRooms.length} total conversations</p>
+                                            <p>• {filteredRooms.filter(r => r.hasUnread).length} unread conversations</p>
+                                            <p>• {filteredRooms.filter(r => r.bookingId).length} with bookings</p>
                                         </div>
                                     </div>
                                 </div>

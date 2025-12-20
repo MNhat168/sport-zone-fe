@@ -6,13 +6,28 @@ class WebSocketService {
   private socket: Socket | null = null;
   private isConnecting = false;
 
-  connect(token: string) {
+  connect() {
     if (this.socket?.connected || this.isConnecting) return;
+
+    // Get user data from sessionStorage
+    const userData = sessionStorage.getItem("user");
+    if (!userData) {
+      console.error("No user data found in sessionStorage");
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    const userId = user.id || user._id;
+    
+    if (!userId) {
+      console.error("No user ID found in sessionStorage");
+      return;
+    }
 
     this.isConnecting = true;
     
-    this.socket = io(`${process.env.VITE_API_URL || "http://localhost:3000"}/chat`, {
-      auth: { token },
+    this.socket = io(`${"http://localhost:3000"}/chat`, {
+      auth: { userId },
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -75,7 +90,8 @@ class WebSocketService {
   }
 
   sendMessage(data: {
-    chatRoomId: string;
+    fieldOwnerId: string;
+    fieldId?: string;
     content: string;
     type?: string;
     attachments?: string[];

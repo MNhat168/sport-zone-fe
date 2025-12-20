@@ -309,6 +309,7 @@ export const createField = createAsyncThunk<
 });
 
 // Create field with image upload (Owner only)
+// Create field with image upload (Owner only)
 export const createFieldWithImages = createAsyncThunk<
     FieldResponse,
     { payload: CreateFieldPayload; images: File[]; locationData?: { address: string; geo: { type: 'Point'; coordinates: [number, number] } } },
@@ -316,6 +317,13 @@ export const createFieldWithImages = createAsyncThunk<
 >("field/createFieldWithImages", async ({ payload, images, locationData }, thunkAPI) => {
     try {
         const formData = new FormData();
+
+        console.log("🚀 [FIELD THUNK] Starting createFieldWithImages:", {
+            fieldName: payload.name,
+            imagesCount: images?.length || 0,
+            locationData,
+            timestamp: new Date().toISOString()
+        });
 
         // Add basic field data
         formData.append("name", payload.name);
@@ -327,76 +335,149 @@ export const createFieldWithImages = createAsyncThunk<
         let locationObject;
         if (locationData && locationData.geo.coordinates[0] !== 0 && locationData.geo.coordinates[1] !== 0) {
             locationObject = locationData;
-        } else if (typeof payload.location === 'object' && 'geo' in payload.location) {
+        } else if (typeof payload.location === 'object' && payload.location && 'geo' in payload.location) {
             locationObject = payload.location;
         } else {
-            // Fallback: if only string address is provided (should not happen with new UI)
+            // Fallback: if only string address is provided
             locationObject = {
-                address: payload.location as string,
+                address: payload.location as string || "",
                 geo: {
                     type: "Point" as const,
                     coordinates: [0, 0] as [number, number]
                 }
             };
         }
+        
+        console.log("📍 [FIELD THUNK] Location object:", locationObject);
         formData.append("location", JSON.stringify(locationObject));
 
+        // Debug: Log operating hours before processing
+        console.log("🕒 [FIELD THUNK] Original operatingHours:", payload.operatingHours);
+
         // Add operating hours as JSON string
-        // Convert duration from number to string to match backend schema (schema chung yêu cầu string)
+        // Convert duration from number to string to match backend schema
         const operatingHoursForAPI = payload.operatingHours.map(oh => ({
             ...oh,
-            duration: oh.duration.toString()
+            duration: oh.duration.toString() // Ensure it's a string
         }));
-        formData.append("operatingHours", JSON.stringify(operatingHoursForAPI));
+        
+        const operatingHoursString = JSON.stringify(operatingHoursForAPI);
+        console.log("🕒 [FIELD THUNK] Operating hours JSON string:", operatingHoursString);
+        formData.append("operatingHours", operatingHoursString);
 
         // Add slot configuration as strings (required for multipart/form-data)
         formData.append("slotDuration", payload.slotDuration.toString());
         formData.append("minSlots", payload.minSlots.toString());
         formData.append("maxSlots", payload.maxSlots.toString());
 
-        // Add base price as string (required for multipart/form-data)
+        // Add base price as string
         formData.append("basePrice", payload.basePrice.toString());
 
-        // Add price ranges as JSON string (OPTIONAL)
-        // Convert multiplier from number to string to match backend schema (schema chung yêu cầu string)
+        // Debug: Log price ranges before processing
+        console.log("💰 [FIELD THUNK] Original priceRanges:", payload.priceRanges);
+
+        // Add price ranges as JSON string
+        // Always send priceRanges, even if empty
+        let priceRangesString = "[]";
         if (payload.priceRanges && payload.priceRanges.length > 0) {
             const priceRangesForAPI = payload.priceRanges.map(range => ({
                 ...range,
-                multiplier: range.multiplier.toString()
+                multiplier: range.multiplier.toString() // Ensure it's a string
             }));
-            formData.append("priceRanges", JSON.stringify(priceRangesForAPI));
+            priceRangesString = JSON.stringify(priceRangesForAPI);
+        } else {
+            // If no priceRanges provided, create default from operating hours
+            const defaultPriceRanges = payload.operatingHours.map(oh => ({
+                day: oh.day,
+                start: oh.start,
+                end: oh.end,
+                multiplier: "1.0" // String value
+            }));
+            priceRangesString = JSON.stringify(defaultPriceRanges);
         }
+        
+        console.log("💰 [FIELD THUNK] Price ranges JSON string:", priceRangesString);
+        formData.append("priceRanges", priceRangesString);
 
-        // Add amenities as JSON string (OPTIONAL)
-        // Convert price from number to string to match backend schema (schema chung yêu cầu string)
+        // Debug: Log amenities before processing
+        console.log("🛍️ [FIELD THUNK] Original amenities:", payload.amenities);
+
+        // Add amenities as JSON string
+        // Always send amenities, even if empty
+        let amenitiesString = "[]";
         if (payload.amenities && payload.amenities.length > 0) {
             const amenitiesForAPI = payload.amenities.map(amenity => ({
                 ...amenity,
-                price: amenity.price.toString()
+                price: amenity.price.toString() // Ensure it's a string
             }));
-            formData.append("amenities", JSON.stringify(amenitiesForAPI));
+            amenitiesString = JSON.stringify(amenitiesForAPI);
+        }
+        
+        console.log("🛍️ [FIELD THUNK] Amenities JSON string:", amenitiesString);
+        formData.append("amenities", amenitiesString);
+
+        // Add number of courts if specified
+        if (payload.numberOfCourts !== undefined && payload.numberOfCourts !== null) {
+            formData.append("numberOfCourts", payload.numberOfCourts.toString());
+            console.log("🏟️ [FIELD THUNK] Number of courts:", payload.numberOfCourts);
         }
 
         // Add image files (OPTIONAL)
         if (images && images.length > 0) {
+            console.log("🖼️ [FIELD THUNK] Adding images:", images.map(img => ({
+                name: img.name,
+                size: img.size,
+                type: img.type
+            })));
+            
             images.forEach((image) => {
                 formData.append("images", image);
             });
+        } else {
+            console.log("🖼️ [FIELD THUNK] No images to upload");
         }
 
-        // IMPORTANT: Do NOT set Content-Type header
-        // Browser will automatically set it with the correct boundary
+        // Log all formData entries for debugging
+        console.log("📋 [FIELD THUNK] FormData entries:");
+        for (const [key, value] of formData.entries()) {
+            if (key === 'images' && value instanceof File) {
+                console.log(`  ${key}: File - ${value.name} (${value.size} bytes)`);
+            } else if (typeof value === 'string' && value.length > 100) {
+                console.log(`  ${key}: ${value.substring(0, 100)}... (${value.length} chars)`);
+            } else {
+                console.log(`  ${key}: ${value}`);
+            }
+        }
+
+        console.log("🚀 [FIELD THUNK] Sending request to:", CREATE_FIELD_WITH_IMAGES_API);
         const response = await axiosPrivate.post(CREATE_FIELD_WITH_IMAGES_API, formData);
 
-        console.log("-----------------------------------------------------");
-        console.log("Create field with images response:", response.data);
-        console.log("-----------------------------------------------------");
+        console.log("✅ [FIELD THUNK] Create field with images response:", {
+            status: response.status,
+            data: response.data,
+            timestamp: new Date().toISOString()
+        });
 
         const raw = response.data;
         const apiField = raw?.data ?? raw;
         const mapped = mapApiFieldToAppField(apiField);
+        
+        console.log("🎉 [FIELD THUNK] Field created successfully:", {
+            fieldId: mapped.id,
+            fieldName: mapped.name,
+            timestamp: new Date().toISOString()
+        });
+        
         return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
     } catch (error: any) {
+        console.error("❌ [FIELD THUNK] Error creating field with images:", {
+            error: error.message,
+            status: error.response?.status,
+            responseData: error.response?.data,
+            requestData: error.config?.data ? 'FormData (multipart)' : 'No data',
+            timestamp: new Date().toISOString()
+        });
+
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to create field with images",
             status: error.response?.status?.toString() || "500",

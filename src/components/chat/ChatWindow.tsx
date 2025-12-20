@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import type { Message } from "@/features/chat/chat-type";
-import axiosPrivate from "@/utils/axios/axiosPrivate";
 
 interface FieldDetailChatWindowProps {
     onClose: () => void;
@@ -32,35 +31,24 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
     const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [localMessages, setLocalMessages] = useState<Message[]>([]);
+    const [localRoomId, setLocalRoomId] = useState<string | null>(null);
 
     const { currentRoom, loading } = useAppSelector((state) => state.chat);
     const dispatch = useAppDispatch();
-    const user = useAppSelector((state) => state.auth.user);
 
     useEffect(() => {
-        if (isOpen && user) {
-            // Initialize WebSocket connection
-            const token = sessionStorage.getItem("access_token");
-            if (token) {
-                webSocketService.connect(token);
-            }
+        if (isOpen) {
+            // Connect WebSocket
+            webSocketService.connect();
         }
-    }, [isOpen, user]);
+    }, [isOpen]);
 
     useEffect(() => {
-        if (isOpen && currentRoom?._id) { // Add optional chaining
-            webSocketService.joinChatRoom(currentRoom._id);
-            dispatch(markAsRead(currentRoom._id));
-            webSocketService.markAsRead(currentRoom._id);
+        if (currentRoom) {
+            setLocalRoomId(currentRoom._id);
+            setLocalMessages(currentRoom.messages || []);
         }
-    }, [isOpen, currentRoom, dispatch]);
-
-    useEffect(() => {
-        // Update local messages when currentRoom changes
-        if (currentRoom?.messages) {
-            setLocalMessages(currentRoom.messages);
-        }
-    }, [currentRoom?.messages]);
+    }, [currentRoom]);
 
     useEffect(() => {
         scrollToBottom();
@@ -70,102 +58,50 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    useEffect(() => {
-        const initializeChat = async () => {
-            if (!isOpen || !user || !fieldOwnerId || !fieldId) return;
-
-            // Validate IDs
-            if (!fieldOwnerId || fieldOwnerId === 'undefined' || !fieldId || fieldId === 'undefined') {
-                console.error('Invalid IDs:', { fieldOwnerId, fieldId });
-                return;
-            }
-
-            try {
-                let roomToUse = currentRoom;
-
-                // If no current room exists, create one
-                if (!roomToUse || !roomToUse._id) {
-                    const response = await axiosPrivate.post('/chat/start', {
-                        fieldOwnerId,
-                        fieldId,
-                    });
-                    roomToUse = response.data;
-                    dispatch(setCurrentRoom(roomToUse));
-                }
-
-                // Now join and mark as read
-                if (webSocketService.isConnected() && roomToUse && roomToUse._id) {
-                    webSocketService.joinChatRoom(roomToUse._id);
-                    dispatch(markAsRead(roomToUse._id));
-                    webSocketService.markAsRead(roomToUse._id);
-                }
-
-                // Set local messages
-                setLocalMessages(roomToUse && roomToUse.messages ? roomToUse.messages : []);
-
-            } catch (error) {
-                console.error("Failed to initialize chat:", error);
-                alert("Failed to initialize chat. Please try again.");
-                onClose();
-            }
-        };
-
-        initializeChat();
-    }, [isOpen, user, fieldOwnerId, fieldId, currentRoom, onClose, dispatch]);
-
     const handleSendMessage = async () => {
         if (!message.trim()) return;
 
-        // If no chat room exists yet, create one first
-        if (!currentRoom) {
-            try {
-                // Create chat room
-                const response = await axiosPrivate.post('/chat/start', {
-                    fieldOwnerId,
-                    fieldId,
-                });
-
-                const newRoom = response.data;
-                dispatch(setCurrentRoom(newRoom));
-
-                // Join the room
-                if (webSocketService.isConnected()) {
-                    webSocketService.joinChatRoom(newRoom._id);
-                }
-
-                // Send the first message
-                webSocketService.sendMessage({
-                    chatRoomId: newRoom._id,
-                    content: message.trim(),
-                    type: "text",
-                });
-            } catch (error) {
-                console.error("Failed to create chat room:", error);
-                alert("Failed to send message. Please try again.");
-                return;
-            }
-        } else {
-            // Existing room, just send message
-            webSocketService.sendMessage({
-                chatRoomId: currentRoom._id,
-                content: message.trim(),
-                type: "text",
-            });
+        // Get user data from sessionStorage
+        const userData = sessionStorage.getItem("user");
+        if (!userData) {
+            alert("Vui lòng đăng nhập để gửi tin nhắn");
+            return;
         }
 
+        // Send message via WebSocket - room will be created automatically on the backend
+        webSocketService.sendMessage({
+            fieldOwnerId,
+            fieldId,
+            content: message.trim(),
+            type: "text",
+        });
+
+        // Add message locally for immediate display
+        const user = JSON.parse(userData);
+        const newMessage: Message = {
+            sender: user.id || user._id,
+            type: 'text',
+            content: message.trim(),
+            isRead: false,
+            sentAt: new Date().toISOString(),
+        };
+
+        setLocalMessages(prev => [...prev, newMessage]);
         setMessage("");
         clearTypingIndicator();
     };
 
     const handleTyping = () => {
-        if (!currentRoom) return;
+        if (!localRoomId) return;
 
-        webSocketService.sendTyping(currentRoom._id, true);
+        webSocketService.sendTyping(localRoomId, true);
 
         if (typingTimeout) clearTimeout(typingTimeout);
 
         const timeout = setTimeout(() => {
-            webSocketService.sendTyping(currentRoom._id, false);
+            if (localRoomId) {
+                webSocketService.sendTyping(localRoomId, false);
+            }
         }, 1000);
 
         setTypingTimeout(timeout);
@@ -173,14 +109,17 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
 
     const clearTypingIndicator = () => {
         if (typingTimeout) clearTimeout(typingTimeout);
-        if (currentRoom) {
-            webSocketService.sendTyping(currentRoom._id, false);
+        if (localRoomId) {
+            webSocketService.sendTyping(localRoomId, false);
         }
-        dispatch(clearTyping({ chatRoomId: currentRoom?._id || "" }));
+        dispatch(clearTyping({ chatRoomId: localRoomId || "" }));
     };
 
     const isUserMessage = (senderId: string) => {
-        return senderId === user?._id;
+        const userData = sessionStorage.getItem("user");
+        if (!userData) return false;
+        const user = JSON.parse(userData);
+        return senderId === (user.id || user._id);
     };
 
     const formatTime = (dateString: string | Date) => {
@@ -206,7 +145,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                         <div>
                             <h3 className="font-semibold text-gray-900">Trò chuyện với {fieldOwnerName}</h3>
                             <p className="text-sm text-gray-600">Về sân: {fieldName}</p>
-                            {!currentRoom && (
+                            {!localRoomId && (
                                 <p className="text-xs text-yellow-600 mt-1">
                                     Phòng chat sẽ được tạo khi bạn gửi tin nhắn đầu tiên
                                 </p>

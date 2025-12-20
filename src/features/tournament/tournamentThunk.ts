@@ -9,6 +9,9 @@ import {
   REGISTER_FOR_TOURNAMENT_API,
   buildTournamentsQuery,
   buildAvailableFieldsQuery,
+  CANCEL_TOURNAMENT_API,
+  MY_TOURNAMENTS_API,
+  UPDATE_TOURNAMENT_API,
 } from './tournamentAPI';
 import {
   setLoading,
@@ -19,7 +22,10 @@ import {
   addTournament,
   updateTournament,
   setSelectedTeam,
+  setAvailableCourts,
+  type Tournament,
 } from './tournamentSlice';
+import { BASE_URL } from '@/utils/constant-value/constant';
 
 
 
@@ -283,3 +289,124 @@ export const selectTeam = createAsyncThunk(
     return teamNumber;
   }
 );
+
+// Add new thunk for fetching available courts
+export const fetchAvailableCourts = createAsyncThunk(
+  'tournament/fetchAvailableCourts',
+  async (params: { sportType: string; location: string; date: string }, { dispatch, rejectWithValue }) => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+
+    try {
+      const queryString = buildAvailableCourtsQuery(params); // New function
+      const response = await axiosPublic.get(`${AVAILABLE_COURTS_API}?${queryString}`);
+
+      // Extract courts from the response structure
+      const courts = response.data.data || response.data || [];
+
+      console.log('Extracted courts:', courts);
+      dispatch(setAvailableCourts(courts));
+      return courts;
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || 'Failed to fetch available courts';
+      dispatch(setError(errorMsg));
+      return rejectWithValue(errorMsg);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+);
+
+// Add these new thunks
+
+export const fetchMyTournaments = createAsyncThunk(
+  'tournament/fetchMyTournaments',
+  async (_, { dispatch, rejectWithValue }) => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+
+    try {
+      const response = await axiosPrivate.get(MY_TOURNAMENTS_API);
+      console.log('My tournaments response:', response.data);
+
+      // Map API response to app format
+      const tournaments = response.data.data || response.data || [];
+      const mappedTournaments = tournaments.map(mapApiTournamentToAppTournament);
+      const validTournaments = mappedTournaments.filter((t): t is Tournament => t !== null);
+
+      dispatch(setTournaments(validTournaments));
+      return validTournaments;
+    } catch (error: any) {
+      console.error('Error fetching my tournaments:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch tournaments';
+      dispatch(setError(errorMsg));
+      return rejectWithValue(errorMsg);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+);
+
+export const updateTournamentById = createAsyncThunk(
+  'tournament/updateTournament',
+  async ({ id, data }: { id: string; data: any }, { dispatch, rejectWithValue }) => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+
+    try {
+      const response = await axiosPrivate.put(UPDATE_TOURNAMENT_API(id), data);
+      const tournamentData = response.data.data || response.data;
+      const mappedTournament = mapApiTournamentToAppTournament(tournamentData);
+
+      if (!mappedTournament) {
+        const errorMsg = 'Invalid tournament data returned from API';
+        dispatch(setError(errorMsg));
+        return rejectWithValue(errorMsg);
+      }
+
+      dispatch(updateTournament(mappedTournament));
+      return mappedTournament;
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || 'Failed to update tournament';
+      dispatch(setError(errorMsg));
+      return rejectWithValue(errorMsg);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+);
+
+export const cancelTournamentById = createAsyncThunk(
+  'tournament/cancelTournament',
+  async (id: string, { dispatch, rejectWithValue }) => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+
+    try {
+      const response = await axiosPrivate.delete(CANCEL_TOURNAMENT_API(id));
+      const tournamentData = response.data.data || response.data;
+      const mappedTournament = mapApiTournamentToAppTournament(tournamentData);
+
+      if (mappedTournament) {
+        // Update the tournament in state to reflect cancellation
+        dispatch(updateTournament(mappedTournament));
+      }
+
+      return response.data;
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || 'Failed to cancel tournament';
+      dispatch(setError(errorMsg));
+      return rejectWithValue(errorMsg);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+);
+
+// Add API endpoint
+export const AVAILABLE_COURTS_API = `${BASE_URL}/tournaments/available-courts`;
+
+export const buildAvailableCourtsQuery = (params: { sportType: string; location: string; date: string }) => {
+  const queryParams = new URLSearchParams(params);
+  return queryParams.toString();
+};
