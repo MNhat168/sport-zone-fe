@@ -47,6 +47,8 @@ import { Route as AuthenticatedReportsReportIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedFieldOwnersRequestsRouteImport } from './routes/_authenticated/field-owners/requests'
 import { Route as AuthenticatedFieldOwnersIdRouteImport } from './routes/_authenticated/field-owners/$id'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
+import { Route as AuthenticatedCoachesRequestsRouteImport } from './routes/_authenticated/coaches/requests'
+import { Route as AuthenticatedCoachesRequestsIdRouteImport } from './routes/_authenticated/coaches/requests/$id'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
@@ -252,6 +254,18 @@ const AuthenticatedErrorsErrorRoute =
     path: '/errors/$error',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCoachesRequestsRoute =
+  AuthenticatedCoachesRequestsRouteImport.update({
+    id: '/coaches/requests',
+    path: '/coaches/requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCoachesRequestsIdRoute =
+  AuthenticatedCoachesRequestsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedCoachesRequestsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -268,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
+  '/coaches/requests': typeof AuthenticatedCoachesRequestsRouteWithChildren
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/field-owners/$id': typeof AuthenticatedFieldOwnersIdRoute
   '/field-owners/requests': typeof AuthenticatedFieldOwnersRequestsRoute
@@ -290,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
 }
 export interface FileRoutesByTo {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -304,6 +320,7 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
+  '/coaches/requests': typeof AuthenticatedCoachesRequestsRouteWithChildren
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/field-owners/$id': typeof AuthenticatedFieldOwnersIdRoute
   '/field-owners/requests': typeof AuthenticatedFieldOwnersRequestsRoute
@@ -326,6 +343,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -345,6 +363,7 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/coaches/requests': typeof AuthenticatedCoachesRequestsRouteWithChildren
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/field-owners/$id': typeof AuthenticatedFieldOwnersIdRoute
   '/_authenticated/field-owners/requests': typeof AuthenticatedFieldOwnersRequestsRoute
@@ -367,6 +386,7 @@ export interface FileRoutesById {
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -385,6 +405,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
+    | '/coaches/requests'
     | '/errors/$error'
     | '/field-owners/$id'
     | '/field-owners/requests'
@@ -407,6 +428,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/transactions'
     | '/users'
+    | '/coaches/requests/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/clerk'
@@ -421,6 +443,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
+    | '/coaches/requests'
     | '/errors/$error'
     | '/field-owners/$id'
     | '/field-owners/requests'
@@ -443,6 +466,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/transactions'
     | '/users'
+    | '/coaches/requests/$id'
   id:
     | '__root__'
     | '/_authenticated'
@@ -461,6 +485,7 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/'
+    | '/_authenticated/coaches/requests'
     | '/_authenticated/errors/$error'
     | '/_authenticated/field-owners/$id'
     | '/_authenticated/field-owners/requests'
@@ -483,6 +508,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tasks/'
     | '/_authenticated/transactions/'
     | '/_authenticated/users/'
+    | '/_authenticated/coaches/requests/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -768,6 +794,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedErrorsErrorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coaches/requests': {
+      id: '/_authenticated/coaches/requests'
+      path: '/coaches/requests'
+      fullPath: '/coaches/requests'
+      preLoaderRoute: typeof AuthenticatedCoachesRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/coaches/requests/$id': {
+      id: '/_authenticated/coaches/requests/$id'
+      path: '/$id'
+      fullPath: '/coaches/requests/$id'
+      preLoaderRoute: typeof AuthenticatedCoachesRequestsIdRouteImport
+      parentRoute: typeof AuthenticatedCoachesRequestsRoute
+    }
   }
 }
 
@@ -794,9 +834,24 @@ const AuthenticatedSettingsRouteRouteWithChildren =
     AuthenticatedSettingsRouteRouteChildren,
   )
 
+interface AuthenticatedCoachesRequestsRouteChildren {
+  AuthenticatedCoachesRequestsIdRoute: typeof AuthenticatedCoachesRequestsIdRoute
+}
+
+const AuthenticatedCoachesRequestsRouteChildren: AuthenticatedCoachesRequestsRouteChildren =
+  {
+    AuthenticatedCoachesRequestsIdRoute: AuthenticatedCoachesRequestsIdRoute,
+  }
+
+const AuthenticatedCoachesRequestsRouteWithChildren =
+  AuthenticatedCoachesRequestsRoute._addFileChildren(
+    AuthenticatedCoachesRequestsRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedCoachesRequestsRoute: typeof AuthenticatedCoachesRequestsRouteWithChildren
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
   AuthenticatedFieldOwnersIdRoute: typeof AuthenticatedFieldOwnersIdRoute
   AuthenticatedFieldOwnersRequestsRoute: typeof AuthenticatedFieldOwnersRequestsRoute
@@ -816,6 +871,8 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedCoachesRequestsRoute:
+    AuthenticatedCoachesRequestsRouteWithChildren,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
   AuthenticatedFieldOwnersIdRoute: AuthenticatedFieldOwnersIdRoute,
   AuthenticatedFieldOwnersRequestsRoute: AuthenticatedFieldOwnersRequestsRoute,

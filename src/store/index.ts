@@ -14,6 +14,7 @@ import storage from 'redux-persist/lib/storage'
 import { authApi } from './services/authApi'
 import { dashboardApi } from './services/dashboardApi'
 import { fieldOwnersApi } from './services/fieldOwnersApi'
+import { coachesApi } from './services/coachesApi'
 import { usersApi } from './services/usersApi'
 import { transactionsApi } from './services/transactionsApi'
 import { reportsApi } from './services/reportsApi'
@@ -36,6 +37,7 @@ const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
   [dashboardApi.reducerPath]: dashboardApi.reducer,
   [fieldOwnersApi.reducerPath]: fieldOwnersApi.reducer,
+  [coachesApi.reducerPath]: coachesApi.reducer,
   [usersApi.reducerPath]: usersApi.reducer,
   [transactionsApi.reducerPath]: transactionsApi.reducer,
   [reportsApi.reducerPath]: reportsApi.reducer,
@@ -57,6 +59,7 @@ export const store = configureStore({
       authApi.middleware,
       dashboardApi.middleware,
       fieldOwnersApi.middleware,
+      coachesApi.middleware,
       usersApi.middleware,
       transactionsApi.middleware,
       reportsApi.middleware,
