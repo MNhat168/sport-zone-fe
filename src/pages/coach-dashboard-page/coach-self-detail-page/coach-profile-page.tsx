@@ -39,7 +39,6 @@ import type { RootState, AppDispatch } from "@/store/store";
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
 import { BioSection } from "./components/BioSection";
 import { LessonsSection } from "./components/LessonsSection";
-import { CoachingSection } from "./components/CoachingSection";
 import { GallerySection } from "./components/GallerySection";
 import { LocationSection } from "./components/LocationSection";
 
@@ -103,43 +102,43 @@ interface GeocodingResult {
 const parseLatLngFromString = (input: string): [number, number] | null => {
   const latLngMatch = input.match(/(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/);
   if (!latLngMatch) return null;
-  
+
   const lat = parseFloat(latLngMatch[1]);
   const lng = parseFloat(latLngMatch[2]);
-  
+
   return (!Number.isNaN(lat) && !Number.isNaN(lng)) ? [lat, lng] : null;
 };
 
 const buildSearchCandidates = (input: string): string[] => {
   const postalRegex = /\b\d{5,6}\b/g;
   const withoutPostal = input.replace(postalRegex, '').trim();
-  
+
   const baseVariants = [input, withoutPostal].filter(Boolean);
   const withCountry = baseVariants.flatMap(v => [v, `${v}, Việt Nam`, `${v}, Vietnam`]);
-  
+
   return Array.from(new Set(withCountry));
 };
 
 const searchLocation = async (query: string): Promise<GeocodingResult | null> => {
   const candidates = buildSearchCandidates(query);
-  
+
   for (const candidate of candidates) {
     try {
       const url = `${NOMINATIM_BASE_URL}?format=jsonv2&limit=5&addressdetails=1&countrycodes=vn&q=${encodeURIComponent(candidate)}`;
-      const response = await fetch(url, { 
-        headers: { 'Accept': 'application/json' } 
+      const response = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
       });
-      
+
       if (!response.ok) continue;
-      
-      const data: Array<{ lat: string; lon: string; display_name: string; importance?: number }> = 
+
+      const data: Array<{ lat: string; lon: string; display_name: string; importance?: number }> =
         await response.json();
-      
+
       if (Array.isArray(data) && data.length > 0) {
         const best = data.slice().sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0))[0];
         const lat = parseFloat(best.lat);
         const lon = parseFloat(best.lon);
-        
+
         if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
           return { lat, lon, display_name: best.display_name };
         }
@@ -149,7 +148,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
       continue;
     }
   }
-  
+
   return null;
 };
 
@@ -263,8 +262,8 @@ export default function CoachSelfDetailPage() {
     // Initialize editable location
     // Handle location as string or object with {address, geo}
     const rawLocation = currentCoach?.location || resolvedCoachRaw?.location || "";
-    const location = typeof rawLocation === 'string' 
-      ? rawLocation.trim() 
+    const location = typeof rawLocation === 'string'
+      ? rawLocation.trim()
       : (rawLocation?.address || "").trim();
     setEditableLocation(location);
   }, [currentCoach, resolvedCoachRaw]);
@@ -318,7 +317,7 @@ export default function CoachSelfDetailPage() {
     // Retry initialization with longer delay and size check
     const initTimeout = setTimeout(() => {
       if (!mapContainerRef.current || mapRef.current) return;
-      
+
       // Check if container has dimensions
       if (!checkContainerSize()) {
         console.warn('[Leaflet] Container has no dimensions, retrying...');
@@ -372,7 +371,7 @@ export default function CoachSelfDetailPage() {
       });
       L.Marker.prototype.options.icon = defaultIcon;
 
-      const marker = L.marker(DEFAULT_CENTER, { 
+      const marker = L.marker(DEFAULT_CENTER, {
         draggable: true,
         icon: defaultIcon
       }).addTo(map);
@@ -429,7 +428,7 @@ export default function CoachSelfDetailPage() {
       if (markerRef.current.dragging) {
         markerRef.current.dragging.enable();
       }
-      
+
       const handleDragEnd = () => {
         const pos = markerRef.current!.getLatLng();
         setLocationCoordinates([pos.lat, pos.lng]);
@@ -457,7 +456,7 @@ export default function CoachSelfDetailPage() {
       };
 
       mapRef.current.on('click', handleMapClick);
-      
+
       return () => {
         markerRef.current?.off('dragend', handleDragEnd);
         mapRef.current?.off('click', handleMapClick);
@@ -476,7 +475,7 @@ export default function CoachSelfDetailPage() {
   useEffect(() => {
     // Only search if we have location text but no coordinates, and map is initialized
     if (!editableLocation.trim() || locationCoordinates || !mapRef.current || !markerRef.current) return;
-    
+
     // Small delay to avoid too many requests
     const timeoutId = setTimeout(async () => {
       try {
@@ -525,7 +524,7 @@ export default function CoachSelfDetailPage() {
     if (!query || !mapRef.current || !markerRef.current) return;
 
     setIsSearching(true);
-    
+
     try {
       // Check if input is direct lat,lng coordinates
       const coordinates = parseLatLngFromString(query);
@@ -538,7 +537,7 @@ export default function CoachSelfDetailPage() {
 
       // Search using geocoding service
       const result = await searchLocation(query);
-      
+
       if (result) {
         updateMapPosition(result.lat, result.lon, result.display_name);
       } else {
@@ -767,8 +766,8 @@ export default function CoachSelfDetailPage() {
         </div>
       </div>
 
-        {/* Main Content */}
-        <div className="container mx-auto px-4 lg:px-8 -mt-48 relative z-20 pb-8">
+      {/* Main Content */}
+      <div className="container mx-auto px-4 lg:px-8 -mt-48 relative z-20 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {/* Left Column - Coach Info Card and Content Sections */}
           <div className="lg:col-span-2 space-y-6">
@@ -849,7 +848,7 @@ export default function CoachSelfDetailPage() {
                           <span className="font-semibold">
                             {coachData.rating}
                           </span>
-                          
+
                         </div>
 
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -873,12 +872,12 @@ export default function CoachSelfDetailPage() {
                           <span>
                             Tham gia Dreamsports từ: {coachData.memberSince
                               ? new Date(
-                                  coachData.memberSince
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })
+                                coachData.memberSince
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
                               : "-"}
                           </span>
                         </div>
@@ -901,11 +900,10 @@ export default function CoachSelfDetailPage() {
                     key={tab.id}
                     variant={activeTab === tab.id ? "default" : "ghost"}
                     onClick={() => scrollToSection(tab.id)}
-                    className={`transition-all duration-300 ${
-                      activeTab === tab.id
-                        ? "bg-[#1a2332] text-white hover:bg-[#1a2332]/90"
-                        : "hover:bg-muted text-muted-foreground"
-                    }`}
+                    className={`transition-all duration-300 ${activeTab === tab.id
+                      ? "bg-[#1a2332] text-white hover:bg-[#1a2332]/90"
+                      : "hover:bg-muted text-muted-foreground"
+                      }`}
                   >
                     {tab.label}
                   </Button>
@@ -927,13 +925,6 @@ export default function CoachSelfDetailPage() {
               <LessonsSection
                 lessonTypes={lessonTypes}
                 onLessonSelect={setSelectedLesson}
-              />
-
-              {/* Phần: Coaching summary */}
-              <CoachingSection
-                coachingSummary={editableCoachingSummary}
-                isEditMode={isEditMode}
-                onCoachingSummaryChange={setEditableCoachingSummary}
               />
 
               {/* Phần: Thư viện ảnh */}
@@ -970,7 +961,7 @@ export default function CoachSelfDetailPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div className="text-left">
-                          <div className="text-md font-semibold text-foreground">
+                        <div className="text-md font-semibold text-foreground">
                           <span className="font-semibold">{coachData?.name ?? "-"}</span>{" "}
                           <span className={isCoachActive ? "text-green-600" : "text-red-600"}>
                             {isCoachActive ? "đang hoạt động" : "tạm ngưng"}
@@ -1007,83 +998,8 @@ export default function CoachSelfDetailPage() {
                       </div>
                     </div>
                   </div>
-                  
-                </CardHeader>
-              </Card>
 
-              {/* Lịch trống tiếp theo */}
-              <Card id="next-availability" className="shadow-md hover:shadow-lg transition-shadow duration-300">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Clock className="h-5 w-5 text-green-600" />
-                    Lịch trống tiếp theo
-                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    {(coachData?.availableSlots?.length
-                      ? coachData.availableSlots
-                          .slice(0, 4)
-                          .map((slot, index) => ({
-                            day: new Date(
-                              Date.now() + index * 24 * 60 * 60 * 1000
-                            ).toLocaleDateString("en-US", {
-                              weekday: "short",
-                              month: "short",
-                              day: "numeric",
-                            }),
-                            time: slot.startTime,
-                          }))
-                      : [
-                          { day: "Th 5, 24 Thg 9", time: "3 PM" },
-                          { day: "Th 6, 25 Thg 9", time: "4 PM" },
-                          { day: "Th 7, 26 Thg 9", time: "2 PM" },
-                          { day: "CN, 27 Thg 9", time: "11 AM" },
-                        ]
-                    ).map((slot, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        className="h-auto py-3 px-2 flex flex-col items-start hover:border-green-500 hover:bg-green-50 transition-all duration-300 group bg-transparent"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                      >
-                        <span className="text-xs text-muted-foreground group-hover:text-green-700">
-                          {slot.day}
-                        </span>
-                        <span className="font-semibold text-sm group-hover:text-green-600">
-                          {slot.time}
-                        </span>
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Danh sách bởi chủ sở hữu */}
-              <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
-                <CardHeader>
-                  <CardTitle className="text-lg text-left">Danh sách bởi chủ sở hữu</CardTitle>
-                  <hr className="my-2 border-gray-200 w-full" />
-                </CardHeader>
-
-                <CardContent>
-                  <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300 cursor-pointer group">
-                    <img
-                      src="/sports-academy-building.jpg"
-                      alt="Manchester Academy"
-                      className="w-20 h-20 rounded-lg object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-semibold group-hover:text-green-600 transition-colors">
-                        Manchester Academy
-                      </h4>
-                      <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mt-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>New York, NY 10012</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
               </Card>
             </div>
           </div>
@@ -1109,7 +1025,7 @@ export default function CoachSelfDetailPage() {
       </div>
 
       {/* Modal chi tiết buổi học */}
-        <Dialog
+      <Dialog
         open={!!selectedLesson}
         onOpenChange={() => setSelectedLesson(null)}
       >
