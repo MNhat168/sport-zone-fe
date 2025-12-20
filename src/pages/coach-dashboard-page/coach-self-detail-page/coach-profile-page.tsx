@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import {
   MapPin,
   Star,
@@ -33,14 +34,20 @@ import {
   User,
   //   ChevronUp,
 } from "lucide-react";
-import { getCoachIdByUserId, clearCurrentCoach } from "@/features/coach";
-import { CustomSuccessToast } from "@/components/toast/notificiation-toast";
+import { getCoachById, getCoachIdByUserId, clearCurrentCoach, updateCoach } from "@/features/coach";
+import { deleteLessonType } from "@/features/lesson-types/lessonTypesThunk";
+import { CustomSuccessToast, CustomFailedToast } from "@/components/toast/notificiation-toast";
 import type { RootState, AppDispatch } from "@/store/store";
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
 import { BioSection } from "./components/BioSection";
-import { LessonsSection } from "./components/LessonsSection";
+import { LessonsSection } from "../../coach-detail-page/components/LessonsSection";
+import { CoachingSection } from "./components/CoachingSection";
 import { GallerySection } from "./components/GallerySection";
 import { LocationSection } from "./components/LocationSection";
+import { ReviewsSection } from "../../coach-detail-page/components/ReviewsSection";
+import { ReviewModal } from "../../coach-detail-page/components/ReviewModal";
+import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
+import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
 
 interface LessonType {
   id: string;
@@ -51,6 +58,7 @@ interface LessonType {
   iconBg: string;
   iconColor: string;
   badge: string;
+  lessonPrice?: number | string;
 }
 
 // Mock lesson types - sẽ được thay thế bằng dữ liệu thật từ API khi có
@@ -65,6 +73,7 @@ const mockLessonTypes: LessonType[] = [
     iconBg: "bg-green-100",
     iconColor: "text-green-600",
     badge: "1 kèm 1",
+    lessonPrice: 200000,
   },
   {
     id: "2",
@@ -76,6 +85,7 @@ const mockLessonTypes: LessonType[] = [
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
     badge: "2-4 người",
+    lessonPrice: 120000,
   },
 ];
 
@@ -102,43 +112,43 @@ interface GeocodingResult {
 const parseLatLngFromString = (input: string): [number, number] | null => {
   const latLngMatch = input.match(/(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/);
   if (!latLngMatch) return null;
-
+  
   const lat = parseFloat(latLngMatch[1]);
   const lng = parseFloat(latLngMatch[2]);
-
+  
   return (!Number.isNaN(lat) && !Number.isNaN(lng)) ? [lat, lng] : null;
 };
 
 const buildSearchCandidates = (input: string): string[] => {
   const postalRegex = /\b\d{5,6}\b/g;
   const withoutPostal = input.replace(postalRegex, '').trim();
-
+  
   const baseVariants = [input, withoutPostal].filter(Boolean);
   const withCountry = baseVariants.flatMap(v => [v, `${v}, Việt Nam`, `${v}, Vietnam`]);
-
+  
   return Array.from(new Set(withCountry));
 };
 
 const searchLocation = async (query: string): Promise<GeocodingResult | null> => {
   const candidates = buildSearchCandidates(query);
-
+  
   for (const candidate of candidates) {
     try {
       const url = `${NOMINATIM_BASE_URL}?format=jsonv2&limit=5&addressdetails=1&countrycodes=vn&q=${encodeURIComponent(candidate)}`;
-      const response = await fetch(url, {
-        headers: { 'Accept': 'application/json' }
+      const response = await fetch(url, { 
+        headers: { 'Accept': 'application/json' } 
       });
-
+      
       if (!response.ok) continue;
-
-      const data: Array<{ lat: string; lon: string; display_name: string; importance?: number }> =
+      
+      const data: Array<{ lat: string; lon: string; display_name: string; importance?: number }> = 
         await response.json();
-
+      
       if (Array.isArray(data) && data.length > 0) {
         const best = data.slice().sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0))[0];
         const lat = parseFloat(best.lat);
         const lon = parseFloat(best.lon);
-
+        
         if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
           return { lat, lon, display_name: best.display_name };
         }
@@ -148,7 +158,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
       continue;
     }
   }
-
+  
   return null;
 };
 
@@ -177,6 +187,20 @@ export default function CoachSelfDetailPage() {
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
   const [selectedLesson, setSelectedLesson] = useState<LessonType | null>(null);
 
+  // Reviews state
+  const [coachReviews, setCoachReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
+  const REVIEW_PAGE_LIMIT = 5;
+  const [selectedRatingFilter, setSelectedRatingFilter] = useState<number | null>(null);
+
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState<string>("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
   // Edit mode and editable fields (UI only)
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCoachActive, setIsCoachActive] = useState(true);
@@ -186,31 +210,148 @@ export default function CoachSelfDetailPage() {
   const [editableLocation, setEditableLocation] = useState<string>("");
   const [locationCoordinates, setLocationCoordinates] = useState<[number, number] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [editableRank, setEditableRank] = useState<string>("");
+  const [editableSports, setEditableSports] = useState<string[]>([]);
+
+  // Local copy of lessonTypes to support optimistic UI updates (deletion)
+  const [localLessonTypes, setLocalLessonTypes] = useState<LessonType[]>([]);
+  useEffect(() => {
+    const fromCurrent = (currentCoach?.lessonTypes && currentCoach.lessonTypes.length)
+      ? currentCoach.lessonTypes.map((lesson: any) => ({
+          id: lesson.id || lesson._id || "",
+          type: lesson.type as "single" | "pair" | "group",
+          name: lesson.name,
+          description: lesson.description,
+          icon: lesson.type === "single" ? User : Users,
+          iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
+          iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
+          badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+          lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? (lesson as any).hourlyRate ?? undefined,
+        }))
+      : null;
+
+    const fromResolved = (resolvedCoachRaw?.lessonTypes && resolvedCoachRaw.lessonTypes.length)
+      ? resolvedCoachRaw.lessonTypes.map((lesson: any) => ({
+          id: lesson.id || lesson._id || "",
+          type: lesson.type as "single" | "pair" | "group",
+          name: lesson.name,
+          description: lesson.description,
+          icon: lesson.type === "single" ? User : Users,
+          iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
+          iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
+          badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+          lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? (lesson as any).hourlyRate ?? undefined,
+        }))
+      : null;
+
+    setLocalLessonTypes(fromCurrent ?? fromResolved ?? mockLessonTypes);
+  }, [currentCoach, resolvedCoachRaw]);
 
   // Leaflet map refs
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
 
-  // Get lesson types from real coach data or fallback to mock data
-  const getLessonTypes = (): LessonType[] => {
-    if (currentCoach?.lessonTypes?.length) {
-      return currentCoach.lessonTypes.map((lesson) => ({
-        id: lesson._id,
-        type: lesson.type as "single" | "pair" | "group",
-        name: lesson.name,
-        description: lesson.description,
-        icon: lesson.type === "single" ? User : Users,
-        iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
-        iconColor:
-          lesson.type === "single" ? "text-green-600" : "text-blue-600",
-        badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
-      }));
-    }
-    return mockLessonTypes;
+  // `lessonTypes` will be computed after `coachData` is built to ensure
+  // we use the normalized lessonTypes assigned into `coachData`.
+
+  const filteredReviews = useMemo(() => {
+    const base = Array.isArray(coachReviews) ? coachReviews : [];
+    if (!selectedRatingFilter) return base;
+    return base.filter((rv) => Math.round(Number(rv.rating || 0)) === selectedRatingFilter);
+  }, [coachReviews, selectedRatingFilter]);
+
+  const fetchReviews = useCallback(
+    async (page = 1, append = false) => {
+      // determine coach id (param preferred, else from store/resolved)
+      const coachId = initialCoachId || currentCoach?.id || resolvedCoachRaw?._id;
+      if (!coachId) return;
+      try {
+        setReviewsLoading(true);
+        const resp = await getReviewsForCoachAPI(coachId as string, page, REVIEW_PAGE_LIMIT);
+
+        // Normalize possible API shapes:
+        // 1) { data: [...], pagination: { ... } }
+        // 2) { success: true, data: { data: [...], pagination: { ... } } }
+        // 3) direct array (unlikely)
+        let body: any = resp;
+        if (resp && typeof resp === 'object' && 'success' in resp && 'data' in resp) {
+          body = resp.data;
+        }
+
+        const items = Array.isArray(body?.data)
+          ? body.data
+          : Array.isArray(body)
+          ? body
+          : body.data ?? [];
+
+        const pageFromResp = body?.pagination?.page ?? resp?.pagination?.page ?? page;
+        const totalPagesFromResp = body?.pagination?.totalPages ?? resp?.pagination?.totalPages ?? 1;
+
+        if (append) setCoachReviews((prev) => [...prev, ...items]);
+        else setCoachReviews(items);
+
+        setReviewsPage(pageFromResp ?? page);
+        setReviewsTotalPages(totalPagesFromResp ?? 1);
+      } catch (err) {
+        console.error('Failed to load coach reviews', err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    },
+    [initialCoachId, currentCoach, resolvedCoachRaw],
+  );
+
+  useEffect(() => {
+    const coachId = initialCoachId || currentCoach?.id || resolvedCoachRaw?._id;
+    if (!coachId) return;
+    fetchReviews(1, false);
+    const timer = setInterval(() => {
+      fetchReviews(1, false);
+    }, 20000);
+    return () => clearInterval(timer);
+  }, [initialCoachId, currentCoach, resolvedCoachRaw, fetchReviews]);
+
+  const onFilterChange = (rating: number | null) => {
+    setSelectedRatingFilter(rating);
   };
 
-  const lessonTypes = getLessonTypes();
+  const onLoadMore = () => {
+    if (reviewsPage >= reviewsTotalPages) return;
+    fetchReviews(reviewsPage + 1, true);
+  };
+
+  const onWriteReview = () => setShowReviewModal(true);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const coachId = initialCoachId || currentCoach?.id || resolvedCoachRaw?._id;
+    if (!coachId) return CustomFailedToast('Không tìm thấy thông tin HLV để gửi đánh giá');
+    try {
+      setIsSubmittingReview(true);
+      const payload = {
+        coachId,
+        rating: reviewRating,
+        comment: reviewComment,
+      } as any;
+
+      const action: any = await dispatch(createCoachReviewThunk(payload));
+      if (action?.meta?.requestStatus === 'fulfilled') {
+        CustomSuccessToast('Gửi đánh giá thành công');
+        setShowReviewModal(false);
+        setReviewComment('');
+        setReviewRating(0);
+        fetchReviews(1, false);
+      } else {
+        CustomFailedToast(String(action?.payload || 'Gửi đánh giá thất bại'));
+      }
+    } catch (err) {
+      console.error('Submit review failed', err);
+      CustomFailedToast('Gửi đánh giá thất bại');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   // Resolve coachId: prefer param, else thunk resolve by userId
   useEffect(() => {
@@ -233,7 +374,7 @@ export default function CoachSelfDetailPage() {
       // ignore parse errors
     }
     if (userId) {
-      dispatch(getCoachIdByUserId(userId));
+      dispatch(getCoachById(userId));
     }
   }, [initialCoachId, dispatch]);
 
@@ -259,11 +400,24 @@ export default function CoachSelfDetailPage() {
     // Initialize editable short bio summary
     const summary = (currentCoach?.description || resolvedCoachRaw?.bio || "").trim();
     setEditableSummary(summary);
+    // Initialize coaching summary (experience/certification) for CoachingSection
+    const coachingExperience = currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? resolvedCoachRaw?.experience ?? "";
+    const coachingCertification = currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? resolvedCoachRaw?.certification ?? "";
+    // Prefer a combined editable summary if not separately used
+    const combinedSummary = coachingExperience || coachingCertification ? `${coachingExperience}${coachingExperience && coachingCertification ? " — " : ""}${coachingCertification}` : "";
+    // Remove specific undesired combined phrase (e.g. '10 years coaching experience with ITF certification — ITF Level 3 Coach')
+    const filteredSummary = combinedSummary.replace(/10 years coaching experience with ITF certification\s*—\s*ITF Level 3 Coach/gi, "").trim();
+    setEditableCoachingSummary(filteredSummary);
+    // Initialize rank and specializations
+    const initRank = currentCoach?.level ?? resolvedCoachRaw?.rank ?? "";
+    setEditableRank(initRank);
+    const initSpecs = currentCoach?.sports ?? resolvedCoachRaw?.sports ?? [];
+    setEditableSports(Array.isArray(initSpecs) ? initSpecs : []);
     // Initialize editable location
     // Handle location as string or object with {address, geo}
     const rawLocation = currentCoach?.location || resolvedCoachRaw?.location || "";
-    const location = typeof rawLocation === 'string'
-      ? rawLocation.trim()
+    const location = typeof rawLocation === 'string' 
+      ? rawLocation.trim() 
       : (rawLocation?.address || "").trim();
     setEditableLocation(location);
   }, [currentCoach, resolvedCoachRaw]);
@@ -305,9 +459,9 @@ export default function CoachSelfDetailPage() {
 
   // Initialize Leaflet map
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (mapRef.current) return;
 
-    // Wait for container to have proper dimensions
+    // Wait for container to have proper dimensions (we will retry until container exists)
     const checkContainerSize = () => {
       if (!mapContainerRef.current) return false;
       const rect = mapContainerRef.current.getBoundingClientRect();
@@ -316,16 +470,23 @@ export default function CoachSelfDetailPage() {
 
     // Retry initialization with longer delay and size check
     const initTimeout = setTimeout(() => {
-      if (!mapContainerRef.current || mapRef.current) return;
+      if (mapRef.current) return;
 
-      // Check if container has dimensions
-      if (!checkContainerSize()) {
-        console.warn('[Leaflet] Container has no dimensions, retrying...');
-        setTimeout(() => {
-          if (!mapContainerRef.current || mapRef.current || !checkContainerSize()) return;
-          initializeMap();
+      // If container not yet available or has no size, retry shortly
+      if (!mapContainerRef.current || !checkContainerSize()) {
+        console.warn('[Leaflet] Container not ready, retrying initialization...');
+        const retry = setTimeout(() => {
+          if (mapRef.current) return;
+          if (mapContainerRef.current && checkContainerSize()) {
+            initializeMap();
+          } else {
+            // one more retry after a bit
+            setTimeout(() => {
+              if (!mapRef.current && mapContainerRef.current && checkContainerSize()) initializeMap();
+            }, 300);
+          }
         }, 300);
-        return;
+        return () => clearTimeout(retry);
       }
 
       initializeMap();
@@ -371,7 +532,7 @@ export default function CoachSelfDetailPage() {
       });
       L.Marker.prototype.options.icon = defaultIcon;
 
-      const marker = L.marker(DEFAULT_CENTER, {
+      const marker = L.marker(DEFAULT_CENTER, { 
         draggable: true,
         icon: defaultIcon
       }).addTo(map);
@@ -428,7 +589,7 @@ export default function CoachSelfDetailPage() {
       if (markerRef.current.dragging) {
         markerRef.current.dragging.enable();
       }
-
+      
       const handleDragEnd = () => {
         const pos = markerRef.current!.getLatLng();
         setLocationCoordinates([pos.lat, pos.lng]);
@@ -456,7 +617,7 @@ export default function CoachSelfDetailPage() {
       };
 
       mapRef.current.on('click', handleMapClick);
-
+      
       return () => {
         markerRef.current?.off('dragend', handleDragEnd);
         mapRef.current?.off('click', handleMapClick);
@@ -475,7 +636,7 @@ export default function CoachSelfDetailPage() {
   useEffect(() => {
     // Only search if we have location text but no coordinates, and map is initialized
     if (!editableLocation.trim() || locationCoordinates || !mapRef.current || !markerRef.current) return;
-
+    
     // Small delay to avoid too many requests
     const timeoutId = setTimeout(async () => {
       try {
@@ -524,7 +685,7 @@ export default function CoachSelfDetailPage() {
     if (!query || !mapRef.current || !markerRef.current) return;
 
     setIsSearching(true);
-
+    
     try {
       // Check if input is direct lat,lng coordinates
       const coordinates = parseLatLngFromString(query);
@@ -537,7 +698,7 @@ export default function CoachSelfDetailPage() {
 
       // Search using geocoding service
       const result = await searchLocation(query);
-
+      
       if (result) {
         updateMapPosition(result.lat, result.lon, result.display_name);
       } else {
@@ -663,29 +824,29 @@ export default function CoachSelfDetailPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Lỗi tải dữ liệu huấn luyện viên: {detailError.message}</p>
-          <Button
-            onClick={() => {
-              let uid = "";
-              try {
-                const cookieUserStr = document.cookie.match(/user=([^;]+)/)?.[1];
-                const storageUserStr = sessionStorage.getItem("user");
-                const raw = cookieUserStr ? decodeURIComponent(cookieUserStr) : storageUserStr;
-                if (raw) {
-                  const user = JSON.parse(raw);
-                  if (typeof user?._id === "string") uid = user._id;
-                  else if (user?._id?.buffer) {
-                    const arr = Object.values(user._id.buffer) as number[];
-                    uid = arr.map((b) => b.toString(16).padStart(2, "0")).join("");
-                  } else if (user?.id) uid = String(user.id);
-                }
-              } catch {
-                // ignore parse errors
-              }
-              if (uid) dispatch(getCoachIdByUserId(uid));
-            }}
-          >
-            Thử lại
-          </Button>
+              <Button
+                onClick={() => {
+                  let uid = "";
+                  try {
+                    const cookieUserStr = document.cookie.match(/user=([^;]+)/)?.[1];
+                    const storageUserStr = sessionStorage.getItem("user");
+                    const raw = cookieUserStr ? decodeURIComponent(cookieUserStr) : storageUserStr;
+                    if (raw) {
+                      const user = JSON.parse(raw);
+                      if (typeof user?._id === "string") uid = user._id;
+                      else if (user?._id?.buffer) {
+                        const arr = Object.values(user._id.buffer) as number[];
+                        uid = arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+                      } else if (user?.id) uid = String(user.id);
+                    }
+                  } catch {
+                    // ignore parse errors
+                  }
+                  if (uid) dispatch(getCoachById(uid));
+                }}
+              >
+                Thử lại
+              </Button>
         </div>
       </div>
     );
@@ -727,6 +888,36 @@ export default function CoachSelfDetailPage() {
   const coachData = currentCoach ? {
     ...currentCoach,
     location: normalizeLocation(currentCoach.location),
+    lessonTypes: Array.isArray(currentCoach.lessonTypes)
+      ? currentCoach.lessonTypes.map((ls: any) => {
+          const normalizeId = (val: any) => {
+            if (!val && val !== 0) return "";
+            if (typeof val === "string") return val;
+            if (typeof val === "object") {
+              if (typeof val.toString === "function") return val.toString();
+              if (val?._id) return normalizeId(val._id);
+              if (val?.$oid) return String(val.$oid);
+              if (val?.buffer) {
+                try {
+                  const arr = Object.values(val.buffer) as number[];
+                  return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+                } catch {
+                  return JSON.stringify(val);
+                }
+              }
+              return JSON.stringify(val);
+            }
+            return String(val);
+          };
+
+          return {
+            ...ls,
+            _id: normalizeId(ls._id),
+            id: normalizeId(ls._id),
+            user: normalizeId(ls.user ?? ls.userId ?? ""),
+          };
+        })
+      : [],
   } : (resolvedCoachRaw ? {
     id: resolvedCoachRaw._id || "",
     name: resolvedCoachRaw.user?.fullName || "",
@@ -749,6 +940,25 @@ export default function CoachSelfDetailPage() {
     },
   } : null);
 
+  // Compute lessonTypes from normalized coachData (fallback to mock)
+  const lessonTypes: LessonType[] = (coachData?.lessonTypes && coachData.lessonTypes.length)
+    ? coachData.lessonTypes.map((lesson: any) => ({
+        id: lesson.id || lesson._id || "",
+        type: lesson.type as "single" | "pair" | "group",
+        name: lesson.name,
+        description: lesson.description,
+        icon: lesson.type === "single" ? User : Users,
+        iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
+        iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
+        badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+      }))
+    : mockLessonTypes;
+
+  
+
+  // DEBUG: log lessonTypes received from normalized coachData/store
+  console.log("DEBUG [CoachProfilePage] lessonTypes:", lessonTypes);
+
 
   return (
     <CoachDashboardLayout>
@@ -766,8 +976,8 @@ export default function CoachSelfDetailPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 lg:px-8 -mt-48 relative z-20 pb-8">
+        {/* Main Content */}
+        <div className="container mx-auto px-4 lg:px-8 -mt-48 relative z-20 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {/* Left Column - Coach Info Card and Content Sections */}
           <div className="lg:col-span-2 space-y-6">
@@ -817,16 +1027,48 @@ export default function CoachSelfDetailPage() {
                               <Button
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => {
-                                  console.log("Saving changes:", {
-                                    summary: editableSummary,
-                                    coachingSummary: editableCoachingSummary,
-                                    location: editableLocation,
-                                    coordinates: locationCoordinates,
-                                    price: editablePrice,
-                                    isActive: isCoachActive,
-                                  });
-                                  CustomSuccessToast("Đã lưu thay đổi (UI) — sẽ gọi API sau");
+                                onClick={async () => {
+                                  const coachId = initialCoachId || currentCoach?.id || resolvedCoachRaw?._id;
+                                  if (!coachId) return CustomFailedToast('Không tìm thấy HLV để lưu');
+
+                                  // Try to parse coaching summary into experience and certification if possible
+                                  let experience = '';
+                                  let certification = '';
+                                  if (editableCoachingSummary && editableCoachingSummary.trim()) {
+                                    const parts = editableCoachingSummary.split('—').map(p => p.trim()).filter(Boolean);
+                                    if (parts.length === 1) {
+                                      // Ambiguous — prefer as experience
+                                      experience = parts[0];
+                                    } else if (parts.length >= 2) {
+                                      experience = parts[0];
+                                      certification = parts.slice(1).join(' — ');
+                                    }
+                                  } else {
+                                    experience = currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? '';
+                                    certification = currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? '';
+                                  }
+
+                                  const payload: any = {
+                                    bio: editableSummary,
+                                    sports: editableSports,
+                                    certification,
+                                    experience,
+                                    rank: editableRank,
+                                  };
+
+                                  try {
+                                    const action: any = await dispatch(updateCoach({ id: coachId, data: payload }));
+                                    if (action?.meta?.requestStatus === 'fulfilled') {
+                                      CustomSuccessToast('Lưu thông tin huấn luyện viên thành công');
+                                      // refresh data
+                                      dispatch(getCoachById(coachId));
+                                    } else {
+                                      CustomFailedToast(String(action?.payload?.message || 'Lưu thất bại'));
+                                    }
+                                  } catch (err) {
+                                    console.error('Update coach failed', err);
+                                    CustomFailedToast('Lưu thất bại');
+                                  }
                                 }}
                               >
                                 Lưu
@@ -848,7 +1090,7 @@ export default function CoachSelfDetailPage() {
                           <span className="font-semibold">
                             {coachData.rating}
                           </span>
-
+                          
                         </div>
 
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -872,12 +1114,12 @@ export default function CoachSelfDetailPage() {
                           <span>
                             Tham gia Dreamsports từ: {coachData.memberSince
                               ? new Date(
-                                coachData.memberSince
-                              ).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })
+                                  coachData.memberSince
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
                               : "-"}
                           </span>
                         </div>
@@ -900,10 +1142,11 @@ export default function CoachSelfDetailPage() {
                     key={tab.id}
                     variant={activeTab === tab.id ? "default" : "ghost"}
                     onClick={() => scrollToSection(tab.id)}
-                    className={`transition-all duration-300 ${activeTab === tab.id
-                      ? "bg-[#1a2332] text-white hover:bg-[#1a2332]/90"
-                      : "hover:bg-muted text-muted-foreground"
-                      }`}
+                    className={`transition-all duration-300 ${
+                      activeTab === tab.id
+                        ? "bg-[#1a2332] text-white hover:bg-[#1a2332]/90"
+                        : "hover:bg-muted text-muted-foreground"
+                    }`}
                   >
                     {tab.label}
                   </Button>
@@ -923,8 +1166,43 @@ export default function CoachSelfDetailPage() {
 
               {/* Phần: Buổi học cùng tôi */}
               <LessonsSection
-                lessonTypes={lessonTypes}
-                onLessonSelect={setSelectedLesson}
+                lessonTypes={localLessonTypes}
+                onLessonClick={setSelectedLesson}
+                isEditMode={isEditMode}
+                onDelete={async (lessonId: string) => {
+                  // optimistic removal
+                  const prev = localLessonTypes;
+                  setLocalLessonTypes((cur) => cur.filter((l) => l.id !== lessonId));
+
+                  try {
+                    const action: any = await dispatch(deleteLessonType({ id: lessonId }));
+                    if (action?.meta?.requestStatus === 'fulfilled') {
+                      CustomSuccessToast('Xoá buổi học thành công');
+                      // kept optimistic UI; no full refresh to keep UX snappy
+                    } else {
+                      // revert
+                      setLocalLessonTypes(prev);
+                      CustomFailedToast(String(action?.payload?.message || 'Xoá thất bại'));
+                    }
+                  } catch (err) {
+                    console.error('Delete lesson failed', err);
+                    setLocalLessonTypes(prev);
+                    CustomFailedToast('Xoá buổi học thất bại');
+                  }
+                }}
+              />
+
+              {/* Phần: Coaching summary */}
+              <CoachingSection
+                coachingSummary={editableCoachingSummary}
+                isEditMode={isEditMode}
+                onCoachingSummaryChange={setEditableCoachingSummary}
+                certification={currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? resolvedCoachRaw?.certification}
+                experienceText={currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? resolvedCoachRaw?.experience}
+                rank={editableRank}
+                sports={editableSports}
+                onRankChange={setEditableRank}
+                onSportsChange={setEditableSports}
               />
 
               {/* Phần: Thư viện ảnh */}
@@ -933,6 +1211,21 @@ export default function CoachSelfDetailPage() {
                 currentIndex={currentGalleryIndex}
                 onNext={nextGallerySlide}
                 onPrev={prevGallerySlide}
+              />
+
+              {/* Phần: Đánh giá / Reviews */}
+              <ReviewsSection
+                coachData={coachData}
+                coachReviews={coachReviews}
+                filteredReviews={filteredReviews}
+                reviewsLoading={reviewsLoading}
+                reviewsPage={reviewsPage}
+                reviewsTotalPages={reviewsTotalPages}
+                selectedRatingFilter={selectedRatingFilter}
+                onFilterChange={onFilterChange}
+                onLoadMore={onLoadMore}
+                onWriteReview={onWriteReview}
+                showWriteReview={false}
               />
 
               {/* Phần: Vị trí */}
@@ -961,7 +1254,7 @@ export default function CoachSelfDetailPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div className="text-left">
-                        <div className="text-md font-semibold text-foreground">
+                          <div className="text-md font-semibold text-foreground">
                           <span className="font-semibold">{coachData?.name ?? "-"}</span>{" "}
                           <span className={isCoachActive ? "text-green-600" : "text-red-600"}>
                             {isCoachActive ? "đang hoạt động" : "tạm ngưng"}
@@ -998,9 +1291,84 @@ export default function CoachSelfDetailPage() {
                       </div>
                     </div>
                   </div>
-
+                  
                 </CardHeader>
               </Card>
+
+              {/* Lịch trống tiếp theo */}
+              <Card id="next-availability" className="shadow-md hover:shadow-lg transition-shadow duration-300">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Clock className="h-5 w-5 text-green-600" />
+                    Lịch trống tiếp theo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    {(coachData?.availableSlots?.length
+                      ? coachData.availableSlots
+                          .slice(0, 4)
+                          .map((slot, index) => ({
+                            day: new Date(
+                              Date.now() + index * 24 * 60 * 60 * 1000
+                            ).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            }),
+                            time: slot.startTime,
+                          }))
+                      : [
+                          { day: "Th 5, 24 Thg 9", time: "3 PM" },
+                          { day: "Th 6, 25 Thg 9", time: "4 PM" },
+                          { day: "Th 7, 26 Thg 9", time: "2 PM" },
+                          { day: "CN, 27 Thg 9", time: "11 AM" },
+                        ]
+                    ).map((slot, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        className="h-auto py-3 px-2 flex flex-col items-start hover:border-green-500 hover:bg-green-50 transition-all duration-300 group bg-transparent"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <span className="text-xs text-muted-foreground group-hover:text-green-700">
+                          {slot.day}
+                        </span>
+                        <span className="font-semibold text-sm group-hover:text-green-600">
+                          {slot.time}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Danh sách bởi chủ sở hữu */}
+              {/* <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
+                <CardHeader>
+                  <CardTitle className="text-lg text-left">Danh sách bởi chủ sở hữu</CardTitle>
+                  <hr className="my-2 border-gray-200 w-full" />
+                </CardHeader>
+
+                <CardContent>
+                  <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors duration-300 cursor-pointer group">
+                    <img
+                      src="/sports-academy-building.jpg"
+                      alt="Manchester Academy"
+                      className="w-20 h-20 rounded-lg object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-semibold group-hover:text-green-600 transition-colors">
+                        Manchester Academy
+                      </h4>
+                      <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mt-1">
+                        <MapPin className="h-3 w-3" />
+                        <span>New York, NY 10012</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card> */}
             </div>
           </div>
         </div>
@@ -1025,7 +1393,7 @@ export default function CoachSelfDetailPage() {
       </div>
 
       {/* Modal chi tiết buổi học */}
-      <Dialog
+        <Dialog
         open={!!selectedLesson}
         onOpenChange={() => setSelectedLesson(null)}
       >
@@ -1088,6 +1456,27 @@ export default function CoachSelfDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Review modal - placed with other modals */}
+      <ReviewModal
+        open={showReviewModal}
+        onOpenChange={(v) => setShowReviewModal(v)}
+        coachName={coachData?.name || "HLV này"}
+        reviewRating={reviewRating}
+        hoveredRating={hoveredRating}
+        reviewComment={reviewComment}
+        isSubmitting={isSubmittingReview}
+        onRatingChange={(r) => setReviewRating(r)}
+        onHoveredRatingChange={(r) => setHoveredRating(r)}
+        onCommentChange={(c) => setReviewComment(c)}
+        onSubmit={handleSubmitReview}
+        onCancel={() => {
+          setShowReviewModal(false);
+          setReviewRating(0);
+          setHoveredRating(0);
+        }}
+      />
+
     </CoachDashboardLayout>
   );
 }

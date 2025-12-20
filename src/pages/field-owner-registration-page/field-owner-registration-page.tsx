@@ -12,7 +12,7 @@ import { PageWrapper } from "@/components/layouts/page-wrapper"
 import PageHeader from "@/components/header-banner/page-header"
 import { User, Building2, FileText, CheckCircle, AlertTriangle } from "lucide-react"
 import { StepIndicator } from "./StepIndicator"
-import { PersonalInfoStep } from "./PersonalInfoStep"
+import PersonalInfoStep from "./PersonalInfoStep"
 import { FacilityInfoStep } from "./FacilityInfoStep"
 import { DocumentsStep } from "./DocumentsStep"
 import { ConfirmationStep } from "./ConfirmationStep"
@@ -107,7 +107,7 @@ export default function FieldOwnerRegistrationPage() {
 
   const handleSubmit = async () => {
     setShowConfirmDialog(false)
-    
+
     try {
       // Validate field images (required >= 5)
       const documents = formData.documents as any
@@ -125,7 +125,7 @@ export default function FieldOwnerRegistrationPage() {
           dispatch(uploadRegistrationDocument(file)).unwrap()
         )
         uploadedFieldImageUrls = await Promise.all(uploadPromises)
-        
+
         // Validate all URLs
         if (uploadedFieldImageUrls.some(url => !url || typeof url !== 'string' || url.trim() === '')) {
           throw new Error('Một số ảnh upload không thành công')
@@ -137,7 +137,7 @@ export default function FieldOwnerRegistrationPage() {
 
       // Handle business license upload (optional)
       let businessLicenseUrl: string | undefined = undefined
-      
+
       if (documents) {
         const businessLicenseFile = documents.businessLicense_file
         if (businessLicenseFile instanceof File) {
@@ -172,8 +172,8 @@ export default function FieldOwnerRegistrationPage() {
         // Only include business license in documents (optional)
         documents: businessLicenseUrl
           ? {
-              businessLicense: businessLicenseUrl,
-            }
+            businessLicense: businessLicenseUrl,
+          }
           : undefined,
         // eKYC fields
         ekycSessionId: formData.ekycSessionId,

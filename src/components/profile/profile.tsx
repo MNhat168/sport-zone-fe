@@ -216,7 +216,7 @@ export default function Profile() {
                     </div>
 
                     {/* About Section */}
-                    <div className="space-y-5 pb-5 border-b border-gray-200">
+                    {/* <div className="space-y-5 pb-5 border-b border-gray-200">
                         <Label className="text-base font-normal  text-start">
                             Thông tin về bạn
                         </Label>
@@ -225,7 +225,7 @@ export default function Profile() {
                             disabled={!isEditMode}
                             className="min-h-[100px] p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal  text-[#6B7385] placeholder:text-[#6B7385] resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                    </div>
+                    </div> */}
 
                     {/* Address Section */}
                     <div className="space-y-6">

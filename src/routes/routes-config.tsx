@@ -30,6 +30,9 @@ import CoachSelfDetailPage from "../pages/coach-dashboard-page/coach-self-detail
 // Coach profile settings page
 import CoachProfileSettingsPage from "../pages/coach-dashboard-page/profile/coach-profile-page";
 
+// Coach lessons page
+import CoachLessonsPage from "../pages/coach-dashboard-page/coach-lessons/coach-lessons-page";
+
 import BookingPage from "../pages/coach-booking-page/booking-page";
 import CoachBookingFlow from "../pages/coach-booking-page/coach-booking-flow";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
@@ -61,6 +64,10 @@ import FieldViewPage from "../pages/field-owner-dashboard-page/fields/field-view
 import FieldOwnerRegistrationPage from "../pages/field-owner-registration-page/field-owner-registration-page";
 import FieldOwnerRegistrationStatusPage from "../pages/field-owner-registration-status-page/field-owner-registration-status-page";
 import EkycCallbackPage from "../pages/field-owner-registration-page/EkycCallbackPage";
+
+// Coach Registration Pages
+import CoachRegistrationPage from "../pages/coach-registration-page/coach-registration-page";
+import CoachRegistrationStatusPage from "../pages/coach-registration-status-page/coach-registration-status-page";
 
 //Notification
 import NotificationsPage from "../pages/notifications/page";
@@ -250,6 +257,23 @@ export const userRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
+  // Coach Registration (for regular users)
+  {
+    path: "/become-coach",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <CoachRegistrationPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/coach-registration-status",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.coach]}>
+        <CoachRegistrationStatusPage />
+      </ProtectedRoute>
+    ),
+  },
   // Fallback User Area
   {
     path: "/user",
@@ -320,6 +344,15 @@ export const coachRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <CoachSchedulePage />
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/coach/lessons",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.coach]}>
+        <CoachLessonsPage />
       </ProtectedRoute>
     ),
   },
