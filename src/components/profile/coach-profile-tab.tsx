@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
+import { getCoachById, updateCoach } from "@/features/coach/coachThunk"
 import { toast } from "sonner"
 import { Trophy, Star } from "lucide-react"
 
@@ -15,42 +16,55 @@ export default function CoachProfileTab() {
     const authUser = useAppSelector((state) => state.auth.user)
 
     const [formData, setFormData] = useState({
-        specialization: "",
+        specialization: [] as string[],
         experience: "",
         certifications: "",
         hourlyRate: "",
         bio: "",
         achievements: "",
-        coachingStyle: "",
+        rank: "",
     })
 
     // Fetch coach profile data on component mount
     useEffect(() => {
-        // TODO: Implement getCoachProfile thunk
-        // if (authUser?._id && authUser?.role === "coach") {
-        //     dispatch(getCoachProfile())
-        // }
+        if (authUser?._id && authUser?.role === "coach") {
+            // Fetch full coach detail (backend expects user id for /coaches/:id)
+            dispatch(getCoachById(authUser._id as string));
+        }
     }, [authUser?._id, dispatch])
+
+    // current coach from redux
+    const currentCoach = useAppSelector((s) => s.coach.currentCoach)
+    const detailLoading = useAppSelector((s) => s.coach.detailLoading)
 
     // Update form data when coach data is loaded
     useEffect(() => {
-        if (user && authUser?.role === "coach") {
-            // TODO: Map coach specific data when API is available
+        if (currentCoach && authUser?.role === "coach") {
             setFormData({
-                specialization: "",
-                experience: "",
-                certifications: "",
+                specialization: Array.isArray((currentCoach as any).sports) ? (currentCoach as any).sports : (Array.isArray((currentCoach as any).lessonTypes) ? (currentCoach as any).lessonTypes.map((l: any) => l.type || l.name) : []),
+                experience: (currentCoach as any)?.coachingDetails?.experience ?? "",
+                certifications: (currentCoach as any)?.coachingDetails?.certification ?? "",
                 hourlyRate: "",
-                bio: "",
+                bio: (currentCoach as any)?.description ?? "",
                 achievements: "",
-                coachingStyle: "",
+                rank: (currentCoach as any)?.level ?? "",
             })
         }
-    }, [user, authUser?.role])
+    }, [currentCoach, authUser?.role])
 
     // Handle input changes
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }))
+    }
+
+    const handleToggleSpecialization = (value: string) => {
+        setFormData(prev => {
+            const current = prev.specialization as string[]
+            if (current.includes(value)) {
+                return { ...prev, specialization: current.filter(v => v !== value) }
+            }
+            return { ...prev, specialization: [...current, value] }
+        })
     }
 
     // Handle form submit
@@ -61,11 +75,16 @@ export default function CoachProfileTab() {
         }
 
         try {
-            // TODO: Implement updateCoachProfile thunk
-            // await dispatch(updateCoachProfile({
-            //     coachId: authUser._id,
-            //     ...formData,
-            // })).unwrap()
+            await dispatch(updateCoach({
+                id: authUser._id as string,
+                data: {
+                    bio: formData.bio,
+                    sports: formData.specialization,
+                    certification: formData.certifications,
+                    rank: formData.rank,
+                    experience: formData.experience,
+                }
+            })).unwrap()
 
             toast.success("Coach profile updated successfully!")
         } catch (error: any) {
@@ -76,13 +95,13 @@ export default function CoachProfileTab() {
     // Handle reset form
     const handleReset = () => {
         setFormData({
-            specialization: "",
+            specialization: [],
             experience: "",
             certifications: "",
             hourlyRate: "",
             bio: "",
             achievements: "",
-            coachingStyle: "",
+            rank: "",
         })
     }
 
@@ -109,37 +128,36 @@ export default function CoachProfileTab() {
                                 <Label className="text-base font-normal text-start">
                                     Specialization *
                                 </Label>
-                                <Select value={formData.specialization} onValueChange={(value) => handleInputChange('specialization', value)}>
-                                    <SelectTrigger className="h-14 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385]">
-                                        <SelectValue placeholder="Select Specialization" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="football">Football</SelectItem>
-                                        <SelectItem value="basketball">Basketball</SelectItem>
-                                        <SelectItem value="tennis">Tennis</SelectItem>
-                                        <SelectItem value="badminton">Badminton</SelectItem>
-                                        <SelectItem value="swimming">Swimming</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex flex-wrap gap-2">
+                                    {['football','basketball','tennis','badminton','swimming','volleyball','pickleball','gym'].map((spec) => (
+                                        <label key={spec} className="inline-flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-md cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={(formData.specialization as string[]).includes(spec)}
+                                                onChange={() => handleToggleSpecialization(spec)}
+                                                className="w-4 h-4"
+                                            />
+                                            <span className="capitalize">{spec}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="space-y-2.5">
                                 <Label className="text-base font-normal text-start">
-                                    Years of Experience
+                                    Experience
                                 </Label>
-                                <Input
-                                    type="number"
+                                <Textarea
                                     value={formData.experience}
                                     onChange={(e) => handleInputChange('experience', e.target.value)}
-                                    placeholder="Enter years of experience"
-                                    className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
+                                    placeholder="Describe your coaching experience, background and approach..."
+                                    className="min-h-[100px] p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] resize-none"
                                 />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2.5">
+                            {/* <div className="space-y-2.5">
                                 <Label className="text-base font-normal text-start">
                                     Hourly Rate (VND)
                                 </Label>
@@ -150,21 +168,21 @@ export default function CoachProfileTab() {
                                     placeholder="Enter hourly rate"
                                     className="h-14 p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385]"
                                 />
-                            </div>
+                            </div> */}
 
                             <div className="space-y-2.5">
                                 <Label className="text-base font-normal text-start">
-                                    Coaching Style
+                                    Rank
                                 </Label>
-                                <Select value={formData.coachingStyle} onValueChange={(value) => handleInputChange('coachingStyle', value)}>
+                                <Select value={formData.rank} onValueChange={(value) => handleInputChange('rank', value)}>
                                     <SelectTrigger className="h-14 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385]">
-                                        <SelectValue placeholder="Select Coaching Style" />
+                                        <SelectValue placeholder="Select Rank" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="strict">Strict & Disciplined</SelectItem>
-                                        <SelectItem value="encouraging">Encouraging & Supportive</SelectItem>
-                                        <SelectItem value="technical">Technical Focused</SelectItem>
-                                        <SelectItem value="fun">Fun & Engaging</SelectItem>
+                                        <SelectItem value="novice">Novice</SelectItem>
+                                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                                        <SelectItem value="advanced">Advanced</SelectItem>
+                                        <SelectItem value="expert">Expert</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -184,7 +202,7 @@ export default function CoachProfileTab() {
 
                         <div className="space-y-2.5">
                             <Label className="text-base font-normal text-start">
-                                Bio & Experience
+                                Bio 
                             </Label>
                             <Textarea
                                 value={formData.bio}
@@ -194,7 +212,7 @@ export default function CoachProfileTab() {
                             />
                         </div>
 
-                        <div className="space-y-2.5">
+                        {/* <div className="space-y-2.5">
                             <Label className="text-base font-normal text-start">
                                 Achievements
                             </Label>
@@ -204,7 +222,7 @@ export default function CoachProfileTab() {
                                 placeholder="List your achievements, awards, and notable accomplishments..."
                                 className="min-h-[100px] p-5 bg-gray-50 rounded-[10px] border-0 text-base font-normal text-[#6B7385] placeholder:text-[#6B7385] resize-none"
                             />
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Coach Status */}
@@ -237,9 +255,10 @@ export default function CoachProfileTab() {
                         <Button
                             type="button"
                             onClick={handleSubmit}
-                            className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium"
+                            disabled={detailLoading}
+                            className={`min-w-36 px-6 py-3.5 ${detailLoading ? 'bg-gray-500 cursor-wait' : 'bg-gray-800 hover:bg-gray-900'} text-white rounded-[10px] text-base font-medium`}
                         >
-                            Save Changes
+                            {detailLoading ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </div>
                 </div>

@@ -26,6 +26,8 @@ export interface Coach {
     rating: number;
     totalReviews: number;
     location?: string; // Coach location for filtering
+    rank?: string;
+    experience?: string;
 }
 
 // Legacy Coach interface for /coaches/all endpoint
@@ -67,6 +69,7 @@ export interface CoachDetail {
     availableSlots: TimeSlot[];
     lessonTypes: LessonType[];
     price: number;
+    sports?: SportType[];
     coachingDetails: {
         experience: string;
         certification: string;

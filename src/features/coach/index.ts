@@ -11,6 +11,7 @@ export {
     getCoachById,
     getAllCoaches,
     getCoachIdByUserId,
+    updateCoach,
 } from './coachThunk';
 
 export {

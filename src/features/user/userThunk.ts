@@ -1,4 +1,5 @@
 import { SET_FAVOURITE_SPORTS_API, SET_FAVOURITE_COACHES_API, REMOVE_FAVOURITE_COACHES_API } from "./userAPI";
+import { REMOVE_FAVOURITE_SPORTS_API } from './userAPI';
 // Set favourite sports
 export interface SetFavouriteSportsPayload {
     favouriteSports: string[];
@@ -15,6 +16,25 @@ export const setFavouriteSports = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to set favourite sports",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Remove all favourite sports
+export const removeAllFavouriteSports = createAsyncThunk<
+    User,
+    void,
+    { rejectValue: ErrorResponse }
+>("user/removeAllFavouriteSports", async (_payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.delete(REMOVE_FAVOURITE_SPORTS_API);
+        // API may return updated user in response.data.data or response.data
+        return response.data.data || response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to remove favourite sports",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

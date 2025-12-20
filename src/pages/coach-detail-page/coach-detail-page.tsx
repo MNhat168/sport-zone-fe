@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { User, Users } from "lucide-react";
 import L from "leaflet";
 import { getCoachById, clearCurrentCoach } from "@/features/coach";
-import { setFavouriteCoaches, removeFavouriteCoaches } from "@/features/user";
+import { setFavouriteCoaches, removeFavouriteCoaches, getUserProfile } from "@/features/user";
 import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
 import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
 import {
@@ -42,6 +42,7 @@ interface LessonType {
   iconBg: string;
   iconColor: string;
   badge: string;
+  lessonPrice?: number | string;
 }
 
 // Mock lesson types - sẽ được thay thế bằng dữ liệu thật từ API khi có
@@ -56,6 +57,7 @@ const mockLessonTypes: LessonType[] = [
     iconBg: "bg-green-100",
     iconColor: "text-green-600",
     badge: "1 kèm 1",
+    lessonPrice: 200000,
   },
   {
     id: "2",
@@ -67,6 +69,7 @@ const mockLessonTypes: LessonType[] = [
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
     badge: "2-4 người",
+    lessonPrice: 120000,
   },
 ];
 
@@ -86,11 +89,11 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
   const [favLoading, setFavLoading] = useState(false);
 
-  const isFavourite = Boolean(
-    currentUser?.favouriteCoaches &&
-    effectiveCoachId &&
-    currentUser.favouriteCoaches.includes(effectiveCoachId as string),
-  );
+  const favouriteCoachIds: string[] = Array.isArray(currentUser?.favouriteCoaches)
+    ? currentUser!.favouriteCoaches.map((c: any) => (typeof c === 'string' ? c : (c._id || c.id || String(c))))
+    : [];
+
+  const isFavourite = Boolean(effectiveCoachId && favouriteCoachIds.includes(effectiveCoachId as string));
 
   const toggleFavourite = async () => {
     if (!currentUser) {
@@ -101,28 +104,42 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     try {
       setFavLoading(true);
       if (isFavourite) {
-        const action: any = await dispatch(
-          removeFavouriteCoaches({ favouriteCoaches: [effectiveCoachId as string] }),
-        );
+        const payload = { favouriteCoaches: [effectiveCoachId as string] };
+        console.log('Removing favourite coaches payload:', payload);
+        const action: any = await dispatch(removeFavouriteCoaches(payload));
+        console.log('removeFavouriteCoaches action:', action);
         if (action?.meta?.requestStatus === "fulfilled") {
           CustomSuccessToast("Đã bỏ yêu thích");
         } else {
-          CustomFailedToast(String(action?.payload || "Bỏ yêu thích thất bại"));
+          const pl = action?.payload;
+          const message = typeof pl === 'string' ? pl : pl?.message ?? (pl ? JSON.stringify(pl) : "Bỏ yêu thích thất bại");
+          console.error('Remove favourite failed:', pl || action?.error);
+          CustomFailedToast(message);
         }
       } else {
-        const action: any = await dispatch(
-          setFavouriteCoaches({ favouriteCoaches: [effectiveCoachId as string] }),
-        );
+        const payload = { favouriteCoaches: [effectiveCoachId as string] };
+        console.log('Setting favourite coaches payload:', payload);
+        const action: any = await dispatch(setFavouriteCoaches(payload));
+        console.log('setFavouriteCoaches action:', action);
         if (action?.meta?.requestStatus === "fulfilled") {
           CustomSuccessToast("Đã thêm vào yêu thích");
         } else {
-          CustomFailedToast(String(action?.payload || "Thêm yêu thích thất bại"));
+          const pl = action?.payload;
+          const message = typeof pl === 'string' ? pl : pl?.message ?? (pl ? JSON.stringify(pl) : "Thêm yêu thích thất bại");
+          console.error('Set favourite failed:', pl || action?.error);
+          CustomFailedToast(message);
         }
       }
     } catch (err: any) {
       CustomFailedToast(err?.message || "Thao tác thất bại");
     } finally {
       setFavLoading(false);
+        try {
+          // refresh profile to sync favouriteCoaches state with server
+          dispatch(getUserProfile());
+        } catch (e) {
+          // ignore
+        }
     }
   };
 
@@ -175,6 +192,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
         iconColor:
           lesson.type === "single" ? "text-green-600" : "text-blue-600",
         badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
+        lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? undefined,
       }));
     }
     return mockLessonTypes;
@@ -188,6 +206,17 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       dispatch(getCoachById(effectiveCoachId));
     }
   }, [dispatch, effectiveCoachId]);
+
+  // Ensure auth profile (favouriteCoaches) is fresh on page load so the favorite
+  // button correctly reflects server state. Only refresh when favourites are
+  // missing or don't include the current coach id.
+  useEffect(() => {
+    if (!effectiveCoachId) return;
+    const needRefresh = !currentUser || !Array.isArray(currentUser.favouriteCoaches) || !currentUser.favouriteCoaches.includes(effectiveCoachId as string);
+    if (needRefresh) {
+      dispatch(getUserProfile());
+    }
+  }, [dispatch, effectiveCoachId, currentUser]);
 
   const handleBookNow = () => {
     if (!effectiveCoachId) {
@@ -204,12 +233,35 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       if (!effectiveCoachId) return;
       try {
         setReviewsLoading(true);
+        console.log('fetchReviews called', { effectiveCoachId, page, limit: REVIEW_PAGE_LIMIT });
         const resp = await getReviewsForCoachAPI(effectiveCoachId, page, REVIEW_PAGE_LIMIT);
-        const items = Array.isArray(resp?.data) ? resp.data : resp?.data ?? [];
+        console.log('fetchReviews response', { effectiveCoachId, page, resp });
+
+        // Normalize possible API shapes:
+        // 1) { data: [...], pagination: { ... } }
+        // 2) { success: true, data: { data: [...], pagination: { ... } } }
+        // 3) direct array (unlikely)
+        let body: any = resp;
+        if (resp && typeof resp === 'object' && 'success' in resp && 'data' in resp) {
+          body = resp.data;
+        }
+
+        const items = Array.isArray(body?.data)
+          ? body.data
+          : Array.isArray(body)
+          ? body
+          : [];
+
+        const pageFromResp = body?.pagination?.page ?? resp?.pagination?.page ?? page;
+        const totalPagesFromResp = body?.pagination?.totalPages ?? resp?.pagination?.totalPages ?? 1;
+
+        console.log('fetchReviews normalized', { itemsLength: items.length, pageFromResp, totalPagesFromResp });
+
         if (append) setCoachReviews((prev) => [...prev, ...items]);
         else setCoachReviews(items);
-        setReviewsPage(resp?.pagination?.page ?? page);
-        setReviewsTotalPages(resp?.pagination?.totalPages ?? 1);
+
+        setReviewsPage(pageFromResp ?? page);
+        setReviewsTotalPages(totalPagesFromResp ?? 1);
       } catch (err) {
         console.error('Failed to load coach reviews', err);
       } finally {
@@ -478,7 +530,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   onLessonClick={setSelectedLesson}
                 />
 
-                <CoachingSection />
+                {/* <CoachingSection /> */}
 
                 <GallerySection
                   images={galleryImages}
