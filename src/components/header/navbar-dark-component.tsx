@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
 import { clearUserAuth } from "../../lib/cookies";
@@ -14,6 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { RootState } from "../../store/store";
 import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
+import { NotificationBell } from "./notification-bell";
 
 export const NavbarDarkComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -39,9 +40,8 @@ export const NavbarDarkComponent = () => {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-                isScrolled ? "bg-white/95 shadow-md border-b border-gray-200" : "bg-transparent"
-            }`}
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white/95 shadow-md border-b border-gray-200" : "bg-transparent"
+                }`}
         >
             <div className="container mx-auto max-w-screen-2xl flex h-20 items-center justify-between px-4">
                 {/* Logo */}
@@ -80,15 +80,10 @@ export const NavbarDarkComponent = () => {
                 <div className="flex items-center gap-4">
                     {/* Notification */}
                     {auth.user && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="hover:bg-transparent"
-                            onClick={() => navigate("/notifications")}
-                        >
-                            <Bell className={iconClass} />
-                            <span className="sr-only">Thông báo</span>
-                        </Button>
+                        <NotificationBell
+                            userId={auth.user._id}
+                            iconClassName={iconClass}
+                        />
                     )}
 
                     {auth.user ? (

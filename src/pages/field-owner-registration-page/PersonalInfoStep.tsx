@@ -14,7 +14,7 @@ interface PersonalInfoStepProps {
   onFormDataChange: (data: Partial<CreateRegistrationRequestPayload>) => void
 }
 
-export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoStepProps) {
+export default function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoStepProps) {
   const [isCreatingSession, setIsCreatingSession] = useState(false)
   const { status, data, error, startPolling, stopPolling } = useEkycPolling()
   const popupRef = useRef<Window | null>(null)
@@ -37,7 +37,7 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
         popupRef.current = null
       }
     }
-    
+
     // Clear popup monitoring interval
     if (popupCheckIntervalRef.current) {
       window.clearInterval(popupCheckIntervalRef.current)
@@ -53,7 +53,7 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
         window.clearInterval(popupCheckIntervalRef.current)
         popupCheckIntervalRef.current = null
       }
-      
+
       // Try to close popup if still open
       if (popupRef.current && !popupRef.current.closed) {
         try {
@@ -63,7 +63,7 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
           console.warn("[PersonalInfoStep] Could not close popup on unmount:", err)
         }
       }
-      
+
       // Clear popup reference
       popupRef.current = null
     }
@@ -73,7 +73,7 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
   useEffect(() => {
     if (status === "verified" && data) {
       console.log("[PersonalInfoStep] ✅ eKYC Verified with data:", data)
-      
+
       // Close popup safely
       closePopupSafely()
 
@@ -123,12 +123,12 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
 
       if (messageType === "ekyc-verified") {
         console.log("[PersonalInfoStep] ✅ Received eKYC verified message from popup", { sessionId })
-        
+
         // Verify session ID matches
         if (sessionId && sessionId === formData.ekycSessionId) {
           // Close popup safely
           closePopupSafely()
-          
+
           // Polling should detect the verified status automatically, but we can trigger a check
           // The polling will handle the status update and form filling
         } else {
@@ -236,19 +236,19 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
         <div className="flex items-start gap-3">
           <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
           <div className="flex-1 space-y-3">
-          <div>
+            <div>
               <p className="text-sm font-semibold text-blue-900">
                 Xác thực danh tính bằng didit eKYC
-            </p>
+              </p>
               <p className="text-xs text-blue-700 mt-1">
                 Để đăng ký làm chủ sân, bạn cần xác thực danh tính qua hệ thống eKYC của didit.
                 Quá trình chỉ mất khoảng 2-3 phút.
-            </p>
-          </div>
+              </p>
+            </div>
 
             {!isEkycVerified && !isEkycPending && (
               <Button
-            type="button"
+                type="button"
                 onClick={handleStartEkyc}
                 disabled={isCreatingSession}
                 className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm text-white"
@@ -261,7 +261,7 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
                 ) : (
                   <>
                     <Shield className="mr-2 h-4 w-4" />
-            Xác thực ngay
+                    Xác thực ngay
                   </>
                 )}
               </Button>
@@ -309,9 +309,9 @@ export function PersonalInfoStep({ formData, onFormDataChange }: PersonalInfoSte
       </div>
 
       <div className="space-y-2">
-          <Label className="text-sm font-medium">
-            Họ tên đầy đủ
-          </Label>
+        <Label className="text-sm font-medium">
+          Họ tên đầy đủ
+        </Label>
         <Input
           className="h-11"
           value={formData.personalInfo?.fullName || ""}

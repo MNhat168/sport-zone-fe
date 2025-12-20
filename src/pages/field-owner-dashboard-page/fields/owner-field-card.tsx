@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Edit, Eye, Settings } from "lucide-react";
 import { getSportDisplayNameVN } from "@/components/enums/ENUMS";
 import { getPinColor, getSportWhiteIconPath } from "@/utils/fieldPinIcon";
+import { FieldStatusManagementDialog } from "./components/field-status-management-dialog";
 
 interface OwnerFieldCardProps {
     id?: string;
@@ -33,6 +34,7 @@ const OwnerFieldCard: React.FC<OwnerFieldCardProps> = ({
     isActive,
 }) => {
     const navigate = useNavigate();
+    const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
 
     const handleViewDetails = () => {
         if (!id) return;
@@ -48,8 +50,8 @@ const OwnerFieldCard: React.FC<OwnerFieldCardProps> = ({
 
     const handleManageField = () => {
         if (!id) return;
-        // Navigate to field management page
-        navigate(`/field-owner/fields/${id}/manage`);
+        // Open management dialog
+        setIsManageDialogOpen(true);
     };
 
     const sportIconPath = getSportWhiteIconPath(sportType);
@@ -141,6 +143,17 @@ const OwnerFieldCard: React.FC<OwnerFieldCardProps> = ({
                     </div>
                 </CardContent>
             </div>
+            
+            {/* Field Status Management Dialog */}
+            {id && (
+                <FieldStatusManagementDialog
+                    isOpen={isManageDialogOpen}
+                    onOpenChange={setIsManageDialogOpen}
+                    fieldId={id}
+                    fieldName={name}
+                    currentStatus={isActive}
+                />
+            )}
         </Card>
     );
 };

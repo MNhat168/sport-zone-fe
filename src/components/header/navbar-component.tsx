@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
 import { clearUserAuth } from "../../lib/cookies";
@@ -21,12 +21,13 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { NotificationBell } from "./notification-bell";
 export const NavbarComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const auth = useAppSelector((state: RootState) => state.auth);
-    
+
     // Debug log to verify user data
     console.log("🔍 Navbar - User:", auth.user?.fullName, "Role:", auth.user?.role);
 
@@ -104,10 +105,12 @@ export const NavbarComponent = () => {
                 {/* Actions */}
                 <div className="flex items-center gap-4">
                     {/* Notification */}
-                    <Button variant="ghost" size="icon" className="hover:bg-transparent">
-                        <Bell className={iconClass} />
-                        <span className="sr-only">Thông báo</span>
-                    </Button>
+                    {auth.user && (
+                        <NotificationBell
+                            userId={auth.user._id}
+                            iconClassName={iconClass}
+                        />
+                    )}
 
                     {auth.user ? (
                         <DropdownMenu>
