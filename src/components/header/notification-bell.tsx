@@ -12,6 +12,7 @@ import { ScrollArea } from "../../components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "@/hooks/useSocket";
 import axiosInstance from "../../utils/axios/axiosPrivate";
 
@@ -26,12 +27,15 @@ interface Notification {
 interface NotificationBellProps {
   userId: string | null;
   variant?: "default" | "sidebar";
+  iconClassName?: string;
 }
 
 export function NotificationBell({
   userId,
   variant = "default",
+  iconClassName,
 }: NotificationBellProps) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const socket = useSocket(userId || "", "notifications");
@@ -46,14 +50,14 @@ export function NotificationBell({
     }
 
     console.log("📱 Fetching notifications for user:", userId);
-    
+
     const fetchNotifications = async () => {
       try {
         const [notificationResponse, unreadResponse] = await Promise.all([
           axiosInstance.get(`/notification/history/${userId}`),
           axiosInstance.get(`/notification/user/${userId}/unread-count`)
         ]);
-        
+
         setNotifications(notificationResponse.data.data || []);
         setUnreadCount(unreadResponse.data.unreadCount || 0);
       } catch (error) {
@@ -126,13 +130,13 @@ export function NotificationBell({
 
   const handleMarkAsRead = async () => {
     if (!userId) return;
-    
+
     try {
       // Mark all notifications as read
       await axiosInstance.patch(`/notification/user/${userId}/read-all`);
-      
+
       // Update local state
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(notif => ({ ...notif, isRead: true }))
       );
       setUnreadCount(0);
@@ -146,7 +150,7 @@ export function NotificationBell({
       try {
         // Mark individual notification as read
         await axiosInstance.patch(`/notification/${notification.id}/read`);
-        
+
         // Update local state
         setNotifications(prev =>
           prev.map(notif =>
@@ -155,16 +159,22 @@ export function NotificationBell({
               : notif
           )
         );
-        
+
         // Decrease unread count
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (error) {
         console.error("Error marking notification as read:", error);
       }
     }
-    
+
     // Navigate to the notification URL
-    window.location.href = notification.url;
+    if (notification.url) {
+      if (notification.url.startsWith('http')) {
+        window.location.href = notification.url;
+      } else {
+        navigate(notification.url);
+      }
+    }
   };
 
   const formatTime = (dateString: string) => {
@@ -182,17 +192,15 @@ export function NotificationBell({
         <Button
           variant="ghost"
           size="icon"
-          className={`relative ${
-            variant === "sidebar"
-              ? "text-primary-200 hover:text-white hover:bg-primary-700"
-              : ""
-          }`}
+          className={`relative ${variant === "sidebar"
+            ? "text-primary-200 hover:text-white hover:bg-primary-700"
+            : ""
+            }`}
           title="Thông báo"
         >
           <Bell
-            className={`h-5 w-5 ${
-              variant === "sidebar" ? "text-primary-200" : ""
-            }`}
+            className={iconClassName || `h-5 w-5 ${variant === "sidebar" ? "text-primary-200" : ""
+              }`}
           />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
@@ -226,9 +234,8 @@ export function NotificationBell({
                     e.preventDefault();
                     handleNotificationClick(notification);
                   }}
-                  className={`flex flex-col border-b p-4 hover:bg-muted/50 cursor-pointer ${
-                    notification.isRead ? "bg-white" : "bg-gray-100 hover:rounded-xl"
-                  }`}
+                  className={`flex flex-col border-b p-4 hover:bg-muted/50 cursor-pointer ${notification.isRead ? "bg-white" : "bg-gray-100 hover:rounded-xl"
+                    }`}
                 >
                   <p className="text-sm">{notification.content}</p>
                   <span className="mt-1 text-xs text-muted-foreground">
@@ -248,6 +255,14 @@ export function NotificationBell({
             </div>
           )}
         </ScrollArea>
+        <div className="border-t p-2 text-center bg-gray-50">
+          <Link
+            to="/notifications"
+            className="text-sm font-medium text-green-600 hover:text-green-700 flex items-center justify-center py-1"
+          >
+            Xem thêm
+          </Link>
+        </div>
       </PopoverContent>
     </Popover>
   );

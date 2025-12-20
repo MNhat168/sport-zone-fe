@@ -65,6 +65,10 @@ import FieldOwnerRegistrationPage from "../pages/field-owner-registration-page/f
 import FieldOwnerRegistrationStatusPage from "../pages/field-owner-registration-status-page/field-owner-registration-status-page";
 import EkycCallbackPage from "../pages/field-owner-registration-page/EkycCallbackPage";
 
+// Coach Registration Pages
+import CoachRegistrationPage from "../pages/coach-registration-page/coach-registration-page";
+import CoachRegistrationStatusPage from "../pages/coach-registration-status-page/coach-registration-status-page";
+
 //Notification
 import NotificationsPage from "../pages/notifications/page";
 import TournamentListPage from "@/pages/list-tournament/TournamentListPage.tsx";
@@ -250,6 +254,23 @@ export const userRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user, UserRole.FIELD_OWNER]}>
         <EkycCallbackPage />
+      </ProtectedRoute>
+    ),
+  },
+  // Coach Registration (for regular users)
+  {
+    path: "/become-coach",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <CoachRegistrationPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/coach-registration-status",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.coach]}>
+        <CoachRegistrationStatusPage />
       </ProtectedRoute>
     ),
   },
