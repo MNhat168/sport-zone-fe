@@ -59,7 +59,7 @@ const menuItems: MenuItem[] = [
         icon: Plus,
     },
     {
-        title: "Danh sách sân",
+        title: "Quản lý sân",
         url: "/field-owner/fields",
         icon: List,
     },
