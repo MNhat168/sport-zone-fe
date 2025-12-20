@@ -7,6 +7,7 @@ import {
     removeFavouriteCoaches,
     setFavouriteFields,
     removeFavouriteFields,
+    removeAllFavouriteSports,
     getFavouriteFields,
     getFavouriteCoaches,
     forgotPassword,
@@ -97,6 +98,11 @@ const userSlice = createSlice({
         builder.addCase(setFavouriteSports.fulfilled, (state, action) => {
             state.user = action.payload;
         });
+
+            // Remove All Favourite Sports
+            builder.addCase(removeAllFavouriteSports.fulfilled, (state, action) => {
+                state.user = action.payload;
+            });
 
         // Get favourite fields
         builder

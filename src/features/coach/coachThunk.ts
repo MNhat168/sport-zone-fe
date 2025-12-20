@@ -6,13 +6,16 @@ import type {
     CoachFilters,
     ErrorResponse,
     CoachProfileResponse,
+    SportType as SportTypeType,
 } from "../../types/coach-type";
+import { SportType as SPORT_TYPE_CONST } from "../../types/coach-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
 import {
     COACHES_API,
     COACH_BY_ID_API,
     ALL_COACHES_API,
 } from "./coachAPI";
+import { COACH_BY_ID_API as COACH_PUT_API } from './coachAPI';
 import { COACH_ID_BY_USER_ID_API } from "./coachAPI";
 
 // Map API Coach shape (coachesAPI.md) to app Coach type used in UI
@@ -74,6 +77,15 @@ const mapApiCoachDetailToAppCoachDetail = (apiCoach: any): import("../../types/c
         location: apiCoach?.location || apiCoach?.user?.location || "",
         locationData: locationData || undefined, // Include locationData with geo coordinates
         level,
+        // include sports so frontend can show specialization — simple fallback + normalization
+            sports: (() => {
+                const allowed = (Object.values(SPORT_TYPE_CONST) as string[]).map((s) => s.toLowerCase());
+                const raw = apiCoach?.sports ?? apiCoach?.coachingDetails?.sports ?? apiCoach?.profile?.sports ?? apiCoach?.user?.sports ?? [];
+                if (!Array.isArray(raw)) return [] as unknown as SportTypeType[];
+                return raw
+                    .map((s: any) => String(s || '').trim().toLowerCase())
+                    .filter((v: string) => allowed.includes(v)) as unknown as SportTypeType[];
+            })(),
         completedSessions: Number(apiCoach?.completedSessions ?? 0),
         createdAt: apiCoach?.createdAt || "",
         memberSince,
@@ -205,6 +217,31 @@ export const getAllCoaches = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch all coaches",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Update coach profile (PUT /coaches/:id)
+export const updateCoach = createAsyncThunk<
+    CoachDetailResponse,
+    { id: string; data: Partial<any> },
+    { rejectValue: ErrorResponse }
+>("coach/updateCoach", async (payload, thunkAPI) => {
+    try {
+        const { id, data } = payload;
+        const response = await axiosPublic.put(COACH_PUT_API(id), data);
+        const raw = response.data;
+        const apiCoachContainer = (raw && typeof raw === 'object') ? raw : {};
+        const apiCoachRaw = (apiCoachContainer as any)?.data ?? apiCoachContainer;
+        const apiCoach = (apiCoachRaw as any)?.coach ?? apiCoachRaw;
+        const mapped = mapApiCoachDetailToAppCoachDetail(apiCoach);
+        return { success: true, data: mapped, message: raw?.message } as CoachDetailResponse;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to update coach",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };

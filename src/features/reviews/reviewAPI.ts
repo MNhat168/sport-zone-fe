@@ -11,19 +11,8 @@ export const REVIEWS_API = `${BASE_URL}/reviews`;
  * @returns Review object
  */
 export const createCoachReviewAPI = async (data: CreateCoachReviewForm) => {
-  const response = await fetch(`${REVIEWS_API}/coach`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || `HTTP ${response.status}`);
-  }
-  return response.json();
+  const response = await axiosPrivate.post(`${REVIEWS_API}/coach`, data);
+  return response.data;
 };
 
 /**

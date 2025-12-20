@@ -2,7 +2,7 @@ import type React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
-import { setFavouriteFields, removeFavouriteFields } from "@/features/user"
+import { setFavouriteFields, removeFavouriteFields, getUserProfile } from "@/features/user"
 import { CustomFailedToast, CustomSuccessToast } from "@/components/toast/notificiation-toast"
 import { getFieldById } from "@/features/field/fieldThunk"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
@@ -52,9 +52,11 @@ const FieldDetailPage: React.FC = () => {
     const authUser = useAppSelector((s) => s.auth.user)
     const [favLoading, setFavLoading] = useState(false)
 
-    const isFavourite = Boolean(
-        authUser?.favouriteFields && id && authUser.favouriteFields.includes(id),
-    )
+    const favouriteFieldIds: string[] = Array.isArray(authUser?.favouriteFields)
+      ? authUser!.favouriteFields.map((f: any) => (typeof f === 'string' ? f : (f._id || f.id || String(f))))
+      : [];
+
+    const isFavourite = Boolean(id && favouriteFieldIds.includes(id));
 
     const toggleFavourite = async () => {
         console.log("🔥 toggleFavourite called", { authUser: !!authUser });
@@ -97,6 +99,10 @@ const FieldDetailPage: React.FC = () => {
             CustomFailedToast(err?.message || "Thao tác thất bại")
         } finally {
             setFavLoading(false)
+          try {
+            // refresh profile to sync favouriteFields with server
+            dispatch(getUserProfile())
+          } catch {}
         }
     }
 
@@ -105,6 +111,15 @@ const FieldDetailPage: React.FC = () => {
             dispatch(getFieldById(id))
         }
     }, [id, currentField, dispatch])
+
+    // Ensure auth profile is fresh on page load so favourite state is accurate
+    useEffect(() => {
+      if (!id) return
+      const needRefresh = !authUser || !Array.isArray(authUser.favouriteFields) || !authUser.favouriteFields.includes(id)
+      if (needRefresh) {
+        dispatch(getUserProfile())
+      }
+    }, [id, authUser, dispatch])
 
     useEffect(() => {
         if (!id) return
