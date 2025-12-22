@@ -85,18 +85,18 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const { currentCoach, detailLoading, detailError } = useSelector(
     (state: RootState) => state.coach
   );
-  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const authUser = useSelector((state: RootState) => state.auth.user);
 
   const [favLoading, setFavLoading] = useState(false);
 
-  const favouriteCoachIds: string[] = Array.isArray(currentUser?.favouriteCoaches)
-    ? currentUser!.favouriteCoaches.map((c: any) => (typeof c === 'string' ? c : (c._id || c.id || String(c))))
+  const favouriteCoachIds: string[] = Array.isArray(authUser?.favouriteCoaches)
+    ? authUser!.favouriteCoaches.map((c: any) => (typeof c === 'string' ? c : (c._id || c.id || String(c))))
     : [];
 
   const isFavourite = Boolean(effectiveCoachId && favouriteCoachIds.includes(effectiveCoachId as string));
 
   const toggleFavourite = async () => {
-    if (!currentUser) {
+    if (!authUser) {
       return CustomFailedToast("Vui lòng đăng nhập để thêm huấn luyện viên vào yêu thích");
     }
     if (!effectiveCoachId) return;
@@ -134,12 +134,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       CustomFailedToast(err?.message || "Thao tác thất bại");
     } finally {
       setFavLoading(false);
-        try {
-          // refresh profile to sync favouriteCoaches state with server
-          dispatch(getUserProfile());
-        } catch (e) {
-          // ignore
-        }
+      try {
+        // refresh profile to sync favouriteCoaches state with server
+        dispatch(getUserProfile());
+      } catch (e) {
+        // ignore
+      }
     }
   };
 
@@ -208,15 +208,15 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   }, [dispatch, effectiveCoachId]);
 
   // Ensure auth profile (favouriteCoaches) is fresh on page load so the favorite
-  // button correctly reflects server state. Only refresh when favourites are
-  // missing or don't include the current coach id.
+  // button correctly reflects server state. Only refresh when user is logged in
+  // and favourites are missing or don't include the current coach id.
   useEffect(() => {
-    if (!effectiveCoachId) return;
-    const needRefresh = !currentUser || !Array.isArray(currentUser.favouriteCoaches) || !currentUser.favouriteCoaches.includes(effectiveCoachId as string);
+    if (!effectiveCoachId || !authUser) return;
+    const needRefresh = !Array.isArray(authUser.favouriteCoaches) || !authUser.favouriteCoaches.includes(effectiveCoachId as string);
     if (needRefresh) {
       dispatch(getUserProfile());
     }
-  }, [dispatch, effectiveCoachId, currentUser]);
+  }, [dispatch, effectiveCoachId, authUser]);
 
   const handleBookNow = () => {
     if (!effectiveCoachId) {
@@ -249,8 +249,8 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
         const items = Array.isArray(body?.data)
           ? body.data
           : Array.isArray(body)
-          ? body
-          : [];
+            ? body
+            : [];
 
         const pageFromResp = body?.pagination?.page ?? resp?.pagination?.page ?? page;
         const totalPagesFromResp = body?.pagination?.totalPages ?? resp?.pagination?.totalPages ?? 1;
