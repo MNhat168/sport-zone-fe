@@ -954,6 +954,10 @@ const FieldBookingPage = () => {
         isOpen={showFavoriteSportsModal}
         onClose={() => setShowFavoriteSportsModal(false)}
         onAccept={handleFavoriteSportsAccept}
+        onClear={() => {
+          setIsFilteringByFavorites(false);
+          setShowFavoriteSportsModal(false);
+        }}
         initialSelected={authUser?.favouriteSports || []}
       />
       <NavbarDarkComponent />
@@ -1010,6 +1014,11 @@ const FieldBookingPage = () => {
                               setShowFavoriteSportsModal(true);
                               return;
                             }
+                            // If currently filtering by favorites, open modal to edit/see selections
+                            if (isFilteringByFavorites) {
+                              setShowFavoriteSportsModal(true);
+                              return;
+                            }
                             handleToggleFavoriteFilter();
                           }}
                           className="flex items-center gap-2"
@@ -1017,7 +1026,7 @@ const FieldBookingPage = () => {
                             !favouriteSports || favouriteSports.length === 0
                               ? "Chọn môn thể thao yêu thích"
                               : isFilteringByFavorites
-                                ? "Tắt bộ lọc sân yêu thích"
+                                ? "Chỉnh sửa sân yêu thích"
                                 : "Bật bộ lọc sân yêu thích"
                           }
                         >

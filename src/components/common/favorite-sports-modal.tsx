@@ -35,25 +35,26 @@ interface FavoriteSportsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAccept: (selectedSports: string[]) => void;
+  onClear?: () => void;
   initialSelected?: string[];
 }
 
 const SPORTS_OPTIONS = [
   {
     id: "football",
-    label: "Football",
+    label: "Bóng đá",
     icon: FootballIcon,
     color: "from-red-500 to-orange-500",
   },
   {
     id: "tennis",
-    label: "Tennis",
+    label: "Quần vợt",
     icon: TennisIcon,
     color: "from-green-500 to-emerald-500",
   },
   {
     id: "badminton",
-    label: "Badminton",
+    label: "Cầu lông",
     icon: BadmintonIcon,
     color: "from-blue-500 to-cyan-500",
   },
@@ -65,25 +66,25 @@ const SPORTS_OPTIONS = [
   },
   {
     id: "basketball",
-    label: "Basketball",
+    label: "Bóng rổ",
     icon: BasketballIcon,
     color: "from-orange-500 to-red-500",
   },
   {
     id: "volleyball",
-    label: "Volleyball",
+    label: "Bóng chuyền",
     icon: VolleyballIcon,
     color: "from-yellow-500 to-orange-500",
   },
   {
     id: "swimming",
-    label: "Swimming",
+    label: "Bơi lội",
     icon: SwimmingIcon,
     color: "from-cyan-500 to-blue-500",
   },
   {
     id: "gym",
-    label: "Gym",
+    label: "Phòng tập",
     icon: GymIcon,
     color: "from-slate-600 to-slate-800",
   },
@@ -93,11 +94,13 @@ export function FavoriteSportsModal({
   isOpen,
   onClose,
   onAccept,
+  onClear,
   initialSelected = [],
 }: FavoriteSportsModalProps) {
   const [selectedSports, setSelectedSports] = useState<string[]>(() => initialSelected ?? []);
   const dispatch = useAppDispatch();
   const [clearing, setClearing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // When opened, initialize selection from initialSelected
   useEffect(() => {
@@ -135,6 +138,8 @@ export function FavoriteSportsModal({
         // Refresh profile to update global auth user
         await dispatch(getUserProfile() as any).unwrap();
         toast.success("Favourite sports cleared");
+        // Notify parent that clear completed so it can turn off favorite filter
+        try { onClear && onClear(); } catch {}
       } catch (e: any) {
         console.error("Failed to clear favourite sports on server", e);
         const message = e?.message || e?.response?.data?.message || "Failed to clear favourite sports";
@@ -151,10 +156,10 @@ export function FavoriteSportsModal({
         <div className="bg-primary p-6 text-center">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-primary-foreground mb-1">
-              Favorite Sports?
+              Môn Thể Thao Yêu Thích?
             </DialogTitle>
             <DialogDescription className="text-primary-foreground/90 text-sm">
-              Pick your sports
+              Chọn các môn thể thao bạn yêu thích để cá nhân hóa trải nghiệm của bạn.
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -219,14 +224,14 @@ export function FavoriteSportsModal({
           </div>
 
           <div className="flex gap-2 justify-end pt-4 border-t">
-            <Button
+            {/* <Button
               variant="outline"
               onClick={handleCancel}
               className="px-4 font-semibold bg-transparent text-sm"
               size="sm"
             >
               Cancel
-            </Button>
+            </Button> */}
 
             <Button
               variant="ghost"
@@ -235,7 +240,7 @@ export function FavoriteSportsModal({
               size="sm"
               disabled={selectedSports.length === 0}
             >
-              Clear
+                Xóa tất cả {clearing ? "..." : ""}
             </Button>
 
             <Button
@@ -244,7 +249,7 @@ export function FavoriteSportsModal({
               disabled={selectedSports.length === 0}
               size="sm"
             >
-              Accept {selectedSports.length > 0 && `(${selectedSports.length})`}
+              Chấp nhận {selectedSports.length > 0 && `(${selectedSports.length})`}
             </Button>
           </div>
         </div>
