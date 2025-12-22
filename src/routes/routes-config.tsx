@@ -41,6 +41,7 @@ import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 // Field Pages
 import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
+import FieldCoachBookingPage from "../pages/field-coach-booking-page/field-coach-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
 import FieldDetailPage from "../pages/field-detail-page/field-detail-page";
 
@@ -125,6 +126,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/fields", element: <FieldBookingPage /> },
   { path: "/fields/:id", element: <FieldDetailPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
+  { path: "/booking/field-coach", element: <FieldCoachBookingPage /> },
 
   // Coach Discovery (Public)
   { path: "/coaches", element: <Placeholder title="Danh sách HLV" /> },
