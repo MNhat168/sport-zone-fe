@@ -9,6 +9,7 @@ import VerifyTokenPage from "../pages/auth/verify-token-page";
 import ForgotPasswordPage from "../pages/auth/forgot-password-page";
 import ResetPasswordPage from "../pages/auth/reset-password-page";
 import LandingPage from "../pages/landing/landing-page";
+import AboutPage from "../pages/about/about-page";
 
 // User Pages
 import UserDashboardPage from "../pages/user-dashboard-page/user-dashboard-page";
@@ -135,7 +136,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/coach/booking", element: <BookingPage /> },
 
   // About & Contact (Public)
-  { path: "/about", element: <Placeholder title="Về chúng tôi" /> },
+  { path: "/about", element: <AboutPage /> },
   { path: "/contact", element: <Placeholder title="Liên hệ" /> },
   { path: "/services", element: <Placeholder title="Dịch vụ" /> },
 
