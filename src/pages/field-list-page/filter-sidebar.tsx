@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 interface FilterSidebarProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
+    /** side to open the sheet from: 'left' | 'right' */
+    side?: "left" | "right";
     // Search
     searchQuery: string;
     onSearchChange: (value: string) => void;
@@ -65,6 +67,7 @@ const CollapsibleSection: React.FC<{
 export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     isOpen,
     onOpenChange,
+    side = "right",
     searchQuery,
     onSearchChange,
     locationFilter,
@@ -106,7 +109,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-[400px] sm:w-[450px] p-0 overflow-y-auto">
+            <SheetContent side={side} className="w-[400px] sm:w-[450px] p-0 overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 z-10 px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
