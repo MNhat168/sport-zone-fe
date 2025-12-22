@@ -18,6 +18,17 @@ import { FilterSidebar } from "./filter-sidebar"
 import { FavoriteSportsModal } from "@/components/common/favorite-sports-modal";
 import { getUserProfile, setFavouriteSports } from "@/features/user/userThunk";
 import { getFieldPinIconWithLabel } from "@/utils/fieldPinIcon";
+// Map sport IDs to Vietnamese labels for UI display
+const SPORT_LABELS_VN: Record<string, string> = {
+  football: "Bóng đá",
+  tennis: "Quần vợt",
+  badminton: "Cầu lông",
+  pickleball: "Pickleball",
+  basketball: "Bóng rổ",
+  volleyball: "Bóng chuyền",
+  swimming: "Bơi lội",
+  gym: "Phòng gym",
+};
 const FieldBookingPage = () => {
   const fieldsListRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
@@ -214,14 +225,10 @@ const FieldBookingPage = () => {
     ) {
       // Auto-enable favorite sports filter
       setIsFilteringByFavorites(true);
-      setFilters(
-        (prev) =>
-        ({
-          ...prev,
-          sportTypes: favouriteSports,
-          page: 1,
-        } as any)
-      );
+      // Do not restrict API results to favorite sports here; instead
+      // we'll prioritize favorite-sport fields client-side so other
+      // sports still appear after the favorite ones.
+      setFilters((prev) => ({ ...prev, page: 1 } as any));
     }
   }, [
     authUser,
@@ -241,6 +248,7 @@ const FieldBookingPage = () => {
       setSportFilter("all");
       setFilters((prev) => {
         const copy: any = { ...prev };
+        // ensure we don't keep any server-side favorite restriction
         delete copy.sportTypes;
         delete copy.sportType;
         copy.page = 1;
@@ -251,14 +259,10 @@ const FieldBookingPage = () => {
       if (favouriteSports.length > 0) {
         setIsFilteringByFavorites(true);
         setSportFilter("all");
-        setFilters(
-          (prev) =>
-          ({
-            ...prev,
-            sportTypes: favouriteSports,
-            page: 1,
-          } as any)
-        );
+        // Do not add `sportTypes` to filters (which would ask the API
+        // to return only those sports). Instead, keep the full results
+        // and reorder client-side so favorite sports appear first.
+        setFilters((prev) => ({ ...prev, page: 1 } as any));
       }
     }
   };
@@ -422,7 +426,10 @@ const FieldBookingPage = () => {
             (s: string, i: number) => s === favouriteSports[i]
           );
         if (!sportTypesEqual || prevAny.sportType || prevAny.type) {
-          copy.sportTypes = favouriteSports;
+          // Do not set `sportTypes` server-side; clear any server-side
+          // sport filters so the API returns all fields. We'll prioritize
+          // favorites client-side instead.
+          delete copy.sportTypes;
           delete copy.sportType;
           delete copy.type;
           sportChanged = true;
@@ -641,7 +648,7 @@ const FieldBookingPage = () => {
   const searchLocation = (qLocation || locationFilter.trim().toLowerCase()) || "";
   const searchType = qType || (sportFilter !== "all" ? sportFilter.toLowerCase() : "");
 
-  const filteredTransformedFields = transformedFields.filter((f) => {
+  let filteredTransformedFields = transformedFields.filter((f) => {
     // Search by name/location
     if (searchName) {
       const inName = (f.name || "").toLowerCase().includes(searchName);
@@ -680,6 +687,34 @@ const FieldBookingPage = () => {
     }
     return true;
   });
+
+  // If user enabled "filter by favorites" preference, group fields so
+  // all fields of each favourite sport appear together (in the order
+  // of `favouriteSports`), then append the remaining fields. This
+  // prevents interleaving (e.g., basketball, badminton, basketball).
+  if (isFilteringByFavorites && favouriteSports && favouriteSports.length > 0) {
+    const remaining = [...filteredTransformedFields];
+    const grouped: typeof filteredTransformedFields = [];
+
+    favouriteSports.forEach((favSport) => {
+      const favSportLower = (favSport || "").toLowerCase();
+      for (let i = remaining.length - 1; i >= 0; i--) {
+        const f = remaining[i];
+        const st = (f.sportType || "").toLowerCase();
+        if (st === favSportLower) {
+          // remove from remaining and push to grouped preserving original order
+          remaining.splice(i, 1);
+          grouped.unshift(f);
+        }
+      }
+    });
+
+    // grouped currently has favourites in reverse relative order due to unshift;
+    // reverse to restore original relative ordering within each sport.
+    grouped.reverse();
+
+    filteredTransformedFields = [...grouped, ...remaining];
+  }
 
   // Calculate filtered nearby fields count for display
   const filteredNearbyCount =
@@ -957,6 +992,14 @@ const FieldBookingPage = () => {
         onClear={() => {
           setIsFilteringByFavorites(false);
           setShowFavoriteSportsModal(false);
+          try {
+            if (fieldsListRef.current) {
+              // Jump to top immediately when user clears favourites
+              fieldsListRef.current.scrollTo({ top: 0, behavior: 'auto' });
+            }
+          } catch (e) {
+            // ignore
+          }
         }}
         initialSelected={authUser?.favouriteSports || []}
       />
@@ -1097,7 +1140,7 @@ const FieldBookingPage = () => {
                         </Select>
                       </div>
                       <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-gray-600" />
+                        {/* <DollarSign className="w-4 h-4 text-gray-600" /> */}
                         <span className="text-sm text-gray-600 whitespace-nowrap">
                           Giá:
                         </span>
@@ -1177,7 +1220,7 @@ const FieldBookingPage = () => {
                         <Heart className="w-4 h-4 fill-current" />
                         <span>
                           Đang hiển thị {favouriteSports.length} môn thể thao
-                          yêu thích: {favouriteSports.join(", ")}
+                          yêu thích: {favouriteSports.map(s => SPORT_LABELS_VN[s] || s).join(", ")}
                         </span>
                       </div>
                     </div>
@@ -1187,6 +1230,7 @@ const FieldBookingPage = () => {
                 <FilterSidebar
                   isOpen={isSidebarOpen}
                   onOpenChange={setIsSidebarOpen}
+                  side="left"
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   locationFilter={locationFilter}
