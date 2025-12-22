@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, X, MessageCircle, Building } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
-import { getChatRoom, markAsRead } from "@/features/chat/chatThunk";
+import { getChatRoom, markAsRead, startChat } from "@/features/chat/chatThunk";
 import { setCurrentRoom, clearTyping } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
 import { Button } from "@/components/ui/button";
@@ -58,30 +58,85 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
+    const initializedRef = useRef(false);
     useEffect(() => {
-        if (isOpen && fieldOwnerId) {
-            // Connect WebSocket
-            webSocketService.connect();
+        if (!isOpen || !fieldOwnerId) return;
+        if (initializedRef.current) return; // prevent re-init on every Redux change
+        initializedRef.current = true;
 
-            // Try to find existing chat room in Redux state first
-            const existingRoom = rooms.find(room =>
-                room.fieldOwner._id === fieldOwnerId &&
-                room.field?._id === fieldId
-            );
+        // Connect WebSocket once on open
+        webSocketService.connect();
 
-            if (existingRoom) {
-                dispatch(setCurrentRoom(existingRoom));
-                // Join the chat room in WebSocket
-                webSocketService.joinChatRoom(existingRoom._id);
-                // Also fetch the latest messages from API
-                dispatch(getChatRoom(existingRoom._id));
-            } else {
-                // Clear current room if no existing room
+        const mapKey = `chat:roomId:${fieldOwnerId}:${fieldId || 'none'}`;
+        const savedRoomId = localStorage.getItem(mapKey);
+
+        const hydrateFromLocalStorage = (roomId: string) => {
+            try {
+                const saved = localStorage.getItem(`chat:messages:${roomId}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed?.messages)) {
+                        setLocalMessages(parsed.messages);
+                    }
+                }
+            } catch { }
+        };
+
+        const useRoom = async (roomId: string) => {
+            webSocketService.joinChatRoom(roomId);
+            hydrateFromLocalStorage(roomId);
+            await dispatch(getChatRoom(roomId));
+        };
+
+        // Prefer an existing room snapshot from current Redux state (single read)
+        const existingRoom = rooms.find(room =>
+            room.fieldOwner._id === fieldOwnerId &&
+            room.field?._id === fieldId
+        );
+
+        if (existingRoom) {
+            dispatch(setCurrentRoom(existingRoom));
+            useRoom(existingRoom._id);
+            localStorage.setItem(mapKey, existingRoom._id);
+            return;
+        }
+
+        // If we have a saved mapping, use it
+        if (savedRoomId) {
+            // minimal object to set id so the UI can proceed; full data comes from getChatRoom
+            dispatch(setCurrentRoom({ _id: savedRoomId, messages: [] } as any));
+            useRoom(savedRoomId);
+            return;
+        }
+
+        // Otherwise, create/get the room via API for persistence
+        (async () => {
+            try {
+                const action = await dispatch(startChat({ fieldOwnerId, fieldId })).unwrap();
+                const room = action;
+                dispatch(setCurrentRoom(room));
+                webSocketService.joinChatRoom(room._id);
+                await dispatch(getChatRoom(room._id));
+                localStorage.setItem(mapKey, room._id);
+            } catch (e) {
+                console.error('Failed to initialize chat room:', e);
                 dispatch(setCurrentRoom(null));
                 setLocalMessages([]);
             }
+        })();
+    }, [isOpen, fieldOwnerId, fieldId]);
+
+    // Persist messages locally per room for quick rehydrate
+    useEffect(() => {
+        if (currentRoom?._id) {
+            try {
+                localStorage.setItem(
+                    `chat:messages:${currentRoom._id}`,
+                    JSON.stringify({ messages: localMessages, updatedAt: Date.now() })
+                );
+            } catch { }
         }
-    }, [isOpen, fieldOwnerId, fieldId, rooms, dispatch]);
+    }, [currentRoom?._id, localMessages]);
 
     const handleSendMessage = async () => {
         if (!message.trim()) return;
@@ -93,7 +148,22 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
             return;
         }
 
-        // Send message via WebSocket - room will be created automatically
+        // Ensure we have a room and joined it; if not yet, start chat now
+        let roomId = currentRoom?._id;
+        if (!roomId) {
+            try {
+                const action = await dispatch(startChat({ fieldOwnerId, fieldId })).unwrap();
+                roomId = action._id;
+                dispatch(setCurrentRoom(action));
+                webSocketService.joinChatRoom(roomId);
+                localStorage.setItem(`chat:roomId:${fieldOwnerId}:${fieldId || 'none'}`, roomId);
+            } catch (e) {
+                console.error('Cannot start chat to send message:', e);
+                return;
+            }
+        }
+
+        // Send message via WebSocket
         webSocketService.sendMessage({
             fieldOwnerId,
             fieldId,
@@ -160,16 +230,22 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="relative w-[90%] max-w-2xl h-[80%] bg-white rounded-lg shadow-2xl flex flex-col">
+            <div className="relative w-[90%] max-w-2xl h-[80%] bg-white rounded-lg shadow-2xl flex flex-col min-h-0">
                 {/* Header */}
                 <div className="p-4 border-b flex items-center justify-between bg-gray-50 rounded-t-lg">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <Building className="w-5 h-5 text-blue-600" />
+                            <MessageCircle className="w-5 h-5 text-blue-600" />
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-gray-900">Trò chuyện với {fieldOwnerName}</h3>
-                            <p className="text-sm text-gray-600">Về sân: {fieldName}</p>
+
+                        <div className="text-left">
+                            <h3 className="font-semibold text-gray-900">
+                                Trò chuyện với chủ sân
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                                Về sân: {fieldName}
+                            </p>
+
                             {!currentRoom && (
                                 <p className="text-xs text-yellow-600 mt-1">
                                     Phòng chat sẽ được tạo khi bạn gửi tin nhắn đầu tiên
@@ -177,6 +253,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                             )}
                         </div>
                     </div>
+
                     <Button
                         variant="ghost"
                         size="sm"
@@ -188,7 +265,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                 </div>
 
                 {/* Messages Area */}
-                <ScrollArea className="flex-1 p-4">
+                <ScrollArea className="flex-1 min-h-0 p-4 overflow-y-auto">
                     {loading ? (
                         <div className="text-center py-8">Đang tải cuộc trò chuyện...</div>
                     ) : localMessages.length === 0 ? (

@@ -15,7 +15,8 @@ export const startChat = createAsyncThunk(
     async (payload: StartChatPayload, { rejectWithValue }) => {
         try {
             const response = await axiosPrivate.post(START_CHAT_API, payload);
-            return response.data as ChatRoom;
+            const data = response?.data?.data ?? response?.data;
+            return data as ChatRoom;
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || error.message || "Failed to start chat"
@@ -30,8 +31,8 @@ export const getChatRooms = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const response = await axiosPrivate.get(GET_CHAT_ROOMS_API);
-            // Ensure response.data is an array
-            const rooms = Array.isArray(response.data) ? response.data : [];
+            const data = response?.data?.data ?? response?.data;
+            const rooms = Array.isArray(data) ? data : [];
             return rooms as ChatRoom[];
         } catch (error: any) {
             return rejectWithValue(
@@ -46,7 +47,8 @@ export const getChatRoom = createAsyncThunk(
     async (chatRoomId: string, { rejectWithValue }) => {
         try {
             const response = await axiosPrivate.get(GET_CHAT_ROOM_API(chatRoomId));
-            return response.data as ChatRoom;
+            const data = response?.data?.data ?? response?.data;
+            return data as ChatRoom;
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || error.message || "Failed to get chat room"
@@ -74,7 +76,8 @@ export const getUnreadCount = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const response = await axiosPrivate.get(UNREAD_COUNT_API);
-            return response.data;
+            const data = response?.data?.data ?? response?.data;
+            return data;
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || error.message || "Failed to get unread count"
@@ -86,16 +89,17 @@ export const getUnreadCount = createAsyncThunk(
 // In chatThunk.ts, add this new thunk:
 
 export const getFieldOwnerChatRooms = createAsyncThunk(
-  "chat/getFieldOwnerChatRooms",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axiosPrivate.get(GET_FIELD_OWNER_CHAT_ROOMS_API);
-      const rooms = Array.isArray(response.data) ? response.data : [];
-      return rooms as ChatRoom[];
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message || "Failed to get field owner chat rooms"
-      );
+    "chat/getFieldOwnerChatRooms",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axiosPrivate.get(GET_FIELD_OWNER_CHAT_ROOMS_API);
+            const data = response?.data?.data ?? response?.data;
+            const rooms = Array.isArray(data) ? data : [];
+            return rooms as ChatRoom[];
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message || "Failed to get field owner chat rooms"
+            );
+        }
     }
-  }
 );

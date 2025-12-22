@@ -58,7 +58,7 @@ axiosInstance.interceptors.response.use(
         // Try to refresh the token
         const BASE_URL = import.meta.env.VITE_API_URL;
         await axios.post(
-          `${BASE_URL}/Auth/refresh`,
+          `${BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );

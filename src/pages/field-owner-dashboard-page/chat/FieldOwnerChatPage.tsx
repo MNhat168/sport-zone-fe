@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
 import { getChatRooms, getChatRoom, markAsRead, getFieldOwnerChatRooms } from "@/features/chat/chatThunk";
 import { setCurrentRoom } from "@/features/chat/chatSlice";
@@ -16,11 +17,11 @@ import { fetchFieldOwnerProfile } from "@/features/field-owner-profile/ownerProf
 
 const FieldOwnerChatDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
-    const [activeFilter, setActiveFilter] = useState<"all" | "unread" | "with-bookings">("all");
     const [message, setMessage] = useState("");
     const [localMessages, setLocalMessages] = useState<Message[]>([]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-     const [fieldOwnerProfile, setFieldOwnerProfile] = useState<any>(null); // Local state
+    const [fieldOwnerProfile, setFieldOwnerProfile] = useState<any>(null); // Local state
     const { rooms, currentRoom, loading, unreadCount, typingUsers } = useAppSelector((state) => state.chat);
     const dispatch = useAppDispatch();
     const fieldOwnerData = sessionStorage.getItem("user");
@@ -44,8 +45,7 @@ const FieldOwnerChatDashboard: React.FC = () => {
                 userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 fieldName.toLowerCase().includes(searchQuery.toLowerCase());
 
-            if (activeFilter === "unread" && !room.hasUnread) return false;
-            if (activeFilter === "with-bookings" && !room.bookingId) return false;
+
 
             return matchesSearch;
         })
@@ -89,57 +89,57 @@ const FieldOwnerChatDashboard: React.FC = () => {
         });
     }, []);
 
-// In FieldOwnerChatPage.tsx, update the useEffect for fetching profile:
+    // In FieldOwnerChatPage.tsx, update the useEffect for fetching profile:
 
-useEffect(() => {
-    // Get user data from sessionStorage
-    const userData = sessionStorage.getItem("user");
-    if (!userData) {
-        console.error("No user data found in sessionStorage");
-        return;
-    }
-
-    const user = JSON.parse(userData);
-    const userId = user.id || user._id;
-
-    if (!userId) {
-        console.error("No user ID found in sessionStorage");
-        return;
-    }
-
-    // Connect to WebSocket
-    webSocketService.connect();
-
-    // Fetch field owner profile first
-    const fetchProfileAndRooms = async () => {
-        try {
-            const response = await axiosPrivate.get(`/field-owner/profile/`);
-            if (response.data.success) {
-                const profile = response.data.data;
-                setFieldOwnerProfile(profile);
-                console.log('Field Owner Profile loaded:', profile);
-                
-                // Now fetch chat rooms using the profile ID
-                // We need to dispatch an action that uses the profile ID
-                // Since getFieldOwnerChatRooms doesn't take parameters, we need to adjust
-                
-                // Temporary solution: Refetch the endpoint directly
-                const roomsResponse = await axiosPrivate.get('/chat/field-owner/rooms');
-                if (roomsResponse.data) {
-                    // Dispatch to Redux manually or update state
-                    console.log('Chat rooms fetched:', roomsResponse.data);
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching field owner profile:", error);
+    useEffect(() => {
+        // Get user data from sessionStorage
+        const userData = sessionStorage.getItem("user");
+        if (!userData) {
+            console.error("No user data found in sessionStorage");
+            return;
         }
-    };
 
-    fetchProfileAndRooms();
+        const user = JSON.parse(userData);
+        const userId = user.id || user._id;
 
-    // Also try the standard dispatch
-    dispatch(getFieldOwnerChatRooms());
-}, [dispatch]);
+        if (!userId) {
+            console.error("No user ID found in sessionStorage");
+            return;
+        }
+
+        // Connect to WebSocket
+        webSocketService.connect();
+
+        // Fetch field owner profile first
+        const fetchProfileAndRooms = async () => {
+            try {
+                const response = await axiosPrivate.get(`/field-owner/profile/`);
+                if (response.data.success) {
+                    const profile = response.data.data;
+                    setFieldOwnerProfile(profile);
+                    console.log('Field Owner Profile loaded:', profile);
+
+                    // Now fetch chat rooms using the profile ID
+                    // We need to dispatch an action that uses the profile ID
+                    // Since getFieldOwnerChatRooms doesn't take parameters, we need to adjust
+
+                    // Temporary solution: Refetch the endpoint directly
+                    const roomsResponse = await axiosPrivate.get('/chat/field-owner/rooms');
+                    if (roomsResponse.data) {
+                        // Dispatch to Redux manually or update state
+                        console.log('Chat rooms fetched:', roomsResponse.data);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching field owner profile:", error);
+            }
+        };
+
+        fetchProfileAndRooms();
+
+        // Also try the standard dispatch
+        dispatch(getFieldOwnerChatRooms());
+    }, [dispatch]);
 
 
     useEffect(() => {
@@ -149,6 +149,18 @@ useEffect(() => {
             setLocalMessages([]);
         }
     }, [currentRoom?.messages]);
+
+    const scrollToBottom = (smooth: boolean = true) => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+        }
+    };
+
+    // Auto-scroll when messages update or room changes
+    useEffect(() => {
+        scrollToBottom(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localMessages, currentRoom?._id]);
 
     const handleRoomClick = (room: any) => {
         dispatch(setCurrentRoom(room));
@@ -164,27 +176,20 @@ useEffect(() => {
         const room = rooms.find(r => r._id === roomId);
         if (!room || !room.messages) return 0;
 
-        // Count unread messages sent by the user (not field owner)
-        return room.messages.filter(msg =>
-            !msg.isRead &&
-            msg.sender !== fieldOwnerProfile?.id
-        ).length || 0;
+        // For owner view: count unread messages sent by the customer (room.user)
+        const customerId = room.user?._id;
+        return room.messages.filter(msg => !msg.isRead && msg.sender === customerId).length || 0;
     };
 
     const handleSendMessage = async () => {
         if (!message.trim() || !currentRoom) return;
 
-        // Send message via WebSocket
-        webSocketService.sendMessage({
-            fieldOwnerId: currentRoom.fieldOwner._id,
-            fieldId: currentRoom.field?._id || "",
-            content: message.trim(),
-            type: "text",
-        });
+        // Send message directly to the chat room (owner reply)
+        webSocketService.sendMessageToRoom(currentRoom._id, message.trim(), 'text');
 
-        // Add message locally for immediate display
+        // Optimistic local append
         const newMessage: Message = {
-            sender: fieldOwnerProfile?.id || "",
+            sender: fieldOwnerId || "",
             type: 'text',
             content: message.trim(),
             isRead: false,
@@ -196,7 +201,9 @@ useEffect(() => {
     };
 
     const isUserMessage = (senderId: string) => {
-        return senderId !== fieldOwnerProfile?.id;
+        // Owner view: a user message if the sender equals the room's user._id
+        const customerId = currentRoom?.user?._id;
+        return senderId === customerId;
     };
 
     const formatTime = (dateString: string | Date) => {
@@ -229,27 +236,12 @@ useEffect(() => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
+        <FieldOwnerDashboardLayout>
+            <div className="w-full p-6">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
-                    <p className="text-gray-600 mt-2">
-                        Communicate with customers about bookings, inquiries, and support
-                    </p>
-                    <div className="flex items-center gap-4 mt-4">
-                        <Badge className="bg-blue-500">
-                            {unreadCount} unread messages
-                        </Badge>
-                        <Badge variant="outline" className="text-green-600 border-green-600">
-                            {filteredRooms.filter(r => r.status === "active").length} active conversations
-                        </Badge>
-                        {fieldOwnerProfile && (
-                            <Badge variant="outline" className="text-gray-600">
-                                Field Owner: {fieldOwnerProfile.facilityName}
-                            </Badge>
-                        )}
-                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900">Nhắn tin với khách hàng</h1>
+
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -260,47 +252,28 @@ useEffect(() => {
                             <div className="relative mb-4">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <Input
-                                    placeholder="Search conversations..."
+                                    placeholder="Tìm tên khách hàng"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-9"
                                 />
                             </div>
 
-                            <div className="flex gap-2">
-                                {["all", "unread", "with-bookings"].map((filter) => (
-                                    <button
-                                        key={filter}
-                                        onClick={() => setActiveFilter(filter as any)}
-                                        className={`px-3 py-1.5 text-sm rounded-full ${activeFilter === filter
-                                            ? "bg-blue-500 text-white"
-                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                            }`}
-                                    >
-                                        {filter === "all" && "All Chats"}
-                                        {filter === "unread" && "Unread"}
-                                        {filter === "with-bookings" && "With Bookings"}
-                                    </button>
-                                ))}
-                            </div>
+
                         </div>
 
                         {/* Chat list */}
                         <ScrollArea className="h-[600px]">
                             {loading ? (
-                                <div className="p-8 text-center text-gray-500">Loading conversations...</div>
+                                <div className="p-8 text-center text-gray-500">Đang tải...</div>
                             ) : filteredRooms.length === 0 ? (
                                 <div className="p-8 text-center">
                                     <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-900 mb-2">No conversations yet</h3>
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có cuộc trò chuyện nào</h3>
                                     <p className="text-gray-500">
-                                        When customers message you, conversations will appear here
+                                        Khi khách hàng nhắn tin cho bạn, các cuộc trò chuyện sẽ xuất hiện ở đây
                                     </p>
-                                    {searchQuery && (
-                                        <p className="text-sm text-gray-400 mt-2">
-                                            Try clearing your search to see all conversations
-                                        </p>
-                                    )}
+
                                 </div>
                             ) : (
                                 filteredRooms.map((room) => {
@@ -315,12 +288,6 @@ useEffect(() => {
                                                 }`}
                                         >
                                             <div className="flex items-start gap-3">
-                                                <Avatar>
-                                                    <AvatarImage src={room.user?.avatarUrl} />
-                                                    <AvatarFallback>
-                                                        {room.user?.fullName?.charAt(0) || "U"}
-                                                    </AvatarFallback>
-                                                </Avatar>
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between items-start">
@@ -373,20 +340,15 @@ useEffect(() => {
                     </div>
 
                     {/* Right side - Chat interface or placeholder */}
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-2 min-h-0">
                         {currentRoom ? (
-                            <div className="bg-white rounded-lg shadow border h-full flex flex-col">
+                            <div className="bg-white rounded-lg shadow border h-[600px] max-h-[600px] flex flex-col min-h-0 overflow-hidden">
                                 {/* Chat header */}
                                 <div className="p-4 border-b">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <Avatar>
-                                                <AvatarImage src={currentRoom.user?.avatarUrl} />
-                                                <AvatarFallback>
-                                                    {currentRoom.user?.fullName?.charAt(0) || "U"}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div>
+
+                                            <div className="text-left">
                                                 <h3 className="font-semibold text-gray-900">
                                                     {currentRoom.user?.fullName || "Unknown User"}
                                                 </h3>
@@ -405,29 +367,16 @@ useEffect(() => {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
-                                            {currentRoom.bookingId && (
-                                                <button className="px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-medium hover:bg-green-200">
-                                                    View Booking
-                                                </button>
-                                            )}
-                                            <button className="px-3 py-1.5 border border-gray-300 rounded-full text-sm font-medium hover:bg-gray-50">
-                                                View Profile
-                                            </button>
-                                        </div>
+
                                     </div>
                                 </div>
 
                                 {/* Messages area */}
-                                <ScrollArea className="flex-1 p-4">
+                                <ScrollArea className="flex-1 min-h-0 p-4 overflow-y-auto">
                                     {localMessages.length === 0 ? (
                                         <div className="text-center text-gray-500 mt-10">
                                             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                                            <h4 className="font-medium mb-2">Start the conversation</h4>
-                                            <p className="text-sm">Send your first message to {currentRoom.user?.fullName || "the customer"}</p>
-                                            <p className="text-xs text-gray-500 mt-2">
-                                                Ask about their needs, provide information, or answer questions
-                                            </p>
+
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
@@ -461,7 +410,7 @@ useEffect(() => {
                                             })}
                                             {/* Typing indicator */}
                                             {Object.entries(typingUsers).some(([userId, isTyping]) =>
-                                                isTyping && userId !== fieldOwnerProfile?.id
+                                                isTyping && userId !== fieldOwnerId
                                             ) && (
                                                     <div className="flex justify-start">
                                                         <div className="max-w-[70%] rounded-lg p-3 bg-gray-100 text-gray-800 rounded-bl-none">
@@ -475,13 +424,14 @@ useEffect(() => {
                                                 )}
                                         </div>
                                     )}
+                                    <div ref={messagesEndRef} />
                                 </ScrollArea>
 
                                 {/* Message input */}
                                 <div className="p-4 border-t">
                                     <div className="flex items-center gap-2">
                                         <Input
-                                            placeholder="Type your message..."
+                                            placeholder="Nhập tin nhắn của bạn..."
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
                                             onKeyDown={(e) => {
@@ -500,48 +450,36 @@ useEffect(() => {
                                             <Send className="w-4 h-4" />
                                         </Button>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2 text-center">
-                                        Respond within 24 hours for best customer service
-                                    </p>
+
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-white rounded-lg shadow border h-full flex flex-col items-center justify-center p-8">
+                            <div className="bg-white rounded-lg shadow border h-[600px] max-h-[600px] flex flex-col items-center justify-center p-8 overflow-hidden">
                                 <MessageCircle className="w-16 h-16 text-gray-300 mb-4" />
                                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                    Select a conversation
+                                    Chọn một cuộc trò chuyện để bắt đầu
                                 </h3>
-                                <p className="text-gray-600 text-center max-w-md">
-                                    Choose a conversation from the list to view messages and respond to customers.
-                                    You can search by customer name or field name.
-                                </p>
 
-                                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg">
-                                    <div className="p-4 border rounded-lg bg-blue-50">
-                                        <h4 className="font-medium text-blue-700 mb-2">Quick Tips</h4>
-                                        <ul className="text-sm text-gray-600 space-y-1">
-                                            <li>• Respond within 24 hours</li>
-                                            <li>• Be clear about pricing</li>
-                                            <li>• Share booking terms</li>
-                                            <li>• Confirm availability</li>
-                                        </ul>
-                                    </div>
 
-                                    <div className="p-4 border rounded-lg bg-green-50">
-                                        <h4 className="font-medium text-green-700 mb-2">Stats</h4>
-                                        <div className="text-sm text-gray-600 space-y-1">
-                                            <p>• {filteredRooms.length} total conversations</p>
-                                            <p>• {filteredRooms.filter(r => r.hasUnread).length} unread conversations</p>
-                                            <p>• {filteredRooms.filter(r => r.bookingId).length} with bookings</p>
-                                        </div>
-                                    </div>
+
+                                <div className="p-4 border rounded-lg bg-blue-50">
+                                    <h4 className="font-medium text-blue-700 mb-2">Mẹo nhanh</h4>
+                                    <ul className="text-sm text-gray-600 space-y-1, text-left">
+                                        <li>• Trả lời trong 24h</li>
+                                        <li>• Rõ ràng về giá cả</li>
+                                        <li>• Chia sẻ điều khoản đặt chỗ</li>
+                                        <li>• Xác nhận tình trạng sẵn có</li>
+                                    </ul>
                                 </div>
+
+
+
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-        </div>
+        </FieldOwnerDashboardLayout>
     );
 };
 
