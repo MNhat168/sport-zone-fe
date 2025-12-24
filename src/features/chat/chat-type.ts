@@ -23,6 +23,12 @@ export interface ChatRoom {
     facilityName: string;
     contactPhone?: string;
   };
+  // Optional coach participant for coach chat rooms
+  coach?: {
+    _id: string;
+    displayName?: string;
+    contactPhone?: string;
+  };
   field?: {
     _id: string;
     name: string;
@@ -60,7 +66,7 @@ export interface ChatState {
   error: string | null;
   unreadCount: number;
   connected: boolean;
-  typingUsers: Record<string, boolean>; 
+  typingUsers: Record<string, boolean>;
 }
 
 export interface SocketMessageEvent {

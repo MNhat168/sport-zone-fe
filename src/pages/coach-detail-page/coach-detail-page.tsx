@@ -32,6 +32,7 @@ import { RequestFormCard } from "./components/RequestFormCard";
 import { SimilarCoachesSection } from "./components/SimilarCoachesSection";
 import { LessonDetailModal } from "./components/LessonDetailModal";
 import { ReviewModal } from "./components/ReviewModal";
+import CoachDetailChatWindow from "@/components/chat/CoachDetailChatWindow";
 
 interface LessonType {
   id: string;
@@ -145,6 +146,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
   const [activeTab, setActiveTab] = useState("bio");
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [showCoachChat, setShowCoachChat] = useState(false);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
   const [selectedLesson, setSelectedLesson] = useState<LessonType | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -207,14 +209,25 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     }
   }, [dispatch, effectiveCoachId]);
 
-  // Ensure auth profile (favouriteCoaches) is fresh on page load so the favorite
-  // button correctly reflects server state. Only refresh when user is logged in
-  // and favourites are missing or don't include the current coach id.
+  // Rate-limit profile refresh to avoid frequent /users/get-profile requests.
+  // This keeps favouriteCoaches in sync but prevents continuous fetching.
   useEffect(() => {
-    if (!effectiveCoachId || !authUser) return;
-    const needRefresh = !Array.isArray(authUser.favouriteCoaches) || !authUser.favouriteCoaches.includes(effectiveCoachId as string);
-    if (needRefresh) {
-      dispatch(getUserProfile());
+    if (!effectiveCoachId) return;
+    const PROFILE_REFRESH_KEY = 'profile:lastFetchAt';
+    const MIN_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    const last = Number(localStorage.getItem(PROFILE_REFRESH_KEY) || 0);
+    const now = Date.now();
+    const withinCooldown = now - last < MIN_INTERVAL_MS;
+
+    const missingFavs = !currentUser || !Array.isArray(currentUser.favouriteCoaches);
+    const notIncluded = !!effectiveCoachId && Array.isArray(currentUser?.favouriteCoaches)
+      ? !currentUser!.favouriteCoaches.includes(effectiveCoachId as string)
+      : true;
+
+    if ((missingFavs || notIncluded) && !withinCooldown) {
+      dispatch(getUserProfile()).finally(() => {
+        try { localStorage.setItem(PROFILE_REFRESH_KEY, String(Date.now())); } catch { }
+      });
     }
   }, [dispatch, effectiveCoachId, authUser]);
 
@@ -275,10 +288,10 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     if (!effectiveCoachId) return;
     // initial fetch page 1
     fetchReviews(1, false);
-    // poll every 20 seconds to refresh first page
-    const timer = setInterval(() => {
-      fetchReviews(1, false);
-    }, 20000);
+    // Slow down polling and avoid work while tab hidden
+    const POLL_INTERVAL_MS = 120000; // 2 minutes
+    const tick = () => { if (!document.hidden) fetchReviews(1, false); };
+    const timer = setInterval(tick, POLL_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [effectiveCoachId, fetchReviews]);
 
@@ -481,6 +494,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
   // Use real coach data from API only
   const coachData = currentCoach;
+  const coachDisplayName = coachData?.name || (coachData as any)?.user?.fullName || "HLV";
 
   return (
     <>
@@ -512,6 +526,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                 isFavourite={isFavourite}
                 favLoading={favLoading}
                 onToggleFavourite={toggleFavourite}
+                onOpenChat={() => setShowCoachChat(true)}
               />
 
               {/* Navigation Tabs */}
@@ -578,6 +593,8 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   showForm={showRequestForm}
                   onToggleForm={() => setShowRequestForm(!showRequestForm)}
                 />
+
+                {/* Chat button moved to CoachInfoCard header */}
               </div>
             </div>
           </div>
@@ -655,6 +672,14 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
             setReviewRating(0);
             setHoveredRating(0);
           }}
+        />
+
+        {/* Coach Chat Popup */}
+        <CoachDetailChatWindow
+          isOpen={showCoachChat}
+          onClose={() => setShowCoachChat(false)}
+          coachId={String(effectiveCoachId || "")}
+          coachName={coachDisplayName}
         />
       </PageWrapper>
     </>

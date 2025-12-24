@@ -1,106 +1,100 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Send, X, MessageCircle, Building } from "lucide-react";
-import { useAppSelector, useAppDispatch } from "@/store/hook";
-import { getChatRoom, markAsRead, startChat } from "@/features/chat/chatThunk";
-import { setCurrentRoom, clearTyping } from "@/features/chat/chatSlice";
+import React, { useEffect, useRef, useState } from "react";
+import { Send, X, MessageCircle } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
+import { getChatRoom, markAsRead, startCoachChat } from "@/features/chat/chatThunk";
+import { clearTyping, setCurrentRoom } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import type { Message } from "@/features/chat/chat-type";
+import { getCoachIdByUserId } from "@/features/coach";
 
-interface FieldDetailChatWindowProps {
+interface CoachDetailChatWindowProps {
     onClose: () => void;
-    fieldOwnerId: string;
-    fieldId: string;
-    fieldName: string;
-    fieldOwnerName: string;
+    coachId: string;
+    coachName: string;
     isOpen: boolean;
+    fieldId?: string;
 }
 
-const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
+const CoachDetailChatWindow: React.FC<CoachDetailChatWindowProps> = ({
     onClose,
-    fieldOwnerId,
-    fieldId,
-    fieldName,
-    fieldOwnerName,
+    coachId,
+    coachName,
     isOpen,
+    fieldId,
 }) => {
     const [message, setMessage] = useState("");
     const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [localMessages, setLocalMessages] = useState<Message[]>([]);
-    // Add rooms to dependencies
-    const { rooms, currentRoom, loading } = useAppSelector((state) => state.chat);
+    const { rooms, currentRoom, loading } = useAppSelector((s) => s.chat);
+    const { resolvedCoachId } = useAppSelector((s) => s.coach);
     const dispatch = useAppDispatch();
 
+    // No auto-connection on open; handled in init effect below
+
     useEffect(() => {
-        if (isOpen) {
-            webSocketService.connect();
-        } else {
+        if (currentRoom?.messages?.length) setLocalMessages([...currentRoom.messages]);
+        else setLocalMessages([]);
+    }, [currentRoom?.messages]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [localMessages]);
+
+    // Disconnect and cleanup when popup closes to avoid background activity
+    useEffect(() => {
+        if (!isOpen) {
             try {
                 if (currentRoom?._id) webSocketService.sendTyping(currentRoom._id, false);
             } catch { }
             webSocketService.disconnect();
             dispatch(setCurrentRoom(null));
             setLocalMessages([]);
-            initializedRef.current = false;
+            lastInitForId.current = null;
         }
-    }, [isOpen]);
+    }, [isOpen, currentRoom?._id, dispatch]);
 
+    // Resolve coach profileId from coach userId to satisfy backend /chat/coach/start
     useEffect(() => {
-        if (currentRoom?.messages && currentRoom.messages.length > 0) {
-            setLocalMessages([...currentRoom.messages]);
-        } else {
-            setLocalMessages([]);
-        }
-    }, [currentRoom?.messages]);
+        if (!coachId) return;
+        // Try to resolve profile id; harmless if already resolved elsewhere
+        dispatch(getCoachIdByUserId(coachId) as any).catch(() => { });
+    }, [coachId, dispatch]);
 
+    const lastInitForId = useRef<string | null>(null);
     useEffect(() => {
-        scrollToBottom();
-    }, [localMessages]);
+        if (!isOpen) return;
+        const targetCoachId = resolvedCoachId || coachId; // Prefer CoachProfile._id
+        if (!targetCoachId) return;
+        if (lastInitForId.current === targetCoachId) return;
+        lastInitForId.current = targetCoachId;
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    const initializedRef = useRef(false);
-    useEffect(() => {
-        if (!isOpen || !fieldOwnerId) return;
-        if (initializedRef.current) return; // prevent re-init on every Redux change
-        initializedRef.current = true;
-
-        // Ensure WebSocket is connected (no-op if already connected)
         webSocketService.connect();
 
-        const mapKey = `chat:roomId:${fieldOwnerId}:${fieldId || 'none'}`;
+        const mapKey = `chat:coach:roomId:${targetCoachId}:${fieldId || 'none'}`;
         const savedRoomId = localStorage.getItem(mapKey);
 
-        const hydrateFromLocalStorage = (roomId: string) => {
+        const hydrateFromLocal = (roomId: string) => {
             try {
                 const saved = localStorage.getItem(`chat:messages:${roomId}`);
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed?.messages)) {
-                        setLocalMessages(parsed.messages);
-                    }
+                    if (Array.isArray(parsed?.messages)) setLocalMessages(parsed.messages);
                 }
             } catch { }
         };
 
         const useRoom = async (roomId: string) => {
             webSocketService.joinChatRoom(roomId);
-            hydrateFromLocalStorage(roomId);
+            hydrateFromLocal(roomId);
             await dispatch(getChatRoom(roomId));
         };
 
-        // Prefer an existing room snapshot from current Redux state (single read)
-        const existingRoom = rooms.find(room =>
-            room.fieldOwner._id === fieldOwnerId &&
-            room.field?._id === fieldId
-        );
-
+        const existingRoom = rooms.find(r => r.coach?._id === targetCoachId);
         if (existingRoom) {
             dispatch(setCurrentRoom(existingRoom));
             useRoom(existingRoom._id);
@@ -108,32 +102,27 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
             return;
         }
 
-        // If we have a saved mapping, use it
         if (savedRoomId) {
-            // minimal object to set id so the UI can proceed; full data comes from getChatRoom
             dispatch(setCurrentRoom({ _id: savedRoomId, messages: [] } as any));
             useRoom(savedRoomId);
             return;
         }
 
-        // Otherwise, create/get the room via API for persistence
         (async () => {
             try {
-                const action = await dispatch(startChat({ fieldOwnerId, fieldId })).unwrap();
-                const room = action;
+                const room = await dispatch(startCoachChat({ coachId: targetCoachId, fieldId })).unwrap();
                 dispatch(setCurrentRoom(room));
                 webSocketService.joinChatRoom(room._id);
                 await dispatch(getChatRoom(room._id));
                 localStorage.setItem(mapKey, room._id);
             } catch (e) {
-                console.error('Failed to initialize chat room:', e);
+                console.error('Failed to initialize coach chat room:', e);
                 dispatch(setCurrentRoom(null));
                 setLocalMessages([]);
             }
         })();
-    }, [isOpen, fieldOwnerId, fieldId]);
+    }, [isOpen, coachId, resolvedCoachId, fieldId, rooms, dispatch]);
 
-    // Persist messages locally per room for quick rehydrate
     useEffect(() => {
         if (currentRoom?._id) {
             try {
@@ -147,38 +136,26 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
 
     const handleSendMessage = async () => {
         if (!message.trim()) return;
-
-        // Get user data from sessionStorage
         const userData = sessionStorage.getItem("user");
         if (!userData) {
             alert("Vui lòng đăng nhập để gửi tin nhắn");
             return;
         }
-
-        // Ensure we have a room and joined it; if not yet, start chat now
+        const targetCoachId = resolvedCoachId || coachId;
         let roomId = currentRoom?._id;
         if (!roomId) {
             try {
-                const action = await dispatch(startChat({ fieldOwnerId, fieldId })).unwrap();
-                roomId = action._id;
-                dispatch(setCurrentRoom(action));
+                const room = await dispatch(startCoachChat({ coachId: targetCoachId!, fieldId })).unwrap();
+                roomId = room._id;
+                dispatch(setCurrentRoom(room));
                 webSocketService.joinChatRoom(roomId);
-                localStorage.setItem(`chat:roomId:${fieldOwnerId}:${fieldId || 'none'}`, roomId);
+                localStorage.setItem(`chat:coach:roomId:${targetCoachId}:${fieldId || 'none'}`, roomId);
             } catch (e) {
-                console.error('Cannot start chat to send message:', e);
+                console.error('Cannot start coach chat to send message:', e);
                 return;
             }
         }
-
-        // Send message via WebSocket
-        webSocketService.sendMessage({
-            fieldOwnerId,
-            fieldId,
-            content: message.trim(),
-            type: "text",
-        });
-
-        // Add message locally for immediate display
+        webSocketService.sendMessageToRoom(roomId!, message.trim(), 'text');
         const user = JSON.parse(userData);
         const newMessage: Message = {
             sender: user.id || user._id,
@@ -187,7 +164,6 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
             isRead: false,
             sentAt: new Date().toISOString(),
         };
-
         setLocalMessages(prev => [...prev, newMessage]);
         setMessage("");
         clearTypingIndicator();
@@ -195,25 +171,17 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
 
     const handleTyping = () => {
         if (!currentRoom?._id) return;
-
         webSocketService.sendTyping(currentRoom._id, true);
-
         if (typingTimeout) clearTimeout(typingTimeout);
-
         const timeout = setTimeout(() => {
-            if (currentRoom?._id) {
-                webSocketService.sendTyping(currentRoom._id, false);
-            }
+            if (currentRoom?._id) webSocketService.sendTyping(currentRoom._id, false);
         }, 1000);
-
         setTypingTimeout(timeout);
     };
 
     const clearTypingIndicator = () => {
         if (typingTimeout) clearTimeout(typingTimeout);
-        if (currentRoom?._id) {
-            webSocketService.sendTyping(currentRoom._id, false);
-        }
+        if (currentRoom?._id) webSocketService.sendTyping(currentRoom._id, false);
         dispatch(clearTyping({ chatRoomId: currentRoom?._id || "" }));
     };
 
@@ -238,40 +206,24 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="relative w-[90%] max-w-2xl h-[80%] bg-white rounded-lg shadow-2xl flex flex-col min-h-0">
-                {/* Header */}
                 <div className="p-4 border-b flex items-center justify-between bg-gray-50 rounded-t-lg">
                     <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <MessageCircle className="w-5 h-5 text-blue-600" />
                         </div>
-
                         <div className="text-left">
-                            <h3 className="font-semibold text-gray-900">
-                                Trò chuyện với chủ sân
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                                Về sân: {fieldName}
-                            </p>
-
+                            <h3 className="font-semibold text-gray-900">Trò chuyện với HLV</h3>
+                            <p className="text-sm text-gray-600">{coachName}</p>
                             {!currentRoom && (
-                                <p className="text-xs text-yellow-600 mt-1">
-                                    Phòng chat sẽ được tạo khi bạn gửi tin nhắn đầu tiên
-                                </p>
+                                <p className="text-xs text-yellow-600 mt-1">Phòng chat sẽ được tạo khi bạn gửi tin nhắn đầu tiên</p>
                             )}
                         </div>
                     </div>
-
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onClose}
-                        className="hover:bg-gray-200"
-                    >
+                    <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-gray-200">
                         <X className="w-5 h-5" />
                     </Button>
                 </div>
 
-                {/* Messages Area */}
                 <ScrollArea className="flex-1 min-h-0 p-4 overflow-y-auto">
                     {loading ? (
                         <div className="text-center py-8">Đang tải cuộc trò chuyện...</div>
@@ -279,34 +231,19 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                         <div className="text-center text-gray-500 mt-10">
                             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                             <h4 className="font-medium mb-2">Bắt đầu cuộc trò chuyện</h4>
-                            <p className="text-sm">Gửi tin nhắn đầu tiên cho {fieldOwnerName}</p>
-                            <p className="text-xs text-gray-500 mt-2">
-                                Hãy hỏi về lịch trống, giá thuê hoặc bất kỳ thắc mắc nào khác
-                            </p>
+                            <p className="text-sm">Gửi tin nhắn đầu tiên cho {coachName}</p>
+                            <p className="text-xs text-gray-500 mt-2">Hãy hỏi về lịch dạy, giá buổi học hoặc bất kỳ thắc mắc nào</p>
                         </div>
                     ) : (
-                        localMessages.map((msg: Message, index: number) => {
+                        localMessages.map((msg, idx) => {
                             const isCurrentUserMessage = isUserMessage(msg.sender);
-
                             return (
-                                <div
-                                    key={index}
-                                    className={`flex mb-4 ${isCurrentUserMessage ? "justify-end" : "justify-start"
-                                        }`}
-                                >
-                                    <div
-                                        className={`max-w-[70%] rounded-lg p-3 ${isCurrentUserMessage
-                                            ? "bg-blue-500 text-white rounded-br-none"
-                                            : "bg-gray-100 text-gray-800 rounded-bl-none"
-                                            }`}
-                                    >
+                                <div key={idx} className={`flex mb-4 ${isCurrentUserMessage ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[70%] rounded-lg p-3 ${isCurrentUserMessage ? 'bg-blue-500 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
                                         <p className="text-sm">{msg.content}</p>
-                                        <div className={`text-xs mt-1 flex justify-end ${isCurrentUserMessage ? "text-blue-200" : "text-gray-500"
-                                            }`}>
+                                        <div className={`text-xs mt-1 flex justify-end ${isCurrentUserMessage ? 'text-blue-200' : 'text-gray-500'}`}>
                                             {formatTime(msg.sentAt)}
-                                            {msg.isRead && isCurrentUserMessage && (
-                                                <span className="ml-1">✓</span>
-                                            )}
+                                            {msg.isRead && isCurrentUserMessage && <span className="ml-1">✓</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -316,18 +253,14 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                     <div ref={messagesEndRef} />
                 </ScrollArea>
 
-                {/* Message Input */}
                 <div className="p-4 border-t">
                     <div className="flex items-center gap-2">
                         <Input
-                            placeholder={`Nhập tin nhắn gửi đến ${fieldOwnerName}...`}
+                            placeholder={`Nhập tin nhắn gửi đến ${coachName}...`}
                             value={message}
-                            onChange={(e) => {
-                                setMessage(e.target.value);
-                                handleTyping();
-                            }}
+                            onChange={(e) => { setMessage(e.target.value); handleTyping(); }}
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
+                                if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
                                     handleSendMessage();
                                 }
@@ -335,21 +268,15 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                             onBlur={clearTypingIndicator}
                             className="flex-1"
                         />
-                        <Button
-                            onClick={handleSendMessage}
-                            disabled={!message.trim()}
-                            className="bg-blue-500 hover:bg-blue-600 text-white"
-                        >
+                        <Button onClick={handleSendMessage} disabled={!message.trim()} className="bg-blue-500 hover:bg-blue-600 text-white">
                             <Send className="w-4 h-4" />
                         </Button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2 text-center">
-                        Nhấn Enter để gửi • Thường phản hồi trong vòng 24 giờ
-                    </p>
+                    <p className="text-xs text-gray-500 mt-2 text-center">Nhấn Enter để gửi • Thường phản hồi trong vòng 24 giờ</p>
                 </div>
             </div>
         </div>
     );
 };
 
-export default FieldDetailChatWindow;
+export default CoachDetailChatWindow;

@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Star, Award, Calendar, CheckCircle2, Heart } from "lucide-react";
+import { MapPin, Star, Award, Calendar, CheckCircle2, Heart, Mail } from "lucide-react";
 
 interface CoachInfoCardProps {
   coachData: any;
@@ -10,6 +10,7 @@ interface CoachInfoCardProps {
   isFavourite: boolean;
   favLoading: boolean;
   onToggleFavourite: () => void;
+  onOpenChat?: () => void;
 }
 
 export const CoachInfoCard: React.FC<CoachInfoCardProps> = ({
@@ -18,6 +19,7 @@ export const CoachInfoCard: React.FC<CoachInfoCardProps> = ({
   isFavourite,
   favLoading,
   onToggleFavourite,
+  onOpenChat,
 }) => {
   return (
     <Card className="shadow-2xl border-0 animate-fade-in-up bg-white">
@@ -49,22 +51,35 @@ export const CoachInfoCard: React.FC<CoachInfoCardProps> = ({
             {/* Coach Info */}
             <div className="flex-1 space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap w-full">
                   <h1 className="text-3xl font-bold text-balance">
                     {coachData.name}
                   </h1>
                   <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                   </Badge>
-                  <Button
-                    size="sm"
-                    onClick={onToggleFavourite}
-                    disabled={favLoading}
-                    className={`ml-auto ${isFavourite ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white border-0 flex items-center gap-2`}
-                  >
-                    <Heart className="h-4 w-4" />
-                    {favLoading ? 'Đang xử lý...' : isFavourite ? 'Đã yêu thích' : 'Yêu thích'}
-                  </Button>
+                  <div className="ml-auto flex items-center gap-2">
+                    {/* Chat icon button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-gray-300 hover:bg-gray-100"
+                      onClick={() => onOpenChat && onOpenChat()}
+                      aria-label="Nhắn tin với HLV"
+                    >
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                    {/* Favourite button */}
+                    <Button
+                      size="sm"
+                      onClick={onToggleFavourite}
+                      disabled={favLoading}
+                      className={`${isFavourite ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white border-0 flex items-center gap-2`}
+                    >
+                      <Heart className="h-4 w-4" />
+                      {favLoading ? 'Đang xử lý...' : isFavourite ? 'Đã yêu thích' : 'Yêu thích'}
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-base text-muted-foreground text-left">
                   {coachData.description}
@@ -118,12 +133,12 @@ export const CoachInfoCard: React.FC<CoachInfoCardProps> = ({
                   <span>
                     Tham gia Dreamsports từ: {coachData.memberSince
                       ? new Date(
-                          coachData.memberSince
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
+                        coachData.memberSince
+                      ).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
                       : "-"}
                   </span>
                 </div>
