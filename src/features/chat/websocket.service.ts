@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import { store } from "@/store/store";
 import { addMessage, setTyping, setConnected } from "./chatSlice";
+import { BASE_URL } from "@/utils/constant-value/constant";
 
 class WebSocketService {
   private socket: Socket | null = null;
@@ -18,15 +19,16 @@ class WebSocketService {
 
     const user = JSON.parse(userData);
     const userId = user.id || user._id;
-    
+
     if (!userId) {
       console.error("No user ID found in sessionStorage");
       return;
     }
 
     this.isConnecting = true;
-    
-    this.socket = io(`${"http://localhost:3000"}/chat`, {
+
+    const apiUrl = BASE_URL || "http://localhost:3000";
+    this.socket = io(`${apiUrl}/chat`, {
       auth: { userId },
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -110,6 +112,12 @@ class WebSocketService {
   markAsRead(chatRoomId: string) {
     if (this.socket?.connected) {
       this.socket.emit("read_messages", { chatRoomId });
+    }
+  }
+
+  sendMessageToRoom(chatRoomId: string, content: string, type: string = "text", attachments?: string[]) {
+    if (this.socket?.connected) {
+      this.socket.emit("send_message_to_room", { chatRoomId, content, type, attachments });
     }
   }
 

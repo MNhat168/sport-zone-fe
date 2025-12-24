@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAppDispatch } from "../../store/hook";
 import { validateSession } from "../../features/authentication/authThunk";
+import { getUserProfile } from "../../features/user/userThunk";
 
 /**
  * Component để validate session khi app load
@@ -30,6 +31,13 @@ export const UserSyncProvider = ({ children }: { children: React.ReactNode }) =>
                 try {
                     await dispatch(validateSession()).unwrap();
                     console.log("✅ Session is valid");
+                    // Fetch full profile to ensure fields like favouriteSports are populated
+                    try {
+                        await dispatch(getUserProfile() as any).unwrap();
+                        console.log("✅ Fetched full user profile");
+                    } catch (err) {
+                        console.warn("⚠️ Failed to fetch full user profile after session validation", err);
+                    }
                 } catch (error) {
                     console.log("❌ Session validation failed, user will be logged out");
                 }

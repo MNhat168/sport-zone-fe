@@ -629,10 +629,10 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             <Card className="border border-gray-200">
                 <CardContent className="p-6">
                     <div className="pb-10">
-                        <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
+                        <h1 className="text-2xl font-semibold text-center text-[#1a1a1a] mb-1">
                             Đặt sân
                         </h1>
-                        {/* <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
+                        {/* <p className="text-base font-normal text-center text-[#6b7280]">
                                 Đặt sân nhanh chóng, tiện lợi với cơ sở vật chất hiện đại.
                             </p> */}
                     </div>
@@ -651,10 +651,10 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                         />
                                     )}
                                     <div className="flex-1">
-                                        <h2 className="text-2xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
+                                        <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-2">
                                             {venue.name}
                                         </h2>
-                                        <p className="text-base text-[#6b7280] font-['Outfit'] text-start">
+                                        <p className="text-base text-[#6b7280] text-start">
                                             {venue.description}
                                         </p>
 
@@ -688,7 +688,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                         referrerPolicy="no-referrer-when-downgrade"
                                     />
                                 </div>
-                                <p className="text-md text-[#6b7280] font-['Outfit'] mt-1 text-center">
+                                <p className="text-md text-[#6b7280] mt-1 text-center">
                                     Địa chỉ: {getLocationText(venue.location as any)}
                                 </p>
                             </div>
@@ -703,19 +703,19 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                 <div className="flex-1 min-w-[600px]">
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                            <CardTitle className="text-2xl font-semibold">
                                 Biểu mẫu đặt sân
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-4">
                             {/* Court Selector */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Chọn sân con (court)</Label>
+                                <Label className="text-base font-normal">Chọn sân con (court)</Label>
                                 {courtsError && (
-                                    <p className="text-sm text-red-600 font-['Outfit']">{courtsError}</p>
+                                    <p className="text-sm text-red-600">{courtsError}</p>
                                 )}
                                 {courts.length === 0 ? (
-                                    <p className="text-sm text-gray-500 font-['Outfit']">
+                                    <p className="text-sm text-gray-500">
                                         Chưa có sân con khả dụng. Vui lòng thử lại sau.
                                     </p>
                                 ) : (
@@ -796,24 +796,24 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                             </div>
                             {/* Combined Time Range Selector */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Chọn khung giờ</Label>
+                                <Label className="text-base font-normal">Chọn khung giờ</Label>
                                 <div className="p-4 bg-gray-50 rounded-lg">
                                     {!formData.date ? (
-                                        <p className="text-sm text-gray-500 font-['Outfit'] text-center py-4">
+                                        <p className="text-sm text-gray-500 text-center py-4">
                                             Vui lòng chọn ngày trước khi chọn giờ
                                         </p>
                                     ) : isLoadingAvailability ? (
                                         <div className="flex items-center justify-center py-8">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                                                <p className="text-sm text-gray-600 font-['Outfit']">
+                                                <p className="text-sm text-gray-600">
                                                     Đang tải thông tin khả dụng...
                                                 </p>
                                             </div>
                                         </div>
                                     ) : availabilityError ? (
                                         <div className="text-center py-4">
-                                            <p className="text-sm text-red-600 font-['Outfit'] mb-2">
+                                            <p className="text-sm text-red-600 mb-2">
                                                 {availabilityError}
                                             </p>
                                             <Button
@@ -828,7 +828,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     ) : (
                                         <>
                                             {/* Legend */}
-                                            <div className="mb-4 flex items-center gap-4 flex-wrap text-sm font-['Outfit']">
+                                            <div className="mb-4 flex items-center gap-4 flex-wrap text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
                                                     <span>Trống</span>
@@ -855,7 +855,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
                                                     if (availableSlots.length === 0) {
                                                         return (
-                                                            <p className="text-sm text-gray-500 font-['Outfit'] text-center py-4 w-full">
+                                                            <p className="text-sm text-gray-500 text-center py-4 w-full">
                                                                 Không có khung giờ khả dụng cho ngày này
                                                             </p>
                                                         );
@@ -865,14 +865,14 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                         <div className="inline-block min-w-full">
                                                             {/* Time Header Row - Time labels on vertical lines */}
                                                             <div className="flex border-b-2 border-gray-300 bg-blue-50 relative pt-6">
-                                                                <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-semibold font-['Outfit'] text-center">
+                                                                <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-semibold text-center">
                                                                     Giờ
                                                                 </div>
                                                                 <div className="flex flex-1 relative">
                                                                     {/* First vertical line with time label (start of first slot) */}
                                                                     {availableSlots.length > 0 && (
                                                                         <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
-                                                                            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium font-['Outfit'] text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                                            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-blue-50 px-1">
                                                                                 {(() => {
                                                                                     const [displayHour, displayMin] = availableSlots[0].split(':');
                                                                                     return displayMin === '00' ? `${displayHour}:00` : availableSlots[0];
@@ -894,7 +894,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                                             >
                                                                                 {/* Vertical line on the right with time label */}
                                                                                 <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
-                                                                                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium font-['Outfit'] text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                                                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-blue-50 px-1">
                                                                                         {displayText}
                                                                                     </div>
                                                                                 </div>
@@ -906,7 +906,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
                                                             {/* Slot Row */}
                                                             <div className="flex border-b-2 border-gray-300 bg-white">
-                                                                <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-medium font-['Outfit'] text-center bg-gray-50">
+                                                                <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-medium text-center bg-gray-50">
                                                                     {venue.name}
                                                                 </div>
                                                                 <div className="flex flex-1">
@@ -958,7 +958,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                                                         return (
                                                                             <div
                                                                                 key={`slot-${slotTime}`}
-                                                                                className={`flex-1 min-w-[60px] h-12 flex items-center justify-center text-xs font-['Outfit'] relative ${cellStyle}`}
+                                                                                className={`flex-1 min-w-[60px] h-12 flex items-center justify-center text-xs relative ${cellStyle}`}
                                                                                 onClick={() => {
                                                                                     if (isSlotDisabled) return; // Prevent click if slot is booked or past
                                                                                     handleSlotBlockClick(slotTime);
@@ -980,22 +980,22 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                             </div>
                                             <div className="mt-3 space-y-1">
                                                 {selectedStartTime !== null && (
-                                                    <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                    <p className="text-sm text-emerald-600">
                                                         Giờ bắt đầu: {selectedStartTime}
                                                     </p>
                                                 )}
                                                 {selectedEndTime !== null && (
-                                                    <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                    <p className="text-sm text-emerald-600">
                                                         Giờ kết thúc: {selectedEndTime}
                                                     </p>
                                                 )}
                                                 {selectedStartTime === null && (
-                                                    <p className="text-sm text-gray-500 font-['Outfit']">
+                                                    <p className="text-sm text-gray-500">
                                                         Nhấn vào ô để chọn giờ bắt đầu
                                                     </p>
                                                 )}
                                                 {selectedStartTime !== null && selectedEndTime === null && (
-                                                    <p className="text-sm text-gray-500 font-['Outfit']">
+                                                    <p className="text-sm text-gray-500">
                                                         Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
                                                     </p>
                                                 )}
@@ -1028,7 +1028,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                 <div className="w-96">
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                            <CardTitle className="text-2xl font-semibold">
                                 Chi tiết đặt sân
                             </CardTitle>
                         </CardHeader>
@@ -1040,7 +1040,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                 <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
                                     <CalendarIcon className="w-5 h-5 text-emerald-600" />
                                 </div>
-                                <span className="text-base text-[#6b7280] font-['Outfit']">
+                                <span className="text-base text-[#6b7280]">
                                     {formData.date || 'Chưa chọn ngày'}
                                 </span>
                             </div>
@@ -1051,7 +1051,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     <div className="w-5 h-5 text-emerald-600 font-semibold">#</div>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-base text-[#6b7280] font-['Outfit']">
+                                    <span className="text-base text-[#6b7280]">
                                         {(() => {
                                             const court = courts.find(c => c.id === formData.courtId);
                                             return court?.name || formData.courtName || 'Chưa chọn sân con';
@@ -1066,13 +1066,13 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     <Clock className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-base text-[#6b7280] font-['Outfit']">
+                                    <span className="text-base text-[#6b7280]">
                                         {formData.startTime && formData.endTime
                                             ? `${formData.startTime} to ${formData.endTime}`
                                             : 'Chưa chọn giờ'}
                                     </span>
                                     {formData.startTime && formData.endTime && (
-                                        <span className="text-sm text-emerald-600 font-['Outfit']">
+                                        <span className="text-sm text-emerald-600">
                                             Thời lượng: {(() => {
                                                 const [startHour, startMinute] = formData.startTime.split(':').map(Number);
                                                 const [endHour, endMinute] = formData.endTime.split(':').map(Number);
@@ -1091,7 +1091,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                             {/* Subtotal */}
                             <div className="pt-2">
                                 <Button
-                                    className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
+                                    className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold"
                                     disabled
                                 >
                                     Tổng phụ: {formatVND(calculateSubtotal())}

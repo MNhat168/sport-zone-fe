@@ -27,6 +27,15 @@ const BookingStatusBadge = ({ status }: { status: string }) => {
     }
 }
 
+const getBookingDisplayStatus = (booking: any) => {
+    if (booking.status === "completed") return "completed"
+    if (booking.status === "cancelled" || booking.coachStatus === "declined")
+        return "cancelled"
+    if (booking.status === "confirmed" || booking.coachStatus === "accepted")
+        return "confirmed"
+    return "pending"
+}
+
 const PaymentStatusBadge = ({ status }: { status: string }) => {
     switch (status) {
         case "paid":
@@ -40,6 +49,7 @@ const PaymentStatusBadge = ({ status }: { status: string }) => {
     }
 }
 
+
 import axiosPrivate from "@/utils/axios/axiosPrivate"
 
 export default function CoachBookingsPage() {
@@ -47,7 +57,21 @@ export default function CoachBookingsPage() {
     const [bookings, setBookings] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [coachId, setCoachId] = useState<string | null>(null)
+    useEffect(() => {
+        const storedUser = sessionStorage.getItem("user")
+        if (!storedUser) return
 
+        const user = JSON.parse(storedUser)
+        if (!user?._id) return
+
+        axiosPrivate
+            .get(`/profiles/coach-id/${user._id}`)
+            .then((res) => {
+                setCoachId(res.data?.data?.id)
+            })
+            .catch(console.error)
+    }, [])
     useEffect(() => {
         const fetchBookings = async () => {
             try {
@@ -74,7 +98,45 @@ export default function CoachBookingsPage() {
             fetchBookings()
         }
     }, [authUser])
+    const handleCompleteBooking = async (bookingId: string) => {
+        if (!coachId) return
 
+        try {
+            await axiosPrivate.patch(
+                `/bookings/coach/${coachId}/${bookingId}/complete`
+            )
+
+            setBookings((prev) =>
+                prev.map((b) =>
+                    (b._id || b.id) === bookingId
+                        ? { ...b, status: "completed" }
+                        : b
+                )
+            )
+        } catch (err) {
+            console.error("Complete booking failed", err)
+        }
+    }
+
+    const handleCancelBooking = async (bookingId: string) => {
+        if (!coachId) return
+
+        try {
+            await axiosPrivate.patch(
+                `/bookings/coach/${coachId}/${bookingId}/cancel`
+            )
+
+            setBookings((prev) =>
+                prev.map((b) =>
+                    (b._id || b.id) === bookingId
+                        ? { ...b, status: "cancelled", coachStatus: "declined" }
+                        : b
+                )
+            )
+        } catch (err) {
+            console.error("Cancel booking failed", err)
+        }
+    }
     return (
         <CoachDashboardLayout>
             <div className="w-full mx-auto px-6 py-8">
@@ -154,6 +216,25 @@ export default function CoachBookingsPage() {
                                             <TableCell>
                                                 <BookingStatusBadge status={booking.status} />
                                             </TableCell>
+                                            <TableCell>
+                                                <button
+                                                    disabled={!coachId}
+                                                    className="px-3 py-1 text-xs rounded-md bg-green-600 text-white
+                                                            hover:bg-green-700 disabled:opacity-50"
+                                                    onClick={() => handleCompleteBooking(booking._id || booking.id)}
+                                                >
+                                                    Hoàn thành
+                                                </button>
+                                                <button
+                                                    disabled={!coachId}
+                                                    className="px-3 py-1 text-xs rounded-md bg-red-600 text-white
+                                                            hover:bg-red-700 disabled:opacity-50"
+                                                    onClick={() => handleCancelBooking(booking._id || booking.id)}
+                                                >
+                                                    Hủy
+                                                </button>
+                                            </TableCell>
+
                                             <TableCell>
                                                 <PaymentStatusBadge status={booking.paymentStatus} />
                                             </TableCell>

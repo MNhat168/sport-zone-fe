@@ -4,10 +4,13 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AMENITY_OPTIONS, RATING_OPTIONS, WEEKDAY_OPTIONS } from "@/utils/constant-value/constant";
 
 interface FilterSidebarProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
+    /** side to open the sheet from: 'left' | 'right' */
+    side?: "left" | "right";
     // Search
     searchQuery: string;
     onSearchChange: (value: string) => void;
@@ -65,6 +68,7 @@ const CollapsibleSection: React.FC<{
 export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     isOpen,
     onOpenChange,
+    side = "right",
     searchQuery,
     onSearchChange,
     locationFilter,
@@ -82,19 +86,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onResetFilters,
     onSearch,
 }) => {
-    // Location filters currently unused in UI; keep props for future implementation
+    // Location filters moved to main search bar; keep props for interface compatibility
     void locationFilter;
     void onLocationChange;
 
-    const amenitiesOptions = [
-        "Bãi đỗ xe",
-        "Nhà vệ sinh",
-        "Quán ăn",
-        "Thay đồ",
-        "Tắm rửa",
-        "WiFi",
-        "Đèn chiếu sáng",
-    ];
+    const amenitiesOptions = AMENITY_OPTIONS;
 
     const handleAmenityToggle = (amenity: string) => {
         if (selectedAmenities.includes(amenity)) {
@@ -106,7 +102,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-[400px] sm:w-[450px] p-0 overflow-y-auto">
+            <SheetContent side={side} className="w-[400px] sm:w-[450px] p-0 overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 z-10 px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -206,10 +202,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="0">Tất cả</SelectItem>
-                                    <SelectItem value="4">4 sao trở lên</SelectItem>
-                                    <SelectItem value="4.5">4.5 sao trở lên</SelectItem>
-                                    <SelectItem value="5">5 sao</SelectItem>
+                                    {RATING_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </CollapsibleSection>
@@ -225,14 +222,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="any">Bất kỳ</SelectItem>
-                                    <SelectItem value="mon">Thứ 2</SelectItem>
-                                    <SelectItem value="tue">Thứ 3</SelectItem>
-                                    <SelectItem value="wed">Thứ 4</SelectItem>
-                                    <SelectItem value="thu">Thứ 5</SelectItem>
-                                    <SelectItem value="fri">Thứ 6</SelectItem>
-                                    <SelectItem value="sat">Thứ 7</SelectItem>
-                                    <SelectItem value="sun">Chủ nhật</SelectItem>
+                                    {WEEKDAY_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </CollapsibleSection>

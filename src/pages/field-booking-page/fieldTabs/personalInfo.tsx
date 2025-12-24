@@ -294,14 +294,14 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 <div className="flex-1 min-w-[600px]">
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                            <CardTitle className="text-2xl font-semibold">
                                 Thông tin liên hệ
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-6">
                             {/* Full Name */}
                             <div className="space-y-2">
-                                <Label htmlFor="name" className="text-base font-medium font-['Outfit']">
+                                <Label htmlFor="name" className="text-base font-medium">
                                     Họ và tên *
                                 </Label>
                                 <Input
@@ -319,7 +319,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
                             {/* Email */}
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-base font-medium font-['Outfit']">
+                                <Label htmlFor="email" className="text-base font-medium">
                                     Email *
                                 </Label>
                                 <Input
@@ -337,7 +337,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
                             {/* Phone */}
                             <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-base font-medium font-['Outfit']">
+                                <Label htmlFor="phone" className="text-base font-medium">
                                     Số điện thoại *
                                 </Label>
                                 <Input

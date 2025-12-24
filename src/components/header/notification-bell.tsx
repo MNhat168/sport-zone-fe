@@ -28,17 +28,27 @@ interface NotificationBellProps {
   userId: string | null;
   variant?: "default" | "sidebar";
   iconClassName?: string;
+  /** Callback when a new notification is received via socket */
+  onNotificationReceived?: (notification: { id: string; message: string; type?: string }) => void;
 }
 
 export function NotificationBell({
   userId,
   variant = "default",
   iconClassName,
+  onNotificationReceived,
 }: NotificationBellProps) {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Only create socket connection if userId exists
   const socket = useSocket(userId || "", "notifications");
+
+  // Early return if no userId - don't render anything or make API calls
+  if (!userId) {
+    return null;
+  }
 
   console.log("📱 NotificationBell props:", { userId, variant });
   console.log("📱 Socket instance:", socket);
@@ -54,12 +64,34 @@ export function NotificationBell({
     const fetchNotifications = async () => {
       try {
         const [notificationResponse, unreadResponse] = await Promise.all([
-          axiosInstance.get(`/notification/history/${userId}`),
-          axiosInstance.get(`/notification/user/${userId}/unread-count`)
+          axiosInstance.get(`/notifications/user/${userId}`),
+          axiosInstance.get(`/notifications/user/${userId}/unread-count`)
         ]);
 
-        setNotifications(notificationResponse.data.data || []);
-        setUnreadCount(unreadResponse.data.unreadCount || 0);
+        console.log("📱 Notification response:", notificationResponse.data);
+        // The controller returns the array directly now, but let's handle both cases just to be safe
+        const rawData = Array.isArray(notificationResponse.data)
+          ? notificationResponse.data
+          : notificationResponse.data.data || [];
+
+        // Normalize notification data - backend may return `createdAt` instead of `created_at`
+        const notificationData: Notification[] = rawData.map((item: any) => ({
+          id: item.id || item._id,
+          content: item.message || item.title || item.content || "Thông báo mới",
+          created_at: item.created_at || item.createdAt || new Date().toISOString(),
+          isRead: item.isRead ?? false,
+          url: item.url || "/notifications",
+        }));
+
+        setNotifications(notificationData);
+
+        // Handle unread count - API may return number directly or wrapped in { data: number }
+        const unreadData = unreadResponse.data;
+        const unreadCountValue = typeof unreadData === 'number'
+          ? unreadData
+          : (unreadData?.data ?? unreadData?.count ?? 0);
+        console.log("📱 Unread count response:", unreadResponse.data, "-> parsed:", unreadCountValue);
+        setUnreadCount(unreadCountValue);
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }
@@ -117,8 +149,20 @@ export function NotificationBell({
         return newCount;
       });
 
-      // Show toast notification
-      toast(data?.message || data?.title || "Bạn có thông báo mới!");
+      // Show toast notification with styling
+      toast.success(data?.message || data?.title || "Bạn có thông báo mới!", {
+        description: "Nhấn để xem chi tiết",
+        duration: 5000,
+      });
+
+      // Invoke callback if provided (e.g., for dashboard to refresh)
+      if (onNotificationReceived) {
+        onNotificationReceived({
+          id: notificationId,
+          message: data?.message || data?.title || "Bạn có thông báo mới!",
+          type: (data as any)?.type,
+        });
+      }
     };
 
     socket.on("notification", handleNotification);
@@ -128,12 +172,66 @@ export function NotificationBell({
     };
   }, [socket, userId]);
 
+  // Listen for in-app notifications broadcasted via localStorage (from chat websocket)
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== 'inapp:notification' || !e.newValue) return;
+      try {
+        const data = JSON.parse(e.newValue);
+        const notification: Notification = {
+          id: data.id || `${Date.now()}`,
+          content: data.message || data.title || 'Bạn có thông báo mới!',
+          created_at: data.createdAt || new Date().toISOString(),
+          url: data.url || '/notifications',
+        };
+
+        // Avoid duplicates by id
+        setNotifications(prev => {
+          if (prev.some(n => n.id === notification.id)) return prev;
+          return [notification, ...prev];
+        });
+        setUnreadCount(prev => prev + 1);
+        toast(notification.content);
+      } catch (err) {
+        console.error('Failed to parse inapp notification', err);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Also handle same-tab custom event from chat websocket
+  useEffect(() => {
+    const onCustom = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as any;
+        if (!detail) return;
+        const notification: Notification = {
+          id: detail.id || `${Date.now()}`,
+          content: detail.message || detail.title || 'Bạn có thông báo mới!',
+          created_at: detail.createdAt || new Date().toISOString(),
+          url: detail.url || '/notifications',
+        };
+        setNotifications(prev => {
+          if (prev.some(n => n.id === notification.id)) return prev;
+          return [notification, ...prev];
+        });
+        setUnreadCount(prev => prev + 1);
+        toast(notification.content);
+      } catch (err) {
+        console.error('Failed to handle custom inapp:notification', err);
+      }
+    };
+    window.addEventListener('inapp:notification', onCustom as EventListener);
+    return () => window.removeEventListener('inapp:notification', onCustom as EventListener);
+  }, []);
+
   const handleMarkAsRead = async () => {
     if (!userId) return;
 
     try {
       // Mark all notifications as read
-      await axiosInstance.patch(`/notification/user/${userId}/read-all`);
+      await axiosInstance.patch(`/notifications/user/${userId}/read-all`);
 
       // Update local state
       setNotifications(prev =>
@@ -149,7 +247,7 @@ export function NotificationBell({
     if (!notification.isRead) {
       try {
         // Mark individual notification as read
-        await axiosInstance.patch(`/notification/${notification.id}/read`);
+        await axiosInstance.patch(`/notifications/${notification.id}/read`);
 
         // Update local state
         setNotifications(prev =>
@@ -177,11 +275,19 @@ export function NotificationBell({
     }
   };
 
-  const formatTime = (dateString: string) => {
-    return formatDistanceToNow(new Date(dateString), {
-      addSuffix: true,
-      locale: vi,
-    });
+  const formatTime = (dateString?: string) => {
+    if (!dateString) return "Vừa xong";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Vừa xong";
+
+    try {
+      return formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: vi,
+      });
+    } catch (error) {
+      return "Vừa xong";
+    }
   };
 
   console.log("Current Notifications:", notifications);
