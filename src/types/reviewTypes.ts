@@ -65,3 +65,11 @@ export interface FieldStats {
   totalReviews: number;
   averageRating: number;
 }
+
+/**
+ * Aggregated stats for a coach (same shape as FieldStats)
+ */
+export interface CoachStats {
+  totalReviews: number;
+  averageRating: number;
+}

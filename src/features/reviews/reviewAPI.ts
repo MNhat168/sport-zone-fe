@@ -69,5 +69,22 @@ export const getReviewsForFieldAPI = async (
  */
 export const getFieldStatsAPI = async (fieldId: string) => {
   const response = await axiosPublic.get(`${REVIEWS_API}/field/${fieldId}/stats`);
-  return response.data;
+  const body = response.data;
+  if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
+    return body.data;
+  }
+  return body;
+};
+
+/**
+ * Fetch aggregated stats for a coach (totalReviews and averageRating)
+ * @param coachId - Coach id
+ */
+export const getCoachStatsAPI = async (coachId: string) => {
+  const response = await axiosPublic.get(`${REVIEWS_API}/coach/${coachId}/stats`);
+  const body = response.data;
+  if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
+    return body.data;
+  }
+  return body;
 };
