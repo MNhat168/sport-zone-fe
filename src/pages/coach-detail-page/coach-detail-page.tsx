@@ -8,7 +8,7 @@ import { User, Users } from "lucide-react";
 import L from "leaflet";
 import { getCoachById, clearCurrentCoach } from "@/features/coach";
 import { setFavouriteCoaches, removeFavouriteCoaches, getUserProfile } from "@/features/user";
-import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
+import { createCoachReviewThunk, getCoachStatsThunk } from "@/features/reviews/reviewThunk";
 import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
 import {
   CustomFailedToast,
@@ -154,6 +154,10 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const [reviewComment, setReviewComment] = useState<string>("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [coachReviews, setCoachReviews] = useState<any[]>([]);
+  // Coach aggregated stats from redux
+  const coachStats = useSelector((state: RootState) =>
+    effectiveCoachId ? state.reviews?.coachStats?.[effectiveCoachId] ?? null : null
+  );
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
@@ -204,6 +208,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   useEffect(() => {
     if (effectiveCoachId) {
       dispatch(getCoachById(effectiveCoachId));
+      // fetch aggregated coach stats for UI
+      try {
+        dispatch(getCoachStatsThunk(effectiveCoachId));
+      } catch (e) {
+        console.error('Failed to dispatch getCoachStatsThunk', e);
+      }
     }
   }, [dispatch, effectiveCoachId]);
 
@@ -541,6 +551,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
                 <ReviewsSection
                   coachData={coachData}
+                  coachStats={coachStats}
                   coachReviews={coachReviews}
                   filteredReviews={filteredReviews}
                   reviewsLoading={reviewsLoading}
@@ -556,13 +567,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   onWriteReview={() => setShowReviewModal(true)}
                 />
 
-                <LocationSection
-                  coachData={coachData}
-                  currentCoach={currentCoach}
-                  mapContainerRef={mapContainerRef}
-                  mapRef={mapRef}
-                  markerRef={markerRef}
-                />
+                {/* Location moved to sidebar under RequestFormCard */}
               </div>
             </div>
 
@@ -577,6 +582,14 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                 <RequestFormCard
                   showForm={showRequestForm}
                   onToggleForm={() => setShowRequestForm(!showRequestForm)}
+                />
+
+                <LocationSection
+                  coachData={coachData}
+                  currentCoach={currentCoach}
+                  mapContainerRef={mapContainerRef}
+                  mapRef={mapRef}
+                  markerRef={markerRef}
                 />
               </div>
             </div>

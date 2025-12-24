@@ -674,25 +674,7 @@ const FieldDetailPage: React.FC = () => {
                       fieldId={id || ""}
                     />
 
-                    <LocationCard
-                      refObj={locationRef}
-                      id="location"
-                      addressText={String(
-                        ((currentField as any)?.location?.address ??
-                          locationText) ||
-                        ""
-                      )}
-                      geoCoords={
-                        (() => {
-                          const c = (currentField as any)?.location?.geo
-                            ?.coordinates as number[] | undefined;
-                          return Array.isArray(c) && c.length === 2
-                            ? [c[0], c[1]]
-                            : null;
-                        })() as [number, number] | null
-                      }
-                      sportType={currentField?.sportType}
-                    />
+                    {/* Location moved to sidebar (above owner info) */}
                   </div>
                 </div>
 
@@ -748,6 +730,29 @@ const FieldDetailPage: React.FC = () => {
                         </Button>
                       </CardContent>
                     </Card>
+
+                    {/* Location card (moved from main column) */}
+                    {currentField && (
+                      <LocationCard
+                        refObj={locationRef}
+                        id="location"
+                        addressText={String(
+                          ((currentField as any)?.location?.address ??
+                            locationText) ||
+                          ""
+                        )}
+                        geoCoords={
+                          (() => {
+                            const c = (currentField as any)?.location?.geo
+                              ?.coordinates as number[] | undefined;
+                            return Array.isArray(c) && c.length === 2
+                              ? [c[0], c[1]]
+                              : null;
+                          })() as [number, number] | null
+                        }
+                        sportType={currentField?.sportType}
+                      />
+                    )}
 
                     {/* Owner info card */}
                     {currentField && (
