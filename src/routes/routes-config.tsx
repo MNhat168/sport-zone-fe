@@ -77,7 +77,6 @@ import CreateTournamentPage from "@/pages/create-tournament/CreateTournamentPage
 import TournamentDetailPage from "@/pages/tournament-detail-page/tournament-detail-page.tsx";
 import MyReportsPage from "../pages/my-reports-page/my-reports-page";
 import FieldOwnerChatDashboard from "@/pages/field-owner-dashboard-page/chat/FieldOwnerChatPage.tsx";
-import CoachChatPage from "../pages/coach-dashboard-page/chat/CoachChatPage";
 
 /**
  * Placeholder component for pages under development
@@ -414,24 +413,6 @@ export const coachRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.coach]}>
         <Placeholder title="Thống kê hiệu suất" />
-      </ProtectedRoute>
-    ),
-  },
-
-  // Coach Chat (two aliases for sidebar/tab paths)
-  {
-    path: "/coach/chat",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <CoachChatPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/coach-chat",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <CoachChatPage />
       </ProtectedRoute>
     ),
   },

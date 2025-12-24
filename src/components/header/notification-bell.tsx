@@ -128,60 +128,6 @@ export function NotificationBell({
     };
   }, [socket, userId]);
 
-  // Listen for in-app notifications broadcasted via localStorage (from chat websocket)
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== 'inapp:notification' || !e.newValue) return;
-      try {
-        const data = JSON.parse(e.newValue);
-        const notification: Notification = {
-          id: data.id || `${Date.now()}`,
-          content: data.message || data.title || 'Bạn có thông báo mới!',
-          created_at: data.createdAt || new Date().toISOString(),
-          url: data.url || '/notifications',
-        };
-
-        // Avoid duplicates by id
-        setNotifications(prev => {
-          if (prev.some(n => n.id === notification.id)) return prev;
-          return [notification, ...prev];
-        });
-        setUnreadCount(prev => prev + 1);
-        toast(notification.content);
-      } catch (err) {
-        console.error('Failed to parse inapp notification', err);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
-  // Also handle same-tab custom event from chat websocket
-  useEffect(() => {
-    const onCustom = (e: Event) => {
-      try {
-        const detail = (e as CustomEvent).detail as any;
-        if (!detail) return;
-        const notification: Notification = {
-          id: detail.id || `${Date.now()}`,
-          content: detail.message || detail.title || 'Bạn có thông báo mới!',
-          created_at: detail.createdAt || new Date().toISOString(),
-          url: detail.url || '/notifications',
-        };
-        setNotifications(prev => {
-          if (prev.some(n => n.id === notification.id)) return prev;
-          return [notification, ...prev];
-        });
-        setUnreadCount(prev => prev + 1);
-        toast(notification.content);
-      } catch (err) {
-        console.error('Failed to handle custom inapp:notification', err);
-      }
-    };
-    window.addEventListener('inapp:notification', onCustom as EventListener);
-    return () => window.removeEventListener('inapp:notification', onCustom as EventListener);
-  }, []);
-
   const handleMarkAsRead = async () => {
     if (!userId) return;
 

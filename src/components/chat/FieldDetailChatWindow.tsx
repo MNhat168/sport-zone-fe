@@ -37,15 +37,8 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
 
     useEffect(() => {
         if (isOpen) {
+            // Connect WebSocket
             webSocketService.connect();
-        } else {
-            try {
-                if (currentRoom?._id) webSocketService.sendTyping(currentRoom._id, false);
-            } catch { }
-            webSocketService.disconnect();
-            dispatch(setCurrentRoom(null));
-            setLocalMessages([]);
-            initializedRef.current = false;
         }
     }, [isOpen]);
 
@@ -71,7 +64,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
         if (initializedRef.current) return; // prevent re-init on every Redux change
         initializedRef.current = true;
 
-        // Ensure WebSocket is connected (no-op if already connected)
+        // Connect WebSocket once on open
         webSocketService.connect();
 
         const mapKey = `chat:roomId:${fieldOwnerId}:${fieldId || 'none'}`;
