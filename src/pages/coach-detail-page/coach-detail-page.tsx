@@ -23,7 +23,6 @@ import { CoachInfoCard } from "./components/CoachInfoCard";
 import { CoachTabs } from "./components/CoachTabs";
 import { BioSection } from "./components/BioSection";
 import { LessonsSection } from "./components/LessonsSection";
-import { CoachingSection } from "./components/CoachingSection";
 import { GallerySection } from "./components/GallerySection";
 import { ReviewsSection } from "./components/ReviewsSection";
 import { LocationSection } from "./components/LocationSection";
@@ -135,12 +134,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       CustomFailedToast(err?.message || "Thao tác thất bại");
     } finally {
       setFavLoading(false);
-        try {
-          // refresh profile to sync favouriteCoaches state with server
-          dispatch(getUserProfile());
-        } catch (e) {
-          // ignore
-        }
+      try {
+        // refresh profile to sync favouriteCoaches state with server
+        dispatch(getUserProfile());
+      } catch (e) {
+        // ignore
+      }
     }
   };
 
@@ -224,7 +223,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   // missing or don't include the current coach id.
   useEffect(() => {
     if (!effectiveCoachId) return;
-    const needRefresh = !currentUser || !Array.isArray(currentUser.favouriteCoaches) || !currentUser.favouriteCoaches.includes(effectiveCoachId as string);
+    const needRefresh = !authUser || !Array.isArray(authUser.favouriteCoaches) || !authUser.favouriteCoaches.includes(effectiveCoachId as string);
     if (needRefresh) {
       dispatch(getUserProfile());
     }
@@ -261,8 +260,8 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
         const items = Array.isArray(body?.data)
           ? body.data
           : Array.isArray(body)
-          ? body
-          : [];
+            ? body
+            : [];
 
         const pageFromResp = body?.pagination?.page ?? resp?.pagination?.page ?? page;
         const totalPagesFromResp = body?.pagination?.totalPages ?? resp?.pagination?.totalPages ?? 1;

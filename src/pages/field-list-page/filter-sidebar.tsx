@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Filter, X, Search, DollarSign, Star, Calendar, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Filter, X, DollarSign, Star, Calendar, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { AMENITY_OPTIONS, RATING_OPTIONS, WEEKDAY_OPTIONS } from "@/utils/constant-value/constant";
 
 interface FilterSidebarProps {
@@ -89,6 +88,9 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     // Location filters moved to main search bar; keep props for interface compatibility
     void locationFilter;
     void onLocationChange;
+    // Search is handled in the main page; keep props for compatibility
+    void searchQuery;
+    void onSearchChange;
 
     const amenitiesOptions = AMENITY_OPTIONS;
 
@@ -134,57 +136,78 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         )}
                     </div>
 
-                    {/* Search Input */}
-                    <div className="mb-6">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <Input
-                                type="text"
-                                placeholder="Bạn đang tìm gì?"
-                                value={searchQuery}
-                                onChange={(e) => onSearchChange(e.target.value)}
-                                className="pl-10 h-11 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                            />
-                        </div>
-                    </div>
+                    {/* Search input removed; search is handled on the main page */}
 
                     {/* Filter Sections */}
                     <div className="space-y-0">
-                        {/* Price Range */}
+                        {/* Price Range (Slider) */}
                         <CollapsibleSection
                             title="Khoảng giá"
                             icon={<DollarSign className="w-4 h-4 text-gray-600" />}
                         >
                             <div className="space-y-3">
-                                <div>
-                                    <label className="text-xs text-gray-600 mb-1 block">Giá tối thiểu (VNĐ)</label>
-                                    <Input
-                                        type="number"
-                                        placeholder="0"
-                                        value={minPrice || ""}
-                                        onChange={(e) =>
-                                            onPriceRangeChange(
-                                                e.target.value ? Number(e.target.value) : null,
-                                                maxPrice
-                                            )
-                                        }
-                                        className="w-full h-10 border-gray-300"
-                                    />
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-gray-600">Giới hạn giá</span>
+                                    <span className="text-sm text-gray-900 font-medium">
+                                        {maxPrice == null ? "Bất kỳ" : `${(maxPrice || 0).toLocaleString("vi-VN")} VNĐ`}
+                                    </span>
                                 </div>
-                                <div>
-                                    <label className="text-xs text-gray-600 mb-1 block">Giá tối đa (VNĐ)</label>
-                                    <Input
-                                        type="number"
-                                        placeholder="Không giới hạn"
-                                        value={maxPrice || ""}
-                                        onChange={(e) =>
-                                            onPriceRangeChange(
-                                                minPrice,
-                                                e.target.value ? Number(e.target.value) : null
-                                            )
-                                        }
-                                        className="w-full h-10 border-gray-300"
-                                    />
+
+                                {/* Custom single-thumb slider controlling max price */}
+                                <div className="space-y-2">
+                                    <div className="relative">
+                                        {/* Track */}
+                                        <div className="h-2 bg-gray-200 rounded-lg">
+                                            {/* Progress fill */}
+                                            <div
+                                                className="h-full bg-green-600 rounded-lg"
+                                                style={{ width: `${(((maxPrice ?? 1000000) as number) / 1000000) * 100}%` }}
+                                            />
+                                        </div>
+
+                                        {/* Invisible native range for interaction */}
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={1000000}
+                                            step={50000}
+                                            value={maxPrice ?? 1000000}
+                                            onChange={(e) => onPriceRangeChange(minPrice, Number(e.target.value))}
+                                            className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
+                                        />
+
+                                        {/* Custom thumb */}
+                                        <div
+                                            className="absolute top-1/2 w-4 h-4 bg-green-600 border-2 border-white rounded-full shadow-lg transform -translate-y-1/2 pointer-events-none"
+                                            style={{ left: `calc(${(((maxPrice ?? 1000000) as number) / 1000000) * 100}% - 8px)` }}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between text-xs text-gray-500">
+                                        <span>0</span>
+                                        <span>1,000,000</span>
+                                    </div>
+                                </div>
+
+                                {/* Quick presets */}
+                                <div className="flex gap-2 flex-wrap">
+                                    {[
+                                        { value: 100000, label: "100K" },
+                                        { value: 200000, label: "200K" },
+                                        { value: 500000, label: "500K" },
+                                        { value: 1000000, label: "1M+" },
+                                    ].map(({ value, label }) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            onClick={() => onPriceRangeChange(minPrice, value)}
+                                            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${(maxPrice ?? 1000000) === value
+                                                    ? "bg-green-600 text-white border-green-600"
+                                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </CollapsibleSection>
@@ -261,7 +284,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                             onClick={onSearch}
                             className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold text-base"
                         >
-                            <Search className="w-5 h-5 mr-2" />
+                            <CheckCircle2 className="w-5 h-5 mr-2" />
                             Tìm kiếm ngay
                         </Button>
                     </div>
