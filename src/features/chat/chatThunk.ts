@@ -2,11 +2,13 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
 import {
     START_CHAT_API,
+    START_COACH_CHAT_API,
     GET_CHAT_ROOMS_API,
     GET_CHAT_ROOM_API,
     MARK_AS_READ_API,
     UNREAD_COUNT_API,
     GET_FIELD_OWNER_CHAT_ROOMS_API,
+    GET_COACH_CHAT_ROOMS_API,
 } from "./chatAPI";
 import type { ChatRoom, StartChatPayload } from "./chat-type";
 
@@ -99,6 +101,39 @@ export const getFieldOwnerChatRooms = createAsyncThunk(
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || error.message || "Failed to get field owner chat rooms"
+            );
+        }
+    }
+);
+
+// Coach chat rooms
+export const getCoachChatRooms = createAsyncThunk(
+    "chat/getCoachChatRooms",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axiosPrivate.get(GET_COACH_CHAT_ROOMS_API);
+            const data = response?.data?.data ?? response?.data;
+            const rooms = Array.isArray(data) ? data : [];
+            return rooms as ChatRoom[];
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message || "Failed to get coach chat rooms"
+            );
+        }
+    }
+);
+
+// Start chat with coach
+export const startCoachChat = createAsyncThunk(
+    "chat/startCoachChat",
+    async (payload: { coachId: string; fieldId?: string }, { rejectWithValue }) => {
+        try {
+            const response = await axiosPrivate.post(START_COACH_CHAT_API, payload);
+            const data = response?.data?.data ?? response?.data;
+            return data as ChatRoom;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message || "Failed to start coach chat"
             );
         }
     }

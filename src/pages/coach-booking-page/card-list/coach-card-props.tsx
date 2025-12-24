@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -75,7 +75,7 @@ const CoachCard: React.FC<CoachCardProps> = ({
                             From {price}
                         </div>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{description}</p>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 text-left">{description}</p>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
                             <span className="text-yellow-500 text-lg">★ {rating}</span>
@@ -86,7 +86,7 @@ const CoachCard: React.FC<CoachCardProps> = ({
                                 <span className="text-green-600 ml-1">{nextAvailability}</span>
                             </div>
                         </div>
-                        <Button className="bg-black text-white hover:bg-gray-800">Book Now</Button>
+                        <Button className="bg-black text-white hover:bg-gray-800">Thuê HLV</Button>
                     </div>
                 </CardContent>
             </div>
