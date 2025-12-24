@@ -56,13 +56,13 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
                 <Card className="border-2 border-emerald-600">
                     <CardContent className="p-10 text-center space-y-4">
                         <CheckCircle className="w-20 h-20 text-emerald-600 mx-auto" />
-                        <h2 className="text-3xl font-bold font-['Outfit'] text-emerald-700">
+                        <h2 className="text-3xl font-bold text-emerald-700">
                             Thanh toán thành công!
                         </h2>
-                        <p className="text-lg font-['Outfit'] text-gray-700">
+                        <p className="text-lg text-gray-700">
                             Đơn đặt sân và huấn luyện viên của bạn đã được xác nhận.
                         </p>
-                        <p className="text-sm font-['Outfit'] text-gray-600">
+                        <p className="text-sm text-gray-600">
                             Email xác nhận sẽ được gửi đến hộp thư của bạn.
                         </p>
                     </CardContent>
@@ -75,10 +75,10 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
         <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
             {/* Header */}
             <div className="text-center mb-10">
-                <h1 className="text-3xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
+                <h1 className="text-3xl font-semibold text-[#1a1a1a] mb-2">
                     Thanh toán
                 </h1>
-                <p className="text-base text-gray-600 font-['Outfit']">
+                <p className="text-base text-gray-600">
                     Hoàn tất thanh toán để xác nhận đặt sân và huấn luyện viên
                 </p>
             </div>
@@ -86,14 +86,14 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
             {/* Payment Summary */}
             <Card className="border border-gray-200 mb-6">
                 <CardHeader className="border-b border-gray-200">
-                    <CardTitle className="text-xl font-semibold font-['Outfit']">
+                    <CardTitle className="text-xl font-semibold">
                         Chi tiết thanh toán
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
                     {/* Field Payment */}
                     <div className="p-4 bg-emerald-50 rounded-lg">
-                        <h3 className="font-semibold font-['Outfit'] text-emerald-700 mb-3">
+                        <h3 className="font-semibold text-emerald-700 mb-3">
                             Đặt sân - {fieldData.fieldName}
                         </h3>
                         <div className="space-y-2 text-sm">
@@ -118,7 +118,7 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
 
                     {/* Coach Payment */}
                     <div className="p-4 bg-blue-50 rounded-lg">
-                        <h3 className="font-semibold font-['Outfit'] text-blue-700 mb-3">
+                        <h3 className="font-semibold text-blue-700 mb-3">
                             Đặt huấn luyện viên - {coachData.coachName}
                         </h3>
                         <div className="space-y-2 text-sm">
@@ -134,8 +134,8 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
                     {/* Grand Total */}
                     <div className="p-6 bg-gradient-to-r from-emerald-600 to-blue-600 rounded-lg text-white">
                         <div className="flex justify-between items-center">
-                            <span className="text-xl font-bold font-['Outfit']">Tổng cộng</span>
-                            <span className="text-3xl font-bold font-['Outfit']">
+                            <span className="text-xl font-bold">Tổng cộng</span>
+                            <span className="text-3xl font-bold">
                                 {formatVND(totalAmount)}
                             </span>
                         </div>
@@ -146,17 +146,17 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
             {/* Payment Method Section */}
             <Card className="border border-gray-200 mb-6">
                 <CardHeader className="border-b border-gray-200">
-                    <CardTitle className="text-xl font-semibold font-['Outfit']">
+                    <CardTitle className="text-xl font-semibold">
                         Phương thức thanh toán
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                     <Alert>
                         <AlertDescription>
-                            <p className="font-['Outfit']">
+                            <p>
                                 Vui lòng chuyển khoản vào tài khoản ngân hàng và upload ảnh chứng minh thanh toán.
                             </p>
-                            <p className="mt-2 text-sm text-gray-600 font-['Outfit']">
+                            <p className="mt-2 text-sm text-gray-600">
                                 <strong>Lưu ý:</strong> Chức năng thanh toán đầy đủ sẽ được bổ sung sau.
                                 Hiện tại đây là phiên bản demo.
                             </p>
@@ -179,14 +179,14 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
                     variant="outline"
                     onClick={onBack}
                     disabled={paymentStatus === 'processing'}
-                    className="px-8 py-3 font-['Outfit']"
+                    className="px-8 py-3"
                 >
                     Quay lại
                 </Button>
                 <Button
                     onClick={handlePayment}
                     disabled={paymentStatus !== 'idle' && paymentStatus !== 'error'}
-                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-['Outfit']"
+                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                     {paymentStatus === 'processing' ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
                 </Button>

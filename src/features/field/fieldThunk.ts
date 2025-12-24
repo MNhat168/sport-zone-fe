@@ -22,6 +22,7 @@ import axiosPublic from "../../utils/axios/axiosPublic";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
 import {
     FIELDS_API,
+    FIELDS_PAGINATED_API,
     FIELD_BY_ID_API,
     FIELD_AVAILABILITY_API,
     CREATE_FIELD_API,
@@ -83,7 +84,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
     };
 };
 
-// Get all fields
+// Get all fields (without pagination)
 export const getAllFields = createAsyncThunk<
     FieldsResponse,
     GetFieldsParams | undefined,
@@ -93,7 +94,7 @@ export const getAllFields = createAsyncThunk<
         const queryParams = new URLSearchParams();
         if (params.name) queryParams.append("name", params.name);
         if (params.location) queryParams.append("location", params.location);
-        
+
         // Priority: sportTypes > sportType
         if (params.sportTypes && params.sportTypes.length > 0) {
             // Send as multiple query params: sportTypes=football&sportTypes=badminton
@@ -104,7 +105,7 @@ export const getAllFields = createAsyncThunk<
             // Backward compatible: single sport
             queryParams.append("sportType", params.sportType);
         }
-        
+
         if ((params as any).sortBy) queryParams.append("sortBy", (params as any).sortBy);
         if ((params as any).sortOrder) queryParams.append("sortOrder", (params as any).sortOrder);
 
@@ -119,6 +120,65 @@ export const getAllFields = createAsyncThunk<
         const apiList = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
         const mapped = apiList.map(mapApiFieldToAppField);
         return { success: true, data: mapped } as unknown as FieldsResponse;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch fields",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get all fields with pagination
+export const getAllFieldsPaginated = createAsyncThunk<
+    FieldsResponse,
+    GetFieldsParams & { page: number; limit: number },
+    { rejectValue: ErrorResponse }
+>("field/getAllFieldsPaginated", async (params, thunkAPI) => {
+    try {
+        const queryParams = new URLSearchParams();
+        if (params.name) queryParams.append("name", params.name);
+        if (params.location) queryParams.append("location", params.location);
+
+        // Priority: sportTypes > sportType
+        if (params.sportTypes && params.sportTypes.length > 0) {
+            params.sportTypes.forEach(sport => {
+                queryParams.append("sportTypes", sport);
+            });
+        } else if (params.sportType) {
+            queryParams.append("sportType", params.sportType);
+        }
+
+        if (params.sortBy) queryParams.append("sortBy", params.sortBy);
+        if (params.sortOrder) queryParams.append("sortOrder", params.sortOrder);
+
+        // Pagination params (required)
+        queryParams.append("page", params.page.toString());
+        queryParams.append("limit", params.limit.toString());
+
+        const url = `${FIELDS_PAGINATED_API}?${queryParams}`;
+        const response = await axiosPublic.get(url);
+
+        console.log("-----------------------------------------------------");
+        console.log("Get all fields paginated response:", response.data);
+        console.log("-----------------------------------------------------");
+
+        const raw = response.data;
+        // Handle API response formats:
+        // 1) { success, data: { fields: [...], pagination: {...} } }
+        // 2) { fields: [...], pagination: {...} }
+        // 3) { data: [...]} or [...]
+        const apiList =
+            raw?.data?.fields ||
+            raw?.fields ||
+            (Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []);
+        const mapped = apiList.map(mapApiFieldToAppField);
+        return {
+            success: true,
+            data: mapped,
+            pagination: raw?.data?.pagination || raw?.pagination || null
+        } as unknown as FieldsResponse;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch fields",
@@ -347,7 +407,7 @@ export const createFieldWithImages = createAsyncThunk<
                 }
             };
         }
-        
+
         console.log("📍 [FIELD THUNK] Location object:", locationObject);
         formData.append("location", JSON.stringify(locationObject));
 
@@ -360,7 +420,7 @@ export const createFieldWithImages = createAsyncThunk<
             ...oh,
             duration: oh.duration.toString() // Ensure it's a string
         }));
-        
+
         const operatingHoursString = JSON.stringify(operatingHoursForAPI);
         console.log("🕒 [FIELD THUNK] Operating hours JSON string:", operatingHoursString);
         formData.append("operatingHours", operatingHoursString);
@@ -395,7 +455,7 @@ export const createFieldWithImages = createAsyncThunk<
             }));
             priceRangesString = JSON.stringify(defaultPriceRanges);
         }
-        
+
         console.log("💰 [FIELD THUNK] Price ranges JSON string:", priceRangesString);
         formData.append("priceRanges", priceRangesString);
 
@@ -412,7 +472,7 @@ export const createFieldWithImages = createAsyncThunk<
             }));
             amenitiesString = JSON.stringify(amenitiesForAPI);
         }
-        
+
         console.log("🛍️ [FIELD THUNK] Amenities JSON string:", amenitiesString);
         formData.append("amenities", amenitiesString);
 
@@ -429,7 +489,7 @@ export const createFieldWithImages = createAsyncThunk<
                 size: img.size,
                 type: img.type
             })));
-            
+
             images.forEach((image) => {
                 formData.append("images", image);
             });
@@ -461,13 +521,13 @@ export const createFieldWithImages = createAsyncThunk<
         const raw = response.data;
         const apiField = raw?.data ?? raw;
         const mapped = mapApiFieldToAppField(apiField);
-        
+
         console.log("🎉 [FIELD THUNK] Field created successfully:", {
             fieldId: mapped.id,
             fieldName: mapped.name,
             timestamp: new Date().toISOString()
         });
-        
+
         return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
     } catch (error: any) {
         console.error("❌ [FIELD THUNK] Error creating field with images:", {

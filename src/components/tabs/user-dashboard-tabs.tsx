@@ -14,7 +14,7 @@ export function UserDashboardTabs() {
     const location = useLocation()
 
     const baseTabClasses = (isActive: boolean) =>
-        `w-48 h-32 p-4 rounded-[10px] border border-gray-200 flex flex-col justify-center items-center gap-2.5 transition-all duration-200 font-['Outfit'] ${isActive
+        `w-48 h-32 p-4 rounded-[10px] border border-gray-200 flex flex-col justify-center items-center gap-2.5 transition-all duration-200 ${isActive
             ? "bg-emerald-700 text-white hover:bg-emerald-800"
             : "bg-white text-black hover:bg-emerald-700 hover:text-white"
         }`
@@ -36,7 +36,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-dashboard")}
                         >
                             <LayoutDashboard className="w-6 h-6" />
-                            <div className="text-center text-base font-medium font-['Outfit']">Dashboard</div>
+                            <div className="text-center text-base font-medium">Dashboard</div>
                         </Button>
 
                         <Button
@@ -45,7 +45,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-booking-history")}
                         >
                             <Calendar className="w-6 h-6" />
-                            <div className="text-center text-base font-medium font-['Outfit']">My Bookings</div>
+                            <div className="text-center text-base font-medium">My Bookings</div>
                         </Button>
 
                         <Button
@@ -54,7 +54,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-chat")}
                         >
                             <MessageSquare className="w-6 h-6" />
-                            <div className="text-center text-base font-medium font-['Outfit']">Chat</div>
+                            <div className="text-center text-base font-medium">Chat</div>
                         </Button>
 
                         <Button
@@ -63,7 +63,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-invoices")}
                         >
                             <FileText className="w-6 h-6" />
-                            <div className="text-center text-base font-medium font-['Outfit']">Invoices</div>
+                            <div className="text-center text-base font-medium">Invoices</div>
                         </Button>
 
                         <Button
@@ -72,7 +72,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-wallet")}
                         >
                             <Wallet className="w-6 h-6" />
-                            <div className="text-center text-base font-medium font-['Outfit']">Wallet</div>
+                            <div className="text-center text-base font-medium">Wallet</div>
                         </Button>
 
                         <Button
@@ -81,7 +81,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-profile")}
                         >
                             <User className="w-6 h-6" />
-                            <div className="text-center text-base font-medium font-['Outfit']">Profile Setting</div>
+                            <div className="text-center text-base font-medium">Profile Setting</div>
                         </Button>
                     </div>
                 </div>

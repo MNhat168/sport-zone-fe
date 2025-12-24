@@ -60,10 +60,10 @@ export const NavbarDarkComponent = () => {
                     <Link to="/fields" className={linkClass}>
                         Sân thể thao
                     </Link>
-                    <Link to="/coach/booking" className={linkClass}>
+                    <Link to="/coach" className={linkClass}>
                         Huấn luyện viên
                     </Link>
-                    <Link to="/booking/field-coach" className={linkClass}>
+                    <Link to="/field-coach" className={linkClass}>
                         Đặt Sân + HLV
                     </Link>
                     <Link to="/tournaments" className={linkClass}>
