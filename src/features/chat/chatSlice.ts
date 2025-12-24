@@ -7,6 +7,7 @@ import {
   markAsRead,
   getUnreadCount,
   getFieldOwnerChatRooms,
+  getCoachChatRooms,
 } from "./chatThunk";
 
 const initialState: ChatState = {
@@ -29,11 +30,20 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<SocketMessageEvent>) => {
       const { chatRoomId, message, chatRoom } = action.payload;
 
-      // Update current room if active
+      // Update current room if active, with de-duplication
       if (state.currentRoom?._id === chatRoomId) {
-        state.currentRoom.messages.push(message);
-        state.currentRoom.lastMessageAt = new Date().toISOString();
-        state.currentRoom.lastMessageBy = message.sender;
+        const exists = state.currentRoom.messages.some((m) => {
+          if (m._id && message._id) return m._id === message._id;
+          const a = Number(new Date(m.sentAt).getTime());
+          const b = Number(new Date(message.sentAt).getTime());
+          const timeClose = Math.abs(a - b) <= 2000; // within 2s considered same
+          return m.sender === message.sender && m.content === message.content && timeClose;
+        });
+        if (!exists) {
+          state.currentRoom.messages.push(message);
+          state.currentRoom.lastMessageAt = new Date().toISOString();
+          state.currentRoom.lastMessageBy = message.sender;
+        }
       }
 
       // Update rooms list
@@ -52,7 +62,7 @@ const chatSlice = createSlice({
         state.rooms.unshift(chatRoom);
       }
 
-      // Update unread count
+      // Update unread count (only when not in active room)
       if (state.currentRoom?._id !== chatRoomId) {
         state.unreadCount += 1;
       }
@@ -116,6 +126,18 @@ const chatSlice = createSlice({
         state.rooms = action.payload;
       })
       .addCase(getFieldOwnerChatRooms.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(getCoachChatRooms.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCoachChatRooms.fulfilled, (state, action) => {
+        state.loading = false;
+        state.rooms = action.payload;
+      })
+      .addCase(getCoachChatRooms.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

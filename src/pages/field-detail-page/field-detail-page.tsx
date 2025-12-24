@@ -8,7 +8,7 @@ import { getFieldById } from "@/features/field/fieldThunk"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { FooterComponent } from "@/components/footer/footer-component"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
-import { ChevronLeft, ChevronRight, MapPin, Share2, Star, CalendarDays, AlertCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, MapPin, Share2, Star, CalendarDays, AlertCircle, MessageCircle } from "lucide-react"
 import L from "leaflet"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { QuickNavPills } from "./components/QuickNavPills"
@@ -20,7 +20,6 @@ import { RatingCard } from "./components/RatingCard"
 import { LocationCard } from "./components/LocationCard"
 import { PricingTableCard } from "./components/PricingTableCard"
 import { Button } from "@/components/ui/button"
-import { MessageCircle } from "lucide-react"
 import FieldDetailChatWindow from "@/components/chat/FieldDetailChatWindow"
 import { getFieldPinIcon } from "@/utils/fieldPinIcon"
 import ReportDialog from "@/components/report/ReportDialog"
@@ -112,12 +111,22 @@ const FieldDetailPage: React.FC = () => {
     }
   }, [id, currentField, dispatch])
 
-  // Ensure auth profile is fresh on page load so favourite state is accurate
+  // Rate-limit profile refresh to avoid frequent /users/get-profile requests
   useEffect(() => {
     if (!id) return
-    const needRefresh = !authUser || !Array.isArray(authUser.favouriteFields) || !authUser.favouriteFields.includes(id)
-    if (needRefresh) {
-      dispatch(getUserProfile())
+    const PROFILE_REFRESH_KEY = 'profile:lastFetchAt'
+    const MIN_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+    const last = Number(localStorage.getItem(PROFILE_REFRESH_KEY) || 0)
+    const now = Date.now()
+    const withinCooldown = now - last < MIN_INTERVAL_MS
+
+    const missingFavs = !authUser || !Array.isArray(authUser.favouriteFields)
+    const notIncluded = Array.isArray(authUser?.favouriteFields) ? !authUser!.favouriteFields.includes(id) : true
+
+    if ((missingFavs || notIncluded) && !withinCooldown) {
+      dispatch(getUserProfile()).finally(() => {
+        try { localStorage.setItem(PROFILE_REFRESH_KEY, String(Date.now())) } catch { }
+      })
     }
   }, [id, authUser, dispatch])
 
@@ -560,14 +569,14 @@ const FieldDetailPage: React.FC = () => {
                         ? "Đang xử lý..."
                         : isFavourite
                           ? "Đã yêu thích"
-                          : "Yêu thích"}
+                          : "Thêm vào yêu thích"}
                     </span>
                   </button>
                   <button
                     onClick={() => setShowReportDialog(true)}
                     className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-800"
                   >
-                    <AlertCircle className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4" />
                     <span>Báo cáo</span>
                   </button>
                 </div>
@@ -588,7 +597,7 @@ const FieldDetailPage: React.FC = () => {
                         />
                       ))}
                     </div>
-                    <span className="text-xs">{reviewCount} Reviews</span>
+                    <span className="text-xs">{reviewCount} Đánh giá</span>
                   </div>
                 </button>
               </div>
@@ -619,8 +628,8 @@ const FieldDetailPage: React.FC = () => {
                     pills={[
                       { k: "overview", label: "Tổng quan" },
                       { k: "pricing", label: "Bảng giá" },
-                      { k: "rules", label: "Quy định sân" },
-                      { k: "amenities", label: "Tiện nghi" },
+                      { k: "rules", label: "Quy định" },
+                      { k: "amenities", label: "Tiện ích" },
                       { k: "gallery", label: "Thư viện ảnh" },
                       { k: "rating", label: "Đánh giá" },
                       { k: "location", label: "Vị trí" },
@@ -706,10 +715,10 @@ const FieldDetailPage: React.FC = () => {
                           </div>
                           <div className="text-left">
                             <CardTitle className="text-lg font-semibold text-gray-900">
-                              Availability
+                              Lịch trống
                             </CardTitle>
                             <CardDescription className="text-gray-600 text-sm mt-1">
-                              Check availability on your convenient time
+                              Kiểm tra lịch trống vào thời gian thuận tiện của bạn
                             </CardDescription>
                           </div>
                         </div>
@@ -720,19 +729,19 @@ const FieldDetailPage: React.FC = () => {
                     <Card className="shadow-lg border-0 bg-white">
                       <CardHeader className="pb-4">
                         <CardTitle className="text-sm text-gray-700">
-                          Availability
+                          Lịch trống
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
                           <p className="text-xs text-gray-500 mb-1">
-                            Book a Court
+                            Đặt sân
                           </p>
                           <p className="text-3xl font-bold text-green-600">
                             {currentField.price ||
                               (currentField.basePrice
                                 ? `${currentField.basePrice.toLocaleString()}đ/h`
-                                : "Contact")}
+                                : "Liên hệ")}
                           </p>
                         </div>
                         <Button
@@ -835,7 +844,7 @@ const FieldDetailPage: React.FC = () => {
                           onClick={() => setShowChatWindow(true)}
                         >
                           <MessageCircle className="h-4 w-4 mr-2" />
-                          Nhắn tin với chủ sân
+                          Nhắn tin cho chủ sân
                         </Button>
                       </CardContent>
                     </Card>
@@ -856,7 +865,7 @@ const FieldDetailPage: React.FC = () => {
             fieldId={String(currentField?.id || "")}
             fieldName={currentField?.name || ""}
             fieldOwnerName={
-              (currentField as any)?.owner?.name || "Field Owner"
+              (currentField as any)?.owner?.name || "Chủ sân"
             }
             isOpen={showChatWindow}
           />
