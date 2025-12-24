@@ -58,7 +58,7 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
             {/* <Card className="border border-gray-200">
                 <CardContent className="p-6">
                     <div className="pb-10">
-                        <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
+                        <h1 className="text-2xl font-semibold text-center text-[#1a1a1a] mb-1">
                             Chọn tiện ích
                         </h1>
                     </div>
@@ -75,10 +75,10 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                                         />
                                     )}
                                     <div className="flex-1">
-                                        <h2 className="text-2xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
+                                        <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-2">
                                             {venue?.name}
                                         </h2>
-                                        <p className="text-base text-[#6b7280] font-['Outfit'] text-start">
+                                        <p className="text-base text-[#6b7280] text-start">
                                             {venue?.description}
                                         </p>
                                     </div>
@@ -109,7 +109,7 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                                         referrerPolicy="no-referrer-when-downgrade"
                                     />
                                 </div>
-                                <p className="text-md text-[#6b7280] font-['Outfit'] mt-1 text-center">
+                                <p className="text-md text-[#6b7280] mt-1 text-center">
                                     Địa chỉ: {getLocationText(venue?.location as any)}
                                 </p>
                             </div>
@@ -124,7 +124,7 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                 <div className="flex-1 min-w-[600px]">
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                            <CardTitle className="text-2xl font-semibold">
                                 Danh sách tiện ích
                             </CardTitle>
                         </CardHeader>
@@ -167,20 +167,20 @@ export const AmenitiesTab: React.FC<AmenitiesTabProps> = ({
                 <div className="w-96">
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                            <CardTitle className="text-2xl font-semibold">
                                 Tóm tắt tiện ích
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-5">
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Số lượng đã chọn</Label>
+                                <Label className="text-base font-normal">Số lượng đã chọn</Label>
                                 <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
                                     {selectedAmenityIds.length} tiện ích
                                 </div>
                             </div>
                             <div className="pt-2">
                                 <Button
-                                    className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
+                                    className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold"
                                     disabled
                                 >
                                     Tổng phí: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalAmenityFee)}
