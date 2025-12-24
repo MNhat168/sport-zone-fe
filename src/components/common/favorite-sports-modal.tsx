@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAppDispatch } from "@/store/hook";
-import { removeAllFavouriteSports, getUserProfile } from "@/features/user/userThunk";
+import { removeAllFavouriteSports, getUserProfile, removeFavouriteSport } from "@/features/user/userThunk";
 import {
   Dialog,
   DialogContent,
@@ -115,6 +115,23 @@ export function FavoriteSportsModal({
     );
   };
 
+  const handleRemoveSport = async (sportId: string) => {
+    try {
+      setSaving(true);
+      await dispatch(removeFavouriteSport(sportId) as any).unwrap();
+      // refresh profile
+      await dispatch(getUserProfile() as any).unwrap();
+      setSelectedSports((prev) => prev.filter((id) => id !== sportId));
+      toast.success("Favourite sport removed");
+    } catch (e: any) {
+      console.error('Failed to remove favourite sport', e);
+      const message = e?.message || e?.response?.data?.message || 'Failed to remove favourite sport';
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleAccept = () => {
     onAccept(selectedSports);
     setSelectedSports([]);
@@ -171,9 +188,17 @@ export function FavoriteSportsModal({
               const isSelected = selectedSports.includes(sport.id);
 
               return (
-                <button
+                <div
                   key={sport.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleToggleSport(sport.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleToggleSport(sport.id);
+                    }
+                  }}
                   className={`
                     group relative overflow-hidden rounded-lg p-3
                     transition-all duration-300 ease-out
@@ -216,9 +241,23 @@ export function FavoriteSportsModal({
                   </div>
 
                   {isSelected && (
-                    <div className="absolute inset-0 bg-primary/5 animate-in fade-in duration-300" />
+                    <>
+                      <div className="absolute inset-0 bg-primary/5 animate-in fade-in duration-300" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveSport(sport.id);
+                        }}
+                        aria-label={`Xóa ${sport.label}`}
+                        className="absolute top-2 right-2 z-20 bg-white/80 dark:bg-black/60 rounded-full p-1 text-xs hover:bg-white"
+                      >
+                        ×
+                      </button>
+                    </>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
