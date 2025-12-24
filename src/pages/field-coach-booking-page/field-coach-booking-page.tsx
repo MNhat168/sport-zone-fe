@@ -16,6 +16,7 @@ import { PersonalInfoTab } from "../field-booking-page/fieldTabs/personalInfo";
 import type { BookingFormData } from "../field-booking-page/fieldTabs/personalInfo";
 
 // Import new combined components
+import { FieldListSelection } from "./components/field-list-selection";
 import { CoachListSelection } from "./components/coach-list-selection";
 import { CoachTimeSelection } from "./components/coach-time-selection";
 import { CombinedConfirmation } from "./components/combined-confirmation";
@@ -64,7 +65,7 @@ const FieldCoachBookingPage = () => {
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
 
-    const [currentStep, setCurrentStep] = useState<CombinedBookingStep>(CombinedBookingStep.FIELD_BOOK_COURT);
+    const [currentStep, setCurrentStep] = useState<CombinedBookingStep>(CombinedBookingStep.FIELD_LIST);
     const [courts, setCourts] = useState<Array<{ id: string; name: string; courtNumber?: number }>>([]);
     const [courtsError, setCourtsError] = useState<string | null>(null);
     const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
@@ -99,8 +100,10 @@ const FieldCoachBookingPage = () => {
         },
     });
 
-    // Restore selected field on mount
+    // Only restore field if not on field list step
     useEffect(() => {
+        if (currentStep === CombinedBookingStep.FIELD_LIST) return;
+
         const searchParams = new URLSearchParams(location.search);
         const urlFieldId = searchParams.get('fieldId');
         const stateFieldId = (location.state as any)?.fieldId;
@@ -110,7 +113,7 @@ const FieldCoachBookingPage = () => {
         if (!currentField && fieldId) {
             dispatch(getFieldById(fieldId));
         }
-    }, [location.search, location.state, currentField, dispatch]);
+    }, [location.search, location.state, currentField, dispatch, currentStep]);
 
     // Persist field ID
     useEffect(() => {
@@ -164,6 +167,23 @@ const FieldCoachBookingPage = () => {
         };
         fetchCourts();
     }, [currentField?.id]);
+
+    // ===== Field List Selection Handler =====
+    const handleFieldSelect = (fieldId: string, fieldName: string, fieldLocation: string, fieldPrice: number) => {
+        localStorage.setItem('selectedFieldId', fieldId);
+        dispatch(getFieldById(fieldId));
+        setBookingData(prev => ({
+            ...prev,
+            field: {
+                ...prev.field,
+                fieldId,
+                fieldName,
+                fieldLocation,
+                courtPrice: fieldPrice,
+            }
+        }));
+        setCurrentStep(CombinedBookingStep.FIELD_BOOK_COURT);
+    };
 
     // ===== Field Booking Handlers =====
     const handleBookCourtSubmit = (formData: BookingFormData) => {
@@ -328,6 +348,10 @@ const FieldCoachBookingPage = () => {
                 <FieldCoachBookingStepper currentStep={currentStep} />
 
                 {/* Step Content */}
+                {currentStep === CombinedBookingStep.FIELD_LIST && (
+                    <FieldListSelection onSelect={handleFieldSelect} />
+                )}
+
                 {currentStep === CombinedBookingStep.FIELD_BOOK_COURT && (
                     <BookCourtTab
                         onSubmit={handleBookCourtSubmit}

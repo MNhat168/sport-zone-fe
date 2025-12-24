@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getCoaches } from "../../features/coach/coachThunk"
 import type { Coach } from "../../types/coach-type"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SportType } from "@/types/coach-type"
+import { SPORT_TYPE_OPTIONS, DISTRICT_OPTIONS } from "@/utils/constant-value/constant"
 
 const BookingPage = () => {
     const coachesListRef = useRef<HTMLDivElement>(null)
@@ -39,7 +39,7 @@ const BookingPage = () => {
             nextAvailability: null, // Not available in current API
         }))
     }, [coachesData])
-    
+
     const [addressText, setAddressText] = useState<string>("")
     const {
         error: geolocationError,
@@ -97,7 +97,7 @@ const BookingPage = () => {
 
     // Initialize Leaflet map once (copied pattern from field list page)
     useEffect(() => {
-        ;(async () => {
+        ; (async () => {
             try {
                 const hasLeaflet = typeof (window as any).L !== 'undefined'
                 if (!hasLeaflet) {
@@ -200,7 +200,7 @@ const BookingPage = () => {
         }
     }, [mappedCoaches, userLocation])
 
-    
+
 
     return (
         <div className="min-h-screen">
@@ -240,155 +240,137 @@ const BookingPage = () => {
 
                 {/* Main container with flexbox layout */}
                 <div className="px-4 min-h-screen">
-                <div className="flex gap-6 items-start">
-                    {/* Left Panel - Coaches List */}
-                    <div className="flex-[6] bg-white flex flex-col h-screen">
-                        {/* Filters */}
-                        <div className="p-4 border-b border-gray-200">
-                            <div className="flex items-center gap-4 flex-wrap">
-                                <div className="flex items-center gap-2">
-                                    <Filter className="w-4 h-4 text-gray-500" />
-                                    <span className="text-sm font-medium text-gray-700">Lọc theo:</span>
-                                </div>
-                                <Select value={selectedSport} onValueChange={setSelectedSport}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Tất cả môn" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Tất cả môn</SelectItem>
-                                        <SelectItem value={SportType.FOOTBALL}>Bóng đá</SelectItem>
-                                        <SelectItem value={SportType.TENNIS}>Tennis</SelectItem>
-                                        <SelectItem value={SportType.BADMINTON}>Cầu lông</SelectItem>
-                                        <SelectItem value={SportType.BASKETBALL}>Bóng rổ</SelectItem>
-                                        <SelectItem value={SportType.VOLLEYBALL}>Bóng chuyền</SelectItem>
-                                        <SelectItem value={SportType.SWIMMING}>Bơi lội</SelectItem>
-                                        <SelectItem value={SportType.GYM}>Gym</SelectItem>
-                                        <SelectItem value={SportType.PICKLEBALL}>Pickleball</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Tất cả quận" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Tất cả quận</SelectItem>
-                                        <SelectItem value="Quận 1">Quận 1</SelectItem>
-                                        <SelectItem value="Quận 2">Quận 2</SelectItem>
-                                        <SelectItem value="Quận 3">Quận 3</SelectItem>
-                                        <SelectItem value="Quận 4">Quận 4</SelectItem>
-                                        <SelectItem value="Quận 5">Quận 5</SelectItem>
-                                        <SelectItem value="Quận 6">Quận 6</SelectItem>
-                                        <SelectItem value="Quận 7">Quận 7</SelectItem>
-                                        <SelectItem value="Quận 8">Quận 8</SelectItem>
-                                        <SelectItem value="Quận 9">Quận 9</SelectItem>
-                                        <SelectItem value="Quận 10">Quận 10</SelectItem>
-                                        <SelectItem value="Quận 11">Quận 11</SelectItem>
-                                        <SelectItem value="Quận 12">Quận 12</SelectItem>
-                                        <SelectItem value="Bình Thạnh">Bình Thạnh</SelectItem>
-                                        <SelectItem value="Tân Bình">Tân Bình</SelectItem>
-                                        <SelectItem value="Tân Phú">Tân Phú</SelectItem>
-                                        <SelectItem value="Phú Nhuận">Phú Nhuận</SelectItem>
-                                        <SelectItem value="Gò Vấp">Gò Vấp</SelectItem>
-                                        <SelectItem value="Bình Tân">Bình Tân</SelectItem>
-                                        <SelectItem value="Thủ Đức">Thủ Đức</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        {/* Geolocation UI (copied from field list style) */}
-                        <div className="p-4 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                        <Navigation className="w-4 h-4" />
-                                        Tìm HLV gần tôi
-                                    </h3>
-                                    {geolocationSupported ? (
-                                        <button
-                                            onClick={handleGetLocation}
-                                            disabled={geolocationLoading}
-                                            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                                        >
-                                            {geolocationLoading ? (
-                                                <>
-                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    Đang lấy vị trí...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Navigation className="w-4 h-4" />
-                                                    Lấy vị trí của tôi
-                                                </>
-                                            )}
-                                        </button>
-                                    ) : (
-                                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                                            <AlertCircle className="w-4 h-4" />
-                                            <span>Trình duyệt không hỗ trợ định vị</span>
-                                        </div>
-                                    )}
-                                    {userLocation && (
-                                        <div className="flex items-center gap-2 text-sm text-green-600">
-                                            <MapPin className="w-4 h-4" />
-                                            <span>
-                                                {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {geolocationError && (
-                                        <div className="text-sm text-red-600 flex items-center gap-1">
-                                            <AlertCircle className="w-4 h-4" />
-                                            <span>{geolocationError.message}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            ref={coachesListRef}
-                            className="flex-1 overflow-y-auto scrollbar-hide"
-                            style={{
-                                scrollBehavior: "smooth",
-                                scrollSnapType: "y mandatory"
-                            }}
-                        >
-                            <div className="space-y-4">
-                                {coachesLoading && <div>Đang tải danh sách huấn luyện viên...</div>}
-                                {coachesError && <div className="text-red-500">{coachesError.message || 'Lỗi khi lấy danh sách huấn luyện viên'}</div>}
-                                {!coachesLoading && !coachesError && coaches.length === 0 && (
-                                    <div>Không có huấn luyện viên nào.</div>
-                                )}
-                                {!coachesLoading && !coachesError && coaches.map((coach, index) => (
-                                    <div key={coach.id || index} className="scroll-snap-start">
-                                        <CoachCard
-                                            id={coach.id}
-                                            name={coach.name}
-                                            location={coach.location}
-                                            description={coach.description}
-                                            rating={coach.rating}
-                                            reviews={coach.totalReviews}
-                                            price={coach.price}
-                                            nextAvailability={coach.nextAvailability ?? ''}
-                                        />
-                                        
+                    <div className="flex gap-6 items-start">
+                        {/* Left Panel - Coaches List */}
+                        <div className="flex-[6] bg-white flex flex-col h-screen">
+                            {/* Filters */}
+                            <div className="p-4 border-b border-gray-200">
+                                <div className="flex items-center gap-4 flex-wrap">
+                                    <div className="flex items-center gap-2">
+                                        <Filter className="w-4 h-4 text-gray-500" />
+                                        <span className="text-sm font-medium text-gray-700">Lọc theo:</span>
                                     </div>
-                                ))}
+                                    <Select value={selectedSport} onValueChange={setSelectedSport}>
+                                        <SelectTrigger className="w-40">
+                                            <SelectValue placeholder="Tất cả môn" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {SPORT_TYPE_OPTIONS.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+                                        <SelectTrigger className="w-40">
+                                            <SelectValue placeholder="Tất cả quận" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Tất cả quận</SelectItem>
+                                            {DISTRICT_OPTIONS.map((district) => (
+                                                <SelectItem key={district} value={district}>
+                                                    {district}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            {/* Geolocation UI (copied from field list style) */}
+                            <div className="p-4 border-b border-gray-200">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                            <Navigation className="w-4 h-4" />
+                                            Tìm HLV gần tôi
+                                        </h3>
+                                        {geolocationSupported ? (
+                                            <button
+                                                onClick={handleGetLocation}
+                                                disabled={geolocationLoading}
+                                                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+                                            >
+                                                {geolocationLoading ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                        Đang lấy vị trí...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Navigation className="w-4 h-4" />
+                                                        Lấy vị trí của tôi
+                                                    </>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                <AlertCircle className="w-4 h-4" />
+                                                <span>Trình duyệt không hỗ trợ định vị</span>
+                                            </div>
+                                        )}
+                                        {userLocation && (
+                                            <div className="flex items-center gap-2 text-sm text-green-600">
+                                                <MapPin className="w-4 h-4" />
+                                                <span>
+                                                    {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {geolocationError && (
+                                            <div className="text-sm text-red-600 flex items-center gap-1">
+                                                <AlertCircle className="w-4 h-4" />
+                                                <span>{geolocationError.message}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                ref={coachesListRef}
+                                className="flex-1 overflow-y-auto scrollbar-hide"
+                                style={{
+                                    scrollBehavior: "smooth",
+                                    scrollSnapType: "y mandatory"
+                                }}
+                            >
+                                <div className="space-y-4">
+                                    {coachesLoading && <div>Đang tải danh sách huấn luyện viên...</div>}
+                                    {coachesError && <div className="text-red-500">{coachesError.message || 'Lỗi khi lấy danh sách huấn luyện viên'}</div>}
+                                    {!coachesLoading && !coachesError && coaches.length === 0 && (
+                                        <div>Không có huấn luyện viên nào.</div>
+                                    )}
+                                    {!coachesLoading && !coachesError && coaches.map((coach, index) => (
+                                        <div key={coach.id || index} className="scroll-snap-start">
+                                            <CoachCard
+                                                id={coach.id}
+                                                name={coach.name}
+                                                location={coach.location}
+                                                description={coach.description}
+                                                rating={coach.rating}
+                                                reviews={coach.totalReviews}
+                                                price={coach.price}
+                                                nextAvailability={coach.nextAvailability ?? ''}
+                                            />
+
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Panel - Map (4/10 columns) */}
+                        <div className="flex-[4] relative">
+                            <div className="sticky top-16 h-[calc(100vh-4rem)] w-full">
+                                {addressText && (
+                                    <div className="mb-3 p-3 bg-white border border-gray-200 rounded-md text-sm text-gray-700">
+                                        Địa chỉ: {addressText}
+                                    </div>
+                                )}
+                                <div id={mapContainerId} className="absolute h-full w-full p-0 border-0 m-0 left-0 top-0" />
                             </div>
                         </div>
                     </div>
-
-                    {/* Right Panel - Map (4/10 columns) */}
-                    <div className="flex-[4] relative">
-                        <div className="sticky top-16 h-[calc(100vh-4rem)] w-full">
-                            {addressText && (
-                                <div className="mb-3 p-3 bg-white border border-gray-200 rounded-md text-sm text-gray-700">
-                                    Địa chỉ: {addressText}
-                                </div>
-                            )}
-                            <div id={mapContainerId} className="absolute h-full w-full p-0 border-0 m-0 left-0 top-0" />
-                        </div>
-                    </div>
-                </div>
                 </div>
             </PageWrapper>
 

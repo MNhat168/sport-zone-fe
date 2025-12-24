@@ -9,6 +9,7 @@ export const BookingStep = {
 export type BookingStep = typeof BookingStep[keyof typeof BookingStep];
 
 export const CombinedBookingStep = {
+  FIELD_LIST: 'FIELD_LIST',
   FIELD_BOOK_COURT: 'FIELD_BOOK_COURT',
   FIELD_AMENITIES: 'FIELD_AMENITIES',
   FIELD_CONFIRM: 'FIELD_CONFIRM',

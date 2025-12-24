@@ -6,14 +6,15 @@ interface StepperProps {
 }
 
 const steps = [
-    { key: CombinedBookingStep.FIELD_BOOK_COURT, label: "Chọn sân", number: 1 },
-    { key: CombinedBookingStep.FIELD_AMENITIES, label: "Tiện ích", number: 2 },
-    { key: CombinedBookingStep.FIELD_CONFIRM, label: "Xác nhận sân", number: 3 },
-    { key: CombinedBookingStep.COACH_SELECT, label: "Chọn HLV", number: 4 },
-    { key: CombinedBookingStep.COACH_TIME, label: "Chọn giờ HLV", number: 5 },
-    { key: CombinedBookingStep.COMBINED_CONFIRM, label: "Xác nhận tổng", number: 6 },
-    { key: CombinedBookingStep.PERSONAL_INFO, label: "Thông tin", number: 7 },
-    { key: CombinedBookingStep.PAYMENT, label: "Thanh toán", number: 8 },
+    { key: CombinedBookingStep.FIELD_LIST, label: "Danh sách", number: 1 },
+    { key: CombinedBookingStep.FIELD_BOOK_COURT, label: "Chọn sân", number: 2 },
+    { key: CombinedBookingStep.FIELD_AMENITIES, label: "Tiện ích", number: 3 },
+    { key: CombinedBookingStep.FIELD_CONFIRM, label: "Xác nhận", number: 4 },
+    { key: CombinedBookingStep.COACH_SELECT, label: "Chọn HLV", number: 5 },
+    { key: CombinedBookingStep.COACH_TIME, label: "Giờ HLV", number: 6 },
+    { key: CombinedBookingStep.COMBINED_CONFIRM, label: "Xác nhận", number: 7 },
+    { key: CombinedBookingStep.PERSONAL_INFO, label: "Thông tin", number: 8 },
+    { key: CombinedBookingStep.PAYMENT, label: "Thanh toán", number: 9 },
 ];
 
 export const FieldCoachBookingStepper = ({ currentStep }: StepperProps) => {
@@ -51,7 +52,7 @@ export const FieldCoachBookingStepper = ({ currentStep }: StepperProps) => {
                                 {/* Circle */}
                                 <div
                                     className={`
-                                        w-10 h-10 rounded-full flex items-center justify-center font-semibold font-['Outfit'] text-sm
+                                        w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
                                         transition-all duration-300 bg-white border-2
                                         ${isCompleted ? 'border-emerald-600 bg-emerald-600 text-white' : ''}
                                         ${isCurrent ? 'border-emerald-600 bg-white text-emerald-600 scale-110 shadow-lg' : ''}
@@ -65,7 +66,7 @@ export const FieldCoachBookingStepper = ({ currentStep }: StepperProps) => {
                                 <div className="mt-2 text-center">
                                     <p
                                         className={`
-                                            text-xs font-medium font-['Outfit'] whitespace-nowrap
+                                            text-xs font-medium whitespace-nowrap
                                             ${isCurrent ? 'text-emerald-600' : ''}
                                             ${isCompleted ? 'text-gray-700' : ''}
                                             ${isUpcoming ? 'text-gray-400' : ''}

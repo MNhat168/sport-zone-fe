@@ -121,7 +121,7 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
             {/* Header */}
             <Card className="border border-gray-200 mb-6">
                 <CardContent className="p-6">
-                    <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-4">
+                    <h1 className="text-2xl font-semibold text-center text-[#1a1a1a] mb-4">
                         Chọn thời gian với HLV {coachName}
                     </h1>
                     <div className="p-4 bg-gray-50 rounded-lg">
@@ -141,7 +141,7 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                 <div className="flex-1 min-w-[600px]">
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                            <CardTitle className="text-2xl font-semibold">
                                 Biểu mẫu đặt lịch
                             </CardTitle>
                         </CardHeader>
@@ -191,17 +191,17 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
 
                             {/* Time Range Selector */}
                             <div className="space-y-2.5">
-                                <Label className="text-base font-normal font-['Outfit']">Chọn khung giờ</Label>
+                                <Label className="text-base font-normal">Chọn khung giờ</Label>
                                 <div className="p-4 bg-gray-50 rounded-lg">
                                     {!date ? (
-                                        <p className="text-sm text-gray-500 font-['Outfit'] text-center py-4">
+                                        <p className="text-sm text-gray-500 text-center py-4">
                                             Vui lòng chọn ngày trước khi chọn giờ
                                         </p>
                                     ) : loadingSlots ? (
                                         <div className="flex items-center justify-center py-8">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                                                <p className="text-sm text-gray-600 font-['Outfit']">
+                                                <p className="text-sm text-gray-600">
                                                     Đang tải thông tin khả dụng...
                                                 </p>
                                             </div>
@@ -233,7 +233,7 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                                                                 }
                                                             }}
                                                             className={`
-                                                            w-14 h-14 rounded-lg border-2 font-semibold font-['Outfit'] text-base
+                                                            w-14 h-14 rounded-lg border-2 font-semibold text-base
                                                             transition-all duration-200 relative
                                                             ${isSlotBooked
                                                                     ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed opacity-60"
@@ -259,22 +259,22 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                                             </div>
                                             <div className="mt-3 space-y-1">
                                                 {selectedStartHour !== null && (
-                                                    <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                    <p className="text-sm text-emerald-600">
                                                         Giờ bắt đầu: {String(selectedStartHour).padStart(2, "0")}:00
                                                     </p>
                                                 )}
                                                 {selectedEndHour !== null && (
-                                                    <p className="text-sm text-emerald-600 font-['Outfit']">
+                                                    <p className="text-sm text-emerald-600">
                                                         Giờ kết thúc: {String(selectedEndHour).padStart(2, "0")}:00
                                                     </p>
                                                 )}
                                                 {selectedStartHour === null && (
-                                                    <p className="text-sm text-gray-500 font-['Outfit']">
+                                                    <p className="text-sm text-gray-500">
                                                         Nhấn vào ô để chọn giờ bắt đầu
                                                     </p>
                                                 )}
                                                 {selectedStartHour !== null && selectedEndHour === null && (
-                                                    <p className="text-sm text-gray-500 font-['Outfit']">
+                                                    <p className="text-sm text-gray-500">
                                                         Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
                                                     </p>
                                                 )}
@@ -300,7 +300,7 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
 
                             {/* Note */}
                             <div className="space-y-2">
-                                <Label htmlFor="note" className="text-base font-normal font-['Outfit']">Ghi chú (tùy chọn)</Label>
+                                <Label htmlFor="note" className="text-base font-normal">Ghi chú (tùy chọn)</Label>
                                 <Input
                                     id="note"
                                     type="text"
@@ -318,7 +318,7 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                 <div className="w-96">
                     <Card className="border border-gray-200">
                         <CardHeader className="border-b border-gray-200">
-                            <CardTitle className="text-2xl font-semibold font-['Outfit']">
+                            <CardTitle className="text-2xl font-semibold">
                                 Chi tiết đặt lịch
                             </CardTitle>
                         </CardHeader>
@@ -328,7 +328,7 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                                 <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
                                     <CalendarIcon className="w-5 h-5 text-emerald-600" />
                                 </div>
-                                <span className="text-base text-[#6b7280] font-['Outfit']">
+                                <span className="text-base text-[#6b7280]">
                                     {date || 'Chưa chọn ngày'}
                                 </span>
                             </div>
@@ -339,13 +339,13 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                                     <Clock className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-base text-[#6b7280] font-['Outfit']">
+                                    <span className="text-base text-[#6b7280]">
                                         {startTime && endTime
                                             ? `${startTime} to ${endTime}`
                                             : 'Chưa chọn giờ'}
                                     </span>
                                     {startTime && endTime && (
-                                        <span className="text-sm text-emerald-600 font-['Outfit']">
+                                        <span className="text-sm text-emerald-600">
                                             Thời lượng: {(() => {
                                                 const [startHour] = startTime.split(':').map(Number);
                                                 const [endHour] = endTime.split(':').map(Number);
@@ -361,7 +361,7 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                             {startTime && endTime && (
                                 <div className="pt-2">
                                     <Button
-                                        className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
+                                        className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold"
                                         disabled
                                     >
                                         Tổng phụ: {formatVND(calculateBookingAmount())}
@@ -378,14 +378,14 @@ export const CoachTimeSelection = ({ coachId, coachName, coachPrice, onSubmit, o
                 <Button
                     variant="outline"
                     onClick={onBack}
-                    className="px-8 py-3 font-['Outfit']"
+                    className="px-8 py-3"
                 >
                     Quay lại
                 </Button>
                 <Button
                     onClick={handleSubmit}
                     disabled={!date || !startTime || !endTime}
-                    className={`px-8 py-3 text-white font-['Outfit'] ${(date && startTime && endTime)
+                    className={`px-8 py-3 text-white ${(date && startTime && endTime)
                         ? 'bg-emerald-600 hover:bg-emerald-700'
                         : 'bg-gray-400 cursor-not-allowed'
                         }`}

@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getAllFields } from "../../features/field/fieldThunk"
 import { useGeolocation } from "../../hooks/useGeolocation"
 import { locationAPIService } from "../../utils/geolocation"
-import { Navigation, AlertCircle, Filter, Heart, DollarSign, Plus, Minus } from "lucide-react"
+import { Navigation, AlertCircle, Filter, Heart, DollarSign, Plus, Minus, Search, MapPin, Trophy } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,7 @@ import { FilterSidebar } from "./filter-sidebar"
 import { FavoriteSportsModal } from "@/components/common/favorite-sports-modal";
 import { getUserProfile, setFavouriteSports } from "@/features/user/userThunk";
 import { getFieldPinIconWithLabel } from "@/utils/fieldPinIcon";
+import { VIETNAM_CITIES, SPORT_TYPE_OPTIONS, PRICE_SORT_OPTIONS } from "@/utils/constant-value/constant";
 // Map sport IDs to Vietnamese labels for UI display
 const SPORT_LABELS_VN: Record<string, string> = {
   football: "Bóng đá",
@@ -74,7 +75,6 @@ const FieldBookingPage = () => {
   const pendingZoomRef = useRef<number | null>(null); // THÊM dòng này
   const skipNextDebounceRef = useRef(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const locationInputRef = useRef<HTMLInputElement>(null);
   const lastFitBoundsMarkersRef = useRef<string>(""); // Track which markers we last called fitBounds for
   const mapContainerId = "fields-map-container";
   const mapRef = useRef<any>(null);
@@ -106,7 +106,7 @@ const FieldBookingPage = () => {
       if (!user?.favouriteSports || user.favouriteSports.length === 0) {
         setShowFavoriteSportsModal(true);
         setModalShownOnce(true);
-        try { sessionStorage.setItem(storageKey, '1'); } catch {}
+        try { sessionStorage.setItem(storageKey, '1'); } catch { }
       }
     } catch (e) {
       // ignore storage errors
@@ -124,7 +124,7 @@ const FieldBookingPage = () => {
         // Refetch profile to update Redux state (defensive)
         dispatch(getUserProfile());
         setShowFavoriteSportsModal(false);
-        try { sessionStorage.setItem(storageKey, '1'); } catch {}
+        try { sessionStorage.setItem(storageKey, '1'); } catch { }
       })
       .catch(() => {
         setShowFavoriteSportsModal(false);
@@ -521,7 +521,7 @@ const FieldBookingPage = () => {
 
   const forceSyncFilters = () => {
     const currentNameValue = nameInputRef.current?.value.trim() || "";
-    const currentLocationValue = locationInputRef.current?.value.trim() || "";
+    const currentLocationValue = locationFilter.trim();
 
     if (currentNameValue !== nameFilter) setNameFilter(currentNameValue);
     if (currentLocationValue !== locationFilter)
@@ -1011,154 +1011,156 @@ const FieldBookingPage = () => {
               <div className="bg-background-secondary flex flex-col h-screen p-4">
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 flex items-center gap-3 flex-wrap">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <Filter className="w-4 h-4" />
-                        Thêm bộ lọc
-                      </Button>
-                      {geolocationSupported && (
-                        <button
-                          onClick={handleGetLocation}
-                          disabled={geolocationLoading || isLoadingNearby}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed text-sm ${isNearbyMode
+                    <div className="flex-1 flex flex-col gap-4">
+                      {/* Row 1: Selects and Quick Buttons */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsSidebarOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Filter className="w-4 h-4" />
+                          Thêm
+                        </Button>
+                        {geolocationSupported && (
+                          <button
+                            onClick={handleGetLocation}
+                            disabled={geolocationLoading || isLoadingNearby}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed text-sm ${isNearbyMode
                               ? "bg-blue-600 text-white hover:bg-blue-700"
                               : "bg-green-600 text-white hover:bg-green-700"
-                            }`}
-                        >
-                          {geolocationLoading || isLoadingNearby ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              {isLoadingNearby
-                                ? "Đang tìm..."
-                                : "Đang lấy vị trí..."}
-                            </>
-                          ) : (
-                            <>
-                              <Navigation className="w-4 h-4" /> Lấy vị trí của
-                              tôi
-                            </>
-                          )}
-                        </button>
-                      )}
-                      {authUser && (
-                        <Button
-                          variant={
-                            isFilteringByFavorites ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => {
-                            if (!favouriteSports || favouriteSports.length === 0) {
-                              // Open modal to choose favourite sports when none set
-                              setShowFavoriteSportsModal(true);
-                              return;
+                              }`}
+                          >
+                            {geolocationLoading || isLoadingNearby ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                {isLoadingNearby
+                                  ? "Đang tìm..."
+                                  : "Đang lấy vị trí..."}
+                              </>
+                            ) : (
+                              <>
+                                <Navigation className="w-4 h-4" />Vị trí của tôi
+                              </>
+                            )}
+                          </button>
+                        )}
+                        {authUser && (
+                          <Button
+                            variant={
+                              isFilteringByFavorites ? "default" : "outline"
                             }
-                            // If currently filtering by favorites, open modal to edit/see selections
-                            if (isFilteringByFavorites) {
-                              setShowFavoriteSportsModal(true);
-                              return;
+                            size="sm"
+                            onClick={() => {
+                              if (!favouriteSports || favouriteSports.length === 0) {
+                                setShowFavoriteSportsModal(true);
+                                return;
+                              }
+                              if (isFilteringByFavorites) {
+                                setShowFavoriteSportsModal(true);
+                                return;
+                              }
+                              handleToggleFavoriteFilter();
+                            }}
+                            className="flex items-center gap-2"
+                            title={
+                              !favouriteSports || favouriteSports.length === 0
+                                ? "Chọn môn thể thao yêu thích"
+                                : isFilteringByFavorites
+                                  ? "Chỉnh sửa sân yêu thích"
+                                  : "Bật bộ lọc sân yêu thích"
                             }
-                            handleToggleFavoriteFilter();
-                          }}
-                          className="flex items-center gap-2"
-                          title={
-                            !favouriteSports || favouriteSports.length === 0
-                              ? "Chọn môn thể thao yêu thích"
-                              : isFilteringByFavorites
-                                ? "Chỉnh sửa sân yêu thích"
-                                : "Bật bộ lọc sân yêu thích"
-                          }
-                        >
-                          <Heart
-                            className={`w-4 h-4 ${isFilteringByFavorites ? "fill-current" : ""}`}
-                          />
-                          {isFilteringByFavorites
-                            ? "Đang hiển thị sân yêu thích"
-                            : (!favouriteSports || favouriteSports.length === 0
-                              ? "Thiết lập sân yêu thích"
-                              : "Sân yêu thích của tôi")}
-                        </Button>
-                      )}
-                      <Input
-                        ref={nameInputRef}
-                        className="w-[140px]"
-                        placeholder="Tên sân"
-                        value={nameFilter}
-                        onChange={(e) => setNameFilter(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            setNameFilter(
-                              (e.target as HTMLInputElement).value.trim()
-                            );
-                          }
-                        }}
-                      />
-                      <Input
-                        ref={locationInputRef}
-                        className="w-[140px]"
-                        placeholder="Địa điểm"
-                        value={locationFilter}
-                        onChange={(e) => setLocationFilter(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            setLocationFilter(
-                              (e.target as HTMLInputElement).value.trim()
-                            );
-                          }
-                        }}
-                      />
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 whitespace-nowrap">
-                          Thể loại:
-                        </span>
-                        <Select
-                          value={sportFilter}
-                          onValueChange={setSportFilter}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Loại thể thao" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Tất cả</SelectItem>
-                            <SelectItem value="football">Bóng đá</SelectItem>
-                            <SelectItem value="tennis">Quần vợt</SelectItem>
-                            <SelectItem value="badminton">Cầu lông</SelectItem>
-                            <SelectItem value="pickleball">
-                              Pickleball
-                            </SelectItem>
-                            <SelectItem value="basketball">Bóng rổ</SelectItem>
-                            <SelectItem value="volleyball">
-                              Bóng chuyền
-                            </SelectItem>
-                            <SelectItem value="swimming">Bơi lội</SelectItem>
-                            <SelectItem value="gym">Phòng gym</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          >
+                            <Heart
+                              className={`w-4 h-4 ${isFilteringByFavorites ? "fill-current" : ""}`}
+                            />
+                            {isFilteringByFavorites
+                              ? "Đang hiển thị sân yêu thích"
+                              : (!favouriteSports || favouriteSports.length === 0
+                                ? "Thiết lập sân yêu thích"
+                                : "Sân yêu thích của tôi")}
+                          </Button>
+                        )}
+
+                        <div className="h-6 w-[1px] bg-gray-300 mx-1 hidden sm:block" />
+
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <Select
+                            value={locationFilter || "all"}
+                            onValueChange={(value) => setLocationFilter(value === "all" ? "" : value)}
+                          >
+                            <SelectTrigger className="w-[150px]">
+                              <SelectValue placeholder="Địa điểm" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px] overflow-y-auto">
+                              <SelectItem value="all">Tất cả khu vực</SelectItem>
+                              {VIETNAM_CITIES.map((city) => (
+                                <SelectItem key={city} value={city}>
+                                  {city}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-gray-500" />
+                          <Select
+                            value={sportFilter}
+                            onValueChange={setSportFilter}
+                          >
+                            <SelectTrigger className="w-[150px]">
+                              <SelectValue placeholder="Loại thể thao" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px] overflow-y-auto">
+                              {SPORT_TYPE_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-gray-500" />
+                          <Select
+                            value={priceSort || "none"}
+                            onValueChange={(value) =>
+                              setPriceSort(value === "none" ? "" : value)
+                            }
+                          >
+                            <SelectTrigger className="w-[150px]">
+                              <SelectValue placeholder="Sắp xếp giá" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px] overflow-y-auto">
+                              {PRICE_SORT_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {/* <DollarSign className="w-4 h-4 text-gray-600" /> */}
-                        <span className="text-sm text-gray-600 whitespace-nowrap">
-                          Giá:
-                        </span>
-                        <Select
-                          value={priceSort || "none"}
-                          onValueChange={(value) =>
-                            setPriceSort(value === "none" ? "" : value)
-                          }
-                        >
-                          <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="Sắp xếp giá" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Không sắp xếp</SelectItem>
-                            <SelectItem value="asc">Thấp → Cao</SelectItem>
-                            <SelectItem value="desc">Cao → Thấp</SelectItem>
-                          </SelectContent>
-                        </Select>
+
+                      {/* Row 2: Search Input (Full Width) */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          ref={nameInputRef}
+                          className="pl-10 w-full h-11 bg-white border-gray-300 focus:ring-green-500 rounded-lg shadow-sm"
+                          placeholder="Tìm kiếm theo tên sân hoặc nội dung khác..."
+                          value={nameFilter}
+                          onChange={(e) => setNameFilter(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              setNameFilter((e.target as HTMLInputElement).value.trim());
+                            }
+                          }}
+                        />
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1341,8 +1343,8 @@ const FieldBookingPage = () => {
                               }
                             }}
                             className={`scroll-snap-start transition-all duration-300 ${highlightedFieldId === field.id
-                                ? 'ring-4 ring-green-500 ring-offset-2 rounded-lg'
-                                : ''
+                              ? 'ring-4 ring-green-500 ring-offset-2 rounded-lg'
+                              : ''
                               }`}
                           >
                             <FieldCard

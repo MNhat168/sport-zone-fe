@@ -65,10 +65,10 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
         <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
             {/* Header */}
             <div className="text-center mb-10">
-                <h1 className="text-3xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
+                <h1 className="text-3xl font-semibold text-[#1a1a1a] mb-2">
                     Xác nhận đặt sân và huấn luyện viên
                 </h1>
-                <p className="text-base text-gray-600 font-['Outfit']">
+                <p className="text-base text-gray-600">
                     Vui lòng kiểm tra thông tin trước khi tiếp tục
                 </p>
             </div>
@@ -78,15 +78,15 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                 {/* Field Booking Summary */}
                 <Card className="border border-gray-200">
                     <CardHeader className="border-b border-gray-200 bg-emerald-50">
-                        <CardTitle className="text-xl font-semibold font-['Outfit'] text-emerald-700">
+                        <CardTitle className="text-xl font-semibold text-emerald-700">
                             Đặt sân
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
                         {/* Field Name */}
                         <div>
-                            <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Tên sân</p>
-                            <p className="text-lg font-semibold font-['Outfit'] text-[#1a1a1a]">
+                            <p className="text-sm text-gray-500 mb-1">Tên sân</p>
+                            <p className="text-lg font-semibold text-[#1a1a1a]">
                                 {fieldData.fieldName} - {fieldData.courtName}
                             </p>
                         </div>
@@ -95,8 +95,8 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         <div className="flex items-start gap-2">
                             <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
                             <div>
-                                <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Địa điểm</p>
-                                <p className="text-base font-['Outfit'] text-gray-700">{fieldData.fieldLocation}</p>
+                                <p className="text-sm text-gray-500 mb-1">Địa điểm</p>
+                                <p className="text-base text-gray-700">{fieldData.fieldLocation}</p>
                             </div>
                         </div>
 
@@ -104,8 +104,8 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         <div className="flex items-start gap-2">
                             <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
                             <div>
-                                <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Ngày</p>
-                                <p className="text-base font-['Outfit'] text-gray-700">
+                                <p className="text-sm text-gray-500 mb-1">Ngày</p>
+                                <p className="text-base text-gray-700">
                                     {new Date(fieldData.date).toLocaleDateString('vi-VN', {
                                         weekday: 'long',
                                         year: 'numeric',
@@ -120,8 +120,8 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         <div className="flex items-start gap-2">
                             <Clock className="w-5 h-5 text-gray-500 mt-0.5" />
                             <div>
-                                <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Thời gian</p>
-                                <p className="text-base font-['Outfit'] text-gray-700">
+                                <p className="text-sm text-gray-500 mb-1">Thời gian</p>
+                                <p className="text-base text-gray-700">
                                     {fieldData.startTime} - {fieldData.endTime} ({fieldHours} giờ)
                                 </p>
                             </div>
@@ -130,12 +130,12 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         {/* Amenities */}
                         {selectedAmenities.length > 0 && (
                             <div>
-                                <p className="text-sm text-gray-500 font-['Outfit'] mb-2">Tiện ích đã chọn</p>
+                                <p className="text-sm text-gray-500 mb-2">Tiện ích đã chọn</p>
                                 <div className="space-y-1">
                                     {selectedAmenities.map(amenity => (
                                         <div key={amenity.id} className="flex justify-between items-center">
-                                            <span className="text-sm font-['Outfit'] text-gray-700">{amenity.name}</span>
-                                            <span className="text-sm font-semibold font-['Outfit'] text-emerald-600">
+                                            <span className="text-sm text-gray-700">{amenity.name}</span>
+                                            <span className="text-sm font-semibold text-emerald-600">
                                                 {formatVND(amenity.price)}
                                             </span>
                                         </div>
@@ -147,18 +147,18 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         {/* Field Total */}
                         <div className="pt-4 border-t border-gray-200">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-sm font-['Outfit'] text-gray-600">Giá sân ({fieldHours} giờ)</span>
-                                <span className="text-sm font-semibold font-['Outfit']">{formatVND(fieldCourtTotal)}</span>
+                                <span className="text-sm text-gray-600">Giá sân ({fieldHours} giờ)</span>
+                                <span className="text-sm font-semibold">{formatVND(fieldCourtTotal)}</span>
                             </div>
                             {amenitiesTotal > 0 && (
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-['Outfit'] text-gray-600">Tiện ích</span>
-                                    <span className="text-sm font-semibold font-['Outfit']">{formatVND(amenitiesTotal)}</span>
+                                    <span className="text-sm text-gray-600">Tiện ích</span>
+                                    <span className="text-sm font-semibold">{formatVND(amenitiesTotal)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                                <span className="text-base font-semibold font-['Outfit'] text-gray-700">Tổng phụ sân</span>
-                                <span className="text-xl font-bold font-['Outfit'] text-emerald-600">{formatVND(fieldTotal)}</span>
+                                <span className="text-base font-semibold text-gray-700">Tổng phụ sân</span>
+                                <span className="text-xl font-bold text-emerald-600">{formatVND(fieldTotal)}</span>
                             </div>
                         </div>
                     </CardContent>
@@ -167,15 +167,15 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                 {/* Coach Booking Summary */}
                 <Card className="border border-gray-200">
                     <CardHeader className="border-b border-gray-200 bg-blue-50">
-                        <CardTitle className="text-xl font-semibold font-['Outfit'] text-blue-700">
+                        <CardTitle className="text-xl font-semibold text-blue-700">
                             Đặt huấn luyện viên
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
                         {/* Coach Name */}
                         <div>
-                            <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Tên HLV</p>
-                            <p className="text-lg font-semibold font-['Outfit'] text-[#1a1a1a]">
+                            <p className="text-sm text-gray-500 mb-1">Tên HLV</p>
+                            <p className="text-lg font-semibold text-[#1a1a1a]">
                                 {coachData.coachName}
                             </p>
                         </div>
@@ -184,8 +184,8 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         <div className="flex items-start gap-2">
                             <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
                             <div>
-                                <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Ngày</p>
-                                <p className="text-base font-['Outfit'] text-gray-700">
+                                <p className="text-sm text-gray-500 mb-1">Ngày</p>
+                                <p className="text-base text-gray-700">
                                     {new Date(coachData.date).toLocaleDateString('vi-VN', {
                                         weekday: 'long',
                                         year: 'numeric',
@@ -200,8 +200,8 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         <div className="flex items-start gap-2">
                             <Clock className="w-5 h-5 text-gray-500 mt-0.5" />
                             <div>
-                                <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Thời gian</p>
-                                <p className="text-base font-['Outfit'] text-gray-700">
+                                <p className="text-sm text-gray-500 mb-1">Thời gian</p>
+                                <p className="text-base text-gray-700">
                                     {coachData.startTime} - {coachData.endTime} ({coachHours} giờ)
                                 </p>
                             </div>
@@ -211,8 +211,8 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         <div className="flex items-start gap-2">
                             <DollarSign className="w-5 h-5 text-gray-500 mt-0.5" />
                             <div>
-                                <p className="text-sm text-gray-500 font-['Outfit'] mb-1">Giá theo giờ</p>
-                                <p className="text-base font-semibold font-['Outfit'] text-gray-700">
+                                <p className="text-sm text-gray-500 mb-1">Giá theo giờ</p>
+                                <p className="text-base font-semibold text-gray-700">
                                     {formatVND(coachData.pricePerHour)}/giờ
                                 </p>
                             </div>
@@ -221,12 +221,12 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                         {/* Coach Total */}
                         <div className="pt-4 border-t border-gray-200">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-sm font-['Outfit'] text-gray-600">Giá HLV ({coachHours} giờ)</span>
-                                <span className="text-sm font-semibold font-['Outfit']">{formatVND(coachTotal)}</span>
+                                <span className="text-sm text-gray-600">Giá HLV ({coachHours} giờ)</span>
+                                <span className="text-sm font-semibold">{formatVND(coachTotal)}</span>
                             </div>
                             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                                <span className="text-base font-semibold font-['Outfit'] text-gray-700">Tổng phụ HLV</span>
-                                <span className="text-xl font-bold font-['Outfit'] text-blue-600">{formatVND(coachTotal)}</span>
+                                <span className="text-base font-semibold text-gray-700">Tổng phụ HLV</span>
+                                <span className="text-xl font-bold text-blue-600">{formatVND(coachTotal)}</span>
                             </div>
                         </div>
                     </CardContent>
@@ -238,14 +238,14 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                 <CardContent className="p-6">
                     <div className="flex justify-between items-center">
                         <div>
-                            <p className="text-sm text-gray-600 font-['Outfit'] mb-1">Tổng cộng</p>
-                            <p className="text-3xl font-bold font-['Outfit'] text-emerald-600">
+                            <p className="text-sm text-gray-600 mb-1">Tổng cộng</p>
+                            <p className="text-3xl font-bold text-emerald-600">
                                 {formatVND(grandTotal)}
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm text-gray-600 font-['Outfit']">Sân: {formatVND(fieldTotal)}</p>
-                            <p className="text-sm text-gray-600 font-['Outfit']">HLV: {formatVND(coachTotal)}</p>
+                            <p className="text-sm text-gray-600">Sân: {formatVND(fieldTotal)}</p>
+                            <p className="text-sm text-gray-600">HLV: {formatVND(coachTotal)}</p>
                         </div>
                     </div>
                 </CardContent>
@@ -256,13 +256,13 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                 <Button
                     variant="outline"
                     onClick={onBack}
-                    className="px-8 py-3 font-['Outfit']"
+                    className="px-8 py-3"
                 >
                     Quay lại
                 </Button>
                 <Button
                     onClick={onContinue}
-                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-['Outfit']"
+                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                     Tiếp tục
                 </Button>
