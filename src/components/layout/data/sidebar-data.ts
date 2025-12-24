@@ -107,6 +107,11 @@ export const sidebarData: SidebarData = {
             },
           ],
         },
+        {
+          title: 'Statistics',
+          url: '/admin/statistics',
+          icon: AudioWaveform, // Reusing an icon or import a new one like BarChart
+        },
       ],
     },
     {

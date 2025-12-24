@@ -48,6 +48,7 @@ import { Route as AuthenticatedFieldOwnersRequestsRouteImport } from './routes/_
 import { Route as AuthenticatedFieldOwnersIdRouteImport } from './routes/_authenticated/field-owners/$id'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedCoachesRequestsRouteImport } from './routes/_authenticated/coaches/requests'
+import { Route as AuthenticatedAdminStatisticsIndexRouteImport } from './routes/_authenticated/admin/statistics/index'
 import { Route as AuthenticatedCoachesRequestsIdRouteImport } from './routes/_authenticated/coaches/requests/$id'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
@@ -260,6 +261,12 @@ const AuthenticatedCoachesRequestsRoute =
     path: '/coaches/requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminStatisticsIndexRoute =
+  AuthenticatedAdminStatisticsIndexRouteImport.update({
+    id: '/admin/statistics/',
+    path: '/admin/statistics/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCoachesRequestsIdRoute =
   AuthenticatedCoachesRequestsIdRouteImport.update({
     id: '/$id',
@@ -270,7 +277,6 @@ const AuthenticatedCoachesRequestsIdRoute =
 export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
-  '/clerk/': typeof ClerkauthRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/sign-in': typeof authSignInRoute
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
+  '/admin/statistics': typeof AuthenticatedAdminStatisticsIndexRoute
 }
 export interface FileRoutesByTo {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -344,6 +351,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
+  '/admin/statistics': typeof AuthenticatedAdminStatisticsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -387,13 +395,13 @@ export interface FileRoutesById {
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
+  '/_authenticated/admin/statistics/': typeof AuthenticatedAdminStatisticsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/clerk'
     | '/settings'
-    | '/clerk/'
     | '/forgot-password'
     | '/otp'
     | '/sign-in'
@@ -429,6 +437,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/coaches/requests/$id'
+    | '/admin/statistics'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/clerk'
@@ -467,6 +476,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/coaches/requests/$id'
+    | '/admin/statistics'
   id:
     | '__root__'
     | '/_authenticated'
@@ -509,6 +519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/transactions/'
     | '/_authenticated/users/'
     | '/_authenticated/coaches/requests/$id'
+    | '/_authenticated/admin/statistics/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -628,8 +639,8 @@ declare module '@tanstack/react-router' {
     }
     '/clerk/(auth)': {
       id: '/clerk/(auth)'
-      path: '/'
-      fullPath: '/clerk/'
+      path: ''
+      fullPath: '/clerk'
       preLoaderRoute: typeof ClerkauthRouteRouteImport
       parentRoute: typeof ClerkRouteRoute
     }
@@ -801,6 +812,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachesRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/statistics/': {
+      id: '/_authenticated/admin/statistics/'
+      path: '/admin/statistics'
+      fullPath: '/admin/statistics'
+      preLoaderRoute: typeof AuthenticatedAdminStatisticsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/coaches/requests/$id': {
       id: '/_authenticated/coaches/requests/$id'
       path: '/$id'
@@ -866,6 +884,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedTransactionsIndexRoute: typeof AuthenticatedTransactionsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedAdminStatisticsIndexRoute: typeof AuthenticatedAdminStatisticsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -887,6 +906,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedTransactionsIndexRoute: AuthenticatedTransactionsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedAdminStatisticsIndexRoute:
+    AuthenticatedAdminStatisticsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
