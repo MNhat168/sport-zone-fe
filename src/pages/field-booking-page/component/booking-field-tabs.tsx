@@ -152,7 +152,7 @@ export const BookingFieldTabs: React.FC<BookingFieldTabsProps> = ({
                                             !isCompleted && !isActive && 'bg-blue-400'
                                         )}
                                     >
-                                        <span className="text-white text-lg font-semibold leading-snug">
+                                        <span className="text-white text-lg font-semibold font-['Outfit'] leading-snug">
                                             {stepConfig.step}
                                         </span>
                                     </div>
@@ -160,7 +160,7 @@ export const BookingFieldTabs: React.FC<BookingFieldTabsProps> = ({
                                     {/* Step Label */}
                                     <span
                                         className={cn(
-                                            'text-lg font-semibold leading-snug',
+                                            'text-lg font-semibold font-["Outfit"] leading-snug',
                                             'transition-colors duration-200',
                                             isCompleted && 'text-emerald-600',
                                             isActive && 'text-emerald-600',

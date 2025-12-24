@@ -2,7 +2,6 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { Field, ErrorResponse } from "../../types/field-type";
 import {
     getAllFields,
-    getAllFieldsPaginated,
     getMyFields,
     getFieldById,
     checkFieldAvailability,
@@ -23,20 +22,20 @@ interface FieldState {
     fields: Field[];
     currentField: Field | null;
     pagination: import("../../types/field-type").Pagination | null;
-
+    
     // Availability data (Pure Lazy Creation)
     availability: import("../../types/field-type").FieldAvailabilityData[] | null;
-
+    
     // Price scheduling data
     scheduledPriceUpdates: import("../../types/field-type").ScheduledPriceUpdate[] | null;
-
+    
     // Field amenities data
     fieldAmenities: import("../../types/field-type").FieldAmenity[] | null;
-
+    
     // Field owner bookings data
     fieldOwnerBookings: import("../../types/field-type").FieldOwnerBooking[] | null;
     fieldOwnerBookingsPagination: import("../../types/field-type").Pagination | null;
-
+    
     // Loading states
     loading: boolean;
     createLoading: boolean;
@@ -47,7 +46,7 @@ interface FieldState {
     priceSchedulingLoading: boolean;
     amenitiesLoading: boolean;
     fieldOwnerBookingsLoading: boolean;
-
+    
     // Error states
     error: ErrorResponse | null;
     createError: ErrorResponse | null;
@@ -124,7 +123,7 @@ const fieldSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Get all fields (without pagination)
+            // Get all fields
             .addCase(getAllFields.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -136,22 +135,6 @@ const fieldSlice = createSlice({
                 state.error = null;
             })
             .addCase(getAllFields.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload || { message: "Unknown error", status: "500" };
-            })
-
-            // Get all fields paginated
-            .addCase(getAllFieldsPaginated.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(getAllFieldsPaginated.fulfilled, (state, action) => {
-                state.loading = false;
-                state.fields = action.payload.data;
-                state.pagination = action.payload.pagination || null;
-                state.error = null;
-            })
-            .addCase(getAllFieldsPaginated.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || { message: "Unknown error", status: "500" };
             })
@@ -252,18 +235,18 @@ const fieldSlice = createSlice({
             .addCase(updateField.fulfilled, (state, action) => {
                 state.updateLoading = false;
                 const updatedField = action.payload.data;
-
+                
                 // Update in fields array
                 const fieldsIndex = state.fields.findIndex(field => field.id === updatedField.id);
                 if (fieldsIndex !== -1) {
                     state.fields[fieldsIndex] = updatedField;
                 }
-
+                
                 // Update current field if it's the same
                 if (state.currentField?.id === updatedField.id) {
                     state.currentField = updatedField;
                 }
-
+                
                 state.updateError = null;
             })
             .addCase(updateField.rejected, (state, action) => {
@@ -279,15 +262,15 @@ const fieldSlice = createSlice({
             .addCase(deleteField.fulfilled, (state, action) => {
                 state.deleteLoading = false;
                 const fieldId = action.payload.fieldId;
-
+                
                 // Remove from fields array
                 state.fields = state.fields.filter(field => field.id !== fieldId);
-
+                
                 // Clear current field if it's the deleted one
                 if (state.currentField?.id === fieldId) {
                     state.currentField = null;
                 }
-
+                
                 state.deleteError = null;
             })
             .addCase(deleteField.rejected, (state, action) => {

@@ -34,14 +34,13 @@ import CoachProfileSettingsPage from "../pages/coach-dashboard-page/profile/coac
 // Coach lessons page
 import CoachLessonsPage from "../pages/coach-dashboard-page/coach-lessons/coach-lessons-page";
 
-import BookingPage from "../pages/coach-list-page/booking-page.tsx";
-import CoachBookingFlow from "../pages/coach-list-page/coach-booking-flow.tsx";
+import BookingPage from "../pages/coach-booking-page/booking-page";
+import CoachBookingFlow from "../pages/coach-booking-page/coach-booking-flow";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 
 // Field Pages
 import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
-import FieldCoachBookingPage from "../pages/field-coach-booking-page/field-coach-booking-page";
 import FieldCreatePage from "../pages/field-create-page/field-create-page";
 import FieldDetailPage from "../pages/field-detail-page/field-detail-page";
 
@@ -105,7 +104,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/verify-email/failed", element: <VerifyTokenPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
-  { path: "/coach", element: <BookingPage /> },
+  { path: "/coach/booking", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
@@ -126,13 +125,15 @@ export const publicRoutes: RouteObject[] = [
   { path: "/fields", element: <FieldBookingPage /> },
   { path: "/fields/:id", element: <FieldDetailPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
-  { path: "/field-coach", element: <FieldCoachBookingPage /> },
 
   // Coach Discovery (Public)
   { path: "/coaches", element: <Placeholder title="Danh sách HLV" /> },
   { path: "/coach-detail", element: <CoachDetailPage /> },
   { path: "/coach/:id", element: <CoachDetailPage /> },
   { path: "/coaches/:id/booking", element: <CoachBookingFlow /> },
+
+  // General Booking (Public)
+  { path: "/coach/booking", element: <BookingPage /> },
 
   // About & Contact (Public)
   { path: "/about", element: <AboutPage /> },

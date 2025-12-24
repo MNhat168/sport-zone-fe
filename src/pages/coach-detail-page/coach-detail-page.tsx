@@ -85,18 +85,18 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const { currentCoach, detailLoading, detailError } = useSelector(
     (state: RootState) => state.coach
   );
-  const authUser = useSelector((state: RootState) => state.auth.user);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [favLoading, setFavLoading] = useState(false);
 
-  const favouriteCoachIds: string[] = Array.isArray(authUser?.favouriteCoaches)
-    ? authUser!.favouriteCoaches.map((c: any) => (typeof c === 'string' ? c : (c._id || c.id || String(c))))
+  const favouriteCoachIds: string[] = Array.isArray(currentUser?.favouriteCoaches)
+    ? currentUser!.favouriteCoaches.map((c: any) => (typeof c === 'string' ? c : (c._id || c.id || String(c))))
     : [];
 
   const isFavourite = Boolean(effectiveCoachId && favouriteCoachIds.includes(effectiveCoachId as string));
 
   const toggleFavourite = async () => {
-    if (!authUser) {
+    if (!currentUser) {
       return CustomFailedToast("Vui lòng đăng nhập để thêm huấn luyện viên vào yêu thích");
     }
     if (!effectiveCoachId) return;
@@ -216,7 +216,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     if (needRefresh) {
       dispatch(getUserProfile());
     }
-  }, [dispatch, effectiveCoachId, authUser]);
+  }, [dispatch, effectiveCoachId, currentUser]);
 
   const handleBookNow = () => {
     if (!effectiveCoachId) {

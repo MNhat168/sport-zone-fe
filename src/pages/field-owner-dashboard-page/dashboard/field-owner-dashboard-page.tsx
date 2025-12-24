@@ -9,61 +9,17 @@ import { getMyFields, getMyFieldsBookings, ownerAcceptBooking, ownerRejectBookin
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail"
 import type { FieldOwnerBooking } from "@/types/field-type"
-import { useSocket } from "@/hooks/useSocket"
 
 export default function FieldOwnerDashboardPage() {
     const dispatch = useAppDispatch();
-
+    
     // Redux state
-    const { user } = useAppSelector((state) => state.auth);
-    const {
-        fields,
+    const { 
+        fields, 
         fieldOwnerBookings,
         fieldOwnerBookingsLoading,
         fieldOwnerBookingsError
     } = useAppSelector((state) => state.field);
-
-    const socket = useSocket(user?._id || "");
-
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.on('notification', (data: any) => {
-            if (data?.type === 'payment_proof_submitted') {
-                console.log("🔔 Received payment proof notification, refreshing bookings...");
-                // Refresh booking list
-                dispatch(getMyFieldsBookings({
-                    page: 1,
-                    limit: 50
-                }));
-            }
-        });
-
-        return () => {
-            socket.off('notification');
-        };
-    }, [socket, dispatch]);
-
-    // Listen for custom event from NotificationBell (via sidebar)
-    // This catches all notification types and triggers a bookings refresh
-    useEffect(() => {
-        const handleNewNotification = (event: Event) => {
-            const customEvent = event as CustomEvent<{ id: string; message: string; type?: string }>;
-            console.log("🔔 Received notification via sidebar:", customEvent.detail);
-
-            // Refresh bookings list when any notification arrives
-            dispatch(getMyFieldsBookings({
-                page: 1,
-                limit: 50
-            }));
-        };
-
-        window.addEventListener('new-booking-notification', handleNewNotification);
-
-        return () => {
-            window.removeEventListener('new-booking-notification', handleNewNotification);
-        };
-    }, [dispatch]);
 
     const [selectedTab, setSelectedTab] = useState<"court" | "coaching">("court");
     const [currentPage, setCurrentPage] = useState(1);
@@ -87,11 +43,11 @@ export default function FieldOwnerDashboardPage() {
     const formatDate = (dateStr: string): string => {
         try {
             const date = new Date(dateStr);
-            return date.toLocaleDateString('vi-VN', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+            return date.toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
             });
         } catch {
             return dateStr;
@@ -107,7 +63,7 @@ export default function FieldOwnerDashboardPage() {
     const handleViewDetails = async (bookingId: string) => {
         const booking = fieldOwnerBookings?.find((b: FieldOwnerBooking) => b.bookingId === bookingId);
         if (!booking) return;
-
+        
         // Try to fetch owner booking detail to get user note if exists
         let note: string | undefined;
         try {
@@ -122,7 +78,7 @@ export default function FieldOwnerDashboardPage() {
         const bookingDate = formatDate(booking.date);
 
         const toNumber = (v?: number) => (typeof v === "number" ? v : 0);
-        const bookingAmount = toNumber((booking as any).bookingAmount ?? (booking.totalPrice - ((booking as any).platformFee || 0)));
+        const bookingAmount = toNumber((booking as any).bookingAmount ?? booking.totalPrice - (booking as any).platformFee ?? 0);
         const platformFee = toNumber((booking as any).platformFee);
         const amenitiesFee = toNumber(booking.amenitiesFee);
         const totalPrice = toNumber(booking.totalPrice);
@@ -199,10 +155,10 @@ export default function FieldOwnerDashboardPage() {
     };
 
     // Hàm để lọc và tải bookings
-    const handleFilterBookings = (filters?: {
-        status?: "pending" | "confirmed" | "cancelled" | "completed";
-        page?: number;
-        limit?: number
+    const handleFilterBookings = (filters?: { 
+        status?: "pending" | "confirmed" | "cancelled" | "completed"; 
+        page?: number; 
+        limit?: number 
     }) => {
         dispatch(getMyFieldsBookings({
             ...filters,
@@ -300,7 +256,7 @@ export default function FieldOwnerDashboardPage() {
     const totalFields = fields?.length || 0;
     const totalBookings = bookingData.length;
     const confirmedBookings = bookingData.filter(b => b.status === "confirmed").length;
-
+    
     // Tính doanh thu từ các booking có transaction status SUCCEEDED
     // Use bookingAmount directly (owner revenue = bookingAmount, platform keeps platformFee)
     const totalRevenue = bookingData
@@ -369,7 +325,7 @@ export default function FieldOwnerDashboardPage() {
                 : "N/A";
             const bookingTime = `${booking.startTime || "N/A"} - ${booking.endTime || "N/A"}`;
             const amount = booking.totalPrice?.toLocaleString('vi-VN') + " ₫" || "0 ₫";
-
+            
             let statusText = "";
             switch (booking.status) {
                 case "pending":
@@ -402,414 +358,415 @@ export default function FieldOwnerDashboardPage() {
     return (
         <FieldOwnerDashboardLayout>
             <div className="w-full container mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-                <div className="grid grid-cols-1 gap-8">
-                    {/* Phần thống kê */}
-                    <div>
-                        <div className="bg-white rounded-xl p-4 shadow-lg">
+                        <div className="grid grid-cols-1 gap-8">
+                            {/* Phần thống kê */}
                             <div>
-                                <h4 className="text-xl font-semibold mb-1 text-start">Thống kê</h4>
-                                <p className="text-muted-foreground mb-4 text-start">
-                                    Theo dõi hiệu suất kinh doanh sân của bạn
-                                </p>
-                            </div>
-                            <div className="border-t border-gray-100 my-4" />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {metrics.map((metric, index) => (
-                                    <Card key={index} className="bg-gray-50 border-0 shadow-none">
-                                        <CardContent>
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-green-600 text-start">{metric.value}</h3>
-                                                    <p className="text-sm text-muted-foreground text-start">{metric.title}</p>
-                                                </div>
-                                                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <metric.icon className="w-6 h-6 text-blue-600" />
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                {/* Phần lịch đặt trong ngày */}
-                <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle className="text-lg font-semibold mb-2 text-start">
-                                Lịch đặt trong ngày
-                            </CardTitle>
-                            <p className="text-muted-foreground text-start">
-                                Quản lý các lượt đặt và hoạt động trong ngày
-                            </p>
-                        </div>
-                        <Button className="bg-green-600 hover:bg-green-700 text-white">Xem tất cả</Button>
-                    </CardHeader>
-                    <div className="border-t border-gray-100" />
-                    <CardContent>
-                        {ongoingTodayBookings.length === 0 ? (
-                            <p className="text-muted-foreground text-center pt-4">Không có lịch đặt nào hôm nay</p>
-                        ) : (
-                            ongoingTodayBookings.map((booking) => {
-                                const userName = booking.customer?.fullName || "Người dùng không xác định";
-                                const initials = userName
-                                    .split(" ")
-                                    .map((w) => w[0])
-                                    .join("")
-                                    .toUpperCase();
-                                const fieldName = booking.fieldName || "Sân không xác định";
-                                const bookingDate = booking.date
-                                    ? new Date(booking.date).toLocaleDateString("vi-VN", {
-                                        weekday: "short",
-                                        month: "short",
-                                        day: "numeric",
-                                    })
-                                    : "N/A";
-
-                                return (
-                                    <div
-                                        key={booking.bookingId}
-                                        className="flex items-center p-4 bg-gray-50 rounded-lg mb-2"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <Building2 className="w-6 h-6 text-blue-600" />
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-start">{fieldName}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 ml-4">
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarFallback className="bg-orange-100 text-orange-600">{initials}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="font-medium text-start">{userName}</span>
-                                        </div>
-                                        <div className="flex-1 grid grid-cols-4 gap-6 text-sm ml-4">
-                                            <div>
-                                                <p className="font-medium text-muted-foreground text-start">Ngày đặt</p>
-                                                <p className="text-start">{bookingDate}</p>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-muted-foreground text-start">Giờ bắt đầu</p>
-                                                <p className="text-start">{booking.startTime}</p>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-muted-foreground text-start">Giờ kết thúc</p>
-                                                <p className="text-start">{booking.endTime}</p>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-muted-foreground text-start">Số tiền</p>
-                                                <p className="text-start">{booking.totalPrice?.toLocaleString('vi-VN')} ₫</p>
-                                            </div>
-                                        </div>
+                                <div className="bg-white rounded-xl p-4 shadow-lg">
+                                    <div>
+                                        <h4 className="text-xl font-semibold mb-1 text-start">Thống kê</h4>
+                                        <p className="text-muted-foreground mb-4 text-start">
+                                            Theo dõi hiệu suất kinh doanh sân của bạn
+                                        </p>
                                     </div>
-                                );
-                            })
-                        )}
-                    </CardContent>
-                </Card>
-                {/* Phần hoạt động gần đây */}
-                <Card className="bg-white border rounded-xl shadow-sm border-gray-200">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle className="text-lg font-semibold text-start">Hoạt động gần đây</CardTitle>
-                            <p className="text-muted-foreground text-start">Xem các giao dịch và hoạt động gần đây</p>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="rounded-b-xl">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200">
-                                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Khách hàng</th>
-                                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Sân</th>
-                                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Ngày</th>
-                                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Giờ</th>
-                                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Thanh toán</th>
-                                        <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Trạng thái</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {recentActivity.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} className="text-center py-12 text-muted-foreground">
-                                                Chưa có hoạt động nào
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        recentActivity.map((activity) => (
-                                            <tr key={activity.bookingId} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                                <td className="py-4 px-6">
-                                                    <p className="font-medium text-sm text-gray-900 truncate text-start">{activity.user}</p>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <p className="text-sm text-gray-700 truncate max-w-[200px] text-start">{activity.field}</p>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <p className="text-sm text-gray-700 text-start">{activity.date}</p>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <p className="text-sm text-gray-700 font-mono text-start">{activity.time}</p>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <p className="font-semibold text-sm text-green-600 text-start">{activity.amount}</p>
-                                                </td>
-                                                <td className="py-4 px-6 flex justify-start">
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className={`text-xs font-medium ${activity.status === "Đã xác nhận"
-                                                            ? "bg-green-100 text-green-700 border-green-200"
-                                                            : activity.status === "Hoàn thành"
-                                                                ? "bg-blue-100 text-blue-700 border-blue-200"
-                                                                : activity.status === "Đã hủy"
-                                                                    ? "bg-red-100 text-red-700 border-red-200"
-                                                                    : "bg-yellow-100 text-yellow-700 border-yellow-200"
-                                                            }`}
-                                                    >
-                                                        <p>{activity.status}</p>
-                                                    </Badge>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </CardContent>
-                </Card>
+                                    <div className="border-t border-gray-100 my-4" />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {metrics.map((metric, index) => (
+                                            <Card key={index} className="bg-gray-50 border-0 shadow-none">
+                                                <CardContent>
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <h3 className="text-xl font-bold text-green-600 text-start">{metric.value}</h3>
+                                                            <p className="text-sm text-muted-foreground text-start">{metric.title}</p>
+                                                        </div>
+                                                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                            <metric.icon className="w-6 h-6 text-blue-600" />
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
 
+                        </div>
 
-                {/* Quản lý đặt sân & Doanh thu */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    {/* Cột trái */}
-                    <div className="lg:col-span-3 space-y-8">
-                        {/* Yêu cầu đặt sân */}
+                        {/* Phần lịch đặt trong ngày */}
                         <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
-                            <CardHeader className="flex flex-row items-center justify-between py-2">
-                                <div className="flex flex-col space-y-1">
-                                    <CardTitle className="text-lg font-semibold mb-2 text-start">Quản lý đặt sân</CardTitle>
-                                    <p className="text-muted-foreground text-start">Xem và quản lý tất cả các lượt đặt sân từ khách hàng</p>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle className="text-lg font-semibold mb-2 text-start">
+                                        Lịch đặt trong ngày
+                                    </CardTitle>
+                                    <p className="text-muted-foreground text-start">
+                                        Quản lý các lượt đặt và hoạt động trong ngày
+                                    </p>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleFilterBookings({ page: 1 })}
-                                        disabled={fieldOwnerBookingsLoading}
-                                    >
-                                        Làm mới
-                                    </Button>
-                                    <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
-                                        <Badge
-                                            variant={selectedTab === "court" ? "default" : "outline"}
-                                            className={`px-4 py-2 text-sm font-medium ${selectedTab === "court" ? "bg-green-600" : "border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer"}`}
-                                            onClick={() => setSelectedTab("court")}
-                                        >
-                                            Sân
-                                        </Badge>
-                                        <Badge
-                                            variant={selectedTab === "coaching" ? "default" : "outline"}
-                                            className={`px-4 py-2 text-sm font-medium ${selectedTab === "coaching" ? "bg-green-600" : "border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer"}`}
-                                            onClick={() => setSelectedTab("coaching")}
-                                        >
-                                            Huấn luyện
-                                        </Badge>
-                                    </div>
-                                </div>
+                                <Button className="bg-green-600 hover:bg-green-700 text-white">Xem tất cả</Button>
                             </CardHeader>
-
-                            <CardContent className="space-y-4 text-start">
-                                <div className="border-t border-gray-100" />
-
-                                {fieldOwnerBookingsLoading ? (
-                                    <div className="flex justify-center items-center py-8">
-                                        <div className="text-muted-foreground">Đang tải dữ liệu đặt sân...</div>
-                                    </div>
-                                ) : fieldOwnerBookingsError ? (
-                                    <div className="flex justify-center items-center py-8">
-                                        <div className="text-red-600">Lỗi: {fieldOwnerBookingsError.message}</div>
-                                    </div>
-                                ) : selectedTab === "court" && filteredBookings.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        Chưa có lượt đặt sân nào
-                                    </div>
-                                ) : selectedTab === "court" && paginatedBookings.length > 0 ? (
-                                    paginatedBookings.map((request) => {
-                                        const userName = request.customer?.fullName || "Người dùng không xác định";
-
+                            <div className="border-t border-gray-100" />
+                            <CardContent>
+                                {ongoingTodayBookings.length === 0 ? (
+                                    <p className="text-muted-foreground text-center pt-4">Không có lịch đặt nào hôm nay</p>
+                                ) : (
+                                    ongoingTodayBookings.map((booking) => {
+                                        const userName = booking.customer?.fullName || "Người dùng không xác định";
                                         const initials = userName
                                             .split(" ")
                                             .map((w) => w[0])
                                             .join("")
                                             .toUpperCase();
-
-                                        const bookingDate = request.date
-                                            ? new Date(request.date).toLocaleDateString('vi-VN')
+                                        const fieldName = booking.fieldName || "Sân không xác định";
+                                        const bookingDate = booking.date
+                                            ? new Date(booking.date).toLocaleDateString("vi-VN", {
+                                                weekday: "short",
+                                                month: "short",
+                                                day: "numeric",
+                                            })
                                             : "N/A";
 
-
-
                                         return (
-                                            <div key={request.bookingId}>
-                                                <div className="flex items-center gap-4 p-4">
-                                                    <Avatar className="h-12 w-12">
-                                                        <AvatarFallback className="bg-green-500 text-white font-semibold text-xs">{initials}</AvatarFallback>
-                                                    </Avatar>
-
-                                                    <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
-                                                        <div>
-                                                            <p className="font-medium">{userName}</p>
-                                                            <p className="text-muted-foreground">{request.fieldName}</p>
-                                                            <p className="text-muted-foreground">
-                                                                {bookingDate} — {request.startTime || "N/A"} - {request.endTime || "N/A"}
-                                                            </p>
-                                                        </div>
-
-                                                        <div>
-                                                            <p className="font-medium">Trạng thái</p>
-                                                            <p
-                                                                className={`capitalize font-semibold ${request.status === "pending"
-                                                                    ? "text-yellow-600"
-                                                                    : request.status === "cancelled"
-                                                                        ? "text-red-600"
-                                                                        : request.status === "confirmed"
-                                                                            ? "text-green-600"
-                                                                            : request.status === "completed"
-                                                                                ? "text-blue-600"
-                                                                                : "text-gray-500"
-                                                                    }`}
-                                                            >
-                                                                {request.status === 'pending' ? 'Đang chờ' :
-                                                                    request.status === 'cancelled' ? 'Đã hủy' :
-                                                                        request.status === 'confirmed' ? 'Đã xác nhận' :
-                                                                            request.status === 'completed' ? 'Hoàn thành' : 'Không xác định'}
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="flex items-center justify-between">
-                                                            <p className="font-semibold text-green-600">
-                                                                {request.totalPrice?.toLocaleString('vi-VN')} ₫
-                                                            </p>
-                                                            {/* Hiển thị nút action dựa trên status */}
-                                                            {request.status === "pending" || (request as any).approvalStatus === "pending" ? (
-                                                                <div className="flex space-x-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        className="bg-green-600 hover:bg-green-700"
-                                                                        onClick={() => handleAccept(request.bookingId)}
-                                                                        disabled={fieldOwnerBookingsLoading}
-                                                                    >
-                                                                        Chấp nhận
-                                                                    </Button>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="border-red-500 text-red-500 hover:bg-red-50"
-                                                                        onClick={() => handleReject(request.bookingId)}
-                                                                        disabled={fieldOwnerBookingsLoading}
-                                                                    >
-                                                                        Từ chối
-                                                                    </Button>
-                                                                </div>
-                                                            ) : request.status === "confirmed" || (request as any).approvalStatus === "approved" ? (
-                                                                <div className="flex space-x-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="border-blue-500 text-blue-500 hover:bg-blue-50"
-                                                                        onClick={() => handleViewDetails(request.bookingId)}
-                                                                    >
-                                                                        Xem chi tiết
-                                                                    </Button>
-                                                                </div>
-                                                            ) : request.status === "completed" ? (
-                                                                <div className="flex space-x-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="border-gray-500 text-gray-500 hover:bg-gray-50"
-                                                                        onClick={() => handleViewDetails(request.bookingId)}
-                                                                    >
-                                                                        Xem chi tiết
-                                                                    </Button>
-                                                                </div>
-                                                            ) : request.status === "cancelled" || (request as any).approvalStatus === "rejected" ? (
-                                                                <div className="flex space-x-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="border-red-500 text-red-500 hover:bg-red-50"
-                                                                        onClick={() => handleViewDetails(request.bookingId)}
-                                                                    >
-                                                                        Xem chi tiết
-                                                                    </Button>
-                                                                </div>
-                                                            ) : null}
-                                                        </div>
+                                            <div
+                                                key={booking.bookingId}
+                                                className="flex items-center p-4 bg-gray-50 rounded-lg mb-2"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                        <Building2 className="w-6 h-6 text-blue-600" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-start">{fieldName}</p>
                                                     </div>
                                                 </div>
-                                                <div className="border-t border-gray-100 mx-4" />
+                                                <div className="flex items-center gap-3 ml-4">
+                                                    <Avatar className="h-10 w-10">
+                                                        <AvatarFallback className="bg-orange-100 text-orange-600">{initials}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium text-start">{userName}</span>
+                                                </div>
+                                                <div className="flex-1 grid grid-cols-4 gap-6 text-sm ml-4">
+                                                    <div>
+                                                        <p className="font-medium text-muted-foreground text-start">Ngày đặt</p>
+                                                        <p className="text-start">{bookingDate}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-muted-foreground text-start">Giờ bắt đầu</p>
+                                                        <p className="text-start">{booking.startTime}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-muted-foreground text-start">Giờ kết thúc</p>
+                                                        <p className="text-start">{booking.endTime}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-muted-foreground text-start">Số tiền</p>
+                                                        <p className="text-start">{booking.totalPrice?.toLocaleString('vi-VN')} ₫</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         );
                                     })
-                                ) : selectedTab === "court" && filteredBookings.length > 0 && paginatedBookings.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        Không có dữ liệu trong trang này
-                                    </div>
-                                ) : null}
-                                {totalPages > 1 && (
-                                    <div className="flex justify-center mt-4 space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            disabled={validCurrentPage === 1}
-                                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                        >
-                                            Trước
-                                        </Button>
-                                        <span className="self-center">
-                                            Trang {validCurrentPage} / {totalPages}
-                                        </span>
-                                        <Button
-                                            variant="outline"
-                                            disabled={validCurrentPage === totalPages}
-                                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                                        >
-                                            Sau
-                                        </Button>
-                                    </div>
                                 )}
                             </CardContent>
-
                         </Card>
-                    </div>
-
-                    {/* Cột phải */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Tóm tắt doanh thu */}
-                        <Card className="bg-emerald-700 text-white">
-                            <CardContent>
-                                <div className="flex items-center justify-between mb-2 pt-6">
-                                    <div>
-                                        <p className="text-sm opacity-90">Doanh thu tháng này</p>
-                                        <p className="text-xl font-bold">{totalRevenue.toLocaleString('vi-VN')} ₫</p>
-                                    </div>
-                                    <Button
-                                        variant="secondary"
-                                        className="bg-white/20 hover:bg-white/30 text-white flex items-center justify-center gap-2"
-                                    >
-                                        <DollarSign className="w-4 h-4" />
-                                        Xem chi tiết
-                                    </Button>
+                        {/* Phần hoạt động gần đây */}
+                        <Card className="bg-white border rounded-xl shadow-sm border-gray-200">
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle className="text-lg font-semibold text-start">Hoạt động gần đây</CardTitle>
+                                    <p className="text-muted-foreground text-start">Xem các giao dịch và hoạt động gần đây</p>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="rounded-b-xl">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="bg-gray-50 border-b border-gray-200">
+                                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Khách hàng</th>
+                                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Sân</th>
+                                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Ngày</th>
+                                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Giờ</th>
+                                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Thanh toán</th>
+                                                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {recentActivity.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} className="text-center py-12 text-muted-foreground">
+                                                        Chưa có hoạt động nào
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                recentActivity.map((activity) => (
+                                                    <tr key={activity.bookingId} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                                        <td className="py-4 px-6">
+                                                            <p className="font-medium text-sm text-gray-900 truncate text-start">{activity.user}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <p className="text-sm text-gray-700 truncate max-w-[200px] text-start">{activity.field}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <p className="text-sm text-gray-700 text-start">{activity.date}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <p className="text-sm text-gray-700 font-mono text-start">{activity.time}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <p className="font-semibold text-sm text-green-600 text-start">{activity.amount}</p>
+                                                        </td>
+                                                        <td className="py-4 px-6 flex justify-start">
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className={`text-xs font-medium ${
+                                                                    activity.status === "Đã xác nhận"
+                                                                        ? "bg-green-100 text-green-700 border-green-200"
+                                                                        : activity.status === "Hoàn thành"
+                                                                            ? "bg-blue-100 text-blue-700 border-blue-200"
+                                                                            : activity.status === "Đã hủy"
+                                                                                ? "bg-red-100 text-red-700 border-red-200"
+                                                                                : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                                                                }`}
+                                                            >
+                                                                <p>{activity.status}</p>
+                                                            </Badge>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Lịch đặt sắp tới */}
-                        {/* <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
+                        
+                        {/* Quản lý đặt sân & Doanh thu */}
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                            {/* Cột trái */}
+                            <div className="lg:col-span-3 space-y-8">
+                                {/* Yêu cầu đặt sân */}
+                                <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
+                                    <CardHeader className="flex flex-row items-center justify-between py-2">
+                                        <div className="flex flex-col space-y-1">
+                                            <CardTitle className="text-lg font-semibold mb-2 text-start">Quản lý đặt sân</CardTitle>
+                                            <p className="text-muted-foreground text-start">Xem và quản lý tất cả các lượt đặt sân từ khách hàng</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                onClick={() => handleFilterBookings({ page: 1 })}
+                                                disabled={fieldOwnerBookingsLoading}
+                                            >
+                                                Làm mới
+                                            </Button>
+                                            <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
+                                                <Badge
+                                                    variant={selectedTab === "court" ? "default" : "outline"}
+                                                    className={`px-4 py-2 text-sm font-medium ${selectedTab === "court" ? "bg-green-600" : "border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer"}`}
+                                                    onClick={() => setSelectedTab("court")}
+                                                >
+                                                    Sân
+                                                </Badge>
+                                                <Badge
+                                                    variant={selectedTab === "coaching" ? "default" : "outline"}
+                                                    className={`px-4 py-2 text-sm font-medium ${selectedTab === "coaching" ? "bg-green-600" : "border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer"}`}
+                                                    onClick={() => setSelectedTab("coaching")}
+                                                >
+                                                    Huấn luyện
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+
+                                    <CardContent className="space-y-4 text-start">
+                                        <div className="border-t border-gray-100" />
+
+                                        {fieldOwnerBookingsLoading ? (
+                                            <div className="flex justify-center items-center py-8">
+                                                <div className="text-muted-foreground">Đang tải dữ liệu đặt sân...</div>
+                                            </div>
+                                        ) : fieldOwnerBookingsError ? (
+                                            <div className="flex justify-center items-center py-8">
+                                                <div className="text-red-600">Lỗi: {fieldOwnerBookingsError.message}</div>
+                                            </div>
+                                        ) : selectedTab === "court" && filteredBookings.length === 0 ? (
+                                            <div className="text-center py-8 text-muted-foreground">
+                                                Chưa có lượt đặt sân nào
+                                            </div>
+                                        ) : selectedTab === "court" && paginatedBookings.length > 0 ? (
+                                            paginatedBookings.map((request) => {
+                                                const userName = request.customer?.fullName || "Người dùng không xác định";
+
+                                                const initials = userName
+                                                    .split(" ")
+                                                    .map((w) => w[0])
+                                                    .join("")
+                                                    .toUpperCase();
+
+                                                const bookingDate = request.date
+                                                    ? new Date(request.date).toLocaleDateString('vi-VN')
+                                                    : "N/A";
+
+
+
+                                                return (
+                                                    <div key={request.bookingId}>
+                                                        <div className="flex items-center gap-4 p-4">
+                                                            <Avatar className="h-12 w-12">
+                                                                <AvatarFallback className="bg-green-500 text-white font-semibold text-xs">{initials}</AvatarFallback>
+                                                            </Avatar>
+
+                                                            <div className="flex-1 grid grid-cols-3 gap-4 text-sm text-start">
+                                                                <div>
+                                                                    <p className="font-medium">{userName}</p>
+                                                                    <p className="text-muted-foreground">{request.fieldName}</p>
+                                                                    <p className="text-muted-foreground">
+                                                                        {bookingDate} — {request.startTime || "N/A"} - {request.endTime || "N/A"}
+                                                                    </p>
+                                                                </div>
+
+                                                                <div>
+                                                                    <p className="font-medium">Trạng thái</p>
+                                                                    <p
+                                                                        className={`capitalize font-semibold ${request.status === "pending"
+                                                                                ? "text-yellow-600"
+                                                                                : request.status === "cancelled"
+                                                                                    ? "text-red-600"
+                                                                                    : request.status === "confirmed"
+                                                                                        ? "text-green-600"
+                                                                                        : request.status === "completed"
+                                                                                            ? "text-blue-600"
+                                                                                            : "text-gray-500"
+                                                                            }`}
+                                                                    >
+                                                                        {request.status === 'pending' ? 'Đang chờ' : 
+                                                                         request.status === 'cancelled' ? 'Đã hủy' : 
+                                                                         request.status === 'confirmed' ? 'Đã xác nhận' : 
+                                                                         request.status === 'completed' ? 'Hoàn thành' : 'Không xác định'}
+                                                                    </p>
+                                                                </div>
+
+                                                                <div className="flex items-center justify-between">
+                                                                    <p className="font-semibold text-green-600">
+                                                                        {request.totalPrice?.toLocaleString('vi-VN')} ₫
+                                                                    </p>
+                                                                    {/* Hiển thị nút action dựa trên status */}
+                                                                    {request.status === "pending" || (request as any).approvalStatus === "pending" ? (
+                                                                        <div className="flex space-x-2">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                className="bg-green-600 hover:bg-green-700"
+                                                                                onClick={() => handleAccept(request.bookingId)}
+                                                                                disabled={fieldOwnerBookingsLoading}
+                                                                            >
+                                                                                Chấp nhận
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                className="border-red-500 text-red-500 hover:bg-red-50"
+                                                                                onClick={() => handleReject(request.bookingId)}
+                                                                                disabled={fieldOwnerBookingsLoading}
+                                                                            >
+                                                                                Từ chối
+                                                                            </Button>
+                                                                        </div>
+                                                                    ) : request.status === "confirmed" || (request as any).approvalStatus === "approved" ? (
+                                                                        <div className="flex space-x-2">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                                                                                onClick={() => handleViewDetails(request.bookingId)}
+                                                                            >
+                                                                                Xem chi tiết
+                                                                            </Button>
+                                                                        </div>
+                                                                    ) : request.status === "completed" ? (
+                                                                        <div className="flex space-x-2">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                className="border-gray-500 text-gray-500 hover:bg-gray-50"
+                                                                                onClick={() => handleViewDetails(request.bookingId)}
+                                                                            >
+                                                                                Xem chi tiết
+                                                                            </Button>
+                                                                        </div>
+                                                                    ) : request.status === "cancelled" || (request as any).approvalStatus === "rejected" ? (
+                                                                        <div className="flex space-x-2">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                className="border-red-500 text-red-500 hover:bg-red-50"
+                                                                                onClick={() => handleViewDetails(request.bookingId)}
+                                                                            >
+                                                                                Xem chi tiết
+                                                                            </Button>
+                                                                        </div>
+                                                                    ) : null}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-t border-gray-100 mx-4" />
+                                                    </div>
+                                                );
+                                            })
+                                        ) : selectedTab === "court" && filteredBookings.length > 0 && paginatedBookings.length === 0 ? (
+                                            <div className="text-center py-8 text-muted-foreground">
+                                                Không có dữ liệu trong trang này
+                                            </div>
+                                        ) : null}
+                                        {totalPages > 1 && (
+                                            <div className="flex justify-center mt-4 space-x-2">
+                                                <Button
+                                                    variant="outline"
+                                                    disabled={validCurrentPage === 1}
+                                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                                >
+                                                    Trước
+                                                </Button>
+                                                <span className="self-center">
+                                                    Trang {validCurrentPage} / {totalPages}
+                                                </span>
+                                                <Button
+                                                    variant="outline"
+                                                    disabled={validCurrentPage === totalPages}
+                                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                                >
+                                                    Sau
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </CardContent>
+
+                                </Card>
+                            </div>
+
+                            {/* Cột phải */}
+                            <div className="lg:col-span-2 space-y-6">
+                        {/* Tóm tắt doanh thu */}
+                                <Card className="bg-emerald-700 text-white">
+                                    <CardContent>
+                                        <div className="flex items-center justify-between mb-2 pt-6">
+                                            <div>
+                                                <p className="text-sm opacity-90">Doanh thu tháng này</p>
+                                                <p className="text-xl font-bold">{totalRevenue.toLocaleString('vi-VN')} ₫</p>
+                                            </div>
+                                            <Button
+                                                variant="secondary"
+                                                className="bg-white/20 hover:bg-white/30 text-white flex items-center justify-center gap-2"
+                                            >
+                                                <DollarSign className="w-4 h-4" />
+                                                Xem chi tiết
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Lịch đặt sắp tới */}
+                                {/* <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
                                     <CardHeader className="flex flex-row items-center justify-between">
                                         <div className="flex flex-col space-y-2">
                                             <CardTitle className="text-start">Lịch đặt sắp tới</CardTitle>
@@ -875,8 +832,8 @@ export default function FieldOwnerDashboardPage() {
                                         </div>
                                     </CardContent>
                                 </Card> */}
-                    </div>
-                </div>
+                            </div>
+                        </div>
 
             </div>
 

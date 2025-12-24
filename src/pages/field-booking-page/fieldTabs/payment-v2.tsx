@@ -509,10 +509,10 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             <Card className="border border-gray-200">
                 <CardContent className="">
                     <div className="">
-                        <h1 className="text-2xl font-semibold text-center text-[#1a1a1a] mb-1">
+                        <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
                             Thanh toán & Xác nhận
                         </h1>
-                        <p className="text-base font-normal text-center text-[#6b7280]">
+                        <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
                             Chuyển khoản vào tài khoản chủ sân và upload ảnh chứng minh.
                         </p>
                     </div>
@@ -601,7 +601,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                     ) : (
                         <Card className="border border-gray-200">
                             <CardHeader className="border-b border-gray-200">
-                                <CardTitle className="text-2xl font-semibold flex items-center gap-2">
+                                <CardTitle className="text-2xl font-semibold font-['Outfit'] flex items-center gap-2">
                                     <Wallet className="w-6 h-6" />
                                     Thông tin chuyển khoản
                                 </CardTitle>

@@ -221,7 +221,7 @@ const CoachBookingFlow = () => {
                         <Card className="border border-gray-200">
                             <CardContent className="p-6">
                                 <div className="pb-10">
-                                    <h1 className="text-2xl font-semibold text-center text-[#1a1a1a] mb-1">
+                                    <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">
                                         Đặt lịch với huấn luyện viên
                                     </h1>
                                 </div>
@@ -238,10 +238,10 @@ const CoachBookingFlow = () => {
                                                 />
                                             )}
                                             <div className="flex-1">
-                                                <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-2">
+                                                <h2 className="text-2xl font-semibold font-['Outfit'] text-[#1a1a1a] mb-2">
                                                     {currentCoach.name}
                                                 </h2>
-                                                <p className="text-base text-[#6b7280]">
+                                                <p className="text-base text-[#6b7280] font-['Outfit']">
                                                     {currentCoach.description || 'Huấn luyện viên chuyên nghiệp'}
                                                 </p>
                                                 <div className="mt-2 flex items-baseline gap-1">
@@ -263,7 +263,7 @@ const CoachBookingFlow = () => {
                             <div className="flex-1 min-w-[600px]">
                                 <Card className="border border-gray-200">
                                     <CardHeader className="border-b border-gray-200">
-                                        <CardTitle className="text-2xl font-semibold">
+                                        <CardTitle className="text-2xl font-semibold font-['Outfit']">
                                             Biểu mẫu đặt lịch
                                         </CardTitle>
                                     </CardHeader>
@@ -312,17 +312,17 @@ const CoachBookingFlow = () => {
 
                                         {/* Combined Time Range Selector */}
                                         <div className="space-y-2.5">
-                                            <Label className="text-base font-normal">Chọn khung giờ</Label>
+                                            <Label className="text-base font-normal font-['Outfit']">Chọn khung giờ</Label>
                                             <div className="p-4 bg-gray-50 rounded-lg">
                                                 {!bookingData.date ? (
-                                                    <p className="text-sm text-gray-500 text-center py-4">
+                                                    <p className="text-sm text-gray-500 font-['Outfit'] text-center py-4">
                                                         Vui lòng chọn ngày trước khi chọn giờ
                                                     </p>
                                                 ) : loadingSlots ? (
                                                     <div className="flex items-center justify-center py-8">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                                                            <p className="text-sm text-gray-600">
+                                                            <p className="text-sm text-gray-600 font-['Outfit']">
                                                                 Đang tải thông tin khả dụng...
                                                             </p>
                                                         </div>
@@ -357,7 +357,7 @@ const CoachBookingFlow = () => {
                                                                             }
                                                                         }}
                                                                         className={`
-                                                                        w-14 h-14 rounded-lg border-2 font-semibold text-base
+                                                                        w-14 h-14 rounded-lg border-2 font-semibold font-['Outfit'] text-base
                                                                         transition-all duration-200 relative
                                                                         ${isSlotBooked
                                                                             ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed opacity-60"
@@ -383,22 +383,22 @@ const CoachBookingFlow = () => {
                                                         </div>
                                                         <div className="mt-3 space-y-1">
                                                             {selectedStartHour !== null && (
-                                                                <p className="text-sm text-emerald-600">
+                                                                <p className="text-sm text-emerald-600 font-['Outfit']">
                                                                     Giờ bắt đầu: {String(selectedStartHour).padStart(2, "0")}:00
                                                                 </p>
                                                             )}
                                                             {selectedEndHour !== null && (
-                                                                <p className="text-sm text-emerald-600">
+                                                                <p className="text-sm text-emerald-600 font-['Outfit']">
                                                                     Giờ kết thúc: {String(selectedEndHour).padStart(2, "0")}:00
                                                                 </p>
                                                             )}
                                                             {selectedStartHour === null && (
-                                                                <p className="text-sm text-gray-500">
+                                                                <p className="text-sm text-gray-500 font-['Outfit']">
                                                                     Nhấn vào ô để chọn giờ bắt đầu
                                                                 </p>
                                                             )}
                                                             {selectedStartHour !== null && selectedEndHour === null && (
-                                                                <p className="text-sm text-gray-500">
+                                                                <p className="text-sm text-gray-500 font-['Outfit']">
                                                                     Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
                                                                 </p>
                                                             )}
@@ -425,7 +425,7 @@ const CoachBookingFlow = () => {
 
                                         {/* Note */}
                                         <div className="space-y-2">
-                                            <Label htmlFor="note" className="text-base font-normal">Ghi chú (tùy chọn)</Label>
+                                            <Label htmlFor="note" className="text-base font-normal font-['Outfit']">Ghi chú (tùy chọn)</Label>
                                             <Input
                                                 id="note"
                                                 type="text"
@@ -443,7 +443,7 @@ const CoachBookingFlow = () => {
                             <div className="w-96">
                                 <Card className="border border-gray-200">
                                     <CardHeader className="border-b border-gray-200">
-                                        <CardTitle className="text-2xl font-semibold">
+                                        <CardTitle className="text-2xl font-semibold font-['Outfit']">
                                             Chi tiết đặt lịch
                                         </CardTitle>
                                     </CardHeader>
@@ -453,7 +453,7 @@ const CoachBookingFlow = () => {
                                             <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center shrink-0">
                                                 <CalendarIcon className="w-5 h-5 text-emerald-600" />
                                             </div>
-                                            <span className="text-base text-[#6b7280]">
+                                            <span className="text-base text-[#6b7280] font-['Outfit']">
                                                 {bookingData.date || 'Chưa chọn ngày'}
                                             </span>
                                         </div>
@@ -464,13 +464,13 @@ const CoachBookingFlow = () => {
                                                 <Clock className="w-5 h-5 text-emerald-600" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-base text-[#6b7280]">
+                                                <span className="text-base text-[#6b7280] font-['Outfit']">
                                                     {bookingData.startTime && bookingData.endTime
                                                         ? `${bookingData.startTime} to ${bookingData.endTime}`
                                                         : 'Chưa chọn giờ'}
                                                 </span>
                                                 {bookingData.startTime && bookingData.endTime && (
-                                                    <span className="text-sm text-emerald-600">
+                                                    <span className="text-sm text-emerald-600 font-['Outfit']">
                                                         Thời lượng: {(() => {
                                                             const [startHour] = bookingData.startTime.split(':').map(Number);
                                                             const [endHour] = bookingData.endTime.split(':').map(Number);
@@ -486,7 +486,7 @@ const CoachBookingFlow = () => {
                                         {currentCoach && bookingData.startTime && bookingData.endTime && (
                                             <div className="pt-2">
                                                 <Button
-                                                    className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold"
+                                                    className="w-full h-auto py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-semibold font-['Outfit']"
                                                     disabled
                                                 >
                                                     Tổng phụ: {formatVND(calculateBookingAmount())}

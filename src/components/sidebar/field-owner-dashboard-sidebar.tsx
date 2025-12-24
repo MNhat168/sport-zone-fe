@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { logout } from "@/features/authentication/authThunk"
 import { clearUserAuth } from "@/lib/cookies"
-import { NotificationBell } from "@/components/header/notification-bell"
 
 interface MenuItem {
     title: string
@@ -234,35 +233,22 @@ export function FieldOwnerSidebar() {
 
     const userInitials = authUser?.fullName
         ? authUser.fullName
-            .split(" ")
-            .map((w) => w[0])
-            .join("")
-            .toUpperCase()
+              .split(" ")
+              .map((w) => w[0])
+              .join("")
+              .toUpperCase()
         : "FO"
 
     return (
         <Sidebar collapsible="icon" variant="sidebar">
             <SidebarHeader className="border-b border-sidebar-border">
-                <div className="flex items-center justify-between px-2 py-4">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white font-bold">
-                            <Building2 className="h-5 w-5" />
-                        </div>
-                        <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                            <span className="text-sm font-semibold">SportZone</span>
-                            <span className="text-xs text-muted-foreground">Field Owner</span>
-                        </div>
+                <div className="flex items-center gap-2 px-2 py-4">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white font-bold">
+                        <Building2 className="h-5 w-5" />
                     </div>
-                    <div className="group-data-[collapsible=icon]:hidden">
-                        <NotificationBell
-                            userId={authUser?._id ?? null}
-                            onNotificationReceived={(notification) => {
-                                // Dispatch custom event for dashboard to refresh bookings
-                                window.dispatchEvent(new CustomEvent('new-booking-notification', {
-                                    detail: notification
-                                }));
-                            }}
-                        />
+                    <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+                        <span className="text-sm font-semibold">SportZone</span>
+                        <span className="text-xs text-muted-foreground">Field Owner</span>
                     </div>
                 </div>
             </SidebarHeader>

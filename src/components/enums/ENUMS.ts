@@ -1,169 +1,154 @@
 export const BookingStep = {
-  BOOK_COURT: 1,
-  AMENITIES: 2,
-  ORDER_CONFIRMATION: 3,
-  PERSONAL_INFO: 4,
-  PAYMENT: 5,
+    BOOK_COURT: 1,
+    AMENITIES: 2,
+    ORDER_CONFIRMATION: 3,
+    PERSONAL_INFO: 4,
+    PAYMENT: 5,
 } as const;
 
 export type BookingStep = typeof BookingStep[keyof typeof BookingStep];
 
-export const CombinedBookingStep = {
-  FIELD_LIST: 'FIELD_LIST',
-  FIELD_BOOK_COURT: 'FIELD_BOOK_COURT',
-  FIELD_AMENITIES: 'FIELD_AMENITIES',
-  FIELD_CONFIRM: 'FIELD_CONFIRM',
-  COACH_SELECT: 'COACH_SELECT',
-  COACH_TIME: 'COACH_TIME',
-  COMBINED_CONFIRM: 'COMBINED_CONFIRM',
-  PERSONAL_INFO: 'PERSONAL_INFO',
-  PAYMENT: 'PAYMENT',
-} as const;
-
-export type CombinedBookingStep = typeof CombinedBookingStep[keyof typeof CombinedBookingStep];
-
-
 // ENUMS.ts - Enhanced with categories
 export const SportType = {
-  FOOTBALL: 'football',
-  TENNIS: 'tennis',
-  BADMINTON: 'badminton',
-  PICKLEBALL: 'pickleball',
-  BASKETBALL: 'basketball',
-  VOLLEYBALL: 'volleyball',
-  SWIMMING: 'swimming',
-  GYM: 'gym'
+    FOOTBALL: 'football',
+    TENNIS: 'tennis', 
+    BADMINTON: 'badminton',
+    PICKLEBALL: 'pickleball',
+    BASKETBALL: 'basketball',
+    VOLLEYBALL: 'volleyball',
+    SWIMMING: 'swimming',
+    GYM: 'gym'
 } as const;
 
 export type SportType = typeof SportType[keyof typeof SportType];
 
 // Competition formats
 export const CompetitionFormat = {
-  SINGLE_ELIMINATION: 'single_elimination',
-  DOUBLE_ELIMINATION: 'double_elimination',
-  ROUND_ROBIN: 'round_robin',
-  GROUP_STAGE: 'group_stage',
-  LEAGUE: 'league',
-  KNOCKOUT: 'knockout'
+    SINGLE_ELIMINATION: 'single_elimination',
+    DOUBLE_ELIMINATION: 'double_elimination',
+    ROUND_ROBIN: 'round_robin',
+    GROUP_STAGE: 'group_stage',
+    LEAGUE: 'league',
+    KNOCKOUT: 'knockout'
 } as const;
 
 export type CompetitionFormat = typeof CompetitionFormat[keyof typeof CompetitionFormat];
 
 // Sport-specific categories
 export const SportCategories = {
-  // Net sports (Tennis, Badminton, Pickleball)
-  NET_SPORTS: {
-    SINGLES: 'singles',
-    DOUBLES: 'doubles',
-    MIXED_DOUBLES: 'mixed_doubles'
-  },
-
-  // Football categories
-  FOOTBALL: {
-    MENS: 'mens',
-    WOMENS: 'womens',
-    MIXED: 'mixed',
-    YOUTH: 'youth',
-    VETERANS: 'veterans',
-    FIVE_A_SIDE: '5_a_side',
-    SEVEN_A_SIDE: '7_a_side',
-    ELEVEN_A_SIDE: '11_a_side'
-  },
-
-  // Basketball categories  
-  BASKETBALL: {
-    MENS: 'mens',
-    WOMENS: 'womens',
-    THREE_ON_THREE: '3x3',
-    FIVE_ON_FIVE: '5x5',
-    YOUTH: 'youth'
-  },
-
-  // Volleyball categories
-  VOLLEYBALL: {
-    MENS: 'mens',
-    WOMENS: 'womens',
-    MIXED: 'mixed',
-    BEACH: 'beach',
-    INDOOR: 'indoor'
-  },
-
-  // Swimming categories
-  SWIMMING: {
-    FREESTYLE: 'freestyle',
-    BREASTSTROKE: 'breaststroke',
-    BACKSTROKE: 'backstroke',
-    BUTTERFLY: 'butterfly',
-    INDIVIDUAL_MEDLEY: 'individual_medley',
-    RELAY: 'relay'
-  },
-
-  // Gym/Fitness categories
-  GYM: {
-    BODYBUILDING: 'bodybuilding',
-    POWERLIFTING: 'powerlifting',
-    CROSSFIT: 'crossfit',
-    CALISTHENICS: 'calisthenics',
-    WEIGHTLIFTING: 'weightlifting'
-  }
+    // Net sports (Tennis, Badminton, Pickleball)
+    NET_SPORTS: {
+        SINGLES: 'singles',
+        DOUBLES: 'doubles',
+        MIXED_DOUBLES: 'mixed_doubles'
+    },
+    
+    // Football categories
+    FOOTBALL: {
+        MENS: 'mens',
+        WOMENS: 'womens',
+        MIXED: 'mixed',
+        YOUTH: 'youth',
+        VETERANS: 'veterans',
+        FIVE_A_SIDE: '5_a_side',
+        SEVEN_A_SIDE: '7_a_side',
+        ELEVEN_A_SIDE: '11_a_side'
+    },
+    
+    // Basketball categories  
+    BASKETBALL: {
+        MENS: 'mens',
+        WOMENS: 'womens',
+        THREE_ON_THREE: '3x3',
+        FIVE_ON_FIVE: '5x5',
+        YOUTH: 'youth'
+    },
+    
+    // Volleyball categories
+    VOLLEYBALL: {
+        MENS: 'mens',
+        WOMENS: 'womens', 
+        MIXED: 'mixed',
+        BEACH: 'beach',
+        INDOOR: 'indoor'
+    },
+    
+    // Swimming categories
+    SWIMMING: {
+        FREESTYLE: 'freestyle',
+        BREASTSTROKE: 'breaststroke',
+        BACKSTROKE: 'backstroke',
+        BUTTERFLY: 'butterfly',
+        INDIVIDUAL_MEDLEY: 'individual_medley',
+        RELAY: 'relay'
+    },
+    
+    // Gym/Fitness categories
+    GYM: {
+        BODYBUILDING: 'bodybuilding',
+        POWERLIFTING: 'powerlifting',
+        CROSSFIT: 'crossfit',
+        CALISTHENICS: 'calisthenics',
+        WEIGHTLIFTING: 'weightlifting'
+    }
 } as const;
 
 // Team size mapping based on sport category
 export const TeamSizeMap: Record<string, Record<string, number>> = {
-  [SportType.FOOTBALL]: {
-    '5_a_side': 5,
-    '7_a_side': 7,
-    '11_a_side': 11,
-    'mens': 11,
-    'womens': 11,
-    'mixed': 11,
-    'youth': 11,
-    'veterans': 11
-  },
-  [SportType.BASKETBALL]: {
-    '3x3': 3,
-    '5x5': 5,
-    'mens': 5,
-    'womens': 5,
-    'youth': 5
-  },
-  [SportType.VOLLEYBALL]: {
-    'mens': 6,
-    'womens': 6,
-    'mixed': 6,
-    'beach': 2,
-    'indoor': 6
-  },
-  [SportType.TENNIS]: {
-    'singles': 1,
-    'doubles': 2,
-    'mixed_doubles': 2
-  },
-  [SportType.BADMINTON]: {
-    'singles': 1,
-    'doubles': 2,
-    'mixed_doubles': 2
-  },
-  [SportType.PICKLEBALL]: {
-    'singles': 1,
-    'doubles': 2,
-    'mixed_doubles': 2
-  },
-  [SportType.SWIMMING]: {
-    'freestyle': 1,
-    'breaststroke': 1,
-    'backstroke': 1,
-    'butterfly': 1,
-    'individual_medley': 1,
-    'relay': 4
-  },
-  [SportType.GYM]: {
-    'bodybuilding': 1,
-    'powerlifting': 1,
-    'crossfit': 1,
-    'calisthenics': 1,
-    'weightlifting': 1
-  }
+    [SportType.FOOTBALL]: {
+        '5_a_side': 5,
+        '7_a_side': 7,
+        '11_a_side': 11,
+        'mens': 11,
+        'womens': 11,
+        'mixed': 11,
+        'youth': 11,
+        'veterans': 11
+    },
+    [SportType.BASKETBALL]: {
+        '3x3': 3,
+        '5x5': 5,
+        'mens': 5,
+        'womens': 5,
+        'youth': 5
+    },
+    [SportType.VOLLEYBALL]: {
+        'mens': 6,
+        'womens': 6,
+        'mixed': 6,
+        'beach': 2,
+        'indoor': 6
+    },
+    [SportType.TENNIS]: {
+        'singles': 1,
+        'doubles': 2,
+        'mixed_doubles': 2
+    },
+    [SportType.BADMINTON]: {
+        'singles': 1,
+        'doubles': 2,
+        'mixed_doubles': 2
+    },
+    [SportType.PICKLEBALL]: {
+        'singles': 1,
+        'doubles': 2,
+        'mixed_doubles': 2
+    },
+    [SportType.SWIMMING]: {
+        'freestyle': 1,
+        'breaststroke': 1,
+        'backstroke': 1,
+        'butterfly': 1,
+        'individual_medley': 1,
+        'relay': 4
+    },
+    [SportType.GYM]: {
+        'bodybuilding': 1,
+        'powerlifting': 1,
+        'crossfit': 1,
+        'calisthenics': 1,
+        'weightlifting': 1
+    }
 };
 
 export interface SportRules {
@@ -335,31 +320,31 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
 
 // Helper function to calculate participants based on teams and team size
 export const calculateParticipants = (
-  numTeams: number,
-  sportType: string,
-  category: string,
-  teamSize?: number
+    numTeams: number, 
+    sportType: string, 
+    category: string, 
+    teamSize?: number
 ): number => {
-  const baseTeamSize = TeamSizeMap[sportType]?.[category] || 1;
-  const finalTeamSize = teamSize || baseTeamSize;
-  return numTeams * finalTeamSize;
+    const baseTeamSize = TeamSizeMap[sportType]?.[category] || 1;
+    const finalTeamSize = teamSize || baseTeamSize;
+    return numTeams * finalTeamSize;
 };
 
 // Helper function to calculate teams based on participants and team size
 export const calculateTeams = (
-  numParticipants: number,
-  sportType: string,
-  category: string,
-  teamSize?: number
+    numParticipants: number, 
+    sportType: string, 
+    category: string, 
+    teamSize?: number
 ): number => {
-  const baseTeamSize = TeamSizeMap[sportType]?.[category] || 1;
-  const finalTeamSize = teamSize || baseTeamSize;
-  return Math.floor(numParticipants / finalTeamSize);
+    const baseTeamSize = TeamSizeMap[sportType]?.[category] || 1;
+    const finalTeamSize = teamSize || baseTeamSize;
+    return Math.floor(numParticipants / finalTeamSize);
 };
 
 // Helper function to get default team size for a category
 export const getDefaultTeamSize = (sportType: string, category: string): number => {
-  return TeamSizeMap[sportType]?.[category] || 1;
+    return TeamSizeMap[sportType]?.[category] || 1;
 };
 
 /**
@@ -368,8 +353,8 @@ export const getDefaultTeamSize = (sportType: string, category: string): number 
  * @returns True if the sport is team-based
  */
 export const isTeamSport = (sportType: string): boolean => {
-  const teamSports: SportType[] = [SportType.FOOTBALL, SportType.BASKETBALL, SportType.VOLLEYBALL];
-  return teamSports.includes(sportType as SportType);
+    const teamSports: SportType[] = [SportType.FOOTBALL, SportType.BASKETBALL, SportType.VOLLEYBALL];
+    return teamSports.includes(sportType as SportType);
 };
 
 export const getCategoryDisplayName = (category: string, sportType: string): string => {
@@ -381,7 +366,7 @@ export const getCategoryDisplayName = (category: string, sportType: string): str
     },
     [SportType.BADMINTON]: {
       'singles': 'Đơn',
-      'doubles': 'Đôi',
+      'doubles': 'Đôi', 
       'mixed_doubles': 'Đôi nam nữ'
     },
     [SportType.PICKLEBALL]: {
@@ -469,12 +454,12 @@ export function getSportRules(sportType: string): SportRules | null {
 }
 
 export const TransactionStatus = {
-  PENDING: 'pending',
-  PROCESSING: 'processing',
-  SUCCEEDED: 'succeeded',
-  FAILED: 'failed',
-  CANCELLED: 'cancelled',
-  REFUNDED: 'refunded',
+    PENDING: 'pending',
+    PROCESSING: 'processing',
+    SUCCEEDED: 'succeeded',
+    FAILED: 'failed',
+    CANCELLED: 'cancelled',
+    REFUNDED: 'refunded',
 } as const;
 
 export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];

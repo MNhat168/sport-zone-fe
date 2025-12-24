@@ -2,7 +2,6 @@ import { BASE_URL } from "../../utils/constant-value/constant";
 
 // Base endpoints
 export const FIELDS_API = `${BASE_URL}/fields`;
-export const FIELDS_PAGINATED_API = `${BASE_URL}/fields/paginated`;
 export const FIELD_BY_ID_API = (id: string) => `${BASE_URL}/fields/${id}`;
 
 // Field owner-specific endpoints now live under /field-owner

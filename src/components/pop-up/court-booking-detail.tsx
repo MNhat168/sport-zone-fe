@@ -59,11 +59,11 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                 <div className="px-6 py-6 border-b border-[#E8F4FF] flex justify-between items-center rounded-t-lg">
                     <div className="flex flex-col gap-0">
                         <div className="flex items-center gap-3">
-                            <h2 className="text-2xl font-semibold text-[#1A3353]">
+                            <h2 className="text-2xl font-semibold text-[#1A3353] font-['Outfit']">
                                 Chi Tiết Đặt Sân
                             </h2>
                             <div className="px-[5px] py-[5px] bg-violet-600/20 rounded-sm">
-                                <span className="text-sm font-normal text-violet-600">
+                                <span className="text-sm font-normal text-violet-600 font-['Outfit']">
                                     Sắp Tới
                                 </span>
                             </div>
@@ -83,7 +83,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     {note && (
                         <div className="p-3.5 bg-[#FFFBEA] rounded-[10px] border border-yellow-200">
                             <div className="pb-2">
-                                <h3 className="text-lg font-semibold text-[#8A6D3B]">
+                                <h3 className="text-lg font-semibold text-[#8A6D3B] font-['Outfit']">
                                     Ghi chú của khách hàng
                                 </h3>
                             </div>
@@ -93,37 +93,37 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     {/* Court Information */}
                     <div className="p-3.5 bg-[#F8F8F8] rounded-[10px]">
                         <div className="pb-5">
-                            <h3 className="text-lg font-semibold text-[#1A3353]">
+                            <h3 className="text-lg font-semibold text-[#1A3353] font-['Outfit']">
                                 Thông Tin Sân
                             </h3>
                         </div>
                         <div className="grid grid-cols-3 gap-4">
                             <div className="flex flex-col gap-[5px]">
-                                <h4 className="text-base font-medium text-[#1A3353]">
+                                <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                     Sân
                                 </h4>
-                                <p className="text-sm font-normal text-[#1A3353]">
+                                <p className="text-sm font-normal text-[#1A3353] font-['Outfit']">
                                     {academy}
                                 </p>
-                                <p className="text-sm font-normal text-[#26A65B]">
+                                <p className="text-sm font-normal text-[#26A65B] font-['Outfit']">
                                     {court}
                                 </p>
                             </div>
 
                             <div className="flex flex-col gap-[5px]">
-                                <h4 className="text-base font-medium text-[#1A3353]">
+                                <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                     Đặt Vào
                                 </h4>
-                                <p className="text-sm font-normal text-[#6B7280]">
+                                <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                     {bookedOn}
                                 </p>
                             </div>
 
                             <div className="flex flex-col gap-[5px]">
-                                <h4 className="text-base font-medium text-[#1A3353]">
+                                <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                     Tổng Số Giờ
                                 </h4>
-                                <p className="text-sm font-normal text-[#6B7280]">
+                                <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                     {totalHours}
                                 </p>
                             </div>
@@ -133,45 +133,45 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     {/* Appointment Information */}
                     <div className="p-3.5 bg-[#F8F8F8] rounded-[10px]">
                         <div className="pb-5">
-                            <h3 className="text-lg font-semibold text-[#1A3353]">
+                            <h3 className="text-lg font-semibold text-[#1A3353] font-['Outfit']">
                                 Thông Tin Lịch Hẹn
                             </h3>
                         </div>
                         <div className="px-4 pt-3.5 pb-4 border border-[#EDEDED]">
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="flex flex-col gap-[5px]">
-                                    <h4 className="text-base font-medium text-[#1A3353]">
+                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                         Đặt Vào
                                     </h4>
-                                    <p className="text-sm font-normal text-[#6B7280]">
+                                    <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                         {bookingDate}
                                     </p>
                                 </div>
 
                                 <div className="flex flex-col gap-[5px]">
-                                    <h4 className="text-base font-medium text-[#1A3353]">
+                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                         Ngày & Giờ
                                     </h4>
-                                    <p className="text-sm font-normal text-[#6B7280]">
+                                    <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                         {bookingDate}
                                     </p>
-                                    <p className="text-sm font-normal text-[#6B7280]">
+                                    <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                         {bookingTime}
                                     </p>
                                 </div>
 
                                 <div className="flex flex-col gap-[5px]">
-                                    <h4 className="text-base font-medium text-[#1A3353]">
+                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                         Tổng Số Giờ
                                     </h4>
-                                    <p className="text-sm font-normal text-[#6B7280]">
+                                    <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                         {totalHours}
                                     </p>
                                 </div>
                             </div>
                             {note && note.trim() && (
                                 <div className="mt-4">
-                                    <h4 className="text-base font-medium text-[#1A3353] mb-1">
+                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit'] mb-1">
                                         Ghi Chú Của Khách Hàng
                                     </h4>
                                     <p className="text-sm text-[#6B7280] whitespace-pre-wrap">
@@ -185,7 +185,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                     {/* Payment Details */}
                     <div className="p-3.5 bg-[#F8F8F8] rounded-[10px]">
                         <div className="pb-5">
-                            <h3 className="text-lg font-semibold text-[#1A3353]">
+                            <h3 className="text-lg font-semibold text-[#1A3353] font-['Outfit']">
                                 Chi Tiết Thanh Toán
                             </h3>
                         </div>
@@ -194,64 +194,64 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                             <div className="px-4 pt-3.5 pb-4 border border-[#EDEDED]">
                                 <div className="grid grid-cols-4 gap-4">
                                     <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353]">
+                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Tiền sân
                                         </h4>
-                                        <p className="text-sm font-normal text-[#6B7280]">
+                                        <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {courtBookingAmount}
                                         </p>
                                     </div>
 
                                     <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353]">
+                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Tiện ích
                                         </h4>
-                                        <p className="text-sm font-normal text-[#6B7280]">
+                                        <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {amenitiesFee}
                                         </p>
                                     </div>
 
                                     <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353]">
+                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Phí Dịch Vụ
                                         </h4>
-                                        <p className="text-sm font-normal text-[#6B7280]">
+                                        <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {serviceCharge}
                                         </p>
                                     </div>
 
                                     <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353]">
+                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Tổng Số Tiền Đã Thanh Toán
                                         </h4>
-                                        <p className="text-sm font-normal text-[#26A65B]">
+                                        <p className="text-sm font-normal text-[#26A65B] font-['Outfit']">
                                             {totalAmountPaid}
                                         </p>
                                     </div>
 
                                     <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353]">
+                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Thanh Toán Vào
                                         </h4>
-                                        <p className="text-sm font-normal text-[#6B7280]">
+                                        <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {paidOn}
                                         </p>
                                     </div>
 
                                     <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353]">
+                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Mã Giao Dịch
                                         </h4>
-                                        <p className="text-sm font-normal text-[#6B7280]">
+                                        <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {transactionId}
                                         </p>
                                     </div>
 
                                     <div className="flex flex-col gap-[5px]">
-                                        <h4 className="text-base font-medium text-[#1A3353]">
+                                        <h4 className="text-base font-medium text-[#1A3353] font-['Outfit']">
                                             Loại Thanh Toán
                                         </h4>
-                                        <p className="text-sm font-normal text-[#6B7280]">
+                                        <p className="text-sm font-normal text-[#6B7280] font-['Outfit']">
                                             {paymentType}
                                         </p>
                                     </div>
@@ -261,7 +261,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                             {/* Payment Proof Image */}
                             {paymentProofImageUrl && (
                                 <div className="px-4 pt-3.5 pb-4 border border-[#EDEDED] mt-3.5">
-                                    <h4 className="text-base font-medium text-[#1A3353] mb-3">
+                                    <h4 className="text-base font-medium text-[#1A3353] font-['Outfit'] mb-3">
                                         Ảnh Chứng Minh Thanh Toán
                                     </h4>
                                     <div className="relative w-full max-w-md border-2 border-gray-200 rounded-lg overflow-hidden">
@@ -272,7 +272,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                             onClick={() => window.open(paymentProofImageUrl, '_blank')}
                                         />
                                     </div>
-                                    <p className="text-xs text-[#6B7280] mt-2">
+                                    <p className="text-xs text-[#6B7280] mt-2 font-['Outfit']">
                                         Nhấp vào ảnh để xem kích thước đầy đủ
                                     </p>
                                 </div>
@@ -285,7 +285,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                 <div className="px-6 py-6 border-t border-[#E8F4FF] flex justify-end items-center rounded-b-lg">
                     <Button
                         onClick={onClose}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-[10px] font-medium"
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-[10px] font-medium font-['Outfit']"
                     >
                         Đóng
                     </Button>

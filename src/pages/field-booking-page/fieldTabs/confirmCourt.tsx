@@ -223,8 +223,8 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
             <Card className="border border-gray-200">
                 <CardContent className="">
                     <div className="">
-                        <h1 className="text-2xl font-semibold text-center text-[#1a1a1a] mb-1">Xác nhận đặt sân</h1>
-                        <p className="text-base font-normal text-center text-[#6b7280]">
+                        <h1 className="text-2xl font-semibold font-['Outfit'] text-center text-[#1a1a1a] mb-1">Xác nhận đặt sân</h1>
+                        <p className="text-base font-normal font-['Outfit'] text-center text-[#6b7280]">
                             Cảm ơn bạn đã đặt sân! Vui lòng kiểm tra lại thông tin trước khi tiếp tục.
                         </p>
                     </div>

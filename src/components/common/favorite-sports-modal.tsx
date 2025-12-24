@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAppDispatch } from "@/store/hook";
-import { removeAllFavouriteSports, getUserProfile, removeFavouriteSport } from "@/features/user/userThunk";
+import { removeAllFavouriteSports, getUserProfile } from "@/features/user/userThunk";
 import {
   Dialog,
   DialogContent,
@@ -35,26 +35,25 @@ interface FavoriteSportsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAccept: (selectedSports: string[]) => void;
-  onClear?: () => void;
   initialSelected?: string[];
 }
 
 const SPORTS_OPTIONS = [
   {
     id: "football",
-    label: "Bóng đá",
+    label: "Football",
     icon: FootballIcon,
     color: "from-red-500 to-orange-500",
   },
   {
     id: "tennis",
-    label: "Quần vợt",
+    label: "Tennis",
     icon: TennisIcon,
     color: "from-green-500 to-emerald-500",
   },
   {
     id: "badminton",
-    label: "Cầu lông",
+    label: "Badminton",
     icon: BadmintonIcon,
     color: "from-blue-500 to-cyan-500",
   },
@@ -66,25 +65,25 @@ const SPORTS_OPTIONS = [
   },
   {
     id: "basketball",
-    label: "Bóng rổ",
+    label: "Basketball",
     icon: BasketballIcon,
     color: "from-orange-500 to-red-500",
   },
   {
     id: "volleyball",
-    label: "Bóng chuyền",
+    label: "Volleyball",
     icon: VolleyballIcon,
     color: "from-yellow-500 to-orange-500",
   },
   {
     id: "swimming",
-    label: "Bơi lội",
+    label: "Swimming",
     icon: SwimmingIcon,
     color: "from-cyan-500 to-blue-500",
   },
   {
     id: "gym",
-    label: "Phòng tập",
+    label: "Gym",
     icon: GymIcon,
     color: "from-slate-600 to-slate-800",
   },
@@ -94,13 +93,11 @@ export function FavoriteSportsModal({
   isOpen,
   onClose,
   onAccept,
-  onClear,
   initialSelected = [],
 }: FavoriteSportsModalProps) {
   const [selectedSports, setSelectedSports] = useState<string[]>(() => initialSelected ?? []);
   const dispatch = useAppDispatch();
   const [clearing, setClearing] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   // When opened, initialize selection from initialSelected
   useEffect(() => {
@@ -113,23 +110,6 @@ export function FavoriteSportsModal({
         ? prev.filter((id) => id !== sportId)
         : [...prev, sportId]
     );
-  };
-
-  const handleRemoveSport = async (sportId: string) => {
-    try {
-      setSaving(true);
-      await dispatch(removeFavouriteSport(sportId) as any).unwrap();
-      // refresh profile
-      await dispatch(getUserProfile() as any).unwrap();
-      setSelectedSports((prev) => prev.filter((id) => id !== sportId));
-      toast.success("Favourite sport removed");
-    } catch (e: any) {
-      console.error('Failed to remove favourite sport', e);
-      const message = e?.message || e?.response?.data?.message || 'Failed to remove favourite sport';
-      toast.error(message);
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleAccept = () => {
@@ -155,8 +135,6 @@ export function FavoriteSportsModal({
         // Refresh profile to update global auth user
         await dispatch(getUserProfile() as any).unwrap();
         toast.success("Favourite sports cleared");
-        // Notify parent that clear completed so it can turn off favorite filter
-        try { onClear && onClear(); } catch {}
       } catch (e: any) {
         console.error("Failed to clear favourite sports on server", e);
         const message = e?.message || e?.response?.data?.message || "Failed to clear favourite sports";
@@ -173,10 +151,10 @@ export function FavoriteSportsModal({
         <div className="bg-primary p-6 text-center">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-primary-foreground mb-1">
-              Môn Thể Thao Yêu Thích?
+              Favorite Sports?
             </DialogTitle>
             <DialogDescription className="text-primary-foreground/90 text-sm">
-              Chọn các môn thể thao bạn yêu thích để cá nhân hóa trải nghiệm của bạn.
+              Pick your sports
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -188,17 +166,9 @@ export function FavoriteSportsModal({
               const isSelected = selectedSports.includes(sport.id);
 
               return (
-                <div
+                <button
                   key={sport.id}
-                  role="button"
-                  tabIndex={0}
                   onClick={() => handleToggleSport(sport.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleToggleSport(sport.id);
-                    }
-                  }}
                   className={`
                     group relative overflow-hidden rounded-lg p-3
                     transition-all duration-300 ease-out
@@ -241,36 +211,22 @@ export function FavoriteSportsModal({
                   </div>
 
                   {isSelected && (
-                    <>
-                      <div className="absolute inset-0 bg-primary/5 animate-in fade-in duration-300" />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleRemoveSport(sport.id);
-                        }}
-                        aria-label={`Xóa ${sport.label}`}
-                        className="absolute top-2 right-2 z-20 bg-white/80 dark:bg-black/60 rounded-full p-1 text-xs hover:bg-white"
-                      >
-                        ×
-                      </button>
-                    </>
+                    <div className="absolute inset-0 bg-primary/5 animate-in fade-in duration-300" />
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
 
           <div className="flex gap-2 justify-end pt-4 border-t">
-            {/* <Button
+            <Button
               variant="outline"
               onClick={handleCancel}
               className="px-4 font-semibold bg-transparent text-sm"
               size="sm"
             >
               Cancel
-            </Button> */}
+            </Button>
 
             <Button
               variant="ghost"
@@ -279,7 +235,7 @@ export function FavoriteSportsModal({
               size="sm"
               disabled={selectedSports.length === 0}
             >
-                Xóa tất cả {clearing ? "..." : ""}
+              Clear
             </Button>
 
             <Button
@@ -288,7 +244,7 @@ export function FavoriteSportsModal({
               disabled={selectedSports.length === 0}
               size="sm"
             >
-              Chấp nhận {selectedSports.length > 0 && `(${selectedSports.length})`}
+              Accept {selectedSports.length > 0 && `(${selectedSports.length})`}
             </Button>
           </div>
         </div>
