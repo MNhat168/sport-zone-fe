@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAppSelector } from "@/store/hook";
 import { useLocation } from "react-router-dom";
 import type { Field } from "@/types/field-type";
+import axiosPrivate from "@/utils/axios/axiosPrivate";
 
 /**
  * Interface for booking form data
@@ -60,7 +61,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     const location = useLocation();
     const currentField = useAppSelector((state) => state.field.currentField);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
-    
+
     // Get user info from auth state
     const auth = useAppSelector((state) => state.auth);
     const currentUser = auth.user;
@@ -77,7 +78,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         phone: bookingData?.phone || currentUser?.phone || '',
     });
 
-    const [errors, setErrors] = useState<{[key: string]: string}>({});
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     // Update form when user info changes
     useEffect(() => {
@@ -95,7 +96,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
     // Form validation
     const validateForm = (): boolean => {
-        const newErrors: {[key: string]: string} = {};
+        const newErrors: { [key: string]: string } = {};
 
         if (!formData.name?.trim()) {
             newErrors.name = 'Full name is required';
@@ -189,59 +190,10 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 }
             }
 
-            const token = localStorage.getItem('token');
-            const headers: HeadersInit = {
-                'Content-Type': 'application/json',
-            };
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            const response = await axiosPrivate.post(`/bookings/field-booking-hold`, payload);
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/field-booking-hold`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(payload),
-            });
+            const responseData = response.data;
 
-            if (!response.ok) {
-                let errorMessage = 'Không thể giữ chỗ. Vui lòng thử lại.';
-                try {
-                    const errorData = await response.json();
-                    // Handle different error response formats
-                    if (errorData.message) {
-                        errorMessage = errorData.message;
-                    } else if (errorData.error) {
-                        errorMessage = typeof errorData.error === 'string' 
-                            ? errorData.error 
-                            : errorData.error.message || errorMessage;
-                    }
-                    
-                    // Add validation errors if present
-                    if (errorData.details && Array.isArray(errorData.details)) {
-                        const validationErrors = errorData.details
-                            .map((detail: any) => {
-                                if (detail.constraints) {
-                                    return Object.values(detail.constraints).join(', ');
-                                }
-                                return detail.message || detail;
-                            })
-                            .filter(Boolean)
-                            .join('; ');
-                        if (validationErrors) {
-                            errorMessage = `${errorMessage}: ${validationErrors}`;
-                        }
-                    }
-                } catch (parseError) {
-                    // If JSON parsing fails, use status text or default message
-                    errorMessage = response.statusText || errorMessage;
-                    console.error('❌ [PERSONAL INFO] Failed to parse error response:', parseError);
-                }
-                console.error('❌ [PERSONAL INFO] Booking hold error:', { status: response.status, errorMessage });
-                throw new Error(errorMessage);
-            }
-
-            const responseData = await response.json();
-            
             // API wraps response in {success: true, data: booking} format
             const booking = responseData.data || responseData;
             const bookingIdStr = booking._id || booking.id;
@@ -265,7 +217,8 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
             }
         } catch (error: any) {
             console.error('❌ [PERSONAL INFO] Error creating booking hold:', error);
-            setHoldError(error?.message || 'Không thể giữ chỗ. Vui lòng thử lại.');
+            const errorMessage = error.response?.data?.message || error.message || 'Không thể giữ chỗ. Vui lòng thử lại.';
+            setHoldError(errorMessage);
         } finally {
             setIsHoldingSlot(false);
         }
@@ -353,7 +306,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                 )}
                             </div>
 
-                            
+
                             {/* Hold Error Display */}
                             {holdError && (
                                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">

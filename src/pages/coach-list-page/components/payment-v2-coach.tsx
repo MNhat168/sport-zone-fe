@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle, AlertCircle, Loader2, Upload, X, ImageIcon, Copy } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, ImageIcon, X, Loader2, Clock, Wallet, Copy, Check, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -46,15 +46,21 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
 
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [paymentError, setPaymentError] = useState<string | null>(null);
+    const [verificationResult, setVerificationResult] = useState<{
+        status: string;
+        reason?: string;
+        isAiVerified: boolean;
+    } | null>(null);
+
+    // Held booking state (restored from localStorage if page is refreshed)
     const [heldBookingId, setHeldBookingId] = useState<string | null>(null);
     const [countdown, setCountdown] = useState<number>(300); // 5 minutes in seconds
     const [holdError, setHoldError] = useState<string | null>(null);
+    const [bankAccount, setBankAccount] = useState<any>(null);
+    const [loadingBankAccount, setLoadingBankAccount] = useState<boolean>(false);
     const [proofImage, setProofImage] = useState<File | null>(null);
     const [proofPreview, setProofPreview] = useState<string | null>(null);
-    const [bankAccount, setBankAccount] = useState<any>(null);
-    const [loadingBankAccount, setLoadingBankAccount] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
     // Fetch bank account info when component mounts
     useEffect(() => {
         if (coachId) {
@@ -67,19 +73,19 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
         try {
             const storedBookingId = localStorage.getItem('heldBookingId');
             const storedHoldTime = localStorage.getItem('heldBookingTime');
-            
-            console.log('[PAYMENT V2 COACH] Checking localStorage for held booking:', { 
-                storedBookingId, 
-                storedHoldTime 
+
+            console.log('[PAYMENT V2 COACH] Checking localStorage for held booking:', {
+                storedBookingId,
+                storedHoldTime
             });
-            
+
             // Validate stored booking ID
             if (!storedBookingId || storedBookingId.trim() === '' || storedBookingId === 'undefined' || storedBookingId === 'null') {
                 console.warn('⚠️ [PAYMENT V2 COACH] Invalid or missing heldBookingId in localStorage:', storedBookingId);
                 setHoldError('Chưa có booking được giữ chỗ. Vui lòng quay lại bước trước.');
                 return;
             }
-            
+
             if (storedHoldTime) {
                 const holdTime = parseInt(storedHoldTime);
                 if (isNaN(holdTime)) {
@@ -87,11 +93,11 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                     setHoldError('Dữ liệu booking không hợp lệ. Vui lòng quay lại bước trước.');
                     return;
                 }
-                
+
                 const now = Date.now();
                 const elapsed = Math.floor((now - holdTime) / 1000);
                 const remaining = 300 - elapsed; // 5 minutes = 300 seconds
-                
+
                 if (remaining > 0) {
                     setHeldBookingId(storedBookingId);
                     setCountdown(remaining);
@@ -127,7 +133,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                 'Content-Type': 'application/json',
             };
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/cancel-hold`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL} /bookings/${heldBookingId}/cancel-hold`, {
                 method: 'PATCH',
                 headers,
                 body: JSON.stringify({
@@ -323,7 +329,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
 
         try {
             console.log('[PaymentV2Coach] Submitting payment proof for booking:', heldBookingId);
-            
+
             // Create FormData with payment proof
             const formDataToSend = new FormData();
             formDataToSend.append('paymentProof', proofImage);
@@ -338,7 +344,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
             // Submit payment proof for existing booking
             const url = `${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/submit-payment-proof`;
             console.log('[PaymentV2Coach] Submitting to URL:', url);
-            
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers,
@@ -352,12 +358,37 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
             }
 
             const responseData = await response.json();
-            // API wraps response in {success: true, data: booking} format
             const booking = responseData.data || responseData;
             console.log('[PaymentV2Coach] Payment proof submitted successfully:', booking);
+
+            // Check for AI verification result
+            const isConfirmed = booking.status === 'confirmed';
+            const transaction = booking.transaction;
+            const isRejected = transaction?.paymentProofStatus === 'rejected';
+
+            if (isConfirmed) {
+                setVerificationResult({
+                    status: 'confirmed',
+                    isAiVerified: true
+                });
+                CustomSuccessToast('Thanh toán thành công! AI đã xác nhận biên lai của bạn.');
+            } else if (isRejected) {
+                setVerificationResult({
+                    status: 'rejected',
+                    reason: transaction?.paymentProofRejectionReason,
+                    isAiVerified: true
+                });
+                CustomFailedToast('AI từ chối biên lai: ' + transaction?.paymentProofRejectionReason);
+            } else {
+                setVerificationResult({
+                    status: 'pending',
+                    isAiVerified: false
+                });
+                CustomSuccessToast('Đã gửi yêu cầu đặt coach! Đang chờ coach xác nhận thanh toán.');
+            }
+
             setPaymentStatus('success');
-            CustomSuccessToast('Đã gửi yêu cầu đặt coach! Đang chờ coach xác nhận thanh toán.');
-            
+
             // Clear localStorage
             localStorage.removeItem('heldBookingId');
             localStorage.removeItem('heldBookingCountdown');
@@ -430,18 +461,16 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                 <CardContent className="space-y-6">
                     {/* Booking Hold Status */}
                     {heldBookingId && countdown > 0 && (
-                        <div className={`p-4 border rounded-lg flex items-center justify-between ${
-                            countdown < 120 
-                                ? 'bg-red-50 border-red-200 text-red-800' 
-                                : 'bg-green-50 border-green-200 text-green-800'
-                        }`}>
+                        <div className={`p-4 border rounded-lg flex items-center justify-between ${countdown < 120
+                            ? 'bg-red-50 border-red-200 text-red-800'
+                            : 'bg-green-50 border-green-200 text-green-800'
+                            }`}>
                             <div className="flex items-center gap-2">
                                 <CheckCircle className="w-5 h-5" />
                                 <span>Chỗ đã được giữ. Vui lòng upload ảnh chứng minh trong thời gian còn lại.</span>
                             </div>
-                            <div className={`font-bold text-lg ${
-                                countdown < 120 ? 'text-red-600' : 'text-green-600'
-                            }`}>
+                            <div className={`font-bold text-lg ${countdown < 120 ? 'text-red-600' : 'text-green-600'
+                                }`}>
                                 {formatCountdown(countdown)}
                             </div>
                         </div>
@@ -648,11 +677,57 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
 
                     {/* Success Message */}
                     {paymentStatus === 'success' && (
-                        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                            <div className="flex items-center gap-2 text-green-800">
-                                <CheckCircle className="h-5 w-5" />
-                                <p className="font-medium">Đặt coach thành công! Đang chuyển hướng...</p>
+                        <div className={`p-6 rounded-lg border space-y-4 ${verificationResult?.status === 'confirmed'
+                            ? 'bg-green-50 border-green-200 text-green-800'
+                            : verificationResult?.status === 'rejected'
+                                ? 'bg-red-50 border-red-200 text-red-800'
+                                : 'bg-amber-50 border-amber-200 text-amber-800'
+                            }`}>
+                            <div className="flex items-center gap-3">
+                                {verificationResult?.status === 'confirmed' ? (
+                                    <CheckCircle className="h-8 w-8 text-green-600" />
+                                ) : verificationResult?.status === 'rejected' ? (
+                                    <AlertCircle className="h-8 w-8 text-red-600" />
+                                ) : (
+                                    <Clock className="h-8 w-8 text-amber-600" />
+                                )}
+                                <div>
+                                    <h3 className="text-xl font-bold">
+                                        {verificationResult?.status === 'confirmed'
+                                            ? 'Thanh toán thành công!'
+                                            : verificationResult?.status === 'rejected'
+                                                ? 'Biên lai bị từ chối'
+                                                : 'Đã gửi yêu cầu'}
+                                    </h3>
+                                    <p className="text-sm">
+                                        {verificationResult?.status === 'confirmed'
+                                            ? 'AI đã xác nhận thanh toán. Lịch hẹn của bạn đã được xác nhận.'
+                                            : verificationResult?.status === 'rejected'
+                                                ? `AI không thể xác nhận: ${verificationResult.reason}`
+                                                : 'Đơn đặt đang chờ coach xác minh thanh toán thủ công.'}
+                                    </p>
+                                </div>
                             </div>
+
+                            {verificationResult?.status !== 'confirmed' && (
+                                <div className="space-y-2">
+                                    {verificationResult?.status === 'pending' && (
+                                        <p className="text-xs text-amber-700 italic">
+                                            Lưu ý: Bạn có thể thay đổi ảnh minh chứng nếu phát hiện sai sót.
+                                        </p>
+                                    )}
+                                    <Button
+                                        variant="outline"
+                                        className={`w-full ${verificationResult?.status === 'rejected'
+                                                ? 'border-red-300 text-red-800 hover:bg-red-100'
+                                                : 'border-amber-300 text-amber-800 hover:bg-amber-100'
+                                            }`}
+                                        onClick={() => setPaymentStatus('idle')}
+                                    >
+                                        {verificationResult?.status === 'rejected' ? 'Thử lại với ảnh khác' : 'Thay thế ảnh minh chứng'}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -669,8 +744,8 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                         <Button
                             onClick={handlePayment}
                             disabled={
-                                !proofImage || 
-                                paymentStatus === 'processing' || 
+                                !proofImage ||
+                                paymentStatus === 'processing' ||
                                 !bankAccount ||
                                 !!holdError
                             }

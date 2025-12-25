@@ -51,26 +51,26 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
     const startTime12h = formatTime(booking.startTime);
     const endTime12h = formatTime(booking.endTime);
 
-  // Ưu tiên trạng thái duyệt của chủ sân: nếu approvalStatus đang pending
-  // thì luôn coi là "Đang chờ" để hiển thị nút hành động chấp nhận / từ chối
-  if (booking.approvalStatus === 'pending') {
-    return {
-      id: booking.bookingId,
-      academyName: booking.fieldName,
-      courtName: booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : booking.fieldName),
-      courtNumber: booking.courtNumber,
-      academyImage: "/images/academies/default.jpg",
-      date: formatDate(booking.date),
-      time: `${startTime12h} - ${endTime12h}`,
-      payment: formatCurrency(booking.totalPrice, "VND"),
-      status: "awaiting" as const,
-      statusText: "Đang Chờ Duyệt",
-      originalBooking: booking,
-    };
-  }
+    // Ưu tiên trạng thái duyệt của chủ sân: nếu approvalStatus đang pending
+    // thì luôn coi là "Đang chờ" để hiển thị nút hành động chấp nhận / từ chối
+    if (booking.approvalStatus === 'pending') {
+        return {
+            id: booking.bookingId,
+            academyName: booking.fieldName,
+            courtName: booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : booking.fieldName),
+            courtNumber: booking.courtNumber,
+            academyImage: "/images/academies/default.jpg",
+            date: formatDate(booking.date),
+            time: `${startTime12h} - ${endTime12h}`,
+            payment: formatCurrency(booking.totalPrice, "VND"),
+            status: "awaiting" as const,
+            statusText: "Đang Chờ Duyệt",
+            originalBooking: booking,
+        };
+    }
 
-  // Nếu không có approvalStatus pending thì map theo transactionStatus / status
-  const transactionStatus = booking.transactionStatus || booking.status;
+    // Nếu không có approvalStatus pending thì map theo transactionStatus / status
+    const transactionStatus = booking.transactionStatus || booking.status;
     let status: "awaiting" | "accepted" | "rejected" = "awaiting";
     let statusText = "Chờ Xác Nhận";
 
@@ -212,6 +212,7 @@ export default function FieldHistoryBookingPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
     const [hiddenIds, setHiddenIds] = useState<string[]>([]);
+    const [hasInitialData, setHasInitialData] = useState(false);
 
     // Load hidden IDs from localStorage so acted items stay hidden after refresh
     useEffect(() => {
@@ -251,8 +252,8 @@ export default function FieldHistoryBookingPage() {
         };
     }, []);
 
-    // Fetch bookings on mount and whenever filters/pagination change
-    useEffect(() => {
+    // Helper to fetch bookings
+    const fetchBookings = (isInitial = false) => {
         const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
         dispatch(
             getMyFieldsBookings({
@@ -263,8 +264,24 @@ export default function FieldHistoryBookingPage() {
                 page: currentPage,
                 limit: itemsPerPage,
             })
-        );
+        ).then(() => {
+            if (isInitial) setHasInitialData(true);
+        });
+    };
+
+    // Fetch bookings on mount and whenever filters/pagination change
+    useEffect(() => {
+        fetchBookings(true);
     }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage]);
+
+    // Polling for updates every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchBookings(false);
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [activeTab, searchQuery, timeFilter, currentPage, itemsPerPage]);
 
     const handleViewDetails = async (bookingId: string) => {
         const booking = fieldOwnerBookings?.find(b => b.bookingId === bookingId);
@@ -428,8 +445,8 @@ export default function FieldHistoryBookingPage() {
                             </Alert>
                         )}
 
-                        {/* Loading State */}
-                        {fieldOwnerBookingsLoading ? (
+                        {/* Loading State - only show spinner on initial load to avoid flashing during polling */}
+                        {fieldOwnerBookingsLoading && !hasInitialData ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                             </div>

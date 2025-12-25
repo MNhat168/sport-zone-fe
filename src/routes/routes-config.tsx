@@ -15,7 +15,7 @@ import AboutPage from "../pages/about/about-page";
 import UserDashboardPage from "../pages/user-dashboard-page/user-dashboard-page";
 import UserBookingHistoryPage from "../pages/user-dashboard-page/user-booking-history-page";
 import UserInvoicesPage from "../pages/user-dashboard-page/user-invoices-page";
-import UserChatPage from "../pages/user-dashboard-page/user-chat-page";
+import MyTournaments from "../pages/user-dashboard-page/user-chat-page";
 import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
 import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 
@@ -61,6 +61,7 @@ import FieldOwnerRevenuePage from "../pages/field-owner-dashboard-page/revenue/f
 import FieldOwnerProfilePage from "../pages/field-owner-dashboard-page/profile/field-owner-profile-page";
 import FieldEditPage from "../pages/field-owner-dashboard-page/fields/field-edit-page";
 import FieldViewPage from "../pages/field-owner-dashboard-page/fields/field-view-page";
+import TournamentRequestsPage from "../pages/field-owner-dashboard-page/tournament-requests/tournament-requests-page";
 
 // Field Owner Registration Pages
 import FieldOwnerRegistrationPage from "../pages/field-owner-registration-page/field-owner-registration-page";
@@ -204,10 +205,10 @@ export const userRoutes: RouteObject[] = [
 
   // User Communication & Finance
   {
-    path: "/user-chat",
+    path: "/user-tournaments",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <UserChatPage />
+        <MyTournaments />
       </ProtectedRoute>
     ),
   },
@@ -613,6 +614,14 @@ export const fieldOwnerRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <FieldHistoryBookingPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/tournament-requests",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <TournamentRequestsPage />
       </ProtectedRoute>
     ),
   },

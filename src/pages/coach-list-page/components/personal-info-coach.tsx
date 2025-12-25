@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppSelector } from "@/store/hook";
+import axiosPrivate from "@/utils/axios/axiosPrivate";
 
 /**
  * Interface for booking form data
@@ -67,7 +68,7 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
         phone: bookingData?.phone || currentUser?.phone || '',
     });
 
-    const [errors, setErrors] = useState<{[key: string]: string}>({});
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     // Update form when user info changes
     useEffect(() => {
@@ -83,7 +84,7 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
 
     // Form validation
     const validateForm = (): boolean => {
-        const newErrors: {[key: string]: string} = {};
+        const newErrors: { [key: string]: string } = {};
 
         if (!formData.name?.trim()) {
             newErrors.name = 'Họ và tên là bắt buộc';
@@ -126,7 +127,7 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
             setHoldError('Thiếu thông tin đặt lịch. Vui lòng quay lại và kiểm tra.');
             return;
         }
-        
+
         // FieldId is required for coach booking
         if (!formData.fieldId) {
             setHoldError('Vui lòng chọn sân ở bước trước.');
@@ -162,42 +163,10 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
                 }
             }
 
-            const token = localStorage.getItem('token');
-            const headers: HeadersInit = {
-                'Content-Type': 'application/json',
-            };
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            const response = await axiosPrivate.post(`/bookings/coach-booking-hold`, payload);
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/coach-booking-hold`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(payload),
-            });
+            const responseData = response.data;
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Có lỗi xảy ra' }));
-                let errorMessage = errorData.message || 'Không thể giữ chỗ. Vui lòng thử lại.';
-                if (errorData.details && Array.isArray(errorData.details)) {
-                    const validationErrors = errorData.details
-                        .map((detail: any) => {
-                            if (detail.constraints) {
-                                return Object.values(detail.constraints).join(', ');
-                            }
-                            return detail.message || detail;
-                        })
-                        .filter(Boolean)
-                        .join('; ');
-                    if (validationErrors) {
-                        errorMessage = `${errorMessage}: ${validationErrors}`;
-                    }
-                }
-                throw new Error(errorMessage);
-            }
-
-            const responseData = await response.json();
-            
             // API wraps response in {success: true, data: booking} format
             const booking = responseData.data || responseData;
             const bookingIdStr = booking._id || booking.id;
@@ -221,8 +190,10 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
             }
         } catch (error: any) {
             console.error('❌ [PERSONAL INFO COACH] Error creating booking hold:', error);
-            setHoldError(error?.message || 'Không thể giữ chỗ. Vui lòng thử lại.');
-        } finally {
+            const errorMessage = error.response?.data?.message || error.message || 'Không thể giữ chỗ. Vui lòng thử lại.';
+            setHoldError(errorMessage);
+        }
+        finally {
             setIsHoldingSlot(false);
         }
     };
@@ -309,7 +280,7 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
                                 )}
                             </div>
 
-                            
+
                             {/* Hold Error Display */}
                             {holdError && (
                                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">

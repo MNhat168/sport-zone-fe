@@ -72,30 +72,36 @@ export default function CoachBookingsPage() {
             })
             .catch(console.error)
     }, [])
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                // Use axiosPrivate which handles credentials (cookies) automatically
-                const response = await axiosPrivate.get('/bookings/coach/my-bookings')
+    const fetchBookings = async (isSilent = false) => {
+        if (!isSilent) setLoading(true)
+        try {
+            // Use axiosPrivate which handles credentials (cookies) automatically
+            const response = await axiosPrivate.get('/bookings/coach/my-bookings')
 
-                // Handle response structure similar to other API calls in this project
-                // Usually response.data or response.data.data
-                const data = response.data;
-                const bookingsData = Array.isArray(data) ? data : (data.data || []);
+            // Handle response structure similar to other API calls in this project
+            const data = response.data;
+            const bookingsData = Array.isArray(data) ? data : (data.data || []);
 
-                setBookings(Array.isArray(bookingsData) ? bookingsData : [])
-            } catch (err: any) {
-                console.error("Error fetching bookings:", err)
-                // Extract error message from axios response if available
-                const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
-                setError(errorMessage)
-            } finally {
-                setLoading(false)
-            }
+            setBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        } catch (err: any) {
+            console.error("Error fetching bookings:", err)
+            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
+            setError(errorMessage)
+        } finally {
+            setLoading(false)
         }
+    }
 
+    useEffect(() => {
         if (authUser) {
             fetchBookings()
+
+            // Polling for updates every 30 seconds
+            const interval = setInterval(() => {
+                fetchBookings(true)
+            }, 30000);
+
+            return () => clearInterval(interval);
         }
     }, [authUser])
     const handleCompleteBooking = async (bookingId: string) => {

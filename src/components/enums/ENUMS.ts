@@ -170,7 +170,7 @@ export interface SportRules {
   sportType: SportType;
   minTeams: number;
   maxTeams: number;
-  minParticipants: number;
+
   maxParticipants: number;
   // Keep both field and court properties for backward compatibility
   minFieldsRequired: number;
@@ -191,7 +191,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.FOOTBALL,
     minTeams: 4,
     maxTeams: 16,
-    minParticipants: 20,
+
     maxParticipants: 176,
     minFieldsRequired: 1,
     maxFieldsRequired: 2,
@@ -209,7 +209,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.TENNIS,
     minTeams: 8,
     maxTeams: 32,
-    minParticipants: 8,
+
     maxParticipants: 64,
     minFieldsRequired: 1,
     maxFieldsRequired: 8,
@@ -227,7 +227,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.BADMINTON,
     minTeams: 8,
     maxTeams: 32,
-    minParticipants: 8,
+
     maxParticipants: 64,
     minFieldsRequired: 2,
     maxFieldsRequired: 8,
@@ -245,7 +245,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.PICKLEBALL,
     minTeams: 8,
     maxTeams: 32,
-    minParticipants: 8,
+
     maxParticipants: 64,
     minFieldsRequired: 2,
     maxFieldsRequired: 6,
@@ -263,7 +263,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.BASKETBALL,
     minTeams: 4,
     maxTeams: 16,
-    minParticipants: 12,
+
     maxParticipants: 80,
     minFieldsRequired: 1,
     maxFieldsRequired: 3,
@@ -281,7 +281,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.VOLLEYBALL,
     minTeams: 4,
     maxTeams: 16,
-    minParticipants: 8,
+
     maxParticipants: 96,
     minFieldsRequired: 1,
     maxFieldsRequired: 4,
@@ -299,7 +299,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.SWIMMING,
     minTeams: 1,
     maxTeams: 50,
-    minParticipants: 4,
+
     maxParticipants: 200,
     minFieldsRequired: 1,
     maxFieldsRequired: 2,
@@ -317,7 +317,7 @@ export const SPORT_RULES_MAP: Record<SportType, SportRules> = {
     sportType: SportType.GYM,
     minTeams: 1,
     maxTeams: 40,
-    minParticipants: 4,
+
     maxParticipants: 120,
     minFieldsRequired: 1,
     maxFieldsRequired: 1,

@@ -2,25 +2,25 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import {
   Dialog,
@@ -42,37 +42,37 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Calendar, 
-  Clock, 
-  Edit, 
-  Eye, 
-  MapPin, 
-  MoreVertical, 
-  Plus, 
-  Trash2, 
+import {
+  Calendar,
+  Clock,
+  Edit,
+  Eye,
+  MapPin,
+  MoreVertical,
+  Plus,
+  Trash2,
   Users,
   DollarSign,
   Calendar as CalendarIcon,
   AlertTriangle
 } from 'lucide-react';
 import type { AppDispatch, RootState } from '@/store/store';
-import { 
-  fetchMyTournaments, 
-  updateTournamentById, 
-  cancelTournamentById 
+import {
+  fetchMyTournaments,
+  updateTournamentById
 } from '@/features/tournament/tournamentThunk';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { CancelTournamentModal } from '@/components/tournamnent/CancelTournamentModal';
 
 const MyTournaments = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { tournaments, loading, error } = useSelector((state: RootState) => state.tournament);
-  
+
   const [editingTournament, setEditingTournament] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [tournamentToCancel, setTournamentToCancel] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -108,24 +108,11 @@ const MyTournaments = () => {
         id: editingTournament._id,
         data: formData
       })).unwrap();
-      
+
       toast.success('Tournament updated successfully');
       setIsEditDialogOpen(false);
     } catch (error: any) {
       toast.error(error.message || 'Failed to update tournament');
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!tournamentToCancel) return;
-
-    try {
-      await dispatch(cancelTournamentById(tournamentToCancel._id)).unwrap();
-      toast.success('Tournament cancelled successfully');
-      setIsCancelDialogOpen(false);
-      setTournamentToCancel(null);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to cancel tournament');
     }
   };
 
@@ -241,17 +228,17 @@ const MyTournaments = () => {
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => handleEdit(tournament)}
                         disabled={!['draft', 'pending'].includes(tournament.status)}
                       >
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Tournament
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => {
                           setTournamentToCancel(tournament);
-                          setIsCancelDialogOpen(true);
+                          setShowCancelModal(true);
                         }}
                         disabled={!['draft', 'pending'].includes(tournament.status)}
                         className="text-red-600"
@@ -294,16 +281,16 @@ const MyTournaments = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => navigate(`/tournaments/${tournament._id}`)}
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   View
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => handleEdit(tournament)}
                   disabled={!['draft', 'pending'].includes(tournament.status)}
@@ -334,7 +321,7 @@ const MyTournaments = () => {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="col-span-3"
               />
             </div>
@@ -345,7 +332,7 @@ const MyTournaments = () => {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="col-span-3"
                 rows={3}
               />
@@ -357,7 +344,7 @@ const MyTournaments = () => {
               <Textarea
                 id="rules"
                 value={formData.rules}
-                onChange={(e) => setFormData({...formData, rules: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, rules: e.target.value })}
                 className="col-span-3"
                 rows={4}
               />
@@ -370,7 +357,7 @@ const MyTournaments = () => {
                 id="registrationFee"
                 type="number"
                 value={formData.registrationFee}
-                onChange={(e) => setFormData({...formData, registrationFee: parseFloat(e.target.value)})}
+                onChange={(e) => setFormData({ ...formData, registrationFee: parseFloat(e.target.value) })}
                 className="col-span-3"
               />
             </div>
@@ -381,7 +368,7 @@ const MyTournaments = () => {
                   id="startTime"
                   type="time"
                   value={formData.startTime}
-                  onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
@@ -390,7 +377,7 @@ const MyTournaments = () => {
                   id="endTime"
                   type="time"
                   value={formData.endTime}
-                  onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                 />
               </div>
             </div>
@@ -404,39 +391,17 @@ const MyTournaments = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Cancel Tournament Dialog */}
-      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Cancel Tournament</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to cancel this tournament? 
-              {tournamentToCancel?.participants?.length > 0 && (
-                <span className="text-red-600 block mt-2">
-                  This will refund all registered participants.
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          {tournamentToCancel && (
-            <div className="py-4">
-              <h4 className="font-semibold mb-2">{tournamentToCancel.name}</h4>
-              <p className="text-sm text-gray-600">
-                <strong>Date:</strong> {formatDate(tournamentToCancel.tournamentDate)}<br />
-                <strong>Participants:</strong> {tournamentToCancel.participants?.length || 0} registered
-              </p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
-              No, Keep Tournament
-            </Button>
-            <Button variant="destructive" onClick={handleCancel}>
-              Yes, Cancel Tournament
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Cancel Tournament Modal */}
+      {tournamentToCancel && (
+        <CancelTournamentModal
+          isOpen={showCancelModal}
+          onClose={() => {
+            setShowCancelModal(false);
+            setTournamentToCancel(null);
+          }}
+          tournamentId={tournamentToCancel._id}
+        />
+      )}
     </div>
   );
 };

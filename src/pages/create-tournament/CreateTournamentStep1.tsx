@@ -7,10 +7,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Clock, Users, Trophy, Zap, Target, Users2, Hash, CalendarRange, CalendarDays, ArrowRight } from "lucide-react"
-import { 
-  getCategoryDisplayName, 
-  getFormatDisplayName, 
-  SPORT_RULES_MAP, 
+import {
+  getCategoryDisplayName,
+  getFormatDisplayName,
+  SPORT_RULES_MAP,
   type SportType,
   getDefaultTeamSize,
   calculateParticipants,
@@ -61,43 +61,42 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
 
   const handleChange = (field: string, value: any) => {
     const newData = { ...formData, [field]: value }
-    
+
     if (field === "sportType") {
       const rules = SPORT_RULES_MAP[value as SportType]
       const defaultTeamSize = getDefaultTeamSize(value, newData.category || "")
       setTeamSize(defaultTeamSize)
       setShowTeamSizeInput(rules?.supportsTeamSizeOverride || false)
-      
+
       newData.numberOfTeams = rules.minTeams
       newData.teamSize = defaultTeamSize
-      newData.minParticipants = calculateParticipants(rules.minTeams, value, newData.category || "", defaultTeamSize)
+      newData.numberOfTeams = rules.minTeams
+      newData.teamSize = defaultTeamSize
       newData.maxParticipants = calculateParticipants(rules.maxTeams, value, newData.category || "", defaultTeamSize)
     }
-    
+
     if (field === "category") {
       const defaultTeamSize = getDefaultTeamSize(newData.sportType, value)
       setTeamSize(defaultTeamSize)
       newData.teamSize = defaultTeamSize
-      
+
       // Recalculate participants based on new category
       if (newData.numberOfTeams) {
-        newData.minParticipants = calculateParticipants(newData.numberOfTeams, newData.sportType, value, defaultTeamSize)
         newData.maxParticipants = calculateParticipants(newData.numberOfTeams, newData.sportType, value, defaultTeamSize)
       }
     }
-    
+
     if (field === "numberOfTeams" || field === "teamSize") {
       const currentTeamSize = field === "teamSize" ? value : newData.teamSize
       const currentTeams = field === "numberOfTeams" ? value : newData.numberOfTeams
-      
+
       if (currentTeams && currentTeamSize) {
-        newData.minParticipants = calculateParticipants(currentTeams, newData.sportType, newData.category || "", currentTeamSize)
         newData.maxParticipants = calculateParticipants(currentTeams, newData.sportType, newData.category || "", currentTeamSize)
       }
     }
-    
+
     onUpdate(newData)
-    
+
     if (errors[field]) {
       setErrors({ ...errors, [field]: "" })
     }
@@ -106,22 +105,22 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
   // Handle registration date range change
   const handleRegistrationDateChange = (range: DateRange | undefined) => {
     if (!range) return
-    
+
     setRegistrationDate(range)
-    
+
     if (range.from) {
-      const newData = { 
-        ...formData, 
-        registrationStart: format(range.from, "yyyy-MM-dd") 
+      const newData = {
+        ...formData,
+        registrationStart: format(range.from, "yyyy-MM-dd")
       }
       onUpdate(newData)
       if (errors.registrationStart) setErrors({ ...errors, registrationStart: "" })
     }
-    
+
     if (range.to) {
-      const newData = { 
-        ...formData, 
-        registrationEnd: format(range.to, "yyyy-MM-dd") 
+      const newData = {
+        ...formData,
+        registrationEnd: format(range.to, "yyyy-MM-dd")
       }
       onUpdate(newData)
       if (errors.registrationEnd) setErrors({ ...errors, registrationEnd: "" })
@@ -131,11 +130,11 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
   // Handle tournament date change
   const handleTournamentDateChange = (date: Date | undefined) => {
     setTournamentDate(date)
-    
+
     if (date) {
-      const newData = { 
-        ...formData, 
-        tournamentDate: format(date, "yyyy-MM-dd") 
+      const newData = {
+        ...formData,
+        tournamentDate: format(date, "yyyy-MM-dd")
       }
       onUpdate(newData)
       if (errors.tournamentDate) setErrors({ ...errors, tournamentDate: "" })
@@ -147,10 +146,10 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     // Parse current times
     const startStr = formData.startTime || "08:00"
     const endStr = formData.endTime || "17:00"
-    
+
     const [startHours, startMinutes] = startStr.split(":").map(Number)
     const [endHours, endMinutes] = endStr.split(":").map(Number)
-    
+
     setStartTime({ hours: startHours, minutes: startMinutes })
     setEndTime({ hours: endHours, minutes: endMinutes })
     setSelectedTimeType("start")
@@ -160,24 +159,24 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
   const handleTimeConfirm = () => {
     const startTimeStr = `${startTime.hours.toString().padStart(2, "0")}:${startTime.minutes.toString().padStart(2, "0")}`
     const endTimeStr = `${endTime.hours.toString().padStart(2, "0")}:${endTime.minutes.toString().padStart(2, "0")}`
-    
+
     // Validate that start time is before end time
     const startTotalMinutes = startTime.hours * 60 + startTime.minutes
     const endTotalMinutes = endTime.hours * 60 + endTime.minutes
-    
+
     if (startTotalMinutes >= endTotalMinutes) {
       // Show error but still allow setting
       setErrors({ ...errors, endTime: "Giờ kết thúc phải sau giờ bắt đầu" })
     } else {
       if (errors.endTime) setErrors({ ...errors, endTime: "" })
     }
-    
-    const newData = { 
-      ...formData, 
+
+    const newData = {
+      ...formData,
       startTime: startTimeStr,
       endTime: endTimeStr
     }
-    
+
     onUpdate(newData)
     setShowTimeDialog(false)
   }
@@ -200,12 +199,12 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
       const today = new Date()
       const defaultFrom = today
       const defaultTo = addDays(today, 14) // Default 2 weeks registration period
-      
+
       // Only set defaults if no dates are already set
       setRegistrationDate({ from: defaultFrom, to: defaultTo })
-      
-      onUpdate({ 
-        ...formData, 
+
+      onUpdate({
+        ...formData,
         registrationStart: format(defaultFrom, "yyyy-MM-dd"),
         registrationEnd: format(defaultTo, "yyyy-MM-dd")
       })
@@ -217,8 +216,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (!tournamentDate && registrationDate.to) {
       const defaultTournamentDate = addDays(registrationDate.to, 7) // Default 1 week after registration ends
       setTournamentDate(defaultTournamentDate)
-      onUpdate({ 
-        ...formData, 
+      onUpdate({
+        ...formData,
         tournamentDate: format(defaultTournamentDate, "yyyy-MM-dd")
       })
     }
@@ -239,7 +238,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (!formData.numberOfTeams) newErrors.numberOfTeams = "Vui lòng nhập số lượng đội"
 
     const selectedSportRules = formData.sportType ? SPORT_RULES_MAP[formData.sportType as SportType] : null
-    
+
     if (selectedSportRules) {
       if (formData.numberOfTeams < selectedSportRules.minTeams) {
         newErrors.numberOfTeams = `Số đội tối thiểu là ${selectedSportRules.minTeams}`
@@ -253,16 +252,16 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (formData.registrationStart && formData.registrationEnd) {
       const regStart = new Date(formData.registrationStart)
       const regEnd = new Date(formData.registrationEnd)
-      
+
       if (isAfter(regStart, regEnd)) {
         newErrors.registrationEnd = "Ngày kết thúc đăng ký phải sau ngày bắt đầu"
       }
-      
+
       // Registration period must be at least 1 day
       if (differenceInDays(regEnd, regStart) < 0) {
         newErrors.registrationEnd = "Thời gian đăng ký phải ít nhất 1 ngày"
       }
-      
+
       // Registration cannot end before today (but can start before today for ongoing registrations)
       const today = startOfDay(new Date())
       if (isBefore(regEnd, today)) {
@@ -274,11 +273,11 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (formData.registrationEnd && formData.tournamentDate) {
       const regEnd = new Date(formData.registrationEnd)
       const tournamentDate = new Date(formData.tournamentDate)
-      
+
       if (!isAfter(tournamentDate, regEnd)) {
         newErrors.tournamentDate = "Ngày diễn ra giải đấu phải sau ngày kết thúc đăng ký"
       }
-      
+
       // Tournament date cannot be more than 1 week after registration ends
       const maxTournamentDate = addWeeks(regEnd, 1)
       if (isAfter(tournamentDate, maxTournamentDate)) {
@@ -290,7 +289,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (formData.registrationStart && formData.tournamentDate) {
       const regStart = new Date(formData.registrationStart)
       const tournamentDate = new Date(formData.tournamentDate)
-      
+
       if (isBefore(tournamentDate, regStart)) {
         newErrors.tournamentDate = "Ngày diễn ra giải đấu không được trước ngày bắt đầu đăng ký"
       }
@@ -309,11 +308,11 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
     if (formData.startTime && formData.endTime) {
       const [startHour, startMin] = formData.startTime.split(":").map(Number)
       const [endHour, endMin] = formData.endTime.split(":").map(Number)
-      
+
       if (startHour > endHour || (startHour === endHour && startMin >= endMin)) {
         newErrors.endTime = "Giờ kết thúc phải sau giờ bắt đầu"
       }
-      
+
       // Minimum duration of 1 hour
       const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin)
       if (durationMinutes < 60) {
@@ -346,13 +345,13 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
   const UnifiedClockLayout = () => {
     const hourValues = Array.from({ length: 12 }, (_, i) => i) // 0-11 for AM
     const hourLabels = ["12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
-    
+
     const minuteValues = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
     const minuteLabels = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]
 
     // Get current time for display
     const currentTime = selectedTimeType === "start" ? startTime : endTime
-    
+
     // Calculate total minutes for validation
     const startTotalMinutes = startTime.hours * 60 + startTime.minutes
     const endTotalMinutes = endTime.hours * 60 + endTime.minutes
@@ -367,7 +366,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
             Thiết Lập Thời Gian Thi Đấu
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex flex-col items-center space-y-6">
           {/* Time Selector Toggle */}
           <div className="flex items-center justify-center gap-6">
@@ -375,8 +374,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
               onClick={() => setSelectedTimeType("start")}
               className={cn(
                 "flex flex-col items-center p-4 rounded-xl transition-all",
-                selectedTimeType === "start" 
-                  ? "bg-green-100 border-2 border-green-500 scale-105" 
+                selectedTimeType === "start"
+                  ? "bg-green-100 border-2 border-green-500 scale-105"
                   : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
               )}
             >
@@ -388,15 +387,15 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                 {startTime.hours < 12 ? "Sáng" : "Chiều"}
               </div>
             </button>
-            
+
             <ArrowRight className="h-6 w-6 text-gray-400" />
-            
+
             <button
               onClick={() => setSelectedTimeType("end")}
               className={cn(
                 "flex flex-col items-center p-4 rounded-xl transition-all",
-                selectedTimeType === "end" 
-                  ? "bg-blue-100 border-2 border-blue-500 scale-105" 
+                selectedTimeType === "end"
+                  ? "bg-blue-100 border-2 border-blue-500 scale-105"
                   : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
               )}
             >
@@ -413,8 +412,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
           {/* Duration Display */}
           <div className={cn(
             "p-3 rounded-lg text-center w-full",
-            durationMinutes < 60 
-              ? "bg-red-100 text-red-700" 
+            durationMinutes < 60
+              ? "bg-red-100 text-red-700"
               : "bg-green-100 text-green-700"
           )}>
             <div className="text-sm font-medium">Tổng thời gian:</div>
@@ -477,33 +476,33 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
               <TabsTrigger value="hours">Chọn Giờ</TabsTrigger>
               <TabsTrigger value="minutes">Chọn Phút</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="hours" className="mt-4">
               <div className="relative w-64 h-64 mx-auto">
                 {/* Clock Face */}
                 <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-                
+
                 {/* Hour Markers */}
                 {hourValues.map((hour, index) => {
                   const displayHour = hour === 0 ? 12 : hour
                   const isAM = currentTime.hours < 12
                   const currentHourValue = isAM ? hour : hour + 12
                   const isSelected = currentTime.hours === currentHourValue
-                  
+
                   // Calculate position on clock face
                   const angle = (index * 30) * (Math.PI / 180)
                   const radius = 110
                   const x = Math.sin(angle) * radius
                   const y = -Math.cos(angle) * radius
-                  
+
                   return (
                     <button
                       key={hour}
                       className={cn(
                         "absolute w-10 h-10 flex items-center justify-center rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all",
-                        isSelected 
+                        isSelected
                           ? selectedTimeType === "start"
-                            ? "bg-green-600 text-white scale-110" 
+                            ? "bg-green-600 text-white scale-110"
                             : "bg-blue-600 text-white scale-110"
                           : "bg-gray-100 hover:bg-gray-200"
                       )}
@@ -524,7 +523,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     </button>
                   )
                 })}
-                
+
                 {/* Center Dot */}
                 <div className={cn(
                   "absolute top-1/2 left-1/2 w-4 h-4 rounded-full transform -translate-x-1/2 -translate-y-1/2",
@@ -532,7 +531,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                 )}></div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="minutes" className="mt-4">
               <div className="grid grid-cols-4 gap-2">
                 {minuteValues.map((minuteValue, index) => (
@@ -549,8 +548,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     className={cn(
                       "h-12",
                       currentTime.minutes === minuteValue && (
-                        selectedTimeType === "start" 
-                          ? "bg-green-600 hover:bg-green-700" 
+                        selectedTimeType === "start"
+                          ? "bg-green-600 hover:bg-green-700"
                           : "bg-blue-600 hover:bg-blue-700"
                       )
                     )}
@@ -559,7 +558,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   </Button>
                 ))}
               </div>
-              
+
               <div className="mt-4 flex justify-center gap-2">
                 <Button
                   variant="outline"
@@ -571,8 +570,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     }
                   }}
                   className={currentTime.minutes === 0 ? (
-                    selectedTimeType === "start" 
-                      ? "bg-green-100 border-green-300" 
+                    selectedTimeType === "start"
+                      ? "bg-green-100 border-green-300"
                       : "bg-blue-100 border-blue-300"
                   ) : ""}
                 >
@@ -588,8 +587,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     }
                   }}
                   className={currentTime.minutes === 15 ? (
-                    selectedTimeType === "start" 
-                      ? "bg-green-100 border-green-300" 
+                    selectedTimeType === "start"
+                      ? "bg-green-100 border-green-300"
                       : "bg-blue-100 border-blue-300"
                   ) : ""}
                 >
@@ -605,8 +604,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     }
                   }}
                   className={currentTime.minutes === 30 ? (
-                    selectedTimeType === "start" 
-                      ? "bg-green-100 border-green-300" 
+                    selectedTimeType === "start"
+                      ? "bg-green-100 border-green-300"
                       : "bg-blue-100 border-blue-300"
                   ) : ""}
                 >
@@ -622,8 +621,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     }
                   }}
                   className={currentTime.minutes === 45 ? (
-                    selectedTimeType === "start" 
-                      ? "bg-green-100 border-green-300" 
+                    selectedTimeType === "start"
+                      ? "bg-green-100 border-green-300"
                       : "bg-blue-100 border-blue-300"
                   ) : ""}
                 >
@@ -643,9 +642,9 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   // Set end time to 1 hour after start
                   const endHours = startTime.hours + 1
                   const endMinutes = startTime.minutes
-                  setEndTime({ 
-                    hours: endHours >= 24 ? 23 : endHours, 
-                    minutes: endMinutes 
+                  setEndTime({
+                    hours: endHours >= 24 ? 23 : endHours,
+                    minutes: endMinutes
                   })
                   setSelectedTimeType("end")
                 }}
@@ -658,9 +657,9 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   // Set end time to 2 hours after start
                   const endHours = startTime.hours + 2
                   const endMinutes = startTime.minutes
-                  setEndTime({ 
-                    hours: endHours >= 24 ? 23 : endHours, 
-                    minutes: endMinutes 
+                  setEndTime({
+                    hours: endHours >= 24 ? 23 : endHours,
+                    minutes: endMinutes
                   })
                   setSelectedTimeType("end")
                 }}
@@ -673,9 +672,9 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                   // Set end time to 3 hours after start
                   const endHours = startTime.hours + 3
                   const endMinutes = startTime.minutes
-                  setEndTime({ 
-                    hours: endHours >= 24 ? 23 : endHours, 
-                    minutes: endMinutes 
+                  setEndTime({
+                    hours: endHours >= 24 ? 23 : endHours,
+                    minutes: endMinutes
                   })
                   setSelectedTimeType("end")
                 }}
@@ -761,11 +760,11 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                           <Users className="h-4 w-4" />
                           <span className="text-sm">Players</span>
                         </div>
-                        <p className="text-white font-bold text-lg">{formData.minParticipants || formData.maxParticipants}</p>
+                        <p className="text-white font-bold text-lg">{formData.maxParticipants}</p>
                       </div>
                     </div>
                   </div>
-                  
+
                   {isTeamBased && formData.teamSize && (
                     <div className="bg-gradient-to-br from-gray-900 to-gray-80 bg-opacity-10 p-3 rounded-lg">
                       <div className="flex items-center gap-2">
@@ -901,8 +900,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                             variant="outline"
                             className={cn(
                               "w-full justify-start text-left font-normal border-2",
-                              errors.registrationStart || errors.registrationEnd 
-                                ? "border-red-500" 
+                              errors.registrationStart || errors.registrationEnd
+                                ? "border-red-500"
                                 : "border-green-200",
                               !registrationDate && "text-muted-foreground"
                             )}
@@ -936,19 +935,19 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                               // Start date can be flexible (even in the past for ongoing registrations)
                               // End date cannot be before today
                               const today = startOfDay(new Date())
-                              
+
                               // If we're selecting a range and we have a start date,
                               // we need to check if this date is the end date
                               if (registrationDate.from && date < registrationDate.from) {
                                 return true // End date can't be before start date
                               }
-                              
+
                               // When selecting end date, it can't be before today
                               // But when selecting start date, it can be flexible
                               if (!registrationDate.from && date < today) {
                                 return false // Allow selecting past dates for start
                               }
-                              
+
                               return false
                             }}
                           />
@@ -957,7 +956,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                               <div className="flex items-center justify-between text-sm">
                                 <span>Thời gian đăng ký:</span>
                                 <span className="font-semibold">
-                                  {registrationDate.from && registrationDate.to 
+                                  {registrationDate.from && registrationDate.to
                                     ? `${differenceInDays(registrationDate.to, registrationDate.from) + 1} ngày`
                                     : "0 ngày"}
                                 </span>
@@ -985,28 +984,28 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                           <CalendarDays className="h-4 w-4 text-green-600 flex-shrink-0" />
                           <div className="flex-1">
                             <p className="text-sm font-medium">
-                              {registrationDate.from 
-                                ? format(registrationDate.from, "dd/MM/yyyy") 
+                              {registrationDate.from
+                                ? format(registrationDate.from, "dd/MM/yyyy")
                                 : "Chưa chọn"}
                               {" - "}
-                              {registrationDate.to 
-                                ? format(registrationDate.to, "dd/MM/yyyy") 
+                              {registrationDate.to
+                                ? format(registrationDate.to, "dd/MM/yyyy")
                                 : "Chưa chọn"}
                             </p>
                             <p className="text-xs text-gray-600">
-                              {registrationDate.from && registrationDate.to 
+                              {registrationDate.from && registrationDate.to
                                 ? `${differenceInDays(registrationDate.to, registrationDate.from) + 1} ngày đăng ký`
                                 : "Chọn thời gian đăng ký"}
                             </p>
                             {registrationDate.from && (
                               <div className="flex items-center gap-1 mt-1">
                                 <Badge variant={
-                                  registrationDate.from < startOfDay(new Date()) 
-                                    ? "secondary" 
+                                  registrationDate.from < startOfDay(new Date())
+                                    ? "secondary"
                                     : "outline"
                                 } className="text-xs">
-                                  {registrationDate.from < startOfDay(new Date()) 
-                                    ? "Đang diễn ra" 
+                                  {registrationDate.from < startOfDay(new Date())
+                                    ? "Đang diễn ra"
                                     : "Sắp bắt đầu"}
                                 </Badge>
                               </div>
@@ -1053,14 +1052,14 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                               // Can't select dates in the past
                               const today = new Date()
                               if (date < today) return true
-                              
+
                               // Tournament must be after registration ends and within 1 week
                               if (registrationDate.to) {
                                 const minDate = addDays(registrationDate.to, 1)
                                 const maxDate = addWeeks(registrationDate.to, 1)
                                 return date < minDate || date > maxDate
                               }
-                              
+
                               return false
                             }}
                             locale={vi}
@@ -1082,8 +1081,8 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                       <Label className="text-sm font-medium mb-2 block">Thông tin ngày thi đấu</Label>
                       <Card className="p-3 border-2 border-blue-200 bg-blue-50">
                         <p className="text-sm font-medium">
-                          {tournamentDate 
-                            ? format(tournamentDate, "dd/MM/yyyy") 
+                          {tournamentDate
+                            ? format(tournamentDate, "dd/MM/yyyy")
                             : "Chưa chọn ngày"}
                         </p>
                         {registrationDate.to && tournamentDate && (
@@ -1109,7 +1108,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     <Clock className="h-4 w-4" />
                     Thời Gian Thi Đấu *
                   </Label>
-                  
+
                   {/* Time Display Card */}
                   <Dialog open={showTimeDialog} onOpenChange={setShowTimeDialog}>
                     <DialogTrigger asChild>
@@ -1125,9 +1124,9 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                                 {formData.startTime ? (parseInt(formData.startTime.split(":")[0]) < 12 ? "Sáng" : "Chiều") : "Sáng"}
                               </div>
                             </div>
-                            
+
                             <ArrowRight className="h-6 w-6 text-gray-400" />
-                            
+
                             <div className="text-center">
                               <div className="text-sm font-medium text-gray-600">Kết thúc</div>
                               <div className="text-2xl font-bold text-blue-700">
@@ -1138,7 +1137,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex flex-col items-end">
                             <Button variant="outline" size="sm" onClick={handleTimeDialogOpen}>
                               <Clock className="h-4 w-4 mr-2" />
@@ -1164,21 +1163,20 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                       <UnifiedClockLayout />
                     </DialogContent>
                   </Dialog>
-                  
+
                   {/* Error Messages */}
                   <div className="space-y-2 mt-2">
                     {errors.startTime && <p className="text-red-500 text-sm">{errors.startTime}</p>}
                     {errors.endTime && <p className="text-red-500 text-sm">{errors.endTime}</p>}
                   </div>
-                  
+
                   {/* Duration Summary */}
-                  {formData.startTime && formData.endTime && (
+                  {!!formData.maxParticipants && (
                     <div className="mt-4 p-3 bg-gray-50 rounded-lg border">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium">Tổng thời gian thi đấu</p>
                           <p className={cn(
-                            "text-lg font-bold",
                             (() => {
                               const [startHour, startMin] = formData.startTime.split(":").map(Number)
                               const [endHour, endMin] = formData.endTime.split(":").map(Number)
@@ -1204,7 +1202,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                     </div>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   {/* Sport Category */}
                   <div>
@@ -1303,13 +1301,13 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
                 </div>
 
                 {/* Participants Summary */}
-                {(formData.minParticipants || formData.maxParticipants) && (
+                {!!formData.maxParticipants && (
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold text-gray-700">Tổng Số Người Tham Gia:</p>
                         <p className="text-lg font-bold text-blue-600">
-                          {formData.minParticipants || formData.maxParticipants} người
+                          {formData.maxParticipants} người
                         </p>
                       </div>
                       <div className="text-right">

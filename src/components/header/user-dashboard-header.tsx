@@ -8,7 +8,7 @@ interface HeaderInfo {
 
 export function UserDashboardHeader() {
     const location = useLocation()
-    
+
     const getHeaderInfo = (pathname: string): HeaderInfo => {
         switch (pathname) {
             case "/user-dashboard":
@@ -26,10 +26,10 @@ export function UserDashboardHeader() {
                     title: "Invoices",
                     breadcrumb: ["Home", "User Dashboard", "Invoices"]
                 }
-            case "/user-chat":
+            case "/user-tournaments":
                 return {
-                    title: "Chat",
-                    breadcrumb: ["Home", "User Dashboard", "Chat"]
+                    title: "Tournaments",
+                    breadcrumb: ["Home", "User Dashboard", "Tournaments"]
                 }
             case "/user-wallet":
                 return {
@@ -48,7 +48,7 @@ export function UserDashboardHeader() {
                 }
         }
     }
-    
+
     const headerInfo = getHeaderInfo(location.pathname)
 
     // Use shared banner image from public/banner.img

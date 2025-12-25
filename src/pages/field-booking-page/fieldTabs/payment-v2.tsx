@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle, AlertCircle, Loader2, Wallet, Upload, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Loader2, Wallet, Upload, X, ImageIcon, Copy, Check, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
@@ -51,6 +51,11 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [paymentError, setPaymentError] = useState<string | null>(null);
     const [bookingId, setBookingId] = useState<string | null>(null);
+    const [verificationResult, setVerificationResult] = useState<{
+        status: string;
+        reason?: string;
+        isAiVerified: boolean;
+    } | null>(null);
     const [heldBookingId, setHeldBookingId] = useState<string | null>(null);
     const [countdown, setCountdown] = useState<number>(300); // 5 minutes in seconds
     const [holdError, setHoldError] = useState<string | null>(null);
@@ -231,7 +236,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                 'Content-Type': 'application/json',
             };
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/cancel-hold`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL} /bookings/${heldBookingId}/cancel-hold`, {
                 method: 'PATCH',
                 headers,
                 body: JSON.stringify({
@@ -457,6 +462,30 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             const booking = responseData.data || responseData;
             console.log('[PaymentV2] Payment proof submitted successfully:', booking);
             setBookingId(booking._id || booking.id);
+
+            // Check for AI verification result
+            const isConfirmed = booking.status === 'confirmed';
+            const transaction = booking.transaction;
+            const isRejected = transaction?.paymentProofStatus === 'rejected';
+
+            if (isConfirmed) {
+                setVerificationResult({
+                    status: 'confirmed',
+                    isAiVerified: true
+                });
+            } else if (isRejected) {
+                setVerificationResult({
+                    status: 'rejected',
+                    reason: transaction?.paymentProofRejectionReason,
+                    isAiVerified: true
+                });
+            } else {
+                setVerificationResult({
+                    status: 'pending',
+                    isAiVerified: false
+                });
+            }
+
             setPaymentStatus('success');
 
             // Clear localStorage
@@ -524,8 +553,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                     {/* Booking Hold Status - removed since hold happens in PersonalInfo step */}
                     {heldBookingId && countdown > 0 && (
                         <div className={`p-4 border rounded-lg mt-4 flex items-center justify-between ${countdown < 120
-                                ? 'bg-red-50 border-red-200 text-red-800'
-                                : 'bg-green-50 border-green-200 text-green-800'
+                            ? 'bg-red-50 border-red-200 text-red-800'
+                            : 'bg-green-50 border-green-200 text-green-800'
                             }`}>
                             <div className="flex items-center gap-2">
                                 <CheckCircle className="w-5 h-5" />
@@ -562,38 +591,129 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                 {/* Payment Section */}
                 <div className="flex-1 min-w-[600px]">
                     {paymentStatus === 'success' ? (
-                        <Card className="border border-emerald-200 bg-emerald-50">
+                        <Card className={`border ${verificationResult?.status === 'confirmed'
+                            ? 'border-emerald-200 bg-emerald-50'
+                            : verificationResult?.status === 'rejected'
+                                ? 'border-red-200 bg-red-50'
+                                : 'border-amber-200 bg-amber-50'
+                            }`}>
                             <CardContent className="p-8 text-center space-y-4">
-                                <CheckCircle className="w-16 h-16 text-emerald-600 mx-auto" />
+                                {verificationResult?.status === 'confirmed' ? (
+                                    <CheckCircle className="w-16 h-16 text-emerald-600 mx-auto" />
+                                ) : verificationResult?.status === 'rejected' ? (
+                                    <AlertCircle className="w-16 h-16 text-red-600 mx-auto" />
+                                ) : (
+                                    <Clock className="w-16 h-16 text-amber-600 mx-auto" />
+                                )}
                                 <div>
-                                    <h2 className="text-2xl font-semibold text-emerald-800">
-                                        Đã gửi yêu cầu đặt sân
+                                    <h2 className={`text-2xl font-semibold ${verificationResult?.status === 'confirmed'
+                                        ? 'text-emerald-800'
+                                        : verificationResult?.status === 'rejected'
+                                            ? 'text-red-800'
+                                            : 'text-amber-800'
+                                        }`}>
+                                        {verificationResult?.status === 'confirmed'
+                                            ? 'Thanh toán thành công!'
+                                            : verificationResult?.status === 'rejected'
+                                                ? 'Thanh toán bị từ chối'
+                                                : 'Đã gửi yêu cầu đặt sân'}
                                     </h2>
-                                    <p className="text-emerald-700">
-                                        Đơn đặt đang chờ chủ sân xác minh thanh toán. Email xác nhận sẽ được gửi khi chủ sân duyệt.
+                                    <p className={
+                                        verificationResult?.status === 'confirmed'
+                                            ? 'text-emerald-700'
+                                            : verificationResult?.status === 'rejected'
+                                                ? 'text-red-700'
+                                                : 'text-amber-700'
+                                    }>
+                                        {verificationResult?.status === 'confirmed'
+                                            ? 'Hệ thống AI đã xác nhận thanh toán của bạn thành công. Sân của bạn đã được đặt.'
+                                            : verificationResult?.status === 'rejected'
+                                                ? `AI không thể xác nhận thanh toán: ${verificationResult.reason || 'Vui lòng kiểm tra lại ảnh biên lai.'}`
+                                                : 'Đơn đặt đang chờ chủ sân xác minh thanh toán thủ công. Email xác nhận sẽ được gửi khi chủ sân duyệt.'}
                                     </p>
                                 </div>
 
-                                <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
+                                {verificationResult?.status !== 'confirmed' && (
+                                    <div className={`p-4 rounded-lg border text-sm ${verificationResult?.status === 'rejected'
+                                            ? 'bg-red-100 border-red-200 text-red-800'
+                                            : 'bg-amber-100 border-amber-200 text-amber-800'
+                                        }`}>
+                                        {verificationResult?.status === 'rejected' ? (
+                                            <>
+                                                <p className="font-semibold">Lý do từ chối:</p>
+                                                <p>{verificationResult.reason}</p>
+                                            </>
+                                        ) : (
+                                            <p>Bạn đã gửi ảnh chứng minh. Nếu bạn nhận ra mình đã gửi nhầm ảnh, bạn có thể thay thế bằng ảnh khác.</p>
+                                        )}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className={`mt-2 ${verificationResult?.status === 'rejected'
+                                                    ? 'border-red-300 text-red-800 hover:bg-red-200'
+                                                    : 'border-amber-300 text-amber-800 hover:bg-amber-200'
+                                                }`}
+                                            onClick={() => setPaymentStatus('idle')}
+                                        >
+                                            Thay thế bằng ảnh khác
+                                        </Button>
+                                    </div>
+                                )}
+
+                                <Badge variant="secondary" className={
+                                    verificationResult?.status === 'confirmed'
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : verificationResult?.status === 'rejected'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-amber-100 text-amber-800'
+                                }>
                                     Mã đặt sân: #{bookingId || 'N/A'}
                                 </Badge>
 
-                                <div className="grid md:grid-cols-3 gap-3 text-sm text-emerald-900 bg-white/60 border border-emerald-100 rounded-lg p-4">
+                                <div className={`grid md:grid-cols-3 gap-3 text-sm border rounded-lg p-4 ${verificationResult?.status === 'confirmed'
+                                    ? 'text-emerald-900 bg-white/60 border-emerald-100'
+                                    : verificationResult?.status === 'rejected'
+                                        ? 'text-red-900 bg-white/60 border-red-100'
+                                        : 'text-amber-900 bg-white/60 border-amber-100'
+                                    }`}>
                                     <div className="text-left md:text-center">
                                         <p className="font-semibold">Họ tên</p>
-                                        <p className="text-emerald-700">{formData.name || user?.fullName || 'Khách'}</p>
+                                        <p className={
+                                            verificationResult?.status === 'confirmed'
+                                                ? 'text-emerald-700'
+                                                : verificationResult?.status === 'rejected'
+                                                    ? 'text-red-700'
+                                                    : 'text-amber-700'
+                                        }>{formData.name || user?.fullName || 'Khách'}</p>
                                     </div>
                                     <div className="text-left md:text-center">
                                         <p className="font-semibold">Email nhận thông báo</p>
-                                        <p className="text-emerald-700">{formData.email || (user as any)?.email || '—'}</p>
+                                        <p className={
+                                            verificationResult?.status === 'confirmed'
+                                                ? 'text-emerald-700'
+                                                : verificationResult?.status === 'rejected'
+                                                    ? 'text-red-700'
+                                                    : 'text-amber-700'
+                                        }>{formData.email || (user as any)?.email || '—'}</p>
                                     </div>
                                     <div className="text-left md:text-center">
                                         <p className="font-semibold">Số điện thoại</p>
-                                        <p className="text-emerald-700">{formData.phone || (user as any)?.phone || '—'}</p>
+                                        <p className={
+                                            verificationResult?.status === 'confirmed'
+                                                ? 'text-emerald-700'
+                                                : verificationResult?.status === 'rejected'
+                                                    ? 'text-red-700'
+                                                    : 'text-amber-700'
+                                        }>{formData.phone || (user as any)?.phone || '—'}</p>
                                     </div>
                                 </div>
 
-                                <p className="text-xs text-emerald-700">
+                                <p className={`text-xs ${verificationResult?.status === 'confirmed'
+                                    ? 'text-emerald-700'
+                                    : verificationResult?.status === 'rejected'
+                                        ? 'text-red-700'
+                                        : 'text-amber-700'
+                                    }`}>
                                     Lưu ý: Email được gửi ngay sau khi đặt, qua hàng đợi nền; nếu không thấy, hãy kiểm tra hộp thư spam.
                                 </p>
                             </CardContent>

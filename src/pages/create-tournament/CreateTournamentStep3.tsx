@@ -29,34 +29,34 @@ interface Step3Props {
 export default function CreateTournamentStep3({ formData, onBack, onUpdate }: Step3Props) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  
+
   // Get both availableCourts and availableFields
   const tournamentState = useAppSelector((state: any) => state.tournament);
   const { loading, error, availableCourts } = tournamentState;
-  
+
   const [success, setSuccess] = useState(false);
   const [isEditingFee, setIsEditingFee] = useState(false);
 
   // FIXED: Use selectedCourtIds to get court details from availableCourts
   const selectedCourtIds = formData.selectedCourtIds || [];
-  
+
   // Get court details from availableCourts (populated in Step 2)
   const selectedCourts = availableCourts?.filter((court: any) =>
     selectedCourtIds.includes(court._id)
   ) || [];
 
   // If no courts found in availableCourts, check formData directly
-  const courtDetails = selectedCourts.length > 0 
-    ? selectedCourts 
+  const courtDetails = selectedCourts.length > 0
+    ? selectedCourts
     : formData.courtDetails || [];
 
   // Calculate recommended fees
   const calculateRecommendedFees = () => {
     const totalFieldCost = formData.totalCourtCost || formData.totalFieldCost || 0;
-    const minParticipants = formData.minParticipants || 1;
+    const capacity = formData.maxParticipants || 1;
 
-    // Minimum fee to break even with minimum participants (including 10% commission)
-    const breakEvenFee = Math.ceil((totalFieldCost / minParticipants) / 0.9);
+    // Base fee on max capacity
+    const breakEvenFee = Math.ceil((totalFieldCost / capacity) / 0.9);
 
     // Recommended fee to cover fields and have prize money
     const recommendedFee = Math.ceil(breakEvenFee * 1.3); // 30% above break-even
@@ -179,7 +179,7 @@ export default function CreateTournamentStep3({ formData, onBack, onUpdate }: St
                       {recommendedFees.breakEvenFee.toLocaleString()} VNĐ
                     </p>
                     <p className="text-xs text-gray-600 mt-1">
-                      Đủ chi phí sân ({formData.minParticipants} người)
+                      Đủ chi phí sân (nếu full)
                     </p>
                     <Button
                       variant="outline"
@@ -355,7 +355,7 @@ export default function CreateTournamentStep3({ formData, onBack, onUpdate }: St
                   Số Người Tham Gia
                 </Label>
                 <p className="font-semibold">
-                  Tối thiểu: {formData.minParticipants} | Tối đa: {formData.maxParticipants}
+                  Tối đa: {formData.maxParticipants}
                 </p>
               </div>
             </div>
@@ -443,12 +443,7 @@ export default function CreateTournamentStep3({ formData, onBack, onUpdate }: St
                   </span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span>Doanh Thu Tối Thiểu ({formData.minParticipants} người):</span>
-                  <span className="font-semibold text-green-600">
-                    {((formData.registrationFee || 0) * formData.minParticipants).toLocaleString()} VNĐ
-                  </span>
-                </div>
+
 
                 <div className="flex justify-between">
                   <span>Doanh Thu Tối Đa ({formData.maxParticipants} người):</span>
@@ -458,16 +453,7 @@ export default function CreateTournamentStep3({ formData, onBack, onUpdate }: St
                 </div>
 
                 <div className="border-t pt-3">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Chênh Lệch (Tối Thiểu):</span>
-                    <span className={
-                      ((formData.registrationFee || 0) * formData.minParticipants - (formData.totalCourtCost || formData.totalFieldCost || 0)) >= 0
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }>
-                      {(((formData.registrationFee || 0) * formData.minParticipants) - (formData.totalCourtCost || formData.totalFieldCost || 0)).toLocaleString()} VNĐ
-                    </span>
-                  </div>
+
                 </div>
               </CardContent>
             </Card>
@@ -484,7 +470,7 @@ export default function CreateTournamentStep3({ formData, onBack, onUpdate }: St
                   Hạn chót xác nhận: <strong>{calculateDeadline()}</strong>
                 </li>
                 <li>
-                  Cần tối thiểu <strong>{formData.minParticipants} người</strong> đăng ký trước hạn chót
+                  Kiểm tra kỹ thông tin trước khi xác nhận
                 </li>
                 <li>Nếu không đủ người, giải đấu sẽ tự động hủy và hoàn tiền cho người tham gia</li>
                 <li>Phí hoa hồng 10% sẽ được tính trên tổng phí đăng ký</li>

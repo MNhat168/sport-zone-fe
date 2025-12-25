@@ -7,7 +7,10 @@ import CreateTournamentStep1 from "./CreateTournamentStep1"
 import CreateTournamentStep2 from "./CreateTournamentStep2"
 import CreateTournamentStep3 from "./CreateTournamentStep3"
 import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, Lock } from "lucide-react"
+import { useSelector } from "react-redux"
+import type { RootState } from "@/store/store"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const steps = [
   { id: 1, name: "Thông Tin Cơ Bản", description: "Tên, môn, thời gian" },
@@ -17,6 +20,18 @@ const steps = [
 
 export default function CreateTournamentPage() {
   const [currentStep, setCurrentStep] = useState(1)
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  // Logic for limits
+  const MAX_ACTIVE_TOURNAMENTS = 3;
+  const WEEKLY_LIMIT = user?.tournamentTier === 'PREMIUM' ? 3 : 1;
+  const activeCount = user?.activeTournamentsCount || 0;
+  const weeklyCount = user?.weeklyTournamentCreationCount || 0;
+
+  const isActiveLimitReached = activeCount >= MAX_ACTIVE_TOURNAMENTS;
+  const isWeeklyLimitReached = weeklyCount >= WEEKLY_LIMIT;
+  const isLimitReached = isActiveLimitReached || isWeeklyLimitReached;
+
   const [formData, setFormData] = useState({
     name: "",
     sportType: "",
@@ -31,7 +46,7 @@ export default function CreateTournamentPage() {
     numberOfTeams: 4, // Default number of teams
     teamSize: undefined, // Will be set based on sport and category
     maxParticipants: 0, // Calculated based on teams
-    minParticipants: 0, // Calculated based on teams
+
     registrationFee: 0,
     description: "",
     courtsNeeded: 2, // Changed from fieldsNeeded
@@ -66,77 +81,99 @@ export default function CreateTournamentPage() {
             <p className="text-lg text-gray-600 font-medium">Tổ chức giải đấu thể thao của bạn với SportZone</p>
             <div className="h-1 w-24 bg-gradient-to-r from-green-500 to-green-700 mx-auto mt-4 rounded-full"></div>
           </div>
+          <div className="h-1 w-24 bg-gradient-to-r from-green-500 to-green-700 mx-auto mt-4 rounded-full"></div>
+        </div>
 
-          <Card className="mb-8 border-0 shadow-lg bg-gradient-to-b from-white to-green-50">
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between">
-                {steps.map((step, index) => (
-                  <div
-                    key={step.id}
-                    className="flex items-start"
-                    style={{ width: index < steps.length - 1 ? "100%" : "auto" }}
-                  >
-                    <div className="flex flex-col items-center" style={{ minWidth: "140px" }}>
-                      <div
-                        className={`flex items-center justify-center w-16 h-16 rounded-full font-bold text-lg transition-all duration-300 shadow-md ${currentStep > step.id
-                            ? "bg-green-600 border-2 border-green-700 text-white scale-105"
-                            : currentStep === step.id
-                              ? "border-3 border-green-600 text-green-600 bg-green-50 scale-110"
-                              : "border-2 border-gray-300 text-gray-400 bg-white"
+        {isLimitReached && (
+          <Alert variant="destructive" className="mb-8 border-red-200 bg-red-50">
+            <Lock className="h-5 w-5" />
+            <AlertTitle className="ml-2 font-bold text-lg">Creation Limit Reached</AlertTitle>
+            <AlertDescription className="ml-2 mt-2 text-base">
+              {isActiveLimitReached ? (
+                <p>You have reached the maximum of {MAX_ACTIVE_TOURNAMENTS} active tournaments. Please complete or cancel existing ones.</p>
+              ) : (
+                <p>You have reached your weekly creation limit of {WEEKLY_LIMIT} tournament(s). Limit resets on Monday.</p>
+              )}
+              <div className="mt-2 font-medium">
+                Active: {activeCount}/{MAX_ACTIVE_TOURNAMENTS} • Weekly: {weeklyCount}/{WEEKLY_LIMIT}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Card className="mb-8 border-0 shadow-lg bg-gradient-to-b from-white to-green-50">
+          <CardContent className="p-8">
+            <div className="flex items-start justify-between">
+              {steps.map((step, index) => (
+                <div
+                  key={step.id}
+                  className="flex items-start"
+                  style={{ width: index < steps.length - 1 ? "100%" : "auto" }}
+                >
+                  <div className="flex flex-col items-center" style={{ minWidth: "140px" }}>
+                    <div
+                      className={`flex items-center justify-center w-16 h-16 rounded-full font-bold text-lg transition-all duration-300 shadow-md ${currentStep > step.id
+                        ? "bg-green-600 border-2 border-green-700 text-white scale-105"
+                        : currentStep === step.id
+                          ? "border-3 border-green-600 text-green-600 bg-green-50 scale-110"
+                          : "border-2 border-gray-300 text-gray-400 bg-white"
+                        }`}
+                    >
+                      {currentStep > step.id ? (
+                        <CheckCircle2 className="h-8 w-8" />
+                      ) : (
+                        <span className="text-xl">{step.id}</span>
+                      )}
+                    </div>
+                    <div className="mt-4 text-center">
+                      <p
+                        className={`text-sm font-bold transition-colors ${currentStep >= step.id ? "text-green-700" : "text-gray-400"
                           }`}
                       >
-                        {currentStep > step.id ? (
-                          <CheckCircle2 className="h-8 w-8" />
-                        ) : (
-                          <span className="text-xl">{step.id}</span>
-                        )}
-                      </div>
-                      <div className="mt-4 text-center">
-                        <p
-                          className={`text-sm font-bold transition-colors ${currentStep >= step.id ? "text-green-700" : "text-gray-400"
-                            }`}
-                        >
-                          {step.name}
-                        </p>
-                        <p className={`text-xs mt-1 ${currentStep >= step.id ? "text-gray-600" : "text-gray-400"}`}>
-                          {step.description}
-                        </p>
-                      </div>
+                        {step.name}
+                      </p>
+                      <p className={`text-xs mt-1 ${currentStep >= step.id ? "text-gray-600" : "text-gray-400"}`}>
+                        {step.description}
+                      </p>
                     </div>
-
-                    {index < steps.length - 1 && (
-                      <div
-                        className={`h-1 mx-4 self-start transition-all duration-300 rounded-full ${currentStep > step.id ? "bg-green-600 shadow-md" : "bg-gray-200"
-                          }`}
-                        style={{ flexGrow: 1, marginTop: "32px" }}
-                      />
-                    )}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
 
-          <div>
-            {currentStep === 1 && (
-              <CreateTournamentStep1 formData={formData} onUpdate={handleUpdateFormData} onNext={handleNext} />
-            )}
-            {currentStep === 2 && (
-              <CreateTournamentStep2
-                formData={formData}
-                onUpdate={handleUpdateFormData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
-            {currentStep === 3 && (
-              <CreateTournamentStep3
-                formData={formData}
-                onBack={handleBack}
-                onUpdate={handleUpdateFormData} 
-              />
-            )}
-          </div>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`h-1 mx-4 self-start transition-all duration-300 rounded-full ${currentStep > step.id ? "bg-green-600 shadow-md" : "bg-gray-200"
+                        }`}
+                      style={{ flexGrow: 1, marginTop: "32px" }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div>
+          {!isLimitReached && (
+            <>
+              {currentStep === 1 && (
+                <CreateTournamentStep1 formData={formData} onUpdate={handleUpdateFormData} onNext={handleNext} />
+              )}
+              {currentStep === 2 && (
+                <CreateTournamentStep2
+                  formData={formData}
+                  onUpdate={handleUpdateFormData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
+              {currentStep === 3 && (
+                <CreateTournamentStep3
+                  formData={formData}
+                  onBack={handleBack}
+                  onUpdate={handleUpdateFormData}
+                />
+              )}
+            </>
+          )}
         </div>
       </div>
       <FooterComponent />

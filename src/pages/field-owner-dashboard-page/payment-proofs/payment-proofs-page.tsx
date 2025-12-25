@@ -13,12 +13,9 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 
 interface Booking {
     _id: string;
@@ -75,17 +72,20 @@ export default function PaymentProofsPage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
     const [showImageDialog, setShowImageDialog] = useState(false);
-    const [showVerifyDialog, setShowVerifyDialog] = useState(false);
-    const [verifyAction, setVerifyAction] = useState<'approve' | 'reject'>('approve');
-    const [rejectionReason, setRejectionReason] = useState('');
-    const [verifying, setVerifying] = useState(false);
 
     useEffect(() => {
         fetchPendingProofs();
+
+        // Polling for updates every 30 seconds
+        const interval = setInterval(() => {
+            fetchPendingProofs(true);
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
-    const fetchPendingProofs = async () => {
-        setLoading(true);
+    const fetchPendingProofs = async (isSilent = false) => {
+        if (!isSilent) setLoading(true);
         setError(null);
         try {
             const token = localStorage.getItem('token');
@@ -117,59 +117,6 @@ export default function PaymentProofsPage() {
         setShowImageDialog(true);
     };
 
-    const handleVerify = (booking: Booking, action: 'approve' | 'reject') => {
-        setSelectedBooking(booking);
-        setVerifyAction(action);
-        setRejectionReason('');
-        setShowVerifyDialog(true);
-    };
-
-    const handleConfirmVerify = async () => {
-        if (!selectedBooking) return;
-
-        if (verifyAction === 'reject' && !rejectionReason.trim()) {
-            alert('Vui lòng nhập lý do từ chối');
-            return;
-        }
-
-        setVerifying(true);
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Chưa đăng nhập');
-            }
-
-            const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/bookings/${selectedBooking._id || selectedBooking.id}/verify-payment-proof`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: verifyAction,
-                        rejectionReason: verifyAction === 'reject' ? rejectionReason : undefined,
-                    }),
-                }
-            );
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Có lỗi xảy ra' }));
-                throw new Error(errorData.message || 'Không thể xác minh thanh toán');
-            }
-
-            // Refresh list
-            await fetchPendingProofs();
-            setShowVerifyDialog(false);
-            setSelectedBooking(null);
-            alert(verifyAction === 'approve' ? 'Đã duyệt thanh toán thành công' : 'Đã từ chối thanh toán');
-        } catch (err: any) {
-            alert(err.message || 'Có lỗi xảy ra khi xác minh');
-        } finally {
-            setVerifying(false);
-        }
-    };
 
     const totalAmount = (booking: Booking): number => {
         return booking.totalPrice || (booking.bookingAmount + booking.platformFee);
@@ -272,22 +219,34 @@ export default function PaymentProofsPage() {
                                             )}
                                         </div>
 
-                                        {/* Actions */}
-                                        <div className="flex flex-col gap-2 justify-center">
-                                            <Button
-                                                onClick={() => handleVerify(booking, 'approve')}
-                                                className="bg-emerald-600 hover:bg-emerald-700"
-                                            >
-                                                <CheckCircle className="w-4 h-4 mr-2" />
-                                                Duyệt
-                                            </Button>
-                                            <Button
-                                                variant="destructive"
-                                                onClick={() => handleVerify(booking, 'reject')}
-                                            >
-                                                <XCircle className="w-4 h-4 mr-2" />
-                                                Từ chối
-                                            </Button>
+                                        {/* AI Verification Status Dashboard */}
+                                        <div className="flex flex-col gap-2 justify-center min-w-[150px]">
+                                            <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                                                Trạng thái AI
+                                            </div>
+                                            {booking.transaction?.paymentProofStatus === 'pending' && (
+                                                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg">
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <span className="text-sm font-medium">Đang xác minh...</span>
+                                                </div>
+                                            )}
+                                            {booking.transaction?.paymentProofStatus === 'rejected' && (
+                                                <div className="flex flex-col gap-1 px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <XCircle className="w-4 h-4" />
+                                                        <span className="text-sm font-bold">AI Từ chối</span>
+                                                    </div>
+                                                    <p className="text-[10px] leading-tight opacity-80">
+                                                        Chờ khách gửi lại minh chứng mới
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {booking.transaction?.paymentProofStatus === 'approved' && (
+                                                <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
+                                                    <CheckCircle className="w-4 h-4" />
+                                                    <span className="text-sm font-bold">Đã Duyệt</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </CardContent>
@@ -318,57 +277,6 @@ export default function PaymentProofsPage() {
                                 />
                             </div>
                         )}
-                    </DialogContent>
-                </Dialog>
-
-                {/* Verify Dialog */}
-                <Dialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>
-                                {verifyAction === 'approve' ? 'Duyệt thanh toán' : 'Từ chối thanh toán'}
-                            </DialogTitle>
-                            <DialogDescription>
-                                {verifyAction === 'approve'
-                                    ? 'Bạn có chắc chắn muốn duyệt thanh toán này? Booking sẽ được xác nhận.'
-                                    : 'Vui lòng nhập lý do từ chối thanh toán này.'}
-                            </DialogDescription>
-                        </DialogHeader>
-                        {verifyAction === 'reject' && (
-                            <div className="space-y-2">
-                                <Label htmlFor="rejectionReason">Lý do từ chối *</Label>
-                                <Textarea
-                                    id="rejectionReason"
-                                    value={rejectionReason}
-                                    onChange={(e) => setRejectionReason(e.target.value)}
-                                    placeholder="Nhập lý do từ chối..."
-                                    rows={4}
-                                />
-                            </div>
-                        )}
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowVerifyDialog(false)}
-                                disabled={verifying}
-                            >
-                                Hủy
-                            </Button>
-                            <Button
-                                onClick={handleConfirmVerify}
-                                disabled={verifying || (verifyAction === 'reject' && !rejectionReason.trim())}
-                                variant={verifyAction === 'approve' ? 'default' : 'destructive'}
-                            >
-                                {verifying ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Đang xử lý...
-                                    </>
-                                ) : (
-                                    verifyAction === 'approve' ? 'Xác nhận duyệt' : 'Xác nhận từ chối'
-                                )}
-                            </Button>
-                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>

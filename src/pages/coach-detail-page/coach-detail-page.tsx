@@ -209,16 +209,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     }
   }, [dispatch, effectiveCoachId]);
 
-<<<<<<< HEAD
-  // Ensure auth profile (favouriteCoaches) is fresh on page load so the favorite
-  // button correctly reflects server state. Only refresh when favourites are
-  // missing or don't include the current coach id.
-  useEffect(() => {
-    if (!effectiveCoachId) return;
-    const needRefresh = !currentUser || !Array.isArray(currentUser.favouriteCoaches) || !currentUser.favouriteCoaches.includes(effectiveCoachId as string);
-    if (needRefresh) {
-      dispatch(getUserProfile());
-=======
   // Rate-limit profile refresh to avoid frequent /users/get-profile requests.
   // This keeps favouriteCoaches in sync but prevents continuous fetching.
   useEffect(() => {
@@ -238,7 +228,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       dispatch(getUserProfile()).finally(() => {
         try { localStorage.setItem(PROFILE_REFRESH_KEY, String(Date.now())); } catch { }
       });
->>>>>>> parent of bb3003e (Revert "Merge branch 'Feat/LongNH/Chat'")
     }
   }, [dispatch, effectiveCoachId, authUser]);
 

@@ -50,8 +50,8 @@ export function UserDashboardTabs() {
 
                         <Button
                             variant="ghost"
-                            className={baseTabClasses(isActive("/user-chat"))}
-                            onClick={() => handleNavigation("/user-chat")}
+                            className={baseTabClasses(isActive("/user-tournaments"))}
+                            onClick={() => handleNavigation("/user-tournaments")}
                         >
                             <MessageSquare className="w-6 h-6" />
                             <div className="text-center text-base font-medium">Chat</div>

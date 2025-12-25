@@ -6,24 +6,24 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MapPin, 
-  DollarSign, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  Building,
-  Search,
-  Filter,
-  ChevronRight,
-  ChevronLeft,
-  Star,
-  Users,
-  Calendar,
-  X,
-  Loader2,
-  Minus,
-  Plus
+import {
+    MapPin,
+    DollarSign,
+    Clock,
+    CheckCircle2,
+    AlertCircle,
+    Building,
+    Search,
+    Filter,
+    ChevronRight,
+    ChevronLeft,
+    Star,
+    Users,
+    Calendar,
+    X,
+    Loader2,
+    Minus,
+    Plus
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { fetchAvailableCourts } from '@/features/tournament/tournamentThunk';
@@ -81,7 +81,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
         loading: (state.tournament as any)?.loading || false,
         error: (state.tournament as any)?.error || null
     }));
-    
+
     const [selectedCourts, setSelectedCourts] = useState<string[]>(formData.selectedCourtIds || []);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [searchLocation, setSearchLocation] = useState<string>(formData.location || '');
@@ -109,7 +109,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
 
         setSearchLocation(location);
         onUpdate({ ...formData, location });
-        
+
         console.log('Dispatching fetchAvailableCourts with:', {
             sportType: formData.sportType,
             location: location,
@@ -118,12 +118,14 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
 
         // Start transition
         setIsTransitioning(true);
-        
+
         // Dispatch fetch action
         dispatch(fetchAvailableCourts({
             sportType: formData.sportType,
             location: location,
             date: formData.tournamentDate,
+            startTime: formData.startTime,
+            endTime: formData.endTime,
         }));
 
         // Hide search bar after a short delay to allow animation
@@ -182,13 +184,13 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
 
     // Filter fields based on search and price range
     const filteredFields = Object.entries(courtsByField).filter(([_, { field }]) => {
-        const matchesSearch = !searchQuery || 
+        const matchesSearch = !searchQuery ||
             field.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             field.location.address.toLowerCase().includes(searchQuery.toLowerCase());
-        
+
         const basePrice = field.basePrice || 100000;
         const matchesPrice = basePrice >= priceRange[0] && basePrice <= priceRange[1];
-        
+
         return matchesSearch && matchesPrice;
     });
 
@@ -204,7 +206,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
             if (!selectedFieldId && newSelection.includes(courtId)) {
                 setSelectedFieldId(fieldId);
             }
-            
+
             return newSelection;
         });
         setErrors({});
@@ -277,12 +279,11 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-6">
             {/* Search Bar Section - Full width when active */}
-            <div 
-                className={`transition-all duration-500 ease-in-out ${
-                    showSearchBar 
-                        ? 'opacity-100 translate-x-0 h-auto' 
-                        : 'opacity-0 -translate-x-full h-0 overflow-hidden'
-                }`}
+            <div
+                className={`transition-all duration-500 ease-in-out ${showSearchBar
+                    ? 'opacity-100 translate-x-0 h-auto'
+                    : 'opacity-0 -translate-x-full h-0 overflow-hidden'
+                    }`}
                 ref={searchBarRef}
             >
                 <Card className="border-0 shadow-xl bg-gradient-to-br from-green-50 to-blue-50">
@@ -334,7 +335,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                     <h4 className="font-semibold text-gray-900">Chọn Sân</h4>
                                     <p className="text-sm text-gray-600">Từ {sportRules.minCourtsRequired}-{sportRules.maxCourtsRequired} sân</p>
                                 </div>
-                                
+
                                 <div className="text-center p-4 bg-white rounded-lg shadow-sm">
                                     <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
                                         <Calendar className="h-6 w-6 text-green-600" />
@@ -342,12 +343,12 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                     <h4 className="font-semibold text-gray-900">Ngày {new Date(formData.tournamentDate).toLocaleDateString('vi-VN')}</h4>
                                     <p className="text-sm text-gray-600">{formData.startTime} - {formData.endTime}</p>
                                 </div>
-                                
+
                                 <div className="text-center p-4 bg-white rounded-lg shadow-sm">
                                     <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mb-3">
                                         <Users className="h-6 w-6 text-purple-600" />
                                     </div>
-                                    <h4 className="font-semibold text-gray-900">{formData.minParticipants}-{formData.maxParticipants} Người</h4>
+                                    <h4 className="font-semibold text-gray-900">{formData.maxParticipants} Người</h4>
                                     <p className="text-sm text-gray-600">{formData.numberOfTeams} đội thi đấu</p>
                                 </div>
                             </div>
@@ -382,12 +383,11 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
             </div>
 
             {/* Main Content Section - Only shows when search bar is hidden */}
-            <div 
-                className={`transition-all duration-500 ease-in-out ${
-                    !showSearchBar 
-                        ? 'opacity-100 translate-x-0 h-auto' 
-                        : 'opacity-0 translate-x-full h-0 overflow-hidden'
-                }`}
+            <div
+                className={`transition-all duration-500 ease-in-out ${!showSearchBar
+                    ? 'opacity-100 translate-x-0 h-auto'
+                    : 'opacity-0 translate-x-full h-0 overflow-hidden'
+                    }`}
                 ref={contentRef}
             >
                 <div className="flex flex-col lg:flex-row gap-6 min-h-[600px]">
@@ -416,7 +416,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                     </Button>
                                 </div>
                             </CardHeader>
-                            
+
                             <CardContent className="space-y-4">
                                 {/* Search and Filter */}
                                 <div className="space-y-4">
@@ -429,7 +429,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                             className="pl-9"
                                         />
                                     </div>
-                                    
+
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-sm font-medium">Khoảng giá</Label>
@@ -437,7 +437,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                 {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} VNĐ/giờ
                                             </span>
                                         </div>
-                                        
+
                                         {/* Custom Price Range Selector */}
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-3">
@@ -461,7 +461,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                     placeholder="Tối đa"
                                                 />
                                             </div>
-                                            
+
                                             {/* Quick Price Filters */}
                                             <div className="flex flex-wrap gap-2">
                                                 <Button
@@ -491,7 +491,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-2 text-sm">
                                         <Filter className="h-4 w-4 text-gray-500" />
                                         <span className="font-medium">Lọc theo:</span>
@@ -550,12 +550,12 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                                         </Badge>
                                                                     )}
                                                                 </div>
-                                                                
+
                                                                 <p className="text-sm text-gray-600 flex items-center gap-1 mb-2">
                                                                     <MapPin className="h-4 w-4 flex-shrink-0" />
                                                                     <span className="line-clamp-1">{field.location.address}</span>
                                                                 </p>
-                                                                
+
                                                                 <div className="flex items-center justify-between text-sm">
                                                                     <span className="text-green-600 font-semibold">
                                                                         {totalCost.toLocaleString()} VNĐ
@@ -565,7 +565,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                                     </Badge>
                                                                 </div>
                                                             </div>
-                                                            
+
                                                             {isSelected && (
                                                                 <ChevronRight className="h-5 w-5 text-green-600 flex-shrink-0" />
                                                             )}
@@ -604,7 +604,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                     </CardDescription>
                                 )}
                             </CardHeader>
-                            
+
                             <CardContent className="space-y-6 overflow-y-auto">
                                 {!selectedField ? (
                                     <div className="text-center py-12">
@@ -643,11 +643,11 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                             {selectedField.field.basePrice?.toLocaleString()} VNĐ/giờ
                                                         </Badge>
                                                     </div>
-                                                    
+
                                                     <p className="text-gray-700 mb-3">
                                                         {selectedField.field.description}
                                                     </p>
-                                                    
+
                                                     {selectedField.field.amenities && selectedField.field.amenities.length > 0 && (
                                                         <div className="flex flex-wrap gap-2">
                                                             {selectedField.field.amenities.slice(0, 3).map((amenity: string, index: number) => (
@@ -665,19 +665,19 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                 <div className="flex items-center justify-between mb-4">
                                                     <h4 className="font-semibold text-lg">Các Sân Con</h4>
                                                     <span className="text-sm text-gray-500">
-                                                        {selectedCourts.filter(id => 
+                                                        {selectedCourts.filter(id =>
                                                             selectedField.courts.some(c => c._id === id)
                                                         ).length}/{formData.courtsNeeded} đã chọn
                                                     </span>
                                                 </div>
-                                                
+
                                                 {errors.selectedCourts && (
                                                     <Alert variant="destructive" className="mb-4">
                                                         <AlertCircle className="h-4 w-4" />
                                                         <AlertDescription>{errors.selectedCourts}</AlertDescription>
                                                     </Alert>
                                                 )}
-                                                
+
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     {selectedField.courts.map((court) => {
                                                         const basePrice = court.pricingOverride?.basePrice || court.basePrice || court.field?.basePrice || 0;
@@ -690,7 +690,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                                 className={`cursor-pointer transition-all ${isSelected
                                                                     ? 'border-green-600 border-2 bg-green-50'
                                                                     : 'border-gray-200 hover:border-gray-300'
-                                                                }`}
+                                                                    }`}
                                                                 onClick={() => handleCourtToggle(court._id, selectedField.field._id)}
                                                             >
                                                                 <CardContent className="p-4">
@@ -708,7 +708,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                                                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                                                                                 )}
                                                                             </div>
-                                                                            
+
                                                                             <div className="space-y-2 text-sm">
                                                                                 <div className="flex items-center justify-between">
                                                                                     <span className="text-gray-600">Giá:</span>
@@ -762,14 +762,14 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                     </>
                                 )}
                             </CardContent>
-                            
+
                             {/* Action Buttons */}
                             <div className="p-6 border-t">
                                 <div className="flex items-center justify-between">
                                     <Button onClick={onBack} variant="outline" size="lg">
                                         Quay Lại
                                     </Button>
-                                    
+
                                     <div className="flex items-center gap-4">
                                         <div className="text-right">
                                             <p className="text-sm text-gray-600">Tổng chi phí</p>

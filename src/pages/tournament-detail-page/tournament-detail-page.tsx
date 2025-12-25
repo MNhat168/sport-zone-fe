@@ -41,6 +41,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+import { CancelTournamentModal } from "@/components/tournamnent/CancelTournamentModal"
+
 export default function TournamentDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -52,6 +54,7 @@ export default function TournamentDetailsPage() {
   const [isRegistering, setIsRegistering] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("wallet")
   const [showRegisterDialog, setShowRegisterDialog] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
   const [registrationSuccess, setRegistrationSuccess] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [highlightedTeam, setHighlightedTeam] = useState<number | null>(null)
@@ -278,9 +281,8 @@ export default function TournamentDetailsPage() {
   );
   const isRegistrationOpen = tournament.status === 'pending' || tournament.status === 'confirmed'
   const isFull = tournament.participants?.length >= (tournament.maxParticipants || 0);
-  const daysUntilTournament = Math.ceil(
-    (new Date(tournament.tournamentDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  )
+  const daysUntilTournament = tournament ? Math.ceil((new Date(tournament.tournamentDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
+  const isSolo = tournament?.teamSize === 1
 
   console.log('Tournament object:', {
     participants: tournament.participants,
@@ -338,7 +340,7 @@ export default function TournamentDetailsPage() {
 
   console.log('Tournament data debug:', {
     maxParticipants: tournament.maxParticipants,
-    minParticipants: tournament.minParticipants,
+
     participantsCount: tournament.participants?.length || 0,
     participants: tournament.participants,
     numberOfTeams: tournament.numberOfTeams,
@@ -430,146 +432,168 @@ export default function TournamentDetailsPage() {
                   </div>
 
                   <div className="space-y-3">
-                    {isParticipant ? (
-                      <Button disabled className="w-full bg-green-600 hover:bg-green-700">
-                        <CheckCircle2 className="h-5 w-5 mr-2" />
-                        Already Registered
-                      </Button>
-                    ) : isFull ? (
-                      <Button disabled className="w-full bg-gray-600">
-                        Tournament Full
-                      </Button>
-                    ) : !isRegistrationOpen ? (
-                      <Button disabled className="w-full bg-gray-600">
-                        Registration Closed
-                      </Button>
+                    {/* Organizer Actions */}
+                    {(user?._id === tournament.organizer || (tournament.organizer as any)?._id === user?._id) ? (
+                      <div className="space-y-3">
+                        <Button
+                          variant="destructive"
+                          className="w-full py-6"
+                          onClick={() => setShowCancelModal(true)}
+                          disabled={tournament.status === 'cancelled'}
+                        >
+                          {tournament.status === 'cancelled' ? 'Tournament Cancelled' : 'Cancel Tournament'}
+                        </Button>
+                      </div>
                     ) : (
-                      <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
-                        <DialogTrigger asChild>
-                          <Button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-lg py-6">
-                            <Trophy className="h-5 w-5 mr-2" />
-                            Join Now
+                      // Participant Actions
+                      <>
+                        {isParticipant ? (
+                          <Button disabled className="w-full bg-green-600 hover:bg-green-700">
+                            <CheckCircle2 className="h-5 w-5 mr-2" />
+                            Already Registered
                           </Button>
-                        </DialogTrigger>
-                        {/* Inside the Register Dialog Content */}
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="text-2xl">Join Tournament</DialogTitle>
-                          </DialogHeader>
+                        ) : isFull ? (
+                          <Button disabled className="w-full bg-gray-600">
+                            Tournament Full
+                          </Button>
+                        ) : !isRegistrationOpen ? (
+                          <Button disabled className="w-full bg-gray-600">
+                            Registration Closed
+                          </Button>
+                        ) : (
+                          <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
+                            <DialogTrigger asChild>
+                              <Button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-lg py-6">
+                                <Trophy className="h-5 w-5 mr-2" />
+                                Join Now
+                              </Button>
+                            </DialogTrigger>
 
-                          <ScrollArea className="max-h-[80vh] pr-4">
-                            <div className="space-y-6 py-4">
-                              <div className="space-y-2">
-                                <h3 className="font-semibold">Tournament Details</h3>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <div className="text-gray-600">Name</div>
-                                    <div className="font-medium">{tournament.name}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-600">Fee</div>
-                                    <div className="font-medium">{formatCurrency(tournament.registrationFee)}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-600">Teams</div>
-                                    <div className="font-medium">{tournament.numberOfTeams} teams</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-gray-600">Team Size</div>
-                                    <div className="font-medium">{tournament.teamSize} players</div>
-                                  </div>
-                                </div>
-                              </div>
+                            {/* Inside the Register Dialog Content */}
+                            <DialogContent className="sm:max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="text-2xl">Join Tournament</DialogTitle>
+                              </DialogHeader>
 
-                              <Separator />
-
-                              <div className="space-y-4">
-                                <h3 className="font-semibold">Select Payment Method</h3>
-                                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                                  {/* SportZone Wallet option */}
-                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                                    <RadioGroupItem value="wallet" id="wallet" />
-                                    <Label htmlFor="wallet" className="flex-1 cursor-pointer">
-                                      <div className="font-medium">SportZone Wallet</div>
-                                      <div className="text-sm text-gray-600">Pay from your wallet balance</div>
-                                    </Label>
-                                    <Badge variant="outline">Recommended</Badge>
+                              <ScrollArea className="max-h-[80vh] pr-4">
+                                <div className="space-y-6 py-4">
+                                  <div className="space-y-1">
+                                    <div className="text-2xl font-bold">{tournament.participants?.length || 0}</div>
+                                    <div className="text-xs text-gray-500 uppercase font-semibold">Participants</div>
                                   </div>
-
-                                  {/* PayOS option */}
-                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                                    <RadioGroupItem value="payos" id="payos" />
-                                    <Label htmlFor="payos" className="flex-1 cursor-pointer">
-                                      <div className="font-medium">PayOS Payment</div>
-                                      <div className="text-sm text-gray-600">Credit/Debit card, e-wallet via PayOS</div>
-                                    </Label>
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                      Popular
-                                    </Badge>
-                                  </div>
-
-                                  {/* MoMo option */}
-                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                                    <RadioGroupItem value="momo" id="momo" />
-                                    <Label htmlFor="momo" className="flex-1 cursor-pointer">
-                                      <div className="font-medium">MoMo E-Wallet</div>
-                                      <div className="text-sm text-gray-600">Instant payment via MoMo</div>
-                                    </Label>
-                                  </div>
-
-                                  {/* Bank Transfer option */}
-                                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                                    <RadioGroupItem value="banking" id="banking" />
-                                    <Label htmlFor="banking" className="flex-1 cursor-pointer">
-                                      <div className="font-medium">Bank Transfer</div>
-                                      <div className="text-sm text-gray-600">Direct bank transfer</div>
-                                    </Label>
-                                  </div>
-                                </RadioGroup>
-
-                                {/* Payment Method Details */}
-                                {paymentMethod === 'payos' && (
-                                  <Alert className="bg-blue-50 border-blue-200">
-                                    <div className="flex items-start gap-2">
-                                      <div className="h-4 w-4 mt-0.5 flex-shrink-0">
-                                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
+                                  <div className="space-y-2">
+                                    <h3 className="font-semibold">Tournament Details</h3>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <div className="text-gray-600">Name</div>
+                                        <div className="font-medium">{tournament.name}</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-gray-600">Fee</div>
+                                        <div className="font-medium">{formatCurrency(tournament.registrationFee)}</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-gray-600">Teams</div>
+                                        <div className="font-medium">{tournament.numberOfTeams} teams</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-gray-600">Team Size</div>
+                                        <div className="font-medium">{tournament.teamSize} players</div>
                                       </div>
                                     </div>
+                                  </div>
+
+                                  <Separator />
+
+                                  <div className="space-y-4">
+                                    <h3 className="font-semibold">Select Payment Method</h3>
+                                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                                      {/* SportZone Wallet option */}
+                                      <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                        <RadioGroupItem value="wallet" id="wallet" />
+                                        <Label htmlFor="wallet" className="flex-1 cursor-pointer">
+                                          <div className="font-medium">SportZone Wallet</div>
+                                          <div className="text-sm text-gray-600">Pay from your wallet balance</div>
+                                        </Label>
+                                        <Badge variant="outline">Recommended</Badge>
+                                      </div>
+
+                                      {/* PayOS option */}
+                                      <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                        <RadioGroupItem value="payos" id="payos" />
+                                        <Label htmlFor="payos" className="flex-1 cursor-pointer">
+                                          <div className="font-medium">PayOS Payment</div>
+                                          <div className="text-sm text-gray-600">Credit/Debit card, e-wallet via PayOS</div>
+                                        </Label>
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                          Popular
+                                        </Badge>
+                                      </div>
+
+                                      {/* MoMo option */}
+                                      <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                        <RadioGroupItem value="momo" id="momo" />
+                                        <Label htmlFor="momo" className="flex-1 cursor-pointer">
+                                          <div className="font-medium">MoMo E-Wallet</div>
+                                          <div className="text-sm text-gray-600">Instant payment via MoMo</div>
+                                        </Label>
+                                      </div>
+
+                                      {/* Bank Transfer option */}
+                                      <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                                        <RadioGroupItem value="banking" id="banking" />
+                                        <Label htmlFor="banking" className="flex-1 cursor-pointer">
+                                          <div className="font-medium">Bank Transfer</div>
+                                          <div className="text-sm text-gray-600">Direct bank transfer</div>
+                                        </Label>
+                                      </div>
+                                    </RadioGroup>
+
+                                    {/* Payment Method Details */}
+                                    {paymentMethod === 'payos' && (
+                                      <Alert className="bg-blue-50 border-blue-200">
+                                        <div className="flex items-start gap-2">
+                                          <div className="h-4 w-4 mt-0.5 flex-shrink-0">
+                                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                          </div>
+                                        </div>
+                                      </Alert>
+                                    )}
+                                  </div>
+
+                                  <Alert>
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription className="text-sm">
+                                      You will be automatically assigned to a team based on availability.
+                                      By joining, you agree to the tournament rules and understand that fees are non-refundable unless the tournament is cancelled.
+                                    </AlertDescription>
                                   </Alert>
-                                )}
-                              </div>
 
-                              <Alert>
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertDescription className="text-sm">
-                                  You will be automatically assigned to a team based on availability.
-                                  By joining, you agree to the tournament rules and understand that fees are non-refundable unless the tournament is cancelled.
-                                </AlertDescription>
-                              </Alert>
-
-                              <div className="flex gap-3">
-                                <Button
-                                  variant="outline"
-                                  className="flex-1"
-                                  onClick={() => setShowRegisterDialog(false)}
-                                  disabled={isRegistering}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  className="flex-1 bg-green-600 hover:bg-green-700"
-                                  onClick={handleRegister}
-                                  disabled={isRegistering}
-                                >
-                                  {isRegistering ? "Processing..." : "Confirm & Pay"}
-                                </Button>
-                              </div>
-                            </div>
-                          </ScrollArea>
-                        </DialogContent>
-                      </Dialog>
+                                  <div className="flex gap-3">
+                                    <Button
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => setShowRegisterDialog(false)}
+                                      disabled={isRegistering}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      className="flex-1 bg-green-600 hover:bg-green-700"
+                                      onClick={handleRegister}
+                                      disabled={isRegistering}
+                                    >
+                                      {isRegistering ? "Processing..." : "Confirm & Pay"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </ScrollArea>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </>
                     )}
 
                     <div className="flex gap-2">
@@ -609,9 +633,7 @@ export default function TournamentDetailsPage() {
                     }
                     className="h-2"
                   />
-                  <div className="text-xs text-center mt-2 opacity-80">
-                    {tournament.minParticipants} participants needed to confirm tournament
-                  </div>
+
                 </div>
 
                 {/* Team Progress */}
@@ -1014,16 +1036,19 @@ export default function TournamentDetailsPage() {
                                         </div>
                                         <div>
                                           <h3 className="font-semibold text-lg">
-                                            {team.name || `Team ${team.teamNumber}`}
+                                            {isSolo ? (teamParticipants[0]?.user?.fullName || `Player ${team.teamNumber}`) : (team.name || `Team ${team.teamNumber}`)}
                                           </h3>
                                           <div className="flex items-center gap-2 text-sm text-gray-600">
-                                            <Badge variant={isTeamFull ? "default" : "outline"} className={
-                                              isTeamFull
-                                                ? "bg-green-600 hover:bg-green-700"
-                                                : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-                                            }>
-                                              {isTeamFull ? 'Full Team' : `${teamParticipants.length}/${tournament.teamSize}`}
-                                            </Badge>
+                                            {!isSolo && (
+                                              <Badge variant={isTeamFull ? "default" : "outline"} className={
+                                                isTeamFull
+                                                  ? "bg-green-600 hover:bg-green-700"
+                                                  : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+                                              }>
+                                                {isTeamFull ? 'Full Team' : `${teamParticipants.length}/${tournament.teamSize}`}
+                                              </Badge>
+                                            )}
+
                                             {team.captain && (
                                               <Badge variant="outline" className="flex items-center gap-1">
                                                 <User className="h-3 w-3" />
@@ -1035,7 +1060,7 @@ export default function TournamentDetailsPage() {
                                       </div>
 
                                       <div className="text-right">
-                                        <div className="text-sm text-gray-600">Team Score</div>
+                                        <div className="text-sm text-gray-600">{isSolo ? 'Score' : 'Team Score'}</div>
                                         <div className="text-2xl font-bold">{team.score || 0}</div>
                                       </div>
                                     </div>
@@ -1423,14 +1448,14 @@ export default function TournamentDetailsPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Confirmation</span>
                       <span className="font-medium">
-                        {tournament.participants?.length >= tournament.minParticipants ? (
+                        {isFull ? (
                           <span className="text-green-600 flex items-center gap-1">
                             <CheckCircle2 className="h-4 w-4" />
-                            Confirmed
+                            Full
                           </span>
                         ) : (
-                          <span className="text-yellow-600">
-                            Needs {tournament.minParticipants - (tournament.participants?.length || 0)} more
+                          <span className="text-blue-600 flex items-center gap-1">
+                            Open
                           </span>
                         )}
                       </span>
@@ -1456,15 +1481,6 @@ export default function TournamentDetailsPage() {
                     </div>
                   </div>
 
-                  {tournament.status === 'pending' && tournament.participants?.length < tournament.minParticipants && (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription className="text-sm">
-                        This tournament needs {tournament.minParticipants - (tournament.participants?.length || 0)} more participants to be confirmed.
-                        Join now to help reach the minimum!
-                      </AlertDescription>
-                    </Alert>
-                  )}
                 </CardContent>
               </Card>
 
@@ -1559,6 +1575,14 @@ export default function TournamentDetailsPage() {
           </div>
         </div>
       </div>
+
+      {tournament && (
+        <CancelTournamentModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          tournamentId={tournament._id}
+        />
+      )}
 
       <FooterComponent />
     </>

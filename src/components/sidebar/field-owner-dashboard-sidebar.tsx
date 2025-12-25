@@ -28,6 +28,7 @@ import {
     LogOut,
     Eye,
     Edit,
+    Trophy,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -68,6 +69,11 @@ const menuItems: MenuItem[] = [
         title: "Quản lý Đặt Sân",
         url: "/field-owner/booking-history",
         icon: History,
+    },
+    {
+        title: "Yêu cầu giải đấu",
+        url: "/field-owner/tournament-requests",
+        icon: Trophy,
     },
     {
         title: "Chat",

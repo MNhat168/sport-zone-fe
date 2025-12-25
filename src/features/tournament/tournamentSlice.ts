@@ -19,8 +19,8 @@ export interface Tournament {
   startTime: string;
   endTime: string;
   maxParticipants: number;
-  minParticipants: number;
   registrationFee: number;
+
   description: string;
   status: string;
   isFull?: boolean;
@@ -80,6 +80,7 @@ interface TournamentState {
   currentTournament: Tournament | null;
   availableFields: any[];
   availableCourts: any[]; // Add this
+  tournamentRequests: any[];
   loading: boolean;
   error: string | null;
   selectedTeam: number | null;
@@ -90,6 +91,7 @@ const initialState: TournamentState = {
   currentTournament: null,
   availableFields: [],
   availableCourts: [], // Initialize
+  tournamentRequests: [],
   loading: false,
   error: null,
   selectedTeam: null,
@@ -117,6 +119,9 @@ const tournamentSlice = createSlice({
     setAvailableCourts: (state, action: PayloadAction<any[]>) => { // Add this
       state.availableCourts = action.payload;
     },
+    setTournamentRequests: (state, action: PayloadAction<any[]>) => {
+      state.tournamentRequests = action.payload;
+    },
     setSelectedTeam: (state, action: PayloadAction<number | null>) => {
       state.selectedTeam = action.payload;
     },
@@ -142,7 +147,7 @@ const tournamentSlice = createSlice({
           tournament.teams.push(action.payload.team);
         }
       }
-      
+
       if (state.currentTournament?._id === action.payload.tournamentId) {
         const teamIndex = state.currentTournament.teams.findIndex(t => t.teamNumber === action.payload.team.teamNumber);
         if (teamIndex !== -1) {
@@ -162,6 +167,7 @@ export const {
   setCurrentTournament,
   setAvailableFields,
   setAvailableCourts, // Export
+  setTournamentRequests,
   setSelectedTeam,
   addTournament,
   updateTournament,

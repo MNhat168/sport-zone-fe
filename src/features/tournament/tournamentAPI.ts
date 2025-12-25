@@ -19,12 +19,18 @@ export const buildTournamentsQuery = (filters: { sportType?: string; location?: 
   return params.toString();
 };
 
-export const buildAvailableFieldsQuery = (params: { sportType: string; location: string; date: string }) => {
-  const queryParams = new URLSearchParams(params);
+export const buildAvailableFieldsQuery = (params: { sportType: string; location: string; date: string; startTime?: string; endTime?: string }) => {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) queryParams.append(key, value);
+  });
   return queryParams.toString();
 };
 
-export const buildAvailableCourtsQuery = (params: { sportType: string; location: string; date: string }) => {
-  const queryParams = new URLSearchParams(params);
+export const buildAvailableCourtsQuery = (params: { sportType: string; location: string; date: string; startTime?: string; endTime?: string }) => {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) queryParams.append(key, value);
+  });
   return queryParams.toString();
 };

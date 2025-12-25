@@ -22,9 +22,21 @@ import {
 import type { AuthResponse, ErrorResponse } from "../../types/authentication-type";
 import { clearUserAuth } from "../../lib/cookies";
 
+// Extend the User type from AuthResponse to include new fields
+// This assumes AuthResponse['user'] is the User interface we want to modify.
+// If AuthResponse['user'] is a simple type, this might need adjustment.
+// For now, we'll define a local type that includes the new fields.
+type User = AuthResponse["user"] & {
+    tournaments?: any[];
+    // Abuse prevention fields
+    activeTournamentsCount?: number;
+    weeklyTournamentCreationCount?: number;
+    tournamentTier?: 'FREE' | 'PREMIUM';
+}
+
 interface AuthState {
     _id: string | null;
-    user: AuthResponse["user"] | null;
+    user: User | null; // Use the extended User type here
     token: string | null; // kept for backward-compatibility but unused with cookie auth
     loading: boolean;
     error: ErrorResponse | null;
