@@ -56,7 +56,7 @@ const ProtectedRoute = ({
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location, showToast: true, toastMessage: "Vui lòng đăng nhập để tiếp tục" }} replace />;
   }
 
   if (allowedRoles && allowedRoles.length > 0) {

@@ -12,6 +12,8 @@ export {
     getAllCoaches,
     getCoachIdByUserId,
     updateCoach,
+    uploadCoachGalleryImages,
+    deleteCoachGalleryImage,
 } from './coachThunk';
 
 export {

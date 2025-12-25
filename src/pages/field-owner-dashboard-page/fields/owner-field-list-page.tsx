@@ -26,13 +26,13 @@ const normalizeLocation = (rawLocation: any): string => {
     if (typeof rawLocation === 'string' && rawLocation.trim()) {
         return rawLocation
     }
-    
+
     if (rawLocation && typeof rawLocation === 'object') {
         const address = rawLocation.address
         const geo = rawLocation.geo
         const lat = geo?.latitude ?? geo?.lat
         const lng = geo?.longitude ?? geo?.lng
-        
+
         if (typeof address === 'string' && address.trim()) {
             return address
         }
@@ -40,7 +40,7 @@ const normalizeLocation = (rawLocation: any): string => {
             return `${lat}, ${lng}`
         }
     }
-    
+
     return 'Địa chỉ không xác định'
 }
 
@@ -53,11 +53,11 @@ const extractCoordinates = (field: any) => {
             return { lat, lng }
         }
     }
-    
+
     // Fallback to other possible formats
     const lat = field.latitude ?? field.lat ?? field?.geo?.lat ?? field?.geo?.latitude
     const lng = field.longitude ?? field.lng ?? field?.geo?.lng ?? field?.geo?.longitude
-    
+
     return {
         lat: typeof lat === 'number' && !isNaN(lat) ? lat : null,
         lng: typeof lng === 'number' && !isNaN(lng) ? lng : null,
@@ -67,12 +67,12 @@ const extractCoordinates = (field: any) => {
 const OwnerFieldListPage = () => {
     const dispatch = useAppDispatch()
     const { fields, loading, error, pagination } = useAppSelector((state) => state.field)
-    
+
     const [filters, setFilters] = useState(DEFAULT_FILTERS)
     const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const lastFiltersRef = useRef<string>("")
     const isInitialMount = useRef(true)
-    
+
     // Map refs
     const mapContainerId = 'owner-fields-map-container'
     const mapRef = useRef<any>(null)
@@ -82,14 +82,14 @@ const OwnerFieldListPage = () => {
     const transformedFields = useMemo(() => {
         return fields.map((field: any) => {
             const coords = extractCoordinates(field)
-            
+
             return {
                 id: field.id,
                 name: field.name,
                 location: normalizeLocation(field.location ?? field.address),
                 description: field.description || 'Mô tả không có sẵn',
-                rating: field.rating || 4.5,
-                reviews: field.reviews || field.totalBookings || 0,
+                rating: field.rating ?? 0,
+                reviews: field.totalReviews ?? field.totalBookings ?? 0,
                 price: field.price || `${field.basePrice || 0}k/h`,
                 nextAvailability: field.isActive !== false ? 'Có sẵn' : 'Không có sẵn',
                 sportType: field.sportType || 'unknown',
@@ -104,7 +104,7 @@ const OwnerFieldListPage = () => {
     // Fetch fields with debounce - only when filters change
     useEffect(() => {
         const filtersKey = JSON.stringify(filters)
-        
+
         // Skip nếu là lần mount đầu tiên và đã có data với filters mặc định
         if (isInitialMount.current) {
             isInitialMount.current = false
@@ -114,20 +114,20 @@ const OwnerFieldListPage = () => {
                 return
             }
         }
-        
+
         // Skip if filters haven't changed
         if (filtersKey === lastFiltersRef.current) {
             return
         }
-        
+
         // Clear previous timeout
         if (debounceTimeoutRef.current) {
             clearTimeout(debounceTimeoutRef.current)
         }
-        
+
         // Update last filters immediately to prevent duplicate calls
         lastFiltersRef.current = filtersKey
-        
+
         // Debounce API call
         debounceTimeoutRef.current = setTimeout(() => {
             dispatch(getMyFields({
@@ -222,13 +222,13 @@ const OwnerFieldListPage = () => {
 
         // Add markers for fields with coordinates
         transformedFields.forEach((field) => {
-            if (field.latitude != null && field.longitude != null && 
+            if (field.latitude != null && field.longitude != null &&
                 !isNaN(field.latitude) && !isNaN(field.longitude)) {
                 try {
                     const marker = L.marker([field.latitude, field.longitude], {
                         icon: getFieldPinIcon(field.sportType, L)
                     }).addTo(mapRef.current)
-                    
+
                     const popupHtml = `
                         <div style="min-width: 160px">
                             <div style="font-weight:600;margin-bottom:4px">${field.name}</div>
@@ -301,7 +301,7 @@ const OwnerFieldListPage = () => {
                     scroll-snap-align: start;
                 }
             `}</style>
-            
+
             <FieldOwnerDashboardLayout>
                 <div className="px-4 min-h-screen">
                     <div className="flex gap-6 items-start">
@@ -318,7 +318,7 @@ const OwnerFieldListPage = () => {
                                         Tổng cộng: {pagination?.total || 0} sân
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex gap-4 items-center">
                                     <div className="flex-1">
                                         <input

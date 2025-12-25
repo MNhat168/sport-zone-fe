@@ -72,29 +72,41 @@ axiosInstance.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
 
-        // Clear any persisted client-side user state before forcing re-auth
-        try {
-          localStorage.removeItem("user");
-          sessionStorage.removeItem("user");
-        } catch {
-          // ignore storage errors
-        }
+        // Only redirect to auth if there was actually a stored user session
+        // Anonymous users should NOT be redirected to /auth on 401 errors
+        const hadStoredUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+        if (hadStoredUser) {
+          // Clear any persisted client-side user state before forcing re-auth
+          try {
+            localStorage.removeItem("user");
+            sessionStorage.removeItem("user");
+          } catch {
+            // ignore storage errors
+          }
 
-        // Refresh failed, redirect to login
-        window.location.href = "/auth";
+          // Refresh failed, redirect to login
+          window.location.href = "/auth";
+        }
+        // For anonymous users, just reject the error without redirect
         return Promise.reject(refreshError);
       }
     }
 
     // For 403 or other errors, just reject
     if (error.response?.status === 403) {
-      try {
-        localStorage.removeItem("user");
-        sessionStorage.removeItem("user");
-      } catch {
-        // ignore storage errors
+      // Only redirect to auth if there was actually a stored user session
+      // Anonymous users should NOT be redirected to /auth on 403 errors
+      const hadStoredUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+      if (hadStoredUser) {
+        try {
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("user");
+        } catch {
+          // ignore storage errors
+        }
+        window.location.href = "/auth";
       }
-      window.location.href = "/auth";
+      // For anonymous users, just reject the error without redirect
     }
 
     return Promise.reject(error);

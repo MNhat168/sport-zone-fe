@@ -86,7 +86,7 @@ export function BookingFilters({
                                     value="coaches"
                                     className="px-2.5 py-2 data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-900 rounded-lg"
                                 >
-                                    Huấn Luyện Viên
+                                    Sân + HLV
                                 </TabsTrigger>
                             </TabsList>
                         </Tabs>

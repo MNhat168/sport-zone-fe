@@ -11,10 +11,8 @@ const steps = [
     { key: CombinedBookingStep.FIELD_AMENITIES, label: "Tiện ích", number: 3 },
     { key: CombinedBookingStep.FIELD_CONFIRM, label: "Xác nhận", number: 4 },
     { key: CombinedBookingStep.COACH_SELECT, label: "Chọn HLV", number: 5 },
-    { key: CombinedBookingStep.COACH_TIME, label: "Giờ HLV", number: 6 },
-    { key: CombinedBookingStep.COMBINED_CONFIRM, label: "Xác nhận", number: 7 },
-    { key: CombinedBookingStep.PERSONAL_INFO, label: "Thông tin", number: 8 },
-    { key: CombinedBookingStep.PAYMENT, label: "Thanh toán", number: 9 },
+    { key: CombinedBookingStep.COMBINED_CONFIRM, label: "Xác nhận", number: 6 },
+    { key: CombinedBookingStep.PERSONAL_INFO, label: "Gửi đơn", number: 7 },
 ];
 
 export const FieldCoachBookingStepper = ({ currentStep }: StepperProps) => {
@@ -42,7 +40,7 @@ export const FieldCoachBookingStepper = ({ currentStep }: StepperProps) => {
 
                 {/* Steps */}
                 <div className="relative flex justify-between" style={{ zIndex: 1 }}>
-                    {steps.map((step, index) => {
+                    {steps.map((step) => {
                         const isCompleted = step.number < currentStepNumber;
                         const isCurrent = step.number === currentStepNumber;
                         const isUpcoming = step.number > currentStepNumber;
@@ -53,7 +51,7 @@ export const FieldCoachBookingStepper = ({ currentStep }: StepperProps) => {
                                 <div
                                     className={`
                                         w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
-                                        transition-all duration-300 bg-white border-2
+                                        transition-all duration-300 border-2
                                         ${isCompleted ? 'border-emerald-600 bg-emerald-600 text-white' : ''}
                                         ${isCurrent ? 'border-emerald-600 bg-white text-emerald-600 scale-110 shadow-lg' : ''}
                                         ${isUpcoming ? 'border-gray-300 bg-white text-gray-400' : ''}
@@ -68,7 +66,7 @@ export const FieldCoachBookingStepper = ({ currentStep }: StepperProps) => {
                                         className={`
                                             text-xs font-medium whitespace-nowrap
                                             ${isCurrent ? 'text-emerald-600' : ''}
-                                            ${isCompleted ? 'text-gray-700' : ''}
+                                            ${isCompleted ? 'text-emerald-600' : ''}
                                             ${isUpcoming ? 'text-gray-400' : ''}
                                         `}
                                     >

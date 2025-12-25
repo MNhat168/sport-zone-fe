@@ -1,15 +1,15 @@
 // Payment types based on API documentation
 
 export const PaymentMethod = {
-    CASH: 1,
-    EBANKING: 2,
-    CREDIT_CARD: 3,
-    DEBIT_CARD: 4,
-    MOMO: 5,
-    ZALOPAY: 6,
-    VNPAY: 7,
+    // CASH: 1,
+    // EBANKING: 2,
+    // CREDIT_CARD: 3,
+    // DEBIT_CARD: 4,
+    // MOMO: 5,
+    // ZALOPAY: 6,
+    // VNPAY: 7,
     BANK_TRANSFER: 8,
-    QR_CODE: 9,
+    // QR_CODE: 9,
     INTERNAL: 10, // Giao dịch nội bộ hệ thống (payout, fee)
     PAYOS: 11, // PayOS payment gateway
 } as const;

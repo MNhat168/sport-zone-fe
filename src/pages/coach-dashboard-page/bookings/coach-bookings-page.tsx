@@ -55,8 +55,11 @@ import axiosPrivate from "@/utils/axios/axiosPrivate"
 export default function CoachBookingsPage() {
     const authUser = useAppSelector((state) => state.auth.user)
     const [bookings, setBookings] = useState<any[]>([])
+    const [combinedBookings, setCombinedBookings] = useState<any[]>([]) // FIELD_COACH bookings
     const [loading, setLoading] = useState(true)
+    const [loadingCombined, setLoadingCombined] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [errorCombined, setErrorCombined] = useState<string | null>(null)
     const [coachId, setCoachId] = useState<string | null>(null)
     useEffect(() => {
         const storedUser = sessionStorage.getItem("user")
@@ -75,18 +78,13 @@ export default function CoachBookingsPage() {
     useEffect(() => {
         const fetchBookings = async () => {
             try {
-                // Use axiosPrivate which handles credentials (cookies) automatically
-                const response = await axiosPrivate.get('/bookings/coach/my-bookings')
-
-                // Handle response structure similar to other API calls in this project
-                // Usually response.data or response.data.data
+                // Fetch regular COACH bookings
+                const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=coach')
                 const data = response.data;
                 const bookingsData = Array.isArray(data) ? data : (data.data || []);
-
                 setBookings(Array.isArray(bookingsData) ? bookingsData : [])
             } catch (err: any) {
                 console.error("Error fetching bookings:", err)
-                // Extract error message from axios response if available
                 const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
                 setError(errorMessage)
             } finally {
@@ -94,8 +92,25 @@ export default function CoachBookingsPage() {
             }
         }
 
+        const fetchCombinedBookings = async () => {
+            try {
+                // Fetch FIELD_COACH combined bookings
+                const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=field_coach')
+                const data = response.data;
+                const bookingsData = Array.isArray(data) ? data : (data.data || []);
+                setCombinedBookings(Array.isArray(bookingsData) ? bookingsData : [])
+            } catch (err: any) {
+                console.error("Error fetching combined bookings:", err)
+                const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch kết hợp";
+                setErrorCombined(errorMessage)
+            } finally {
+                setLoadingCombined(false)
+            }
+        }
+
         if (authUser) {
             fetchBookings()
+            fetchCombinedBookings()
         }
     }, [authUser])
     const handleCompleteBooking = async (bookingId: string) => {
@@ -255,6 +270,123 @@ export default function CoachBookingsPage() {
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Combined Bookings Section (FIELD_COACH) */}
+                <div className="mt-8">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Đặt lịch Sân + HLV</h2>
+                    <p className="text-sm text-gray-500 mb-4">Các lịch đặt kết hợp giữa sân và huấn luyện viên</p>
+
+                    {loadingCombined ? (
+                        <div className="flex items-center justify-center p-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    ) : errorCombined ? (
+                        <div className="bg-red-50 text-red-600 p-4 rounded-md">
+                            {errorCombined}
+                        </div>
+                    ) : combinedBookings.length === 0 ? (
+                        <Card>
+                            <CardContent className="flex flex-col items-center justify-center p-12">
+                                <Calendar className="h-12 w-12 text-gray-400 mb-4" />
+                                <p className="text-gray-500 text-lg">Chưa có lịch đặt kết hợp nào</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Danh sách đặt lịch kết hợp (Sân + HLV)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Khách hàng</TableHead>
+                                            <TableHead>Thời gian</TableHead>
+                                            <TableHead>Chi tiết sân</TableHead>
+                                            <TableHead>Giá</TableHead>
+                                            <TableHead>Trạng thái</TableHead>
+                                            <TableHead>Thanh toán</TableHead>
+                                            <TableHead>Ghi chú</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {combinedBookings.map((booking) => (
+                                            <TableRow key={booking._id || booking.id}>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="h-4 w-4 text-gray-400" />
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium">{booking.user?.fullName}</span>
+                                                            <span className="text-xs text-gray-500">{booking.user?.phoneNumber}</span>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2 text-sm">
+                                                            <Calendar className="h-3 w-3 text-gray-400" />
+                                                            {new Date(booking.date).toLocaleDateString('vi-VN')}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-sm">
+                                                            <Clock className="h-3 w-3 text-gray-400" />
+                                                            {booking.startTime} - {booking.endTime}
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="text-sm">
+                                                        <p className="font-medium">{booking.field?.name}</p>
+                                                        <p className="text-xs text-gray-500 truncate max-w-[150px]">{booking.field?.location?.address || booking.field?.location}</p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="font-medium text-primary flex items-center gap-1">
+                                                        {booking.totalPrice?.toLocaleString('vi-VN')}đ
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <BookingStatusBadge status={booking.status} />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <button
+                                                        disabled={!coachId}
+                                                        className="px-3 py-1 text-xs rounded-md bg-green-600 text-white
+                                                                hover:bg-green-700 disabled:opacity-50"
+                                                        onClick={() => handleCompleteBooking(booking._id || booking.id)}
+                                                    >
+                                                        Hoàn thành
+                                                    </button>
+                                                    <button
+                                                        disabled={!coachId}
+                                                        className="px-3 py-1 text-xs rounded-md bg-red-600 text-white
+                                                                hover:bg-red-700 disabled:opacity-50"
+                                                        onClick={() => handleCancelBooking(booking._id || booking.id)}
+                                                    >
+                                                        Hủy
+                                                    </button>
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <PaymentStatusBadge status={booking.paymentStatus} />
+                                                </TableCell>
+                                                <TableCell>
+                                                    {booking.note ? (
+                                                        <div className="flex items-start gap-1 max-w-[150px]" title={booking.note}>
+                                                            <FileText className="h-3 w-3 text-gray-400 mt-1 flex-shrink-0" />
+                                                            <span className="text-sm truncate">{booking.note}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 text-xs">-</span>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
             </div>
         </CoachDashboardLayout>
     )

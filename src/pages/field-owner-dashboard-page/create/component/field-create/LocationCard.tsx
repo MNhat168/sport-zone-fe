@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { VIETNAM_CITIES } from '@/utils/constant-value/constant';
 import type { CreateFieldPayload } from '@/types/field-type';
 
 // Types
@@ -13,9 +15,9 @@ interface LocationCardProps {
     formData: CreateFieldPayload;
     onInputChange: (field: string, value: any) => void;
     onCoordinatesChange?: (lat: number, lng: number) => void;
-    onLocationChange?: (location: { 
-        address: string; 
-        geo: { type: 'Point'; coordinates: [number, number] } 
+    onLocationChange?: (location: {
+        address: string;
+        geo: { type: 'Point'; coordinates: [number, number] }
     }) => void;
 }
 
@@ -51,43 +53,43 @@ const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
 const parseLatLngFromString = (input: string): [number, number] | null => {
     const latLngMatch = input.match(/(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/);
     if (!latLngMatch) return null;
-    
+
     const lat = parseFloat(latLngMatch[1]);
     const lng = parseFloat(latLngMatch[2]);
-    
+
     return (!Number.isNaN(lat) && !Number.isNaN(lng)) ? [lat, lng] : null;
 };
 
 const buildSearchCandidates = (input: string): string[] => {
     const postalRegex = /\b\d{5,6}\b/g;
     const withoutPostal = input.replace(postalRegex, '').trim();
-    
+
     const baseVariants = [input, withoutPostal].filter(Boolean);
     const withCountry = baseVariants.flatMap(v => [v, `${v}, Việt Nam`, `${v}, Vietnam`]);
-    
+
     return Array.from(new Set(withCountry));
 };
 
 const searchLocation = async (query: string): Promise<GeocodingResult | null> => {
     const candidates = buildSearchCandidates(query);
-    
+
     for (const candidate of candidates) {
         try {
             const url = `${NOMINATIM_BASE_URL}?format=jsonv2&limit=5&addressdetails=1&countrycodes=vn&q=${encodeURIComponent(candidate)}`;
-            const response = await fetch(url, { 
-                headers: { 'Accept': 'application/json' } 
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' }
             });
-            
+
             if (!response.ok) continue;
-            
-            const data: Array<{ lat: string; lon: string; display_name: string; importance?: number }> = 
+
+            const data: Array<{ lat: string; lon: string; display_name: string; importance?: number }> =
                 await response.json();
-            
+
             if (Array.isArray(data) && data.length > 0) {
                 const best = data.slice().sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0))[0];
                 const lat = parseFloat(best.lat);
                 const lon = parseFloat(best.lon);
-                
+
                 if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
                     return { lat, lon, display_name: best.display_name };
                 }
@@ -97,7 +99,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
             continue;
         }
     }
-    
+
     return null;
 };
 const reverseGeocode = async (lat: number, lon: number): Promise<string | null> => {
@@ -111,30 +113,31 @@ const reverseGeocode = async (lat: number, lon: number): Promise<string | null> 
         return null;
     }
 };
-export default function LocationCard({ 
-    formData, 
-    onInputChange, 
-    onCoordinatesChange, 
-    onLocationChange 
+export default function LocationCard({
+    formData,
+    onInputChange,
+    onCoordinatesChange,
+    onLocationChange
 }: LocationCardProps) {
     // State
     const [isExpanded, setIsExpanded] = useState(true);
     const [isSearching, setIsSearching] = useState(false);
+    const [selectedCity, setSelectedCity] = useState<string>('all');
     const [locationData, setLocationData] = useState<LocationData>({
         position: null,
         address: ''
     });
-    
+
     // Refs
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
-	const mapRef = useRef<L.Map | null>(null);
-	const markerRef = useRef<L.Marker | null>(null);
+    const mapRef = useRef<L.Map | null>(null);
+    const markerRef = useRef<L.Marker | null>(null);
     const addressRef = useRef<string>('');
 
     // Keep latest address
     useEffect(() => {
-        const locationString = typeof formData.location === 'string' 
-            ? formData.location 
+        const locationString = typeof formData.location === 'string'
+            ? formData.location
             : formData.location?.address || '';
         addressRef.current = locationString;
     }, [formData.location]);
@@ -148,30 +151,30 @@ export default function LocationCard({
             zoom: MAP_CONFIG.zoom,
         });
 
-		L.tileLayer(TILE_LAYER_URL, {
+        L.tileLayer(TILE_LAYER_URL, {
             attribution: '© OpenStreetMap contributors',
             maxZoom: MAP_CONFIG.maxZoom,
         }).addTo(map);
 
-		// Fix default marker icon
-		const defaultIcon = L.icon({
-			iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-			iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-			shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-			iconSize: [25, 41],
-			iconAnchor: [12, 41],
-			popupAnchor: [1, -34],
-			shadowSize: [41, 41]
-		})
-		L.Marker.prototype.options.icon = defaultIcon
+        // Fix default marker icon
+        const defaultIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+        L.Marker.prototype.options.icon = defaultIcon
 
-		// Create a draggable marker so user can drag to select location
-		const marker = L.marker(DEFAULT_CENTER, { 
-			draggable: true,
-			icon: defaultIcon
-		}).addTo(map);
+        // Create a draggable marker so user can drag to select location
+        const marker = L.marker(DEFAULT_CENTER, {
+            draggable: true,
+            icon: defaultIcon
+        }).addTo(map);
 
-		// Handle drag end -> update state and emit callbacks
+        // Handle drag end -> update state and emit callbacks
         marker.on('dragend', () => {
             const pos = marker.getLatLng();
             setLocationData(prev => ({
@@ -199,9 +202,9 @@ export default function LocationCard({
         mapRef.current = map;
 
         return () => {
-			map.remove();
-			mapRef.current = null;
-			markerRef.current = null;
+            map.remove();
+            mapRef.current = null;
+            markerRef.current = null;
         };
     }, []);
 
@@ -236,9 +239,9 @@ export default function LocationCard({
     // Attach click handler
     useEffect(() => {
         if (!mapRef.current) return;
-        
+
         mapRef.current.on('click', handleMapClick);
-        
+
         return () => {
             mapRef.current?.off('click', handleMapClick);
         };
@@ -268,14 +271,14 @@ export default function LocationCard({
 
     // Handle search for location
     const handleSearchLocation = useCallback(async () => {
-        const locationString = typeof formData.location === 'string' 
-            ? formData.location 
+        const locationString = typeof formData.location === 'string'
+            ? formData.location
             : formData.location?.address || '';
         const query = locationString.trim();
         if (!query || !mapRef.current || !markerRef.current) return;
 
         setIsSearching(true);
-        
+
         try {
             // Check if input is direct lat,lng coordinates
             const coordinates = parseLatLngFromString(query);
@@ -287,10 +290,10 @@ export default function LocationCard({
 
             // Search using geocoding service
             const result = await searchLocation(query);
-            
+
             if (result) {
                 updateMapPosition(result.lat, result.lon, result.display_name);
-				console.log('Selected location (search):', { address: result.display_name, lat: result.lat, lng: result.lon });
+                console.log('Selected location (search):', { address: result.display_name, lat: result.lat, lng: result.lon });
             } else {
                 alert('Không tìm thấy địa điểm phù hợp');
             }
@@ -318,25 +321,49 @@ export default function LocationCard({
         onInputChange('location', e.target.value);
     }, [onInputChange]);
 
+    const handleCitySelect = useCallback(async (value: string) => {
+        setSelectedCity(value);
+
+        if (value === 'all' || !value) return;
+
+        setIsSearching(true);
+
+        try {
+            const result = await searchLocation(value + ', Vietnam');
+
+            if (result) {
+                updateMapPosition(result.lat, result.lon, result.display_name);
+                console.log('Selected city:', { city: value, address: result.display_name, lat: result.lat, lng: result.lon });
+            } else {
+                alert('Không tìm thấy thành phố này trên bản đồ');
+            }
+        } catch (error) {
+            console.error('City geocoding error:', error);
+            alert('Có lỗi xảy ra khi tìm kiếm thành phố');
+        } finally {
+            setIsSearching(false);
+        }
+    }, [updateMapPosition]);
+
     // Render helpers
     const renderSearchButton = () => {
-        const locationString = typeof formData.location === 'string' 
-            ? formData.location 
+        const locationString = typeof formData.location === 'string'
+            ? formData.location
             : formData.location?.address || '';
         return (
-        <Button
-            type="button"
-            variant="outline"
-            onClick={handleSearchLocation}
-            disabled={!locationString.trim() || isSearching}
-            className="px-4"
-        >
-            {isSearching ? (
-                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            ) : (
-                <Search className="w-4 h-4" />
-            )}
-        </Button>
+            <Button
+                type="button"
+                variant="outline"
+                onClick={handleSearchLocation}
+                disabled={!locationString.trim() || isSearching}
+                className="px-4"
+            >
+                {isSearching ? (
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                    <Search className="w-4 h-4" />
+                )}
+            </Button>
         );
     };
 
@@ -349,7 +376,7 @@ export default function LocationCard({
             <div className="flex items-center gap-1 mt-2">
                 <MapPin className="w-4 h-4 text-blue-600" />
                 <span className="text-xs text-blue-600">
-                    {locationData.position 
+                    {locationData.position
                         ? `Tọa độ: ${locationData.position[0].toFixed(6)}, ${locationData.position[1].toFixed(6)}`
                         : 'Nhấn "Tìm kiếm" hoặc click trên bản đồ'
                     }
@@ -367,13 +394,12 @@ export default function LocationCard({
                 <div className="flex items-center justify-between">
                     <CardTitle>Vị trí</CardTitle>
                     <ChevronDown
-                        className={`w-5 h-5 transition-transform duration-200 ${
-                            isExpanded ? 'rotate-180' : 'rotate-0'
-                        }`}
+                        className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'
+                            }`}
                     />
                 </div>
             </CardHeader>
-            
+
             {isExpanded && (
                 <>
                     <hr className="border-t border-gray-300 my-0 mx-6" />
@@ -383,6 +409,26 @@ export default function LocationCard({
                                 Địa chỉ sân <span className="text-red-600">*</span>
                             </Label>
                             <div className="flex gap-2">
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-gray-500" />
+                                    <Select
+                                        value={selectedCity}
+                                        onValueChange={handleCitySelect}
+                                        disabled={isSearching}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Chọn tỉnh/thành" />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[300px] overflow-y-auto z-[10000]">
+                                            <SelectItem value="all">Tất cả khu vực</SelectItem>
+                                            {VIETNAM_CITIES.map((city) => (
+                                                <SelectItem key={city} value={city}>
+                                                    {city}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                                 <Input
                                     placeholder="Nhập địa chỉ đầy đủ của sân"
                                     value={typeof formData.location === 'string' ? formData.location : formData.location?.address || ''}

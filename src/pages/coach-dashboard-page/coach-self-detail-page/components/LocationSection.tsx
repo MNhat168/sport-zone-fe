@@ -8,16 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Navigation, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Navigation, Search } from "lucide-react";
+import { VIETNAM_CITIES } from "@/utils/constant-value/constant";
 
 interface LocationSectionProps {
   location: string;
   locationCoordinates: [number, number] | null;
   isEditMode: boolean;
   isSearching: boolean;
+  selectedCity?: string;
   mapContainerRef: React.RefObject<HTMLDivElement | null>;
   onLocationChange: (value: string) => void;
   onSearchLocation: () => void;
+  onCitySelect?: (city: string) => void;
 }
 
 export function LocationSection({
@@ -25,9 +29,11 @@ export function LocationSection({
   locationCoordinates,
   isEditMode,
   isSearching,
+  selectedCity = 'all',
   mapContainerRef,
   onLocationChange,
   onSearchLocation,
+  onCitySelect,
 }: LocationSectionProps) {
   // Load Leaflet CSS dynamically (same approach as other pages)
   useEffect(() => {
@@ -75,6 +81,26 @@ export function LocationSection({
           <div className="space-y-2">
             <Label>Địa chỉ <span className="text-red-600">*</span></Label>
             <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-gray-500" />
+                <Select
+                  value={selectedCity}
+                  onValueChange={onCitySelect}
+                  disabled={isSearching}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Chọn tỉnh/thành" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px] overflow-y-auto z-[10000]">
+                    <SelectItem value="all">Tất cả khu vực</SelectItem>
+                    {VIETNAM_CITIES.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Input
                 placeholder="Nhập địa chỉ đầy đủ"
                 value={location}
@@ -109,10 +135,10 @@ export function LocationSection({
           </div>
         )}
         <div className="h-96 rounded-lg relative overflow-hidden border border-gray-200 bg-gray-50">
-          <div 
-            ref={mapContainerRef} 
+          <div
+            ref={mapContainerRef}
             className="absolute inset-0 w-full h-full z-10"
-            style={{ 
+            style={{
               minHeight: '384px',
               position: 'absolute',
               top: 0,

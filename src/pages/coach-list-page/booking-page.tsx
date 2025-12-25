@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getCoaches } from "../../features/coach/coachThunk"
 import type { Coach } from "../../types/coach-type"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SPORT_TYPE_OPTIONS, DISTRICT_OPTIONS } from "@/utils/constant-value/constant"
+import { SPORT_TYPE_OPTIONS, VIETNAM_CITIES } from "@/utils/constant-value/constant"
 
 const BookingPage = () => {
     const coachesListRef = useRef<HTMLDivElement>(null)
@@ -23,7 +23,7 @@ const BookingPage = () => {
 
     // Filter states
     const [selectedSport, setSelectedSport] = useState<string>('all')
-    const [selectedDistrict, setSelectedDistrict] = useState<string>('all')
+    const [selectedLocation, setSelectedLocation] = useState<string>('all')
 
     // Map Coach data to format expected by CoachCard
     const coaches = useMemo(() => {
@@ -89,11 +89,11 @@ const BookingPage = () => {
         if (selectedSport !== 'all') {
             filters.sportType = selectedSport
         }
-        if (selectedDistrict !== 'all') {
-            filters.district = selectedDistrict
+        if (selectedLocation !== 'all') {
+            filters.district = selectedLocation
         }
         dispatch(getCoaches(Object.keys(filters).length > 0 ? filters : undefined))
-    }, [dispatch, selectedSport, selectedDistrict])
+    }, [dispatch, selectedSport, selectedLocation])
 
     // Initialize Leaflet map once (copied pattern from field list page)
     useEffect(() => {
@@ -262,19 +262,22 @@ const BookingPage = () => {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-                                        <SelectTrigger className="w-40">
-                                            <SelectValue placeholder="Tất cả quận" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Tất cả quận</SelectItem>
-                                            {DISTRICT_OPTIONS.map((district) => (
-                                                <SelectItem key={district} value={district}>
-                                                    {district}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-gray-500" />
+                                        <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Tất cả khu vực" />
+                                            </SelectTrigger>
+                                            <SelectContent className="max-h-[300px] overflow-y-auto">
+                                                <SelectItem value="all">Tất cả khu vực</SelectItem>
+                                                {VIETNAM_CITIES.map((city) => (
+                                                    <SelectItem key={city} value={city}>
+                                                        {city}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
                             {/* Geolocation UI (copied from field list style) */}

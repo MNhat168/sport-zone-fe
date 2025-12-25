@@ -79,7 +79,7 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
     const [note, setNote] = useState<string>("")
     useEffect(() => {
         try {
-            const existing = localStorage.getItem("amenitiesNote")
+            const existing = sessionStorage.getItem("amenitiesNote")
             if (existing) setNote(existing)
         } catch {
             // ignore
@@ -88,8 +88,8 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
     useEffect(() => {
         try {
             const trimmed = note.trim()
-            if (trimmed) localStorage.setItem("amenitiesNote", trimmed)
-            else localStorage.removeItem("amenitiesNote")
+            if (trimmed) sessionStorage.setItem("amenitiesNote", trimmed)
+            else sessionStorage.removeItem("amenitiesNote")
         } catch {
             // ignore
         }

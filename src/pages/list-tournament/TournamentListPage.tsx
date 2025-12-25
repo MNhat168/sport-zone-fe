@@ -172,12 +172,12 @@ export default function TournamentListPage() {
             {/* Slider Track */}
             <div className="h-2 bg-gray-200 rounded-lg">
               {/* Progress Fill */}
-              <div 
+              <div
                 className="h-full bg-green-500 rounded-lg"
                 style={{ width: `${getProgressWidth()}%` }}
               />
             </div>
-            
+
             {/* Slider Thumb */}
             <input
               type="range"
@@ -188,9 +188,9 @@ export default function TournamentListPage() {
               onChange={(e) => handleMaxFeeChange(parseInt(e.target.value))}
               className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
             />
-            
+
             {/* Custom Thumb */}
-            <div 
+            <div
               className="absolute top-1/2 w-4 h-4 bg-green-600 border-2 border-white rounded-full shadow-lg transform -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform"
               style={{ left: `calc(${getProgressWidth()}% - 8px)` }}
             />
@@ -218,11 +218,10 @@ export default function TournamentListPage() {
                 setMaxFee(value)
                 setCurrentPage(1) // Reset to first page when filters change
               }}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
-                maxFee === value 
-                  ? 'bg-green-600 text-white border-green-600' 
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${maxFee === value
+                  ? 'bg-green-600 text-white border-green-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               {label}
             </button>
@@ -421,9 +420,11 @@ export default function TournamentListPage() {
                         : "Be the first to create a tournament in your area!"
                       }
                     </p>
-                    <Button className="bg-green-600 hover:bg-green-700">
-                      Create Tournament
-                    </Button>
+                    <Link to="/tournaments/create">
+                      <Button className="bg-green-600 hover:bg-green-700">
+                        Create Tournament
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               ) : (
@@ -474,11 +475,10 @@ export default function TournamentListPage() {
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-md border ${
-              currentPage === 1
+            className={`px-3 py-1 rounded-md border ${currentPage === 1
                 ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
                 : 'hover:bg-gray-100 border-gray-300 text-gray-700'
-            }`}
+              }`}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -488,11 +488,10 @@ export default function TournamentListPage() {
             <>
               <button
                 onClick={() => handlePageChange(1)}
-                className={`px-3 py-1 rounded-md border ${
-                  currentPage === 1
+                className={`px-3 py-1 rounded-md border ${currentPage === 1
                     ? 'bg-green-600 text-white border-green-600'
                     : 'hover:bg-gray-100 border-gray-300 text-gray-700'
-                }`}
+                  }`}
               >
                 1
               </button>
@@ -509,11 +508,10 @@ export default function TournamentListPage() {
             <button
               key={pageNum}
               onClick={() => handlePageChange(pageNum)}
-              className={`px-3 py-1 rounded-md border ${
-                currentPage === pageNum
+              className={`px-3 py-1 rounded-md border ${currentPage === pageNum
                   ? 'bg-green-600 text-white border-green-600'
                   : 'hover:bg-gray-100 border-gray-300 text-gray-700'
-              }`}
+                }`}
             >
               {pageNum}
             </button>
@@ -529,11 +527,10 @@ export default function TournamentListPage() {
               )}
               <button
                 onClick={() => handlePageChange(totalPages)}
-                className={`px-3 py-1 rounded-md border ${
-                  currentPage === totalPages
+                className={`px-3 py-1 rounded-md border ${currentPage === totalPages
                     ? 'bg-green-600 text-white border-green-600'
                     : 'hover:bg-gray-100 border-gray-300 text-gray-700'
-                }`}
+                  }`}
               >
                 {totalPages}
               </button>
@@ -544,11 +541,10 @@ export default function TournamentListPage() {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-md border ${
-              currentPage === totalPages
+            className={`px-3 py-1 rounded-md border ${currentPage === totalPages
                 ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
                 : 'hover:bg-gray-100 border-gray-300 text-gray-700'
-            }`}
+              }`}
           >
             <ChevronRightIcon className="h-4 w-4" />
           </button>
@@ -669,10 +665,10 @@ function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate,
             <Link to={`/tournaments/${tournament._id}`}>
               <Button
                 className={`group/btn ${isCompleted
-                    ? 'bg-gray-600 hover:bg-gray-700'
-                    : isLive
-                      ? 'bg-red-600 hover:bg-red-700'
-                      : 'bg-green-600 hover:bg-green-700'
+                  ? 'bg-gray-600 hover:bg-gray-700'
+                  : isLive
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-green-600 hover:bg-green-700'
                   }`}
                 disabled={tournament.status === 'cancelled'}
               >

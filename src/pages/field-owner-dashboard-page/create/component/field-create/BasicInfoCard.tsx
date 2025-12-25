@@ -98,11 +98,17 @@ export default function BasicInfoCard({ formData, onInputChange }: BasicInfoCard
                                     type="number"
                                     min="0"
                                     max="10"
-                                    placeholder="1"
-                                    value={formData.numberOfCourts ?? 1}
+                                    value={formData.numberOfCourts === undefined ? '' : formData.numberOfCourts}
                                     onChange={(e) => {
-                                        const value = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
-                                        const clampedValue = Math.max(0, Math.min(10, isNaN(value) ? 1 : value));
+                                        const inputValue = e.target.value;
+                                        if (inputValue === '') {
+                                            onInputChange('numberOfCourts', undefined);
+                                            return;
+                                        }
+                                        const numValue = parseInt(inputValue, 10);
+                                        if (isNaN(numValue)) return;
+                                        // Giới hạn trong khoảng 0-10
+                                        const clampedValue = Math.max(0, Math.min(10, numValue));
                                         onInputChange('numberOfCourts', clampedValue);
                                     }}
                                 />

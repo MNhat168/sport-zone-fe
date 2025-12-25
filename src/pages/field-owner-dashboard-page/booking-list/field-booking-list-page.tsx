@@ -51,26 +51,28 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
     const startTime12h = formatTime(booking.startTime);
     const endTime12h = formatTime(booking.endTime);
 
-  // Ưu tiên trạng thái duyệt của chủ sân: nếu approvalStatus đang pending
-  // thì luôn coi là "Đang chờ" để hiển thị nút hành động chấp nhận / từ chối
-  if (booking.approvalStatus === 'pending') {
-    return {
-      id: booking.bookingId,
-      academyName: booking.fieldName,
-      courtName: booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : booking.fieldName),
-      courtNumber: booking.courtNumber,
-      academyImage: "/images/academies/default.jpg",
-      date: formatDate(booking.date),
-      time: `${startTime12h} - ${endTime12h}`,
-      payment: formatCurrency(booking.totalPrice, "VND"),
-      status: "awaiting" as const,
-      statusText: "Đang Chờ Duyệt",
-      originalBooking: booking,
-    };
-  }
+    // Ưu tiên trạng thái duyệt của chủ sân: nếu approvalStatus đang pending
+    // thì luôn coi là "Đang chờ" để hiển thị nút hành động chấp nhận / từ chối
+    if (booking.approvalStatus === 'pending') {
+        return {
+            id: booking.bookingId,
+            academyName: booking.fieldName,
+            courtName: booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : booking.fieldName),
+            courtNumber: booking.courtNumber,
+            academyImage: "/images/academies/default.jpg",
+            date: formatDate(booking.date),
+            time: `${startTime12h} - ${endTime12h}`,
+            payment: formatCurrency(booking.totalPrice, "VND"),
+            status: "awaiting" as const,
+            statusText: "Đang Chờ Duyệt",
+            originalBooking: booking,
+            transactionStatus: booking.transactionStatus,
+            approvalStatus: booking.approvalStatus,
+        };
+    }
 
-  // Nếu không có approvalStatus pending thì map theo transactionStatus / status
-  const transactionStatus = booking.transactionStatus || booking.status;
+    // Nếu không có approvalStatus pending thì map theo transactionStatus / status
+    const transactionStatus = booking.transactionStatus || booking.status;
     let status: "awaiting" | "accepted" | "rejected" = "awaiting";
     let statusText = "Chờ Xác Nhận";
 
@@ -134,6 +136,8 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
         statusText,
         // Store original booking data for details modal
         originalBooking: booking,
+        transactionStatus: booking.transactionStatus,
+        approvalStatus: booking.approvalStatus,
     };
 };
 
@@ -211,6 +215,7 @@ export default function FieldHistoryBookingPage() {
     const [activeTab, setActiveTab] = useState<TransactionStatus>(TransactionStatus.PENDING);
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
+    const [bookingTypeTab, setBookingTypeTab] = useState<'courts' | 'coaches'>('courts'); // Track courts or coaches tab
     const [hiddenIds, setHiddenIds] = useState<string[]>([]);
 
     // Load hidden IDs from localStorage so acted items stay hidden after refresh
@@ -254,6 +259,10 @@ export default function FieldHistoryBookingPage() {
     // Fetch bookings on mount and whenever filters/pagination change
     useEffect(() => {
         const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
+
+        // Use new endpoint with type filter when coaches tab is selected
+        const type = bookingTypeTab === 'coaches' ? 'field_coach' : 'field';
+
         dispatch(
             getMyFieldsBookings({
                 fieldName: searchQuery || undefined,
@@ -262,9 +271,10 @@ export default function FieldHistoryBookingPage() {
                 endDate,
                 page: currentPage,
                 limit: itemsPerPage,
+                type, // Add type filter
             })
         );
-    }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage]);
+    }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage, bookingTypeTab]);
 
     const handleViewDetails = async (bookingId: string) => {
         const booking = fieldOwnerBookings?.find(b => b.bookingId === bookingId);
@@ -334,7 +344,7 @@ export default function FieldHistoryBookingPage() {
         }
     };
 
-    const handleDeny = async (bookingId: string) => {
+    const handleCancel = async (bookingId: string) => {
         try {
             await dispatch(ownerRejectBooking({ bookingId })).unwrap();
             // Hide the acted booking immediately and refresh in background
@@ -377,7 +387,8 @@ export default function FieldHistoryBookingPage() {
 
     const handleTabChangeFromFilter = (value: string) => {
         // This is for the courts/coaches tab in the filter, not the status tab
-        console.log("Tab:", value);
+        setBookingTypeTab(value as 'courts' | 'coaches');
+        setCurrentPage(1); // Reset to first page when tab changes
     };
 
     const handlePageChange = (page: number) => {
@@ -451,7 +462,8 @@ export default function FieldHistoryBookingPage() {
                                         onViewDetails={handleViewDetails}
                                         onChat={handleChat}
                                         onAccept={handleAccept}
-                                        onDeny={handleDeny}
+                                        onDeny={handleCancel}
+                                        onCancel={handleCancel}
                                     />
                                 )}
                             </>

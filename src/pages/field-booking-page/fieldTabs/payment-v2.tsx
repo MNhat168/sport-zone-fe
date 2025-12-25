@@ -60,7 +60,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     const [loadingBankAccount, setLoadingBankAccount] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Use booking data from props or fallback to localStorage
+    // Use booking data from props or fallback to sessionStorage
     const formData: BookingFormData = useMemo(() => {
         if (bookingData) {
             return {
@@ -76,7 +76,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             };
         }
         try {
-            const raw = localStorage.getItem('bookingFormData');
+            const raw = sessionStorage.getItem('bookingFormData');
             if (!raw) return { date: '', startTime: '', endTime: '' } as BookingFormData;
             const parsed = JSON.parse(raw);
             return {
@@ -163,20 +163,20 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
         }
     }, [venue?.id]);
 
-    // Restore held booking from localStorage on mount (created in PersonalInfo step)
+    // Restore held booking from sessionStorage on mount (created in PersonalInfo step)
     useEffect(() => {
         try {
-            const storedBookingId = localStorage.getItem('heldBookingId');
-            const storedHoldTime = localStorage.getItem('heldBookingTime');
+            const storedBookingId = sessionStorage.getItem('heldBookingId');
+            const storedHoldTime = sessionStorage.getItem('heldBookingTime');
 
-            console.log('[PAYMENT V2] Checking localStorage for held booking:', {
+            console.log('[PAYMENT V2] Checking sessionStorage for held booking:', {
                 storedBookingId,
                 storedHoldTime
             });
 
             // Validate stored booking ID
             if (!storedBookingId || storedBookingId.trim() === '' || storedBookingId === 'undefined' || storedBookingId === 'null') {
-                console.warn('⚠️ [PAYMENT V2] Invalid or missing heldBookingId in localStorage:', storedBookingId);
+                console.warn('⚠️ [PAYMENT V2] Invalid or missing heldBookingId in sessionStorage:', storedBookingId);
                 setHoldError('Chưa có booking được giữ chỗ. Vui lòng quay lại bước trước.');
                 return;
             }
@@ -201,15 +201,15 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                         remainingSeconds: remaining
                     });
                 } else {
-                    // Booking expired, clear localStorage
+                    // Booking expired, clear sessionStorage
                     console.warn('⚠️ [PAYMENT V2] Held booking expired');
-                    localStorage.removeItem('heldBookingId');
-                    localStorage.removeItem('heldBookingCountdown');
-                    localStorage.removeItem('heldBookingTime');
+                    sessionStorage.removeItem('heldBookingId');
+                    sessionStorage.removeItem('heldBookingCountdown');
+                    sessionStorage.removeItem('heldBookingTime');
                     setHoldError('Thời gian giữ chỗ đã hết. Vui lòng quay lại và đặt lại.');
                 }
             } else {
-                console.warn('⚠️ [PAYMENT V2] No hold time found in localStorage');
+                console.warn('⚠️ [PAYMENT V2] No hold time found in sessionStorage');
                 setHoldError('Chưa có booking được giữ chỗ. Vui lòng quay lại bước trước.');
             }
         } catch (error) {
@@ -219,7 +219,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     }, []);
 
     // Booking hold is now created in PersonalInfo step, so we skip this useEffect
-    // PaymentV2 only reads the existing hold from localStorage (see useEffect above)
+    // PaymentV2 only reads the existing hold from sessionStorage (see useEffect above)
 
     // Handle countdown expired - release slot and reset to step 1
     const handleCountdownExpired = useCallback(async () => {
@@ -250,11 +250,11 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             console.error('[PaymentV2] Error cancelling booking on countdown expiry:', error);
         }
 
-        // Clear all localStorage (always run, even if API call fails)
+        // Clear all sessionStorage (always run, even if API call fails)
         clearBookingLocal();
-        localStorage.removeItem('heldBookingId');
-        localStorage.removeItem('heldBookingCountdown');
-        localStorage.removeItem('heldBookingTime');
+        sessionStorage.removeItem('heldBookingId');
+        sessionStorage.removeItem('heldBookingCountdown');
+        sessionStorage.removeItem('heldBookingTime');
 
         // Reset state
         setHeldBookingId(null);
@@ -278,8 +278,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                     handleCountdownExpired();
                     return 0;
                 }
-                // Update localStorage
-                localStorage.setItem('heldBookingCountdown', newCountdown.toString());
+                // Update sessionStorage
+                sessionStorage.setItem('heldBookingCountdown', newCountdown.toString());
                 return newCountdown;
             });
         }, 1000);
@@ -373,12 +373,12 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     // Clear persisted booking-related local storage
     const clearBookingLocal = () => {
         try {
-            localStorage.removeItem('bookingFormData');
-            localStorage.removeItem('selectedFieldId');
-            localStorage.removeItem('amenitiesNote');
-            localStorage.removeItem('heldBookingId');
-            localStorage.removeItem('heldBookingCountdown');
-            localStorage.removeItem('heldBookingTime');
+            sessionStorage.removeItem('bookingFormData');
+            sessionStorage.removeItem('selectedFieldId');
+            sessionStorage.removeItem('amenitiesNote');
+            sessionStorage.removeItem('heldBookingId');
+            sessionStorage.removeItem('heldBookingCountdown');
+            sessionStorage.removeItem('heldBookingTime');
         } catch {
             // ignore storage errors
         }
@@ -430,7 +430,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             formDataToSend.append('paymentProof', proofImage);
 
             // Optional auth token
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const headers: HeadersInit = {};
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
@@ -459,11 +459,11 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             setBookingId(booking._id || booking.id);
             setPaymentStatus('success');
 
-            // Clear localStorage
+            // Clear sessionStorage
             clearBookingLocal();
-            localStorage.removeItem('heldBookingId');
-            localStorage.removeItem('heldBookingCountdown');
-            localStorage.removeItem('heldBookingTime');
+            sessionStorage.removeItem('heldBookingId');
+            sessionStorage.removeItem('heldBookingCountdown');
+            sessionStorage.removeItem('heldBookingTime');
 
             // Clean up preview URL
             if (proofPreview) {
