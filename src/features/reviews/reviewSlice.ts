@@ -1,15 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { FieldStats } from '../../types/reviewTypes';
-import { getFieldStatsThunk, createFieldReviewThunk } from './reviewThunk';
+import type { FieldStats, CoachStats } from '../../types/reviewTypes';
+import { getFieldStatsThunk, createFieldReviewThunk, getCoachStatsThunk } from './reviewThunk';
 
 interface ReviewsState {
   fieldStats: Record<string, FieldStats | null>;
+  coachStats: Record<string, CoachStats | null>;
   loading: boolean;
   error?: string | null;
 }
 
 const initialState: ReviewsState = {
   fieldStats: {},
+  coachStats: {},
   loading: false,
   error: null,
 };
@@ -40,6 +42,23 @@ const reviewsSlice = createSlice({
       const createdReview = action.payload as any;
       const fieldId = createdReview?.field || createdReview?.fieldId;
       if (fieldId) state.fieldStats[String(fieldId)] = null;
+    });
+
+    // Coach stats handlers
+    builder.addCase(getCoachStatsThunk.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+
+    builder.addCase(getCoachStatsThunk.fulfilled, (state, action) => {
+      state.loading = false;
+      const coachId = action.meta.arg as string;
+      if (coachId) state.coachStats[coachId] = action.payload as CoachStats;
+    });
+
+    builder.addCase(getCoachStatsThunk.rejected, (state, action) => {
+      state.loading = false;
+      state.error = (action.payload as string) || action.error?.message || 'Failed to load coach stats';
     });
   },
 });

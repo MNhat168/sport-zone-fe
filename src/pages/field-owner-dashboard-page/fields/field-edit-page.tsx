@@ -20,7 +20,7 @@ import {
     AmenitiesCard,
     GalleryCard,
     LocationCard
-} from '@/pages/field-create-page/component/field-create';
+} from '@/pages/field-owner-dashboard-page/create/component/field-create';
 
 export default function FieldEditPage() {
     const { fieldId } = useParams<{ fieldId: string }>();
@@ -111,7 +111,7 @@ export default function FieldEditPage() {
             const hours = currentField.operatingHours || [];
             const daysFromHours = hours.map(oh => oh.day);
             setSelectedDays(daysFromHours);
-            
+
             // Set day availability based on operating hours
             const availability: Record<string, boolean> = {};
             daysFromHours.forEach(day => {
@@ -123,7 +123,7 @@ export default function FieldEditPage() {
             const amenities = currentField.amenities || [];
             const includesList: AmenityWithPrice[] = [];
             const amenitiesList: AmenityWithPrice[] = [];
-            
+
             amenities.forEach((amenity: any) => {
                 const amenityId = amenity.amenityId || amenity.amenity?._id || amenity.amenity?.id || amenity.amenity || '';
                 const amenityType = amenity.type || amenity.amenity?.type;
@@ -131,7 +131,7 @@ export default function FieldEditPage() {
                     amenityId,
                     price: amenity.price || 0
                 };
-                
+
                 // Phân loại: FACILITY -> includes, DRINK và OTHER -> amenities
                 if (amenityType === 'facility') {
                     includesList.push(amenityData);
@@ -393,8 +393,8 @@ export default function FieldEditPage() {
             CustomFailedToast('Vui lòng nhập mô tả sân');
             return false;
         }
-        const locationString = typeof formData.location === 'string' 
-            ? formData.location 
+        const locationString = typeof formData.location === 'string'
+            ? formData.location
             : formData.location?.address || '';
         if (!locationString.trim()) {
             CustomFailedToast('Vui lòng nhập địa chỉ sân');

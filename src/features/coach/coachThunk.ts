@@ -10,10 +10,14 @@ import type {
 } from "../../types/coach-type";
 import { SportType as SPORT_TYPE_CONST } from "../../types/coach-type";
 import axiosPublic from "../../utils/axios/axiosPublic";
+import axiosUpload from "../../utils/axios/axiosUpload";
+import axiosPrivate from "../../utils/axios/axiosPrivate";
 import {
     COACHES_API,
     COACH_BY_ID_API,
     ALL_COACHES_API,
+    UPLOAD_COACH_GALLERY_API,
+    DELETE_COACH_GALLERY_IMAGE_API,
 } from "./coachAPI";
 import { COACH_BY_ID_API as COACH_PUT_API } from './coachAPI';
 import { COACH_ID_BY_USER_ID_API } from "./coachAPI";
@@ -63,8 +67,8 @@ const mapApiCoachDetailToAppCoachDetail = (apiCoach: any): import("../../types/c
 
     // Extract locationData from API response
     // BE returns locationData as an object with { address, geo: { type, coordinates } }
-    const locationData = apiCoach?.locationData || 
-                        (apiCoach?.location && typeof apiCoach.location === 'object' ? apiCoach.location : null);
+    const locationData = apiCoach?.locationData ||
+        (apiCoach?.location && typeof apiCoach.location === 'object' ? apiCoach.location : null);
 
     return {
         id: apiCoach?.id || apiCoach?._id || "",
@@ -76,16 +80,17 @@ const mapApiCoachDetailToAppCoachDetail = (apiCoach: any): import("../../types/c
         reviewCount,
         location: apiCoach?.location || apiCoach?.user?.location || "",
         locationData: locationData || undefined, // Include locationData with geo coordinates
+        galleryImages: Array.isArray(apiCoach?.galleryImages) ? apiCoach.galleryImages : [],
         level,
         // include sports so frontend can show specialization — simple fallback + normalization
-            sports: (() => {
-                const allowed = (Object.values(SPORT_TYPE_CONST) as string[]).map((s) => s.toLowerCase());
-                const raw = apiCoach?.sports ?? apiCoach?.coachingDetails?.sports ?? apiCoach?.profile?.sports ?? apiCoach?.user?.sports ?? [];
-                if (!Array.isArray(raw)) return [] as unknown as SportTypeType[];
-                return raw
-                    .map((s: any) => String(s || '').trim().toLowerCase())
-                    .filter((v: string) => allowed.includes(v)) as unknown as SportTypeType[];
-            })(),
+        sports: (() => {
+            const allowed = (Object.values(SPORT_TYPE_CONST) as string[]).map((s) => s.toLowerCase());
+            const raw = apiCoach?.sports ?? apiCoach?.coachingDetails?.sports ?? apiCoach?.profile?.sports ?? apiCoach?.user?.sports ?? [];
+            if (!Array.isArray(raw)) return [] as unknown as SportTypeType[];
+            return raw
+                .map((s: any) => String(s || '').trim().toLowerCase())
+                .filter((v: string) => allowed.includes(v)) as unknown as SportTypeType[];
+        })(),
         completedSessions: Number(apiCoach?.completedSessions ?? 0),
         createdAt: apiCoach?.createdAt || "",
         memberSince,
@@ -146,7 +151,7 @@ export const getCoachById = createAsyncThunk<
             apiUrl: COACH_BY_ID_API(id),
             timestamp: new Date().toISOString()
         });
-        
+
         const response = await axiosPublic.get(COACH_BY_ID_API(id));
 
         console.log("📥 [COACH THUNK] Raw API response received:", {
@@ -162,7 +167,7 @@ export const getCoachById = createAsyncThunk<
         const apiCoachRaw = (apiCoachContainer as any)?.data ?? apiCoachContainer;
         const apiCoach = (apiCoachRaw as any)?.coach ?? apiCoachRaw;
         const mapped = mapApiCoachDetailToAppCoachDetail(apiCoach);
-        
+
         console.log("🔄 [COACH THUNK] Coach data mapped successfully:", {
             coachId: id,
             originalApiCoach: apiCoach,
@@ -177,7 +182,7 @@ export const getCoachById = createAsyncThunk<
             },
             timestamp: new Date().toISOString()
         });
-        
+
         return { success: true, data: mapped, message: raw?.message } as CoachDetailResponse;
     } catch (error: any) {
         console.error("❌ [COACH THUNK] Error fetching coach by ID:", {
@@ -187,7 +192,7 @@ export const getCoachById = createAsyncThunk<
             responseData: error.response?.data,
             timestamp: new Date().toISOString()
         });
-        
+
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch coach",
             status: error.response?.status?.toString() || "500",
@@ -264,11 +269,58 @@ export const getCoachIdByUserId = createAsyncThunk<
         const coach = (raw?.data ?? (raw as any)) as import("../../types/coach-type").CoachProfile;
         const coachId = coach?._id ?? null;
         return { success: true, coachId, data: coach, message: raw?.message };
-        
+
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to resolve coach by userId",
             status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Upload coach gallery images
+export const uploadCoachGalleryImages = createAsyncThunk<
+    { success: boolean; urls: string[] },
+    { coachId: string; files: File[] },
+    { rejectValue: ErrorResponse }
+>("coach/uploadGalleryImages", async ({ coachId, files }, thunkAPI) => {
+    try {
+        const formData = new FormData();
+        files.forEach(file => formData.append('images', file));
+
+        const response = await axiosUpload.post(
+            UPLOAD_COACH_GALLERY_API(coachId),
+            formData
+        );
+
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || 'Upload failed',
+            status: error.response?.status?.toString() || '500',
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Delete coach gallery image by index
+export const deleteCoachGalleryImage = createAsyncThunk<
+    { success: boolean },
+    { coachId: string; index: number },
+    { rejectValue: ErrorResponse }
+>("coach/deleteGalleryImage", async ({ coachId, index }, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.delete(
+            DELETE_COACH_GALLERY_IMAGE_API(coachId, index)
+        );
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || 'Delete failed',
+            status: error.response?.status?.toString() || '500',
             errors: error.response?.data?.errors,
         };
         return thunkAPI.rejectWithValue(errorResponse);

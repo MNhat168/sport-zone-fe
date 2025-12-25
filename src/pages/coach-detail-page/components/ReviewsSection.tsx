@@ -7,6 +7,7 @@ import { Star } from "lucide-react";
 
 interface ReviewsSectionProps {
   coachData: any;
+  coachStats?: { totalReviews: number; averageRating: number } | null;
   coachReviews: any[];
   filteredReviews: any[];
   reviewsLoading: boolean;
@@ -25,6 +26,7 @@ interface ReviewsSectionProps {
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   coachData,
+  coachStats = null,
   coachReviews,
   filteredReviews,
   reviewsLoading,
@@ -36,13 +38,8 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   onWriteReview,
   showWriteReview = true,
 }) => {
-  console.log('ReviewsSection props', {
-    coachReviewsLength: Array.isArray(coachReviews) ? coachReviews.length : 0,
-    reviewsLoading,
-    reviewsPage,
-    reviewsTotalPages,
-    selectedRatingFilter,
-  });
+  const avgRating = coachStats?.averageRating ?? (coachData?.rating ? Number(coachData.rating) : 0);
+  const totalReviews = coachStats?.totalReviews ?? (coachData as any)?.numberOfReviews ?? coachReviews.length ?? 0;
   return (
     <Card
       id="reviews"
@@ -70,14 +67,14 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
               {/* Bên trái - Điểm trung bình */}
               <div className="flex flex-col items-center justify-center space-y-2 min-w-[180px]">
                 <div className="text-6xl font-bold text-foreground">
-                  {coachData?.rating ? Number(coachData.rating).toFixed(1) : '0.0'}
+                  {avgRating ? Number(avgRating).toFixed(1) : '0.0'}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   trên 5.0
                 </div>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => {
-                    const rating = coachData?.rating ? Number(coachData.rating) : 0;
+                    const rating = avgRating;
                     return (
                       <Star
                         key={star}
@@ -91,7 +88,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                   })}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  {(coachData as any)?.numberOfReviews || (coachData as any)?.totalReviews || coachReviews.length || 0} đánh giá
+                  {totalReviews} đánh giá
                 </div>
               </div>
 
@@ -103,16 +100,14 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                       Được {Math.round((coachReviews.filter((r: any) => (r.rating || 0) >= 4).length / coachReviews.length) * 100)}% người chơi khuyến nghị
                     </p>
                     <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
-                      {[
-                        { label: "Chất lượng dịch vụ", value: coachData?.rating ? Number(coachData.rating) * 20 : 0 },
-                      ].map((metric, index) => (
+                      {[{ label: "Chất lượng dịch vụ", value: avgRating * 20 }].map((metric, index) => (
                         <div key={index} className="space-y-1">
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">
                               {metric.label}
                             </span>
                             <span className="font-semibold">
-                              {coachData?.rating ? Number(coachData.rating).toFixed(1) : '0.0'}
+                              {avgRating ? Number(avgRating).toFixed(1) : '0.0'}
                             </span>
                           </div>
                           <Progress
@@ -190,9 +185,9 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                               </div>
                             </div>
                             <div className="flex items-start">
-                              <Badge className={` ${r.rating >= 4 ? 'bg-green-600' : 'bg-red-600'} text-white font-medium`}>
-                                Coach Review
-                              </Badge>
+                                <Badge className="bg-green-600 text-white font-medium">
+                                  Coach Review
+                                </Badge>
                             </div>
                           </div>
 

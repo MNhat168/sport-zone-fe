@@ -8,7 +8,6 @@ import { getFieldById } from "@/features/field/fieldThunk";
 import { getSportDisplayNameVN } from "@/components/enums/ENUMS";
 import { getPinColor, getSportWhiteIconPath } from "@/utils/fieldPinIcon";
 import { MapPin, Clock } from "lucide-react";
-
 interface OperatingHours {
     day: string; // monday, tuesday, wednesday, etc.
     start: string; // HH:mm format (24-hour)
@@ -44,7 +43,7 @@ const formatOperatingHours = (operatingHours?: OperatingHours[]): string | null 
 
     // Check if all days have the same hours
     const firstHours = operatingHours[0];
-    const allSame = operatingHours.every(oh => 
+    const allSame = operatingHours.every(oh =>
         oh.start === firstHours.start && oh.end === firstHours.end
     );
 
@@ -101,12 +100,12 @@ const FieldCard: React.FC<FieldCardProps> = ({
 
     const handleBooking = async () => {
         if (!id) return;
-        
+
         // Call onBookNow callback to sync filters before navigation
         if (onBookNow) {
             onBookNow();
         }
-        
+
         try {
             await dispatch(getFieldById(id));
         } finally {
@@ -121,23 +120,23 @@ const FieldCard: React.FC<FieldCardProps> = ({
         <Card className="w-full overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow">
             <div className="flex">
                 {/* Image section */}
-                <div className="relative w-32 h-32 flex-shrink-0">
+                <div className="relative w-32 h-40 flex-shrink-0">
                     <img
                         src={imageUrl}
                         alt={`${name} field`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                             // Fallback image nếu không load được
-                            (e.target as HTMLImageElement).src = "/general-img-portrait.png";
+                            (e.target as HTMLImageElement).src = "/images/1.1.png";
                         }}
                     />
-                    <div 
+                    <div
                         className="absolute top-2 left-2 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1"
                         style={{ backgroundColor: sportColor }}
                     >
                         {sportIconPath && (
-                            <img 
-                                src={sportIconPath} 
+                            <img
+                                src={sportIconPath}
                                 alt={sportType}
                                 className="w-4 h-4"
                             />
@@ -147,48 +146,52 @@ const FieldCard: React.FC<FieldCardProps> = ({
                 </div>
 
                 {/* Content section */}
-                <CardContent className="p-4 flex-1 text-start">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="text-start">
-                            <h3 className="text-xl font-bold mb-1 text-start">{name}</h3>
-                            <p className="text-gray-600 text-sm mb-1 text-start flex items-center gap-1">
-                                <MapPin className="h-4 w-4 flex-shrink-0" />
+                <CardContent className="px-4 py-2 flex-1 flex text-start">
+                    {/* Left Column: All Information */}
+                    <div className="flex-1 pr-4 min-w-0">
+                        <div className="mb-2">
+                            <h3 className="text-xl font-bold mb-1">{name}</h3>
+                            <p className="text-gray-600 text-sm mb-1 flex items-start gap-1 break-words">
+                                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-gray-400" />
                                 {location}
                             </p>
                             {formattedHours && (
-                                <p className="text-gray-600 text-sm mb-1 text-start flex items-center gap-1">
-                                    <Clock className="h-4 w-4 flex-shrink-0" />
+                                <p className="text-gray-600 text-sm mb-1 flex items-center gap-1">
+                                    <Clock className="h-4 w-4 flex-shrink-0 text-gray-400" />
                                     {formattedHours}
                                 </p>
                             )}
                             {distance && (
-                                <p className="text-green-600 text-xs font-medium flex items-center gap-1 text-start">
+                                <p className="text-green-600 text-xs font-medium flex items-center gap-1 mt-1">
                                     📍 {distance} từ vị trí của bạn
                                 </p>
                             )}
                         </div>
-                        <div className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
-                            {price}
-                        </div>
-                    </div>
 
-                    <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center">
+                        <div className="flex items-center mt-3">
                             {displayRating > 0 ? (
                                 <>
                                     <span className="text-yellow-500 text-lg">★ {displayRating.toFixed(1)}</span>
-                                    <span className="text-gray-600 text-sm ml-1">({displayReviews} {displayReviews === 1 ? 'review' : 'reviews'})</span>
+                                    <span className="text-gray-600 text-sm ml-1">({displayReviews} reviews)</span>
                                 </>
                             ) : (
                                 <span className="text-gray-500 text-sm">Chưa có đánh giá</span>
                             )}
                         </div>
-                        <div className="flex gap-2">
+                    </div>
+
+                    {/* Right Column: Price and Action Button */}
+                    <div className="flex flex-col justify-between items-end flex-shrink-0 min-w-[120px]">
+                        <div className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap mb-4">
+                            {price}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
                             <Button
                                 onClick={handleBooking}
-                                className="bg-green-600 text-white hover:bg-green-700"
+                                className="bg-green-600 text-white hover:bg-green-700 w-28 text-sm px-4"
                             >
-                                Book Now
+                                Đặt ngay
                             </Button>
                         </div>
                     </div>

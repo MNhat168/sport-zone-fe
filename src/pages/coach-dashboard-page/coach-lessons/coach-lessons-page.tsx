@@ -441,10 +441,14 @@ export default function CoachLessonsPage() {
                             <h4 className="font-bold text-gray-900 truncate">
                               {field.name}
                             </h4>
-                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                              <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-600 min-w-0">
+                              <div className="flex items-center gap-1 min-w-0">
                                 <MapPin className="h-4 w-4" />
-                                <span className="truncate">
+                                <span
+                                  className="truncate block max-w-full overflow-hidden"
+                                  title={field.location}
+                                  aria-label={field.location}
+                                >
                                   {field.location}
                                 </span>
                               </div>

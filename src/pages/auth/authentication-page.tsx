@@ -59,6 +59,24 @@ export default function AuthenticationPage() {
   const location = useLocation();
   const dispatch = useAppDispatch();
 
+  // Check for redirect toast message
+  useEffect(() => {
+    const state = location.state as { showToast?: boolean; toastMessage?: string; from?: any } | null;
+    if (state?.showToast && state?.toastMessage) {
+      // Use setTimeout to ensure toast library is ready/mounted or to delay slightly after render
+      setTimeout(() => {
+        CustomFailedToast(state.toastMessage);
+      }, 100);
+
+      // Clear the toast flag from state to prevent showing it again on refresh/re-render
+      // We keep other state properties like 'from'
+      navigate(location.pathname, {
+        replace: true,
+        state: { ...state, showToast: false }
+      });
+    }
+  }, [location, navigate]);
+
   // Helper function to get redirect URL from localStorage or location state
   const getRedirectUrl = (): string | null => {
     try {
@@ -322,7 +340,10 @@ export default function AuthenticationPage() {
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-md max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="mx-auto  flex items-center justify-center mb-6">
+            <div
+              className="mx-auto flex items-center justify-center mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => navigate("/")}
+            >
               <img
                 src="/SportZone.png"
                 alt="SportZone Logo"

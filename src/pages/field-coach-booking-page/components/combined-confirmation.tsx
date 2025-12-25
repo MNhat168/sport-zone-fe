@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Clock, DollarSign } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { MapPin, Calendar, Clock, DollarSign, CheckCircle2, User } from "lucide-react";
 
 interface CombinedConfirmationProps {
     fieldData: {
@@ -62,80 +63,98 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
     const grandTotal = fieldTotal + coachTotal;
 
     return (
-        <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
+        <div className="flex flex-col items-center justify-center w-full max-w-5xl mx-auto py-8 px-4">
             {/* Header */}
-            <div className="text-center mb-10">
-                <h1 className="text-3xl font-semibold text-[#1a1a1a] mb-2">
-                    Xác nhận đặt sân và huấn luyện viên
+            <div className="text-center mb-10 space-y-2">
+                <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/10 mb-4 ring-1 ring-primary/20">
+                    <CheckCircle2 className="w-8 h-8 text-primary" />
+                </div>
+                <h1 className="text-3xl font-bold text-foreground">
+                    Xác nhận đặt lịch
                 </h1>
-                <p className="text-base text-gray-600">
-                    Vui lòng kiểm tra thông tin trước khi tiếp tục
+                <p className="text-muted-foreground">
+                    Vui lòng kiểm tra lại thông tin trước khi thanh toán
                 </p>
             </div>
 
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-8">
                 {/* Field Booking Summary */}
-                <Card className="border border-gray-200">
-                    <CardHeader className="border-b border-gray-200 bg-emerald-50">
-                        <CardTitle className="text-xl font-semibold text-emerald-700">
-                            Đặt sân
+                <Card className="border shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <CardHeader className="pb-4 border-b">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2 text-primary">
+                            <MapPin className="w-5 h-5" />
+                            Thông tin sân
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-6 space-y-4">
+                    <CardContent className="p-6 space-y-6">
                         {/* Field Name */}
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Tên sân</p>
-                            <p className="text-lg font-semibold text-[#1a1a1a]">
-                                {fieldData.fieldName} - {fieldData.courtName}
+                            <p className="text-lg font-bold text-foreground">
+                                {fieldData.fieldName}
+                            </p>
+                            <p className="text-sm font-medium text-muted-foreground">
+                                {fieldData.courtName}
                             </p>
                         </div>
 
-                        {/* Location */}
-                        <div className="flex items-start gap-2">
-                            <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
-                            <div>
-                                <p className="text-sm text-gray-500 mb-1">Địa điểm</p>
-                                <p className="text-base text-gray-700">{fieldData.fieldLocation}</p>
+                        <div className="space-y-4">
+                            {/* Location */}
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-md bg-primary/5 text-primary">
+                                    <MapPin className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-0.5 text-start">Địa điểm</p>
+                                    <p className="text-sm font-medium text-start">{fieldData.fieldLocation}</p>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Date */}
-                        <div className="flex items-start gap-2">
-                            <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
-                            <div>
-                                <p className="text-sm text-gray-500 mb-1">Ngày</p>
-                                <p className="text-base text-gray-700">
-                                    {new Date(fieldData.date).toLocaleDateString('vi-VN', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
-                                </p>
+                            {/* Date */}
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-md bg-primary/5 text-primary">
+                                    <Calendar className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-0.5 text-start">Ngày</p>
+                                    <p className="text-sm font-medium text-start">
+                                        {new Date(fieldData.date).toLocaleDateString('vi-VN', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Time */}
-                        <div className="flex items-start gap-2">
-                            <Clock className="w-5 h-5 text-gray-500 mt-0.5" />
-                            <div>
-                                <p className="text-sm text-gray-500 mb-1">Thời gian</p>
-                                <p className="text-base text-gray-700">
-                                    {fieldData.startTime} - {fieldData.endTime} ({fieldHours} giờ)
-                                </p>
+                            {/* Time */}
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-md bg-primary/5 text-primary">
+                                    <Clock className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-0.5 text-start">Thời gian</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-medium text-start">
+                                            {fieldData.startTime} - {fieldData.endTime}
+                                        </p>
+                                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                            {fieldHours} giờ
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         {/* Amenities */}
                         {selectedAmenities.length > 0 && (
-                            <div>
-                                <p className="text-sm text-gray-500 mb-2">Tiện ích đã chọn</p>
-                                <div className="space-y-1">
+                            <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase mb-3">Tiện ích</p>
+                                <div className="space-y-2">
                                     {selectedAmenities.map(amenity => (
-                                        <div key={amenity.id} className="flex justify-between items-center">
-                                            <span className="text-sm text-gray-700">{amenity.name}</span>
-                                            <span className="text-sm font-semibold text-emerald-600">
+                                        <div key={amenity.id} className="flex justify-between items-center text-sm">
+                                            <span className="text-foreground/80">{amenity.name}</span>
+                                            <span className="font-medium text-primary">
                                                 {formatVND(amenity.price)}
                                             </span>
                                         </div>
@@ -144,89 +163,114 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                             </div>
                         )}
 
+                        <Separator />
+
                         {/* Field Total */}
-                        <div className="pt-4 border-t border-gray-200">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-sm text-gray-600">Giá sân ({fieldHours} giờ)</span>
-                                <span className="text-sm font-semibold">{formatVND(fieldCourtTotal)}</span>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Giá sân ({fieldHours} giờ)</span>
+                                <span className="font-medium">{formatVND(fieldCourtTotal)}</span>
                             </div>
                             {amenitiesTotal > 0 && (
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm text-gray-600">Tiện ích</span>
-                                    <span className="text-sm font-semibold">{formatVND(amenitiesTotal)}</span>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-muted-foreground">Tiện ích</span>
+                                    <span className="font-medium">{formatVND(amenitiesTotal)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                                <span className="text-base font-semibold text-gray-700">Tổng phụ sân</span>
-                                <span className="text-xl font-bold text-emerald-600">{formatVND(fieldTotal)}</span>
+                            <div className="flex justify-between items-center pt-2 mt-2">
+                                <span className="font-bold text-foreground">Tổng phí sân</span>
+                                <span className="text-xl font-bold text-primary">{formatVND(fieldTotal)}</span>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Coach Booking Summary */}
-                <Card className="border border-gray-200">
-                    <CardHeader className="border-b border-gray-200 bg-blue-50">
-                        <CardTitle className="text-xl font-semibold text-blue-700">
-                            Đặt huấn luyện viên
+                <Card className="border shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <CardHeader className="pb-4 border-b">
+                        <CardTitle className="text-xl font-bold flex items-center gap-2 text-secondary">
+                            <User className="w-5 h-5" />
+                            Thông tin huấn luyện viên
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-6 space-y-4">
+                    <CardContent className="p-6 space-y-6">
                         {/* Coach Name */}
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Tên HLV</p>
-                            <p className="text-lg font-semibold text-[#1a1a1a]">
+                            <p className="text-lg font-bold text-foreground">
                                 {coachData.coachName}
+                            </p>
+                            <p className="text-sm font-medium text-secondary">
+                                Huấn luyện viên chuyên nghiệp
                             </p>
                         </div>
 
-                        {/* Date */}
-                        <div className="flex items-start gap-2">
-                            <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
-                            <div>
-                                <p className="text-sm text-gray-500 mb-1">Ngày</p>
-                                <p className="text-base text-gray-700">
-                                    {new Date(coachData.date).toLocaleDateString('vi-VN', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
-                                </p>
+                        <div className="space-y-4">
+                            {/* Date */}
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-md bg-secondary/5 text-secondary">
+                                    <Calendar className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-0.5 text-start">Ngày</p>
+                                    <p className="text-sm font-medium text-start">
+                                        {new Date(coachData.date).toLocaleDateString('vi-VN', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Time */}
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-md bg-secondary/5 text-secondary">
+                                    <Clock className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-0.5 text-start">Thời gian</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-medium text-start">
+                                            {coachData.startTime} - {coachData.endTime}
+                                        </p>
+                                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary/10 text-secondary">
+                                            {coachHours} giờ
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Hourly Rate */}
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-md bg-secondary/5 text-secondary">
+                                    <DollarSign className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-0.5 text-start">Giá theo giờ</p>
+                                    <p className="text-sm font-medium text-start">
+                                        {formatVND(coachData.pricePerHour)}/giờ
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Time */}
-                        <div className="flex items-start gap-2">
-                            <Clock className="w-5 h-5 text-gray-500 mt-0.5" />
-                            <div>
-                                <p className="text-sm text-gray-500 mb-1">Thời gian</p>
-                                <p className="text-base text-gray-700">
-                                    {coachData.startTime} - {coachData.endTime} ({coachHours} giờ)
-                                </p>
-                            </div>
-                        </div>
+                        <Separator className="my-6 opacity-0" /> {/* Spacer to align with field card if amenities exist, or just clear space */}
 
-                        {/* Hourly Rate */}
-                        <div className="flex items-start gap-2">
-                            <DollarSign className="w-5 h-5 text-gray-500 mt-0.5" />
-                            <div>
-                                <p className="text-sm text-gray-500 mb-1">Giá theo giờ</p>
-                                <p className="text-base font-semibold text-gray-700">
-                                    {formatVND(coachData.pricePerHour)}/giờ
-                                </p>
-                            </div>
-                        </div>
+                        <div className="flex-1"></div> {/* Spacer */}
+
+                        <Separator />
+
 
                         {/* Coach Total */}
-                        <div className="pt-4 border-t border-gray-200">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-sm text-gray-600">Giá HLV ({coachHours} giờ)</span>
-                                <span className="text-sm font-semibold">{formatVND(coachTotal)}</span>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Giá thuê ({coachHours} giờ)</span>
+                                <span className="font-medium">{formatVND(coachTotal)}</span>
                             </div>
-                            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                                <span className="text-base font-semibold text-gray-700">Tổng phụ HLV</span>
-                                <span className="text-xl font-bold text-blue-600">{formatVND(coachTotal)}</span>
+                            <div className="flex justify-between items-center pt-2 mt-2">
+                                <span className="font-bold text-foreground">Tổng phí HLV</span>
+                                <span className="text-xl font-bold text-secondary">{formatVND(coachTotal)}</span>
                             </div>
                         </div>
                     </CardContent>
@@ -234,39 +278,45 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
             </div>
 
             {/* Grand Total */}
-            <Card className="border-2 border-emerald-600 mb-10">
+            <Card className="w-full border shadow-md bg-background mb-8">
                 <CardContent className="p-6">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <p className="text-sm text-gray-600 mb-1">Tổng cộng</p>
-                            <p className="text-3xl font-bold text-emerald-600">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">Tổng thanh toán</p>
+                            <p className="text-4xl font-bold text-primary">
                                 {formatVND(grandTotal)}
                             </p>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm text-gray-600">Sân: {formatVND(fieldTotal)}</p>
-                            <p className="text-sm text-gray-600">HLV: {formatVND(coachTotal)}</p>
+                        <div className="flex gap-8 text-right">
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase">Sân</p>
+                                <p className="text-lg font-bold text-foreground">{formatVND(fieldTotal)}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase">HLV</p>
+                                <p className="text-lg font-bold text-foreground">{formatVND(coachTotal)}</p>
+                            </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
             {/* Action Buttons */}
-            <div className="flex justify-center gap-5">
+            <div className="flex justify-center gap-4 w-full">
                 <Button
                     variant="outline"
                     onClick={onBack}
-                    className="px-8 py-3"
+                    className="h-12 px-8 min-w-[160px] text-base"
                 >
                     Quay lại
                 </Button>
                 <Button
                     onClick={onContinue}
-                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="h-12 px-8 min-w-[160px] text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all"
                 >
-                    Tiếp tục
+                    Thanh toán
                 </Button>
             </div>
         </div>
-    );
+    )
 };

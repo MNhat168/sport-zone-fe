@@ -120,6 +120,7 @@ export interface CreateFieldPayload {
     basePrice: number | string; // in VND, can be string for form input
     amenities?: FieldAmenityRequest[]; // Array of amenities with prices
     numberOfCourts?: number; // Number of courts to create (0-10, default: 1)
+    rules?: string[]; // Field rules
 }
 
 // Update Field Payload interface
@@ -364,6 +365,7 @@ export interface FieldOwnerBookingsParams {
     endDate?: string; // YYYY-MM-DD format
     page?: number;
     limit?: number;
+    type?: string; // Add type filter for field or field_coach
 }
 
 export interface FieldOwnerBookingsResponse {

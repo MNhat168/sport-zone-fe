@@ -134,6 +134,8 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
         statusText,
         // Store original booking data for details modal
         originalBooking: booking,
+        transactionStatus: booking.transactionStatus,
+        approvalStatus: booking.approvalStatus,
     };
 };
 
@@ -211,6 +213,7 @@ export default function FieldHistoryBookingPage() {
     const [activeTab, setActiveTab] = useState<TransactionStatus>(TransactionStatus.PENDING);
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
+    const [bookingTypeTab, setBookingTypeTab] = useState<'courts' | 'coaches'>('courts'); // Track courts or coaches tab
     const [hiddenIds, setHiddenIds] = useState<string[]>([]);
     const [hasInitialData, setHasInitialData] = useState(false);
 
@@ -255,6 +258,10 @@ export default function FieldHistoryBookingPage() {
     // Helper to fetch bookings
     const fetchBookings = (isInitial = false) => {
         const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
+
+        // Use new endpoint with type filter when coaches tab is selected
+        const type = bookingTypeTab === 'coaches' ? 'field_coach' : 'field';
+
         dispatch(
             getMyFieldsBookings({
                 fieldName: searchQuery || undefined,
@@ -263,6 +270,7 @@ export default function FieldHistoryBookingPage() {
                 endDate,
                 page: currentPage,
                 limit: itemsPerPage,
+                type, // Add type filter
             })
         ).then(() => {
             if (isInitial) setHasInitialData(true);
@@ -351,7 +359,7 @@ export default function FieldHistoryBookingPage() {
         }
     };
 
-    const handleDeny = async (bookingId: string) => {
+    const handleCancel = async (bookingId: string) => {
         try {
             await dispatch(ownerRejectBooking({ bookingId })).unwrap();
             // Hide the acted booking immediately and refresh in background
@@ -394,7 +402,8 @@ export default function FieldHistoryBookingPage() {
 
     const handleTabChangeFromFilter = (value: string) => {
         // This is for the courts/coaches tab in the filter, not the status tab
-        console.log("Tab:", value);
+        setBookingTypeTab(value as 'courts' | 'coaches');
+        setCurrentPage(1); // Reset to first page when tab changes
     };
 
     const handlePageChange = (page: number) => {
@@ -468,7 +477,8 @@ export default function FieldHistoryBookingPage() {
                                         onViewDetails={handleViewDetails}
                                         onChat={handleChat}
                                         onAccept={handleAccept}
-                                        onDeny={handleDeny}
+                                        onDeny={handleCancel}
+                                        onCancel={handleCancel}
                                     />
                                 )}
                             </>

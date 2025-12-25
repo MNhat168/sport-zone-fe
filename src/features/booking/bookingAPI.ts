@@ -4,6 +4,7 @@ import { BASE_URL } from "../../utils/constant-value/constant";
 export const CREATE_FIELD_BOOKING_API = `${BASE_URL}/bookings/field`;
 export const CANCEL_FIELD_BOOKING_API = (id: string) => `${BASE_URL}/bookings/${id}/cancel`;
 export const CREATE_SESSION_BOOKING_API = `${BASE_URL}/bookings/session`;
+export const CREATE_COMBINED_BOOKING_API = `${BASE_URL}/bookings/combined-hold`;
 export const CANCEL_SESSION_BOOKING_API = `${BASE_URL}/bookings/session/cancel`;
 export const GET_COACH_BOOKINGS_API = (coachId: string) => `${BASE_URL}/bookings/coach/${coachId}`;
 export const GET_MY_BOOKINGS_API = `${BASE_URL}/bookings/my-bookings`;

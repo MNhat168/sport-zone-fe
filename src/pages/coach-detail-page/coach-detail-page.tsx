@@ -8,7 +8,7 @@ import { User, Users } from "lucide-react";
 import L from "leaflet";
 import { getCoachById, clearCurrentCoach } from "@/features/coach";
 import { setFavouriteCoaches, removeFavouriteCoaches, getUserProfile } from "@/features/user";
-import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
+import { createCoachReviewThunk, getCoachStatsThunk } from "@/features/reviews/reviewThunk";
 import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
 import {
   CustomFailedToast,
@@ -23,7 +23,6 @@ import { CoachInfoCard } from "./components/CoachInfoCard";
 import { CoachTabs } from "./components/CoachTabs";
 import { BioSection } from "./components/BioSection";
 import { LessonsSection } from "./components/LessonsSection";
-import { CoachingSection } from "./components/CoachingSection";
 import { GallerySection } from "./components/GallerySection";
 import { ReviewsSection } from "./components/ReviewsSection";
 import { LocationSection } from "./components/LocationSection";
@@ -135,12 +134,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       CustomFailedToast(err?.message || "Thao tác thất bại");
     } finally {
       setFavLoading(false);
-        try {
-          // refresh profile to sync favouriteCoaches state with server
-          dispatch(getUserProfile());
-        } catch (e) {
-          // ignore
-        }
+      try {
+        // refresh profile to sync favouriteCoaches state with server
+        dispatch(getUserProfile());
+      } catch (e) {
+        // ignore
+      }
     }
   };
 
@@ -156,6 +155,10 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const [reviewComment, setReviewComment] = useState<string>("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [coachReviews, setCoachReviews] = useState<any[]>([]);
+  // Coach aggregated stats from redux
+  const coachStats = useSelector((state: RootState) =>
+    effectiveCoachId ? state.reviews?.coachStats?.[effectiveCoachId] ?? null : null
+  );
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
@@ -206,28 +209,23 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   useEffect(() => {
     if (effectiveCoachId) {
       dispatch(getCoachById(effectiveCoachId));
+      // fetch aggregated coach stats for UI
+      try {
+        dispatch(getCoachStatsThunk(effectiveCoachId));
+      } catch (e) {
+        console.error('Failed to dispatch getCoachStatsThunk', e);
+      }
     }
   }, [dispatch, effectiveCoachId]);
 
-  // Rate-limit profile refresh to avoid frequent /users/get-profile requests.
-  // This keeps favouriteCoaches in sync but prevents continuous fetching.
+  // Ensure auth profile (favouriteCoaches) is fresh on page load so the favorite
+  // button correctly reflects server state. Only refresh when favourites are
+  // missing or don't include the current coach id.
   useEffect(() => {
     if (!effectiveCoachId) return;
-    const PROFILE_REFRESH_KEY = 'profile:lastFetchAt';
-    const MIN_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-    const last = Number(localStorage.getItem(PROFILE_REFRESH_KEY) || 0);
-    const now = Date.now();
-    const withinCooldown = now - last < MIN_INTERVAL_MS;
-
-    const missingFavs = !currentUser || !Array.isArray(currentUser.favouriteCoaches);
-    const notIncluded = !!effectiveCoachId && Array.isArray(currentUser?.favouriteCoaches)
-      ? !currentUser!.favouriteCoaches.includes(effectiveCoachId as string)
-      : true;
-
-    if ((missingFavs || notIncluded) && !withinCooldown) {
-      dispatch(getUserProfile()).finally(() => {
-        try { localStorage.setItem(PROFILE_REFRESH_KEY, String(Date.now())); } catch { }
-      });
+    const needRefresh = !authUser || !Array.isArray(authUser.favouriteCoaches) || !authUser.favouriteCoaches.includes(effectiveCoachId as string);
+    if (needRefresh) {
+      dispatch(getUserProfile());
     }
   }, [dispatch, effectiveCoachId, authUser]);
 
@@ -262,8 +260,8 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
         const items = Array.isArray(body?.data)
           ? body.data
           : Array.isArray(body)
-          ? body
-          : [];
+            ? body
+            : [];
 
         const pageFromResp = body?.pagination?.page ?? resp?.pagination?.page ?? page;
         const totalPagesFromResp = body?.pagination?.totalPages ?? resp?.pagination?.totalPages ?? 1;
@@ -556,6 +554,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
                 <ReviewsSection
                   coachData={coachData}
+                  coachStats={coachStats}
                   coachReviews={coachReviews}
                   filteredReviews={filteredReviews}
                   reviewsLoading={reviewsLoading}
@@ -571,13 +570,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   onWriteReview={() => setShowReviewModal(true)}
                 />
 
-                <LocationSection
-                  coachData={coachData}
-                  currentCoach={currentCoach}
-                  mapContainerRef={mapContainerRef}
-                  mapRef={mapRef}
-                  markerRef={markerRef}
-                />
+                {/* Location moved to sidebar under RequestFormCard */}
               </div>
             </div>
 
@@ -594,7 +587,13 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   onToggleForm={() => setShowRequestForm(!showRequestForm)}
                 />
 
-                {/* Chat button moved to CoachInfoCard header */}
+                <LocationSection
+                  coachData={coachData}
+                  currentCoach={currentCoach}
+                  mapContainerRef={mapContainerRef}
+                  mapRef={mapRef}
+                  markerRef={markerRef}
+                />
               </div>
             </div>
           </div>

@@ -62,6 +62,7 @@ export interface CoachDetail {
     reviewCount: number;
     location: string;
     locationData?: LocationData; // Location with geo coordinates
+    galleryImages?: string[]; // Gallery images
     level: string;
     completedSessions: number;
     createdAt: string;
@@ -144,6 +145,7 @@ export interface CoachProfile {
     certification: string;
     hourlyRate: number;
     bio: string;
+    galleryImages?: string[];
     rating: number;
     totalReviews: number;
     createdAt: string;

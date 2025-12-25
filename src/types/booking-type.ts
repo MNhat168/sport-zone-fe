@@ -26,6 +26,22 @@ export interface CreateSessionBookingPayload {
     selectedAmenities?: string[];
 }
 
+export interface CreateCombinedBookingPayload {
+    fieldId: string;
+    courtId: string;
+    date: string; // YYYY-MM-DD
+    startTime: string; // HH:mm
+    endTime: string; // HH:mm
+    selectedAmenities?: string[];
+    coachId: string;
+    paymentMethod?: number;
+    note?: string;
+    paymentNote?: string;
+    guestEmail?: string;
+    guestPhone?: string;
+    guestName?: string;
+}
+
 export interface CancelBookingPayload {
     cancellationReason?: string;
     courtId?: string;

@@ -10,3 +10,7 @@ export const COACH_ID_BY_USER_ID_API = (userId: string) => `${BASE_URL}/profiles
 export const COACH_BANK_ACCOUNT_API = (id: string) => `${BASE_URL}/coaches/${id}/bank-account`;
 // Get coach available slots
 export const COACH_AVAILABLE_SLOTS_API = (id: string, date: string) => `${BASE_URL}/coaches/${id}/slots?date=${date}`;
+// Upload gallery images
+export const UPLOAD_COACH_GALLERY_API = (id: string) => `${BASE_URL}/coaches/${id}/upload-gallery`;
+// Delete gallery image by index
+export const DELETE_COACH_GALLERY_IMAGE_API = (id: string, index: number) => `${BASE_URL}/coaches/${id}/gallery/${index}`;

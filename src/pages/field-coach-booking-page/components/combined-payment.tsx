@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useAppDispatch } from "@/store/hook";
+import { createCombinedBooking } from "@/features/booking/bookingThunk";
+import type { CreateCombinedBookingPayload } from "@/types/booking-type";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,11 +18,13 @@ interface CombinedPaymentProps {
         totalPrice: number;
     };
     totalAmount: number;
+    bookingPayload: CreateCombinedBookingPayload;
     onBack: () => void;
     onPaymentComplete: () => void;
 }
 
-export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onPaymentComplete }: CombinedPaymentProps) => {
+export const CombinedPayment = ({ fieldData, coachData, totalAmount, bookingPayload, onBack, onPaymentComplete }: CombinedPaymentProps) => {
+    const dispatch = useAppDispatch();
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [error, setError] = useState<string | null>(null);
 
@@ -36,14 +41,20 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
         setError(null);
 
         try {
-            // TODO: Implement actual payment API call
-            // For now, simulate successful payment after 2 seconds
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const resultAction = await dispatch(createCombinedBooking(bookingPayload));
 
-            setPaymentStatus('success');
-            setTimeout(() => {
-                onPaymentComplete();
-            }, 1500);
+            if (createCombinedBooking.fulfilled.match(resultAction)) {
+                setPaymentStatus('success');
+                setTimeout(() => {
+                    onPaymentComplete();
+                }, 1500);
+            } else {
+                if (resultAction.payload) {
+                    throw new Error(resultAction.payload.message);
+                } else {
+                    throw new Error('Có lỗi xảy ra khi tạo booking');
+                }
+            }
         } catch (err: any) {
             setPaymentStatus('error');
             setError(err.message || 'Có lỗi xảy ra khi thanh toán');
@@ -188,7 +199,7 @@ export const CombinedPayment = ({ fieldData, coachData, totalAmount, onBack, onP
                     disabled={paymentStatus !== 'idle' && paymentStatus !== 'error'}
                     className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
-                    {paymentStatus === 'processing' ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
+                    {paymentStatus === 'processing' ? 'Đang xử lý...' : 'Xác nhận đặt'}
                 </Button>
             </div>
         </div>

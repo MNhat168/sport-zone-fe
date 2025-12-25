@@ -48,7 +48,7 @@ export const GET_FIELDS_BY_LOCATION_API = (location: string) => `${BASE_URL}/fie
 
 // Field owner endpoints
 export const GET_MY_FIELDS_API = `${BASE_URL}/field-owner/fields`;
-export const GET_MY_FIELDS_BOOKINGS_API = `${BASE_URL}/field-owner/bookings`;
+export const GET_MY_FIELDS_BOOKINGS_API = `${BASE_URL}/field-owner/bookings/by-type`; // Use new endpoint with type filtering
 
 // Field owner note-approval endpoints
 export const OWNER_BOOKING_DETAIL_API = (bookingId: string) => `${BASE_URL}/owners/bookings/${bookingId}`;

@@ -14,6 +14,7 @@ import type {
     MyInvoicesResponse,
     UpcomingBooking,
     ErrorResponse,
+    CreateCombinedBookingPayload,
 } from "../../types/booking-type";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
 import axiosPublic from "../../utils/axios/axiosPublic";
@@ -28,6 +29,7 @@ import {
     GET_UPCOMING_BOOKING_API,
     GET_COACH_SCHEDULE_API,
     SET_COACH_HOLIDAY_API,
+    CREATE_COMBINED_BOOKING_API,
 } from "./bookingAPI";
 
 /**
@@ -95,7 +97,7 @@ export const createFieldBooking = createAsyncThunk<
     try {
         console.log("Creating field booking:", payload);
         const response = await axiosPrivate.post(CREATE_FIELD_BOOKING_API, payload);
-        
+
         console.log("Field booking created successfully:", response.data);
         return response.data;
     } catch (error: any) {
@@ -119,7 +121,7 @@ export const cancelFieldBooking = createAsyncThunk<
     try {
         console.log("Cancelling field booking:", id, payload);
         const response = await axiosPrivate.patch(CANCEL_FIELD_BOOKING_API(id), payload);
-        
+
         console.log("Field booking cancelled successfully:", response.data);
         return response.data;
     } catch (error: any) {
@@ -143,7 +145,7 @@ export const createSessionBooking = createAsyncThunk<
     try {
         console.log("Creating session booking:", payload);
         const response = await axiosPrivate.post(CREATE_SESSION_BOOKING_API, payload);
-        
+
         console.log("Session booking created successfully:", response.data);
         return response.data;
     } catch (error: any) {
@@ -167,13 +169,37 @@ export const cancelSessionBooking = createAsyncThunk<
     try {
         console.log("Cancelling session booking:", payload);
         const response = await axiosPrivate.patch(CANCEL_SESSION_BOOKING_API, payload);
-        
+
         console.log("Session booking cancelled successfully:", response.data);
         return response.data;
     } catch (error: any) {
         console.error("Error cancelling session booking:", error);
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to cancel session booking",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Create combined booking (field + coach + hold transaction)
+ */
+export const createCombinedBooking = createAsyncThunk<
+    Booking,
+    CreateCombinedBookingPayload,
+    { rejectValue: ErrorResponse }
+>("booking/createCombinedBooking", async (payload, thunkAPI) => {
+    try {
+        console.log("Creating combined booking:", payload);
+        const response = await axiosPrivate.post(CREATE_COMBINED_BOOKING_API, payload);
+
+        console.log("Combined booking created successfully:", response.data);
+        return response.data;
+    } catch (error: any) {
+        console.error("Error creating combined booking:", error);
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to create combined booking",
             status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);
@@ -191,7 +217,7 @@ export const getCoachBookings = createAsyncThunk<
     try {
         console.log("Getting coach bookings for:", coachId);
         const response = await axiosPublic.get(GET_COACH_BOOKINGS_API(coachId));
-        
+
         console.log("Coach bookings retrieved successfully:", response.data);
         return response.data;
     } catch (error: any) {
@@ -214,24 +240,24 @@ export const getMyBookings = createAsyncThunk<
 >("booking/getMyBookings", async (params, thunkAPI) => {
     try {
         console.log("Getting my bookings with params:", params);
-        
+
         // Build query string
         const queryParams = new URLSearchParams();
         if (params.status) queryParams.append('status', params.status);
         if (params.type) queryParams.append('type', params.type);
         if (params.page) queryParams.append('page', params.page.toString());
         if (params.limit) queryParams.append('limit', params.limit.toString());
-        
-        const url = queryParams.toString() 
+
+        const url = queryParams.toString()
             ? `${GET_MY_BOOKINGS_API}?${queryParams.toString()}`
             : GET_MY_BOOKINGS_API;
-            
+
         const response = await axiosPrivate.get(url);
-        
+
         console.log("My bookings retrieved successfully:", response.data);
         console.log("Response data type:", typeof response.data);
         console.log("Is array:", Array.isArray(response.data));
-        
+
         // Handle API response format: { success: true, data: { bookings: [...], pagination: {...} } }
         const responseData = response.data;
         if (responseData?.success && responseData?.data?.bookings) {
@@ -240,7 +266,7 @@ export const getMyBookings = createAsyncThunk<
                 pagination: responseData.data.pagination
             };
         }
-        
+
         // Fallback for different response formats
         if (Array.isArray(responseData)) {
             return {
@@ -248,21 +274,21 @@ export const getMyBookings = createAsyncThunk<
                 pagination: null
             };
         }
-        
+
         if (responseData?.bookings && Array.isArray(responseData.bookings)) {
             return {
                 bookings: responseData.bookings,
                 pagination: responseData.pagination || null
             };
         }
-        
+
         if (responseData?.data && Array.isArray(responseData.data)) {
             return {
                 bookings: responseData.data,
                 pagination: null
             };
         }
-        
+
         return {
             bookings: [],
             pagination: null
@@ -289,7 +315,7 @@ export const getCoachSchedule = createAsyncThunk<
         console.log("Getting coach schedule:", { coachId, startDate, endDate });
         const url = `${GET_COACH_SCHEDULE_API(coachId)}?startDate=${startDate}&endDate=${endDate}`;
         const response = await axiosPublic.get(url);
-        
+
         console.log("Coach schedule retrieved successfully:", response.data);
         return response.data;
     } catch (error: any) {
@@ -313,7 +339,7 @@ export const setCoachHoliday = createAsyncThunk<
     try {
         console.log("Setting coach holiday:", payload);
         const response = await axiosPrivate.post(SET_COACH_HOLIDAY_API, payload);
-        
+
         console.log("Coach holiday set successfully:", response.data);
         return response.data;
     } catch (error: any) {
@@ -370,7 +396,7 @@ export const createCoachBookingV2 = createAsyncThunk<
         console.log("Creating coach booking V2 with form data");
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
         const token = localStorage.getItem('token');
-        
+
         const headers: HeadersInit = {};
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
@@ -412,11 +438,11 @@ export const getCoachBankAccount = createAsyncThunk<
         console.log("Getting coach bank account for:", coachId);
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
         const response = await fetch(`${apiUrl}/coaches/${coachId}/bank-account`);
-        
+
         if (!response.ok) {
             throw new Error('Failed to fetch bank account');
         }
-        
+
         const result = await response.json();
         const bankAccount = result?.data || result;
         console.log("Coach bank account retrieved successfully:", bankAccount);
@@ -443,11 +469,11 @@ export const getCoachAvailableSlots = createAsyncThunk<
         console.log("Getting coach available slots:", { coachId, date });
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
         const response = await fetch(`${apiUrl}/coaches/${coachId}/slots?date=${date}`);
-        
+
         if (!response.ok) {
             throw new Error('Failed to fetch available slots');
         }
-        
+
         const result = await response.json();
         const slots = Array.isArray(result) ? result : (result?.data || []);
         console.log("Coach available slots retrieved successfully:", slots);
