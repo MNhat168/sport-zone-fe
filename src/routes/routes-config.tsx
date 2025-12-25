@@ -42,7 +42,7 @@ import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 import FieldBookingPage from "../pages/field-list-page/list-page";
 import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
 import FieldCoachBookingPage from "../pages/field-coach-booking-page/field-coach-booking-page";
-import FieldCreatePage from "../pages/field-create-page/field-create-page";
+import FieldCreatePage from "../pages/field-owner-dashboard-page/create/field-create-page";
 import FieldDetailPage from "../pages/field-detail-page/field-detail-page";
 
 // Payment Pages (only VNPay related pages)
@@ -139,6 +139,10 @@ export const publicRoutes: RouteObject[] = [
   { path: "/about", element: <AboutPage /> },
   { path: "/contact", element: <Placeholder title="Liên hệ" /> },
   { path: "/services", element: <Placeholder title="Dịch vụ" /> },
+
+  // Tournament Discovery (Public)
+  { path: "/tournaments", element: <TournamentListPage /> },
+  { path: "/tournaments/:id", element: <TournamentDetailPage /> },
 
   //test
   { path: "/field-owner-dashboard", element: <FieldOwnerDashboardPage /> },
@@ -285,26 +289,10 @@ export const userRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/tournaments",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <TournamentListPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
     path: "/tournaments/create",
     element: (
-      <ProtectedRoute allowedRoles={[UserRole.user]}>
+      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.coach, UserRole.FIELD_OWNER]}>
         <CreateTournamentPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/tournaments/:id",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <TournamentDetailPage />
       </ProtectedRoute>
     ),
   },

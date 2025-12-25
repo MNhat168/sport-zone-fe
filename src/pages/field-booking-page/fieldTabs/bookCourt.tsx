@@ -404,10 +404,10 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             }));
         }
     };
-    // Prefill form from localStorage if available
+    // Prefill form from sessionStorage if available
     useEffect(() => {
         try {
-            const raw = localStorage.getItem('bookingFormData');
+            const raw = sessionStorage.getItem('bookingFormData');
             if (!raw) return;
             const parsed = JSON.parse(raw);
             if (
@@ -426,7 +426,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                     phone: parsed.phone ?? prev.phone,
                 }));
 
-                // Cập nhật selectedStartTime và selectedEndTime từ localStorage
+                // Cập nhật selectedStartTime và selectedEndTime từ sessionStorage
                 if (parsed.startTime) {
                     setSelectedStartTime(parsed.startTime);
                 }
@@ -447,7 +447,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             }
         } catch {
             // Ignore malformed storage
-            console.warn('Failed to parse bookingFormData from localStorage');
+            console.warn('Failed to parse bookingFormData from sessionStorage');
         }
     }, [venue?.id, courts, fetchAvailabilityData]); // Add dependencies
 
@@ -618,7 +618,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
         if (onSubmit) {
             onSubmit(formData);
-            localStorage.setItem('bookingFormData', JSON.stringify(formData));
+            sessionStorage.setItem('bookingFormData', JSON.stringify(formData));
         }
     };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { createField, createFieldWithImages } from '@/features/field/fieldThunk';
@@ -18,9 +19,10 @@ import {
     AmenitiesCard,
     GalleryCard,
     LocationCard
-} from '@/pages/field-create-page/component/field-create';
+} from '@/pages/field-owner-dashboard-page/create/component/field-create';
 export default function FieldCreatePage() {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { createLoading, createWithImagesLoading, createError, createWithImagesError } = useAppSelector((state) => state.field);
 
 
@@ -56,6 +58,7 @@ export default function FieldCreatePage() {
     const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
     const [selectedIncludes, setSelectedIncludes] = useState<AmenityWithPrice[]>([]);
     const [selectedAmenities, setSelectedAmenities] = useState<AmenityWithPrice[]>([]);
+    const [rules, setRules] = useState<string[]>([]);
 
     // Memoized callbacks to prevent infinite re-renders
     const handleIncludesChange = useCallback((amenities: AmenityWithPrice[]) => {
@@ -214,8 +217,8 @@ export default function FieldCreatePage() {
             CustomFailedToast('Vui lòng nhập mô tả sân');
             return false;
         }
-        const locationString = typeof formData.location === 'string' 
-            ? formData.location 
+        const locationString = typeof formData.location === 'string'
+            ? formData.location
             : formData.location?.address || '';
         if (!locationString.trim()) {
             CustomFailedToast('Vui lòng nhập địa chỉ sân');
@@ -277,7 +280,8 @@ export default function FieldCreatePage() {
                 operatingHours: filteredOperatingHours,
                 priceRanges: filteredPriceRanges,
                 amenities: amenitiesForAPI,
-                numberOfCourts: formData.numberOfCourts ?? 1
+                numberOfCourts: formData.numberOfCourts ?? 1,
+                rules: rules.filter(r => r.trim() !== '')
             };
 
             // Debug: log payload prior to submit
@@ -316,6 +320,7 @@ export default function FieldCreatePage() {
                 })).unwrap();
                 console.log('[CreateField] API response (with images):', resWithImages);
                 CustomSuccessToast('Tạo sân thành công với hình ảnh!');
+                setTimeout(() => navigate('/field-owner/fields'), 1500);
             } else {
                 // Debug: log which API will be called
                 console.log('[CreateField] Using JSON API (CREATE_FIELD_API)');
@@ -328,6 +333,7 @@ export default function FieldCreatePage() {
                 const resNoImages = await dispatch(createField(payloadWithLocation)).unwrap();
                 console.log('[CreateField] API response (no images):', resNoImages);
                 CustomSuccessToast('Tạo sân thành công!');
+                setTimeout(() => navigate('/field-owner/fields'), 1500);
             }
 
             // Reset form
@@ -353,6 +359,7 @@ export default function FieldCreatePage() {
             setGalleryPreviews([]);
             setSelectedIncludes([]);
             setSelectedAmenities([]);
+            setRules([]);
 
         } catch (error) {
             console.error('Error creating field:', error);
@@ -498,20 +505,20 @@ export default function FieldCreatePage() {
     return (
         <FieldOwnerDashboardLayout>
             <div className="min-h-screen bg-background-secondary py-8">
-                    <div className="max-w-7xl mx-auto space-y-12">
-                        {/* Basic Info Section */}
-                        <div id="section-basic">
-                            <BasicInfoCard
-                                formData={formData}
-                                onInputChange={handleInputChange}
-                            />
-                        </div>
+                <div className="max-w-7xl mx-auto space-y-12">
+                    {/* Basic Info Section */}
+                    <div id="section-basic">
+                        <BasicInfoCard
+                            formData={formData}
+                            onInputChange={handleInputChange}
+                        />
+                    </div>
 
-                        {/* Basic Price Section */}
-                        <div id="section-price">
-                            <PriceCard
-                                formData={formData}
-                                onInputChange={handleInputChange}
+                    {/* Basic Price Section */}
+                    <div id="section-price">
+                        <PriceCard
+                            formData={formData}
+                            onInputChange={handleInputChange}
                             onApplyDefaultHours={(start: string, end: string) => {
                                 // Always apply to all available days
                                 const targetDays = availableDays.map(d => d.value);
@@ -538,12 +545,12 @@ export default function FieldCreatePage() {
                                     return copy;
                                 });
                             }}
-                            />
-                        </div>
+                        />
+                    </div>
 
-                        {/* Availability Section */}
-                        <div id="section-availability">
-                            <AvailabilityCard
+                    {/* Availability Section */}
+                    <div id="section-availability">
+                        <AvailabilityCard
                             selectedDays={selectedDays}
                             dayAvailability={dayAvailability}
                             editingDay={editingDay}
@@ -610,81 +617,81 @@ export default function FieldCreatePage() {
                             onResetAvailability={handleResetAvailability}
                             onSaveAvailability={handleSaveAvailability}
                         />
-                        </div>
-                        
-                        {/* Venue Overview Section */}
-                        <div id="section-overview">
-                            <OverviewCard
-                                formData={formData}
-                                onInputChange={handleInputChange}
-                            />
-                        </div>
-
-                        {/* Includes Section */}
-                        <div id="section-includes">
-                            <IncludesCard
-                                selectedIncludes={selectedIncludes}
-                                onIncludesChange={handleIncludesChange}
-                                sportType={formData.sportType}
-                            />
-                        </div>
-
-                        {/* Venue Rules Section */}
-                        <div id="section-rules">
-                            <RulesCard />
-                        </div>
-
-                        {/* Amenities Section */}
-                        <div id="section-amenities">
-                            <AmenitiesCard
-                                selectedAmenities={selectedAmenities}
-                                onAmenitiesChange={handleAmenitiesChange}
-                                sportType={formData.sportType}
-                            />
-                        </div>
-
-                        {/* Gallery Section */}
-                        <div id="section-gallery">
-                            <GalleryCard
-                                avatarPreview={avatarPreview}
-                                onAvatarUpload={handleAvatarUpload}
-                                onRemoveAvatar={removeAvatar}
-                                galleryPreviews={galleryPreviews}
-                                onGalleryUpload={handleGalleryUpload}
-                                onRemoveGalleryImage={removeGalleryImage}
-                            />
-                        </div>
-
-                        {/* Location Section */}
-                        <div id="section-locations">
-                            <LocationCard
-                                formData={formData}
-                                onInputChange={handleInputChange}
-                                onLocationChange={handleLocationChange}
-                            />
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex justify-center gap-3">
-                            <Button
-                                variant="outline"
-                                onClick={fillSampleData}
-                                disabled={createLoading || createWithImagesLoading}
-                            >
-                                Điền dữ liệu mẫu
-                            </Button>
-                            <Button
-                                size="lg"
-                                className="px-8"
-                                onClick={handleSubmit}
-                                disabled={createLoading || createWithImagesLoading}
-                            >
-                                {createLoading || createWithImagesLoading ? 'Đang tạo sân...' : 'Lưu sân'}
-                            </Button>
-                        </div>
-
                     </div>
+
+                    {/* Venue Overview Section */}
+                    <div id="section-overview">
+                        <OverviewCard
+                            formData={formData}
+                            onInputChange={handleInputChange}
+                        />
+                    </div>
+
+                    {/* Includes Section */}
+                    <div id="section-includes">
+                        <IncludesCard
+                            selectedIncludes={selectedIncludes}
+                            onIncludesChange={handleIncludesChange}
+                            sportType={formData.sportType}
+                        />
+                    </div>
+
+                    {/* Venue Rules Section */}
+                    <div id="section-rules">
+                        <RulesCard rules={rules} onRulesChange={setRules} />
+                    </div>
+
+                    {/* Amenities Section */}
+                    <div id="section-amenities">
+                        <AmenitiesCard
+                            selectedAmenities={selectedAmenities}
+                            onAmenitiesChange={handleAmenitiesChange}
+                            sportType={formData.sportType}
+                        />
+                    </div>
+
+                    {/* Gallery Section */}
+                    <div id="section-gallery">
+                        <GalleryCard
+                            avatarPreview={avatarPreview}
+                            onAvatarUpload={handleAvatarUpload}
+                            onRemoveAvatar={removeAvatar}
+                            galleryPreviews={galleryPreviews}
+                            onGalleryUpload={handleGalleryUpload}
+                            onRemoveGalleryImage={removeGalleryImage}
+                        />
+                    </div>
+
+                    {/* Location Section */}
+                    <div id="section-locations">
+                        <LocationCard
+                            formData={formData}
+                            onInputChange={handleInputChange}
+                            onLocationChange={handleLocationChange}
+                        />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-center gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={fillSampleData}
+                            disabled={createLoading || createWithImagesLoading}
+                        >
+                            Điền dữ liệu mẫu
+                        </Button>
+                        <Button
+                            size="lg"
+                            className="px-8"
+                            onClick={handleSubmit}
+                            disabled={createLoading || createWithImagesLoading}
+                        >
+                            {createLoading || createWithImagesLoading ? 'Đang tạo sân...' : 'Lưu sân'}
+                        </Button>
+                    </div>
+
                 </div>
+            </div>
         </FieldOwnerDashboardLayout>
     );
 }

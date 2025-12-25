@@ -21,6 +21,8 @@ interface Booking {
     payment: string;
     status: "awaiting" | "accepted" | "rejected";
     statusText: string;
+    transactionStatus?: string;
+    approvalStatus?: string;
 }
 
 interface BookingTableProps {
@@ -29,6 +31,7 @@ interface BookingTableProps {
     onChat: (bookingId: string) => void;
     onAccept?: (bookingId: string) => void;
     onDeny?: (bookingId: string) => void;
+    onCancel?: (bookingId: string) => void;
 }
 
 const getStatusBadgeStyles = (status: Booking["status"]) => {
@@ -76,6 +79,7 @@ export function BookingTable({
     onChat,
     onAccept,
     onDeny,
+    onCancel,
 }: BookingTableProps) {
     return (
         <div className="w-full bg-white">
@@ -169,7 +173,8 @@ export function BookingTable({
                                     </Button>
                                 </TableCell>
                                 <TableCell className="py-5 text-left">
-                                    {booking.status === "awaiting" ? (
+                                    {/* Show Accept/Reject for pending approval OR pending/processing transactions */}
+                                    {(booking.approvalStatus === 'pending' || booking.transactionStatus === 'pending' || booking.transactionStatus === 'processing') ? (
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 type="button"
@@ -188,6 +193,15 @@ export function BookingTable({
                                                 Từ Chối
                                             </Button>
                                         </div>
+                                    ) : booking.transactionStatus === 'succeeded' ? (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            className="h-8 bg-red-600 hover:bg-red-700 text-white"
+                                            onClick={() => onCancel && onCancel(booking.id)}
+                                        >
+                                            Hủy Đặt
+                                        </Button>
                                     ) : (
                                         <div className="text-sm text-gray-500">Không có hành động</div>
                                     )}

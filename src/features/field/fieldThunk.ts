@@ -767,6 +767,7 @@ export const getMyFieldsBookings = createAsyncThunk<
         if (params.endDate) queryParams.append('endDate', params.endDate);
         if (params.page) queryParams.append('page', params.page.toString());
         if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.type) queryParams.append('type', params.type); // Add type param
 
         const url = queryParams.toString()
             ? `${GET_MY_FIELDS_BOOKINGS_API}?${queryParams.toString()}`

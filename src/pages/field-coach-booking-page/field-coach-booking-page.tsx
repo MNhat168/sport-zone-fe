@@ -7,6 +7,10 @@ import { CombinedBookingStep } from "@/components/enums/ENUMS";
 import { FieldCoachBookingStepper } from "./field-coach-booking-stepper";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { getFieldById } from "@/features/field/fieldThunk";
+import { createCombinedBooking } from "@/features/booking/bookingThunk";
+import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle, Loader2 } from "lucide-react";
 
 // Import field booking components
 import { BookCourtTab } from "../field-booking-page/fieldTabs/bookCourt";
@@ -18,9 +22,7 @@ import type { BookingFormData } from "../field-booking-page/fieldTabs/personalIn
 // Import new combined components
 import { FieldListSelection } from "./components/field-list-selection";
 import { CoachListSelection } from "./components/coach-list-selection";
-import { CoachTimeSelection } from "./components/coach-time-selection";
 import { CombinedConfirmation } from "./components/combined-confirmation";
-import { CombinedPayment } from "./components/combined-payment";
 
 import axiosPublic from "@/utils/axios/axiosPublic";
 import { FIELD_COURTS_API } from "@/features/field/fieldAPI";
@@ -69,6 +71,8 @@ const FieldCoachBookingPage = () => {
     const [courts, setCourts] = useState<Array<{ id: string; name: string; courtNumber?: number }>>([]);
     const [courtsError, setCourtsError] = useState<string | null>(null);
     const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
 
     // Combined booking data state
     const [bookingData, setBookingData] = useState<CombinedBookingData>({
@@ -107,7 +111,7 @@ const FieldCoachBookingPage = () => {
         const searchParams = new URLSearchParams(location.search);
         const urlFieldId = searchParams.get('fieldId');
         const stateFieldId = (location.state as any)?.fieldId;
-        const storedFieldId = localStorage.getItem('selectedFieldId');
+        const storedFieldId = sessionStorage.getItem('selectedFieldId');
         const fieldId = urlFieldId || stateFieldId || storedFieldId;
 
         if (!currentField && fieldId) {
@@ -115,17 +119,24 @@ const FieldCoachBookingPage = () => {
         }
     }, [location.search, location.state, currentField, dispatch, currentStep]);
 
+    const getLocationString = (location: any): string => {
+        if (!location) return '';
+        if (typeof location === 'string') return location;
+        if (typeof location === 'object' && location.address) return location.address;
+        return '';
+    };
+
     // Persist field ID
     useEffect(() => {
         if (currentField?.id) {
-            localStorage.setItem('selectedFieldId', currentField.id);
+            sessionStorage.setItem('selectedFieldId', currentField.id);
             setBookingData(prev => ({
                 ...prev,
                 field: {
                     ...prev.field,
                     fieldId: currentField.id,
                     fieldName: currentField.name,
-                    fieldLocation: currentField.location || '',
+                    fieldLocation: getLocationString(currentField.location),
                     courtPrice: currentField.basePrice || 0,
                 }
             }));
@@ -170,7 +181,7 @@ const FieldCoachBookingPage = () => {
 
     // ===== Field List Selection Handler =====
     const handleFieldSelect = (fieldId: string, fieldName: string, fieldLocation: string, fieldPrice: number) => {
-        localStorage.setItem('selectedFieldId', fieldId);
+        sessionStorage.setItem('selectedFieldId', fieldId);
         dispatch(getFieldById(fieldId));
         setBookingData(prev => ({
             ...prev,
@@ -245,31 +256,17 @@ const FieldCoachBookingPage = () => {
                 coachId,
                 coachName,
                 coachPrice,
-            }
-        }));
-        setCurrentStep(CombinedBookingStep.COACH_TIME);
-    };
-
-    const handleCoachSelectBack = () => {
-        setCurrentStep(CombinedBookingStep.FIELD_CONFIRM);
-    };
-
-    const handleCoachTimeSubmit = (data: { date: string; startTime: string; endTime: string; note?: string }) => {
-        setBookingData(prev => ({
-            ...prev,
-            coach: {
-                ...prev.coach,
-                date: data.date,
-                startTime: data.startTime,
-                endTime: data.endTime,
-                note: data.note,
+                // Automatically use the same date and time as the field
+                date: prev.field.date,
+                startTime: prev.field.startTime,
+                endTime: prev.field.endTime,
             }
         }));
         setCurrentStep(CombinedBookingStep.COMBINED_CONFIRM);
     };
 
-    const handleCoachTimeBack = () => {
-        setCurrentStep(CombinedBookingStep.COACH_SELECT);
+    const handleCoachSelectBack = () => {
+        setCurrentStep(CombinedBookingStep.FIELD_CONFIRM);
     };
 
     // ===== Combined Confirmation Handlers =====
@@ -278,11 +275,11 @@ const FieldCoachBookingPage = () => {
     };
 
     const handleCombinedConfirmBack = () => {
-        setCurrentStep(CombinedBookingStep.COACH_TIME);
+        setCurrentStep(CombinedBookingStep.COACH_SELECT);
     };
 
     // ===== Personal Info Handlers =====
-    const handlePersonalInfoSubmit = (formData: BookingFormData) => {
+    const handlePersonalInfoSubmit = async (formData: BookingFormData) => {
         setBookingData(prev => ({
             ...prev,
             user: {
@@ -291,52 +288,117 @@ const FieldCoachBookingPage = () => {
                 phone: formData.phone || '',
             }
         }));
-        setCurrentStep(CombinedBookingStep.PAYMENT);
+
+        // Gửi đơn đặt trực tiếp
+        setIsSubmitting(true);
+        try {
+            const bookingPayload = {
+                fieldId: bookingData.field.fieldId,
+                courtId: bookingData.field.courtId,
+                date: bookingData.field.date,
+                startTime: bookingData.field.startTime,
+                endTime: bookingData.field.endTime,
+                selectedAmenities: bookingData.field.amenityIds,
+                coachId: bookingData.coach.coachId,
+                paymentMethod: 8, // 8: Bank Transfer
+                note: bookingData.coach.note || '',
+                paymentNote: 'Đặt Combo Sân + HLV',
+                guestName: formData.name || '',
+                guestEmail: formData.email || '',
+                guestPhone: formData.phone || '',
+            };
+
+            const resultAction = await dispatch(createCombinedBooking(bookingPayload));
+
+            if (createCombinedBooking.fulfilled.match(resultAction)) {
+                setSubmitSuccess(true);
+                toast.success('Gửi đơn đặt thành công! Vui lòng chờ xác nhận từ huấn luyện viên.');
+
+                // Clear session storage
+                sessionStorage.removeItem('bookingFormData');
+                sessionStorage.removeItem('selectedFieldId');
+                sessionStorage.removeItem('amenitiesNote');
+            } else {
+                const errorMessage = (resultAction.payload as any)?.message || 'Có lỗi xảy ra khi gửi đơn đặt';
+                toast.error(errorMessage);
+            }
+        } catch (err: any) {
+            toast.error(err.message || 'Có lỗi xảy ra khi gửi đơn đặt');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handlePersonalInfoBack = () => {
         setCurrentStep(CombinedBookingStep.COMBINED_CONFIRM);
     };
 
-    // ===== Payment Handlers =====
-    const handlePaymentComplete = () => {
-        // Clear all localStorage
-        localStorage.removeItem('bookingFormData');
-        localStorage.removeItem('selectedFieldId');
-        localStorage.removeItem('amenitiesNote');
+    // Hiển thị màn hình thành công
+    if (submitSuccess) {
+        return (
+            <>
+                <NavbarDarkComponent />
+                <PageWrapper>
+                    <PageHeader title="Đặt sân + HLV" breadcrumbs={breadcrumbs} />
+                    <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
+                        <Card className="border-2 border-emerald-600">
+                            <CardContent className="p-10 text-center space-y-6">
+                                <CheckCircle className="w-20 h-20 text-emerald-600 mx-auto" />
+                                <h2 className="text-3xl font-bold text-emerald-700">
+                                    Gửi đơn đặt thành công!
+                                </h2>
+                                <p className="text-lg text-gray-700">
+                                    Đơn đặt sân và huấn luyện viên của bạn đã được gửi.
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    Vui lòng chờ xác nhận từ huấn luyện viên. Email thông báo sẽ được gửi đến hộp thư của bạn.
+                                </p>
+                                <div className="pt-4 flex justify-center gap-4">
+                                    <button
+                                        onClick={() => navigate('/')}
+                                        className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                                    >
+                                        Về trang chủ
+                                    </button>
+                                    <button
+                                        onClick={() => navigate('/user/bookings')}
+                                        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+                                    >
+                                        Xem lịch sử đặt sân
+                                    </button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </PageWrapper>
+            </>
+        );
+    }
 
-        // Navigate to success page or home
-        navigate('/');
-    };
-
-    const handlePaymentBack = () => {
-        setCurrentStep(CombinedBookingStep.PERSONAL_INFO);
-    };
-
-    // Calculate totals for payment
-    const calculateFieldTotal = () => {
-        const hours = bookingData.field.endTime && bookingData.field.startTime
-            ? parseInt(bookingData.field.endTime.split(':')[0]) - parseInt(bookingData.field.startTime.split(':')[0])
-            : 0;
-        const courtTotal = bookingData.field.courtPrice * hours;
-
-        const amenitiesTotal = (currentField as any)?.amenities
-            ?.filter((a: any) => bookingData.field.amenityIds.includes(a.amenityId))
-            .reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0) || 0;
-
-        return courtTotal + amenitiesTotal;
-    };
-
-    const calculateCoachTotal = () => {
-        const hours = bookingData.coach.endTime && bookingData.coach.startTime
-            ? parseInt(bookingData.coach.endTime.split(':')[0]) - parseInt(bookingData.coach.startTime.split(':')[0])
-            : 0;
-        return bookingData.coach.coachPrice * hours;
-    };
-
-    const calculateGrandTotal = () => {
-        return calculateFieldTotal() + calculateCoachTotal();
-    };
+    // Hiển thị màn hình đang gửi
+    if (isSubmitting) {
+        return (
+            <>
+                <NavbarDarkComponent />
+                <PageWrapper>
+                    <PageHeader title="Đặt sân + HLV" breadcrumbs={breadcrumbs} />
+                    <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
+                        <Card className="border border-gray-200">
+                            <CardContent className="p-10 text-center space-y-4">
+                                <Loader2 className="w-16 h-16 text-emerald-600 mx-auto animate-spin" />
+                                <h2 className="text-2xl font-semibold text-gray-700">
+                                    Đang gửi đơn đặt...
+                                </h2>
+                                <p className="text-gray-600">
+                                    Vui lòng chờ trong giây lát
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </PageWrapper>
+            </>
+        );
+    }
 
     return (
         <>
@@ -401,16 +463,6 @@ const FieldCoachBookingPage = () => {
                     />
                 )}
 
-                {currentStep === CombinedBookingStep.COACH_TIME && (
-                    <CoachTimeSelection
-                        coachId={bookingData.coach.coachId}
-                        coachName={bookingData.coach.coachName}
-                        coachPrice={bookingData.coach.coachPrice}
-                        onSubmit={handleCoachTimeSubmit}
-                        onBack={handleCoachTimeBack}
-                    />
-                )}
-
                 {currentStep === CombinedBookingStep.COMBINED_CONFIRM && (
                     <CombinedConfirmation
                         fieldData={{
@@ -455,29 +507,12 @@ const FieldCoachBookingPage = () => {
                         onSubmit={handlePersonalInfoSubmit}
                         onBack={handlePersonalInfoBack}
                         courts={courts}
+                        submitButtonText="Gửi đơn đặt"
+                        skipFieldBookingHold={true}
                     />
                 )}
 
-                {currentStep === CombinedBookingStep.PAYMENT && (
-                    <CombinedPayment
-                        fieldData={{
-                            fieldName: bookingData.field.fieldName,
-                            courtPrice: bookingData.field.courtPrice * (bookingData.field.endTime && bookingData.field.startTime
-                                ? parseInt(bookingData.field.endTime.split(':')[0]) - parseInt(bookingData.field.startTime.split(':')[0])
-                                : 0),
-                            amenitiesTotal: (currentField as any)?.amenities
-                                ?.filter((a: any) => bookingData.field.amenityIds.includes(a.amenityId))
-                                .reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0) || 0,
-                        }}
-                        coachData={{
-                            coachName: bookingData.coach.coachName,
-                            totalPrice: calculateCoachTotal(),
-                        }}
-                        totalAmount={calculateGrandTotal()}
-                        onBack={handlePaymentBack}
-                        onPaymentComplete={handlePaymentComplete}
-                    />
-                )}
+
             </PageWrapper>
         </>
     );

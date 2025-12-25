@@ -51,12 +51,12 @@ const FieldBookingPage = () => {
 
     
 
-    // Restore selected field on refresh: from URL ?fieldId= or localStorage
+    // Restore selected field on refresh: from URL ?fieldId= or sessionStorage
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const urlFieldId = searchParams.get('fieldId');
         const stateFieldId = (location.state as any)?.fieldId;
-        const storedFieldId = localStorage.getItem('selectedFieldId');
+        const storedFieldId = sessionStorage.getItem('selectedFieldId');
         const fieldId = urlFieldId || stateFieldId || storedFieldId;
 
         console.log('🔍 [FIELD BOOKING] Checking for field ID:', {
@@ -85,22 +85,22 @@ const FieldBookingPage = () => {
     // Persist currently selected field id for refresh
     useEffect(() => {
         if (currentField?.id) {
-            console.log('💾 [FIELD BOOKING] Persisting field ID to localStorage:', {
+            console.log('💾 [FIELD BOOKING] Persisting field ID to sessionStorage:', {
                 fieldId: currentField.id,
                 fieldName: currentField.name
             });
-            try { localStorage.setItem('selectedFieldId', currentField.id); } catch {
-                // Ignore localStorage errors (e.g., in private browsing mode)
-                console.warn('⚠️ [FIELD BOOKING] Failed to save field ID to localStorage');
+            try { sessionStorage.setItem('selectedFieldId', currentField.id); } catch {
+                // Ignore sessionStorage errors (e.g., in private browsing mode)
+                console.warn('⚠️ [FIELD BOOKING] Failed to save field ID to sessionStorage');
             }
         }
     }, [currentField?.id, currentField?.name]);
 
-    // Restore booking data from localStorage on mount (if user just logged in)
+    // Restore booking data from sessionStorage on mount (if user just logged in)
     useEffect(() => {
         if (authUser) {
             try {
-                const raw = localStorage.getItem('bookingFormData');
+                const raw = sessionStorage.getItem('bookingFormData');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (parsed && typeof parsed === 'object') {
@@ -123,7 +123,7 @@ const FieldBookingPage = () => {
                     }
                 }
             } catch (error) {
-                console.warn('Failed to restore booking data from localStorage:', error);
+                console.warn('Failed to restore booking data from sessionStorage:', error);
             }
         }
     }, [authUser]);

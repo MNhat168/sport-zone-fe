@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Dialog,
     DialogContent,
+    DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -55,6 +56,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                 showCloseButton={false}
                 className="max-w-[1400px] sm:max-w-[1400px] w-[95vw] p-0 gap-0 bg-white rounded-lg border border-black/20"
             >
+                <DialogTitle className="sr-only">Chi Tiết Đặt Sân</DialogTitle>
                 {/* Header */}
                 <div className="px-6 py-6 border-b border-[#E8F4FF] flex justify-between items-center rounded-t-lg">
                     <div className="flex flex-col gap-0">
@@ -257,7 +259,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* Payment Proof Image */}
                             {paymentProofImageUrl && (
                                 <div className="px-4 pt-3.5 pb-4 border border-[#EDEDED] mt-3.5">

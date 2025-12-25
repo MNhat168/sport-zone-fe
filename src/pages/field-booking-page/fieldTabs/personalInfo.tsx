@@ -46,6 +46,15 @@ interface PersonalInfoTabProps {
      * Available courts list
      */
     courts?: Array<{ id: string; name: string; courtNumber?: number }>;
+    /**
+     * Custom text for submit button (default: "Tiếp tục đến thanh toán")
+     */
+    submitButtonText?: string;
+    /**
+     * If true, skip the field-booking-hold API call and just call onSubmit
+     * Used when this component is part of a combined booking flow (field + coach)
+     */
+    skipFieldBookingHold?: boolean;
 }
 
 /**
@@ -56,11 +65,13 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     bookingData,
     onSubmit,
     onBack,
+    submitButtonText = "Tiếp tục đến thanh toán",
+    skipFieldBookingHold = false,
 }) => {
     const location = useLocation();
     const currentField = useAppSelector((state) => state.field.currentField);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
-    
+
     // Get user info from auth state
     const auth = useAppSelector((state) => state.auth);
     const currentUser = auth.user;
@@ -77,7 +88,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         phone: bookingData?.phone || currentUser?.phone || '',
     });
 
-    const [errors, setErrors] = useState<{[key: string]: string}>({});
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     // Update form when user info changes
     useEffect(() => {
@@ -95,7 +106,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
     // Form validation
     const validateForm = (): boolean => {
-        const newErrors: {[key: string]: string} = {};
+        const newErrors: { [key: string]: string } = {};
 
         if (!formData.name?.trim()) {
             newErrors.name = 'Full name is required';
@@ -133,6 +144,14 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
             return;
         }
 
+        // If skipFieldBookingHold is true (combined booking flow), just call onSubmit without holding slot
+        if (skipFieldBookingHold) {
+            if (onSubmit) {
+                onSubmit(formData);
+            }
+            return;
+        }
+
         // Call booking hold API before moving to payment
         if (!venue?.id || !formData.date || !formData.startTime || !formData.endTime || !formData.courtId) {
             setHoldError('Thiếu thông tin đặt sân (court, ngày, giờ). Vui lòng quay lại và kiểm tra.');
@@ -143,10 +162,10 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         setHoldError(null);
 
         try {
-            // Get selected amenity IDs from localStorage
+            // Get selected amenity IDs from sessionStorage
             const selectedAmenityIds: string[] = [];
             try {
-                const raw = localStorage.getItem('selectedAmenityIds');
+                const raw = sessionStorage.getItem('selectedAmenityIds');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) {
@@ -157,8 +176,8 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 // Ignore parsing errors
             }
 
-            // Get note from localStorage
-            const note = localStorage.getItem('amenitiesNote') || undefined;
+            // Get note from sessionStorage
+            const note = sessionStorage.getItem('amenitiesNote') || undefined;
 
             const payload: any = {
                 fieldId: venue.id,
@@ -189,7 +208,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 }
             }
 
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const headers: HeadersInit = {
                 'Content-Type': 'application/json',
             };
@@ -211,11 +230,11 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                     if (errorData.message) {
                         errorMessage = errorData.message;
                     } else if (errorData.error) {
-                        errorMessage = typeof errorData.error === 'string' 
-                            ? errorData.error 
+                        errorMessage = typeof errorData.error === 'string'
+                            ? errorData.error
                             : errorData.error.message || errorMessage;
                     }
-                    
+
                     // Add validation errors if present
                     if (errorData.details && Array.isArray(errorData.details)) {
                         const validationErrors = errorData.details
@@ -241,7 +260,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
             }
 
             const responseData = await response.json();
-            
+
             // API wraps response in {success: true, data: booking} format
             const booking = responseData.data || responseData;
             const bookingIdStr = booking._id || booking.id;
@@ -252,10 +271,10 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 throw new Error('Không nhận được ID booking hợp lệ từ server. Vui lòng thử lại.');
             }
 
-            // Store booking hold in localStorage
-            localStorage.setItem('heldBookingId', bookingIdStr);
-            localStorage.setItem('heldBookingTime', Date.now().toString());
-            localStorage.setItem('heldBookingCountdown', '300'); // 5 minutes
+            // Store booking hold in sessionStorage
+            sessionStorage.setItem('heldBookingId', bookingIdStr);
+            sessionStorage.setItem('heldBookingTime', Date.now().toString());
+            sessionStorage.setItem('heldBookingCountdown', '300'); // 5 minutes
 
             console.log('✅ [PERSONAL INFO] Booking hold created:', bookingIdStr);
 
@@ -353,7 +372,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                                 )}
                             </div>
 
-                            
+
                             {/* Hold Error Display */}
                             {holdError && (
                                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
@@ -385,11 +404,11 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                     {isHoldingSlot ? (
                         <>
                             <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Đang giữ chỗ...
+                            Đang xử lý...
                         </>
                     ) : (
                         <>
-                            Tiếp tục đến thanh toán
+                            {submitButtonText}
                             <ArrowRight className="w-4 h-4 ml-2" />
                         </>
                     )}

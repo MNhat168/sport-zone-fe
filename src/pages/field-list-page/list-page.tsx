@@ -950,8 +950,7 @@ const FieldBookingPage = () => {
       }
     });
 
-    // Không có search query
-    // Chỉ fitBounds nếu có ít markers (<= 5) để tránh zoom out quá nhiều
+    // Tự động điều chỉnh map để hiển thị tất cả markers
     const markersWithCoords = filteredTransformedFields.filter(
       (f) => f.latitude != null && f.longitude != null
     );
@@ -959,8 +958,8 @@ const FieldBookingPage = () => {
     // Create a unique key for the current set of markers to prevent repeated fitBounds calls
     const markersKey = markersWithCoords.map(f => f.id).sort().join(',');
 
-    if (bounds.isValid() && markersWithCoords.length > 0 && markersWithCoords.length <= 5) {
-      // Có ít markers, fitBounds để hiển thị tất cả
+    if (bounds.isValid() && markersWithCoords.length > 0) {
+      // Có markers - fitBounds để hiển thị tất cả
       // Chỉ fitBounds nếu:
       // 1. User không đang zoom (tránh reset zoom khi user đang tương tác)
       // 2. Markers đã thay đổi (tránh gọi fitBounds lặp lại)
@@ -969,18 +968,19 @@ const FieldBookingPage = () => {
         lastFitBoundsMarkersRef.current = markersKey;
 
         // Use fitBounds with maxZoom to prevent zooming out too much
+        // For many markers, allow zooming out more; for few markers, stay closer
+        const maxZoomLevel = markersWithCoords.length <= 5 ? 15 : 13;
         mapRef.current.fitBounds(bounds.pad(0.2), {
-          maxZoom: 15, // Prevent zooming out beyond level 15
+          maxZoom: maxZoomLevel,
         });
       }
     } else {
-      // Reset the last fitBounds markers when we have too many markers or no markers
-      if (markersWithCoords.length > 5 || markersWithCoords.length === 0) {
+      // Reset the last fitBounds markers when we have no markers
+      if (markersWithCoords.length === 0) {
         lastFitBoundsMarkersRef.current = "";
       }
 
-      // Không có markers hoặc quá nhiều markers
-      // KHÔNG reset zoom về 12 nữa - giữ zoom hiện tại của user
+      // Không có markers
       // Chỉ set view nếu map chưa có center (lần đầu tiên) và user không đang zoom
       const mapCenter = mapRef.current.getCenter();
       if ((!mapCenter || markersWithCoords.length === 0) && !isUserZoomingRef.current) {

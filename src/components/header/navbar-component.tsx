@@ -47,11 +47,11 @@ export const NavbarComponent = () => {
 
     // Gom style theo trạng thái scroll
     const linkClass = isScrolled
-        ? "text-base font-medium text-gray-900 hover:text-green-600"
-        : "text-base font-medium text-white";
+        ? "text-base font-medium text-gray-900 hover:text-green-600 transition-colors duration-200"
+        : "text-base font-medium text-white hover:text-green-400 transition-colors duration-200";
     const iconClass = isScrolled
-        ? "h-5 w-5 text-gray-900 hover:text-green-600"
-        : "h-5 w-5 text-white";
+        ? "h-5 w-5 text-gray-900 hover:text-green-600 transition-colors duration-200"
+        : "h-5 w-5 text-white hover:text-green-400 transition-colors duration-200";
     const btnTriggerClass = isScrolled
         ? "text-gray-900 bg-white"
         : "text-white bg-transparent";
