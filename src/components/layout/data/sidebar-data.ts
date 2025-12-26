@@ -1,12 +1,5 @@
 import {
   LayoutDashboard,
-  Monitor,
-  HelpCircle,
-  Bell,
-  Palette,
-  Settings,
-  Wrench,
-  UserCog,
   Users,
   AudioWaveform,
   Command,
