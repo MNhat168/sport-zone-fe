@@ -17,7 +17,17 @@ export const createCoachReviewThunk = createAsyncThunk(
     try {
       return await createCoachReviewAPI(data);
     } catch (err: any) {
-      return rejectWithValue(err.message || "Failed to create review");
+      // Extract error response data which may contain profanity info
+      const errorData = err?.response?.data || {};
+      const message = errorData?.message || err.message || "Failed to create review";
+      const flaggedWords = errorData?.flaggedWords || [];
+      
+      return rejectWithValue({
+        message,
+        flaggedWords,
+        status: err?.response?.status,
+        ...errorData
+      });
     }
   }
 );
@@ -33,7 +43,17 @@ export const createFieldReviewThunk = createAsyncThunk(
     try {
       return await createFieldReviewAPI(data);
     } catch (err: any) {
-      return rejectWithValue(err.message || "Failed to create field review");
+      // Extract error response data which may contain profanity info
+      const errorData = err?.response?.data || {};
+      const message = errorData?.message || err.message || "Failed to create field review";
+      const flaggedWords = errorData?.flaggedWords || [];
+      
+      return rejectWithValue({
+        message,
+        flaggedWords,
+        status: err?.response?.status,
+        ...errorData
+      });
     }
   }
 );

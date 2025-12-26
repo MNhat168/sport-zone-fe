@@ -129,11 +129,6 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
             return;
         }
 
-        // FieldId is required for coach booking
-        if (!formData.fieldId) {
-            setHoldError('Vui lòng chọn sân ở bước trước.');
-            return;
-        }
 
         setIsHoldingSlot(true);
         setHoldError(null);
@@ -141,11 +136,15 @@ export const PersonalInfoCoach: React.FC<PersonalInfoCoachProps> = ({
         try {
             const payload: any = {
                 coachId: coachId,
-                fieldId: formData.fieldId,
                 date: formData.date,
                 startTime: formData.startTime,
                 endTime: formData.endTime,
             };
+
+            // Only include fieldId if provided (optional for coach bookings)
+            if (formData.fieldId) {
+                payload.fieldId = formData.fieldId;
+            }
 
             if (formData.note) {
                 payload.note = formData.note;

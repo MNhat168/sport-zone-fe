@@ -256,57 +256,11 @@ const convertTo24Hour = (time12h: string): string => {
 };
 
 export default function CoachBookingsPage() {
-<<<<<<< HEAD
-    const authUser = useAppSelector((state) => state.auth.user)
-    const [bookings, setBookings] = useState<any[]>([])
-    const [combinedBookings, setCombinedBookings] = useState<any[]>([]) // FIELD_COACH bookings
-    const [loading, setLoading] = useState(true)
-    const [loadingCombined, setLoadingCombined] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [errorCombined, setErrorCombined] = useState<string | null>(null)
-    const [coachId, setCoachId] = useState<string | null>(null)
-    const fetchBookings = async () => {
-        try {
-            // Fetch regular COACH bookings
-            const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=coach')
-            const data = response.data;
-            const bookingsData = Array.isArray(data) ? data : (data.data || []);
-            setBookings(Array.isArray(bookingsData) ? bookingsData : [])
-        } catch (err: any) {
-            console.error("Error fetching bookings:", err)
-            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
-            setError(errorMessage)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const fetchCombinedBookings = async () => {
-        try {
-            // Fetch FIELD_COACH combined bookings
-            const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=field_coach')
-            const data = response.data;
-            const bookingsData = Array.isArray(data) ? data : (data.data || []);
-            setCombinedBookings(Array.isArray(bookingsData) ? bookingsData : [])
-        } catch (err: any) {
-            console.error("Error fetching combined bookings:", err)
-            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch kết hợp";
-            setErrorCombined(errorMessage)
-        } finally {
-            setLoadingCombined(false)
-        }
-    }
-
-    useEffect(() => {
-        const storedUser = sessionStorage.getItem("user")
-        if (!storedUser) return
-=======
     const authUser = useAppSelector((state) => state.auth.user);
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [coachId, setCoachId] = useState<string | null>(null);
->>>>>>> 0b390e403d8210b9c930bea448baffac2d6eb081
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -314,6 +268,25 @@ export default function CoachBookingsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
     const [bookingTypeTab, setBookingTypeTab] = useState<'coach' | 'field_coach'>('coach');
+
+    const fetchBookings = async () => {
+        if (!authUser) return;
+        setLoading(true);
+        try {
+            const type = bookingTypeTab === 'field_coach' ? 'field_coach' : 'coach';
+            const response = await axiosPrivate.get(`/bookings/coach/my-bookings/by-type?type=${type}`);
+            const data = response.data;
+            const bookingsData = Array.isArray(data) ? data : (data.data || []);
+            setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+            setError(null);
+        } catch (err: any) {
+            console.error("Error fetching bookings:", err);
+            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const storedUser = sessionStorage.getItem("user");
@@ -327,16 +300,13 @@ export default function CoachBookingsPage() {
             .then((res) => {
                 setCoachId(res.data?.data?.id);
             })
-<<<<<<< HEAD
-            .catch(console.error)
-    }, [])
-
-    useEffect(() => {
-=======
             .catch(console.error);
     }, []);
 
     useEffect(() => {
+<<<<<<< HEAD
+        fetchBookings();
+=======
         const fetchBookings = async () => {
             setLoading(true);
             try {
@@ -355,10 +325,10 @@ export default function CoachBookingsPage() {
             }
         };
 
->>>>>>> 0b390e403d8210b9c930bea448baffac2d6eb081
         if (authUser) {
             fetchBookings();
         }
+>>>>>>> cc08a923d7112ef7003fc379214fabba60fd3e46
     }, [authUser, bookingTypeTab]);
 
     const handleCompleteBooking = async (bookingId: string) => {
@@ -811,54 +781,7 @@ export default function CoachBookingsPage() {
                         )}
                     </CardContent>
                 </Card>
-
-                {/* Pagination */}
-                {!loading && paginatedBookings.length > 0 && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-white border rounded-md">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">Hiển thị</span>
-                            <Select value={itemsPerPage.toString()} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
-                                <SelectTrigger className="w-20">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="5">5</SelectItem>
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="20">20</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <span className="text-sm text-gray-600">mục</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage <= 1}
-                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            >
-                                Trước
-                            </Button>
-                            <span className="text-sm text-gray-600">
-                                Trang {currentPage} / {totalPages || 1}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage >= totalPages}
-                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                            >
-                                Sau
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </div>
         </CoachDashboardLayout>
-<<<<<<< HEAD
-    )}
-    
-=======
     );
 }
->>>>>>> 0b390e403d8210b9c930bea448baffac2d6eb081

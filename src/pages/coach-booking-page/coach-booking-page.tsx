@@ -25,7 +25,7 @@ interface BookingFormData {
     note?: string;
 }
 
-const CoachBookingFlow = () => {
+const CoachBookingPage = () => {
     const params = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -44,15 +44,16 @@ const CoachBookingFlow = () => {
         note: '',
     });
     const [loadingSlots, setLoadingSlots] = useState(false);
-    // State for time selection (similar to field booking)
-    const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null);
-    const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null);
-    // Availability data structure (similar to field booking)
+    // State for time selection (slot-based, similar to field booking)
+    const [selectedStartTime, setSelectedStartTime] = useState<string | null>(null);
+    const [selectedEndTime, setSelectedEndTime] = useState<string | null>(null);
+    // Availability data structure
     const [availabilityData, setAvailabilityData] = useState<{ slots: Array<{ startTime: string; available: boolean }> } | null>(null);
+    const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
     const breadcrumbs = [
         { label: "Trang chủ", href: "/" },
-        { label: "Đặt huấn luyện viên", href: "/coaches" },
+        { label: "Đặt huấn luyện viên", href: "/coach" },
         { label: "Đặt lịch" }
     ];
 
@@ -66,6 +67,7 @@ const CoachBookingFlow = () => {
     const fetchAvailableSlots = useCallback(async (date: string) => {
         if (!coachId) return;
         setLoadingSlots(true);
+        setAvailabilityError(null);
         try {
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
             const response = await fetch(`${apiUrl}/coaches/${coachId}/slots?date=${date}`);
@@ -77,8 +79,8 @@ const CoachBookingFlow = () => {
                 slots = data.data;
             }
 
-            // Convert to availability data format (similar to field booking)
-            // Create slots for hours 8-21 (coach typical hours)
+            // Convert to availability data format (coach typically works 8-21)
+            // Coach slots are 1 hour each
             const allHours = Array.from({ length: 14 }, (_, i) => i + 8); // 8 to 21
             const availabilitySlots = allHours.map(hour => {
                 const timeString = `${String(hour).padStart(2, '0')}:00`;
@@ -93,44 +95,138 @@ const CoachBookingFlow = () => {
             setAvailabilityData({ slots: availabilitySlots });
         } catch (error) {
             console.error('Failed to fetch available slots', error);
+            setAvailabilityError('Không thể tải thông tin khả dụng');
             setAvailabilityData(null);
         } finally {
             setLoadingSlots(false);
         }
     }, [coachId]);
 
+    // Helper functions for slot manipulation
+    const toMinutes = (timeString: string): number => {
+        const [hh = '00', mm = '00'] = (timeString || '00:00').split(':');
+        return Number(hh) * 60 + Number(mm);
+    };
+
+    const minutesToTimeString = (minutes: number): string => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    };
+
+    const getSlotEndTime = (startTime: string, slotDuration: number = 60): string => {
+        const startTotal = toMinutes(startTime);
+        const endTotal = startTotal + slotDuration;
+        return minutesToTimeString(endTotal);
+    };
+
     // Check if slot is available
-    const isSlotAvailable = (hour: number): boolean => {
+    const isSlotAvailable = (timeString: string): boolean => {
         if (!availabilityData || !availabilityData.slots) {
             return true; // If no data, assume available
         }
-        const timeString = `${String(hour).padStart(2, '0')}:00`;
         const slot = availabilityData.slots.find(s => s.startTime === timeString);
         return slot ? slot.available : true;
     };
 
-    // Handle time slot click (similar to field booking)
-    const handleTimeSlotClick = (hour: number, type: "start" | "end") => {
-        if (type === "start") {
-            setSelectedStartHour(hour);
+    // Check if slot is in the past (for today's date)
+    const isSlotInPast = (slotTime: string, selectedDate: string): boolean => {
+        if (!selectedDate) return false;
+
+        const today = new Date();
+        const selected = new Date(selectedDate + 'T00:00:00');
+
+        // Compare dates only
+        const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const selectedDateOnly = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+
+        // If not today, don't disable
+        if (selectedDateOnly.getTime() !== todayDateOnly.getTime()) {
+            return false;
+        }
+
+        // If today, check if slot has passed
+        const [slotHour, slotMinute] = slotTime.split(':').map(Number);
+        const slotTotal = slotHour * 60 + slotMinute;
+        const nowTotal = today.getHours() * 60 + today.getMinutes();
+
+        return slotTotal < nowTotal;
+    };
+
+    // Handle slot block click (range selection)
+    const handleSlotBlockClick = (slotTime: string) => {
+        // Check if slot is in the past
+        if (isSlotInPast(slotTime, bookingData.date)) {
+            alert('Không thể chọn khung giờ đã qua. Vui lòng chọn khung giờ khác.');
+            return;
+        }
+
+        const slotDuration = 60; // Coach slots are 1 hour
+        const slotEndTime = getSlotEndTime(slotTime, slotDuration);
+
+        if (selectedStartTime === null) {
+            // First selection: set both start and end of this block
+            setSelectedStartTime(slotTime);
+            setSelectedEndTime(slotEndTime);
             setBookingData(prev => ({
                 ...prev,
-                startTime: `${String(hour).padStart(2, "0")}:00`,
-                endTime: prev.endTime && Number(prev.endTime.split(":")[0]) <= hour ? "" : prev.endTime,
+                startTime: slotTime,
+                endTime: slotEndTime,
             }));
-            setSelectedEndHour(null); // reset end hour if selecting new start
         } else {
-            setSelectedEndHour(hour);
+            // Already have selection: extend range
+            const currentStartTotal = toMinutes(selectedStartTime);
+            const currentEndTotal = toMinutes(selectedEndTime || getSlotEndTime(selectedStartTime, slotDuration));
+            const clickedTotal = toMinutes(slotTime);
+
+            let newStartTime: string;
+            let newEndTime: string;
+
+            if (clickedTotal < currentStartTotal) {
+                // Click before start -> extend backward
+                newStartTime = slotTime;
+                newEndTime = selectedEndTime || getSlotEndTime(selectedStartTime, slotDuration);
+            } else if (clickedTotal >= currentEndTotal) {
+                // Click after end -> extend forward
+                newStartTime = selectedStartTime;
+                newEndTime = slotEndTime;
+            } else {
+                // Click within range -> reset to this block
+                newStartTime = slotTime;
+                newEndTime = slotEndTime;
+            }
+
+            // Validate range: check if all slots in range are available
+            const newStartTotal = toMinutes(newStartTime);
+            const newEndTotal = toMinutes(newEndTime);
+            let hasBookedSlotInRange = false;
+
+            for (let currentMinutes = newStartTotal; currentMinutes < newEndTotal; currentMinutes += slotDuration) {
+                const checkSlotTime = minutesToTimeString(currentMinutes);
+                if (!isSlotAvailable(checkSlotTime)) {
+                    hasBookedSlotInRange = true;
+                    break;
+                }
+            }
+
+            if (hasBookedSlotInRange) {
+                alert('Khoảng thời gian này có slot đã được đặt. Vui lòng chọn khoảng thời gian khác.');
+                return;
+            }
+
+            setSelectedStartTime(newStartTime);
+            setSelectedEndTime(newEndTime);
             setBookingData(prev => ({
                 ...prev,
-                endTime: `${String(hour).padStart(2, "0")}:00`,
+                startTime: newStartTime,
+                endTime: newEndTime,
             }));
         }
     };
 
     // Get available time slots (8-21 for coach)
-    const getAvailableTimeSlots = (): number[] => {
-        return Array.from({ length: 14 }, (_, i) => i + 8); // 8 to 21
+    const getAvailableTimeSlots = (): string[] => {
+        return Array.from({ length: 14 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
     };
 
     // Calculate booking amount
@@ -158,19 +254,17 @@ const CoachBookingFlow = () => {
         }
     }, [coachId, bookingData.date, fetchAvailableSlots]);
 
-    // Update selected hours when bookingData changes
+    // Update selected times when bookingData changes
     useEffect(() => {
         if (bookingData.startTime) {
-            const startHour = parseInt(bookingData.startTime.split(':')[0]);
-            setSelectedStartHour(startHour);
+            setSelectedStartTime(bookingData.startTime);
         } else {
-            setSelectedStartHour(null);
+            setSelectedStartTime(null);
         }
         if (bookingData.endTime) {
-            const endHour = parseInt(bookingData.endTime.split(':')[0]);
-            setSelectedEndHour(endHour);
+            setSelectedEndTime(bookingData.endTime);
         } else {
-            setSelectedEndHour(null);
+            setSelectedEndTime(null);
         }
     }, [bookingData.startTime, bookingData.endTime]);
 
@@ -277,8 +371,8 @@ const CoachBookingFlow = () => {
                                                 onChange={(day) => {
                                                     if (!day) {
                                                         setBookingData(prev => ({ ...prev, date: '' }));
-                                                        setSelectedStartHour(null);
-                                                        setSelectedEndHour(null);
+                                                        setSelectedStartTime(null);
+                                                        setSelectedEndTime(null);
                                                         setAvailabilityData(null);
                                                         return;
                                                     }
@@ -289,8 +383,8 @@ const CoachBookingFlow = () => {
                                                     setBookingData(prev => ({ ...prev, date: ymd }));
 
                                                     // Reset time selection when date changes
-                                                    setSelectedStartHour(null);
-                                                    setSelectedEndHour(null);
+                                                    setSelectedStartTime(null);
+                                                    setSelectedEndTime(null);
 
                                                     // Fetch availability data for selected date
                                                     fetchAvailableSlots(ymd);
@@ -328,95 +422,184 @@ const CoachBookingFlow = () => {
                                                             </p>
                                                         </div>
                                                     </div>
+                                                ) : availabilityError ? (
+                                                    <div className="text-center py-4">
+                                                        <p className="text-sm text-red-600 mb-2">
+                                                            {availabilityError}
+                                                        </p>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => bookingData.date && fetchAvailableSlots(bookingData.date)}
+                                                            className="text-xs"
+                                                        >
+                                                            Thử lại
+                                                        </Button>
+                                                    </div>
                                                 ) : (
                                                     <>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {getAvailableTimeSlots().map((hour) => {
-                                                                const isStartHour = selectedStartHour === hour;
-                                                                const isEndHour = selectedEndHour === hour;
-                                                                const isInRange = selectedStartHour !== null && selectedEndHour !== null
-                                                                    && hour > selectedStartHour && hour < selectedEndHour;
-                                                                const isSlotBooked = !isSlotAvailable(hour);
+                                                        {/* Legend */}
+                                                        <div className="mb-4 flex items-center gap-4 flex-wrap text-sm">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
+                                                                <span>Trống</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-4 h-4 bg-red-500 rounded"></div>
+                                                                <span>Đã đặt</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-4 h-4 bg-gray-400 rounded opacity-60"></div>
+                                                                <span>Đã qua</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-4 h-4 bg-emerald-600 rounded"></div>
+                                                                <span>Đã chọn</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Grid Layout */}
+                                                        <div className="overflow-x-auto">
+                                                            {(() => {
+                                                                const availableSlots = getAvailableTimeSlots();
+                                                                const slotDuration = 60;
+
+                                                                if (availableSlots.length === 0) {
+                                                                    return (
+                                                                        <p className="text-sm text-gray-500 text-center py-4 w-full">
+                                                                            Không có khung giờ khả dụng
+                                                                        </p>
+                                                                    );
+                                                                }
 
                                                                 return (
-                                                                    <button
-                                                                        key={`time-${hour}`}
-                                                                        type="button"
-                                                                        disabled={isSlotBooked}
-                                                                        onClick={() => {
-                                                                            if (isSlotBooked) return;
+                                                                    <div className="inline-block min-w-full">
+                                                                        {/* Time Header Row */}
+                                                                        <div className="flex border-b-2 border-gray-300 bg-blue-50 relative pt-6">
+                                                                            <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-semibold text-center">
+                                                                                Giờ
+                                                                            </div>
+                                                                            <div className="flex flex-1 relative">
+                                                                                {/* First vertical line */}
+                                                                                {availableSlots.length > 0 && (
+                                                                                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
+                                                                                        <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                                                            {availableSlots[0]}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
 
-                                                                            if (selectedStartHour === null) {
-                                                                                // Chọn giờ bắt đầu
-                                                                                handleTimeSlotClick(hour, "start");
-                                                                            } else if (selectedEndHour === null && hour > selectedStartHour) {
-                                                                                // Chọn giờ kết thúc
-                                                                                handleTimeSlotClick(hour, "end");
-                                                                            } else {
-                                                                                // Reset và chọn lại giờ bắt đầu
-                                                                                handleTimeSlotClick(hour, "start");
-                                                                            }
-                                                                        }}
-                                                                        className={`
-                                                                        w-14 h-14 rounded-lg border-2 font-semibold text-base
-                                                                        transition-all duration-200 relative
-                                                                        ${isSlotBooked
-                                                                                ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed opacity-60"
-                                                                                : isStartHour
-                                                                                    ? "bg-emerald-600 border-emerald-600 text-white shadow-md hover:scale-105"
-                                                                                    : isEndHour
-                                                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-md hover:scale-105"
-                                                                                        : isInRange
-                                                                                            ? "bg-emerald-100 border-emerald-300 text-emerald-700 hover:scale-105"
-                                                                                            : "bg-white border-gray-200 text-gray-700 hover:border-emerald-400 hover:scale-105"
-                                                                            }
-                                                                    `}
-                                                                    >
-                                                                        <div className="flex flex-col items-center leading-none">
-                                                                            <span>{hour}</span>
+                                                                                {/* Slot cells with time labels */}
+                                                                                {availableSlots.map((slotTime) => {
+                                                                                    const slotEndTime = getSlotEndTime(slotTime, slotDuration);
+
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={`header-${slotTime}`}
+                                                                                            className="flex-1 min-w-[60px] relative"
+                                                                                        >
+                                                                                            {/* Vertical line on the right with time label */}
+                                                                                            <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
+                                                                                                <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                                                                    {slotEndTime}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
                                                                         </div>
-                                                                        {isSlotBooked && (
-                                                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                                                                        )}
-                                                                    </button>
+
+                                                                        {/* Slot Row */}
+                                                                        <div className="flex border-b-2 border-gray-300 bg-white">
+                                                                            <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-medium text-center bg-gray-50">
+                                                                                {currentCoach?.name || 'HLV'}
+                                                                            </div>
+                                                                            <div className="flex flex-1">
+                                                                                {availableSlots.map((slotTime) => {
+                                                                                    const slotEndTime = getSlotEndTime(slotTime, slotDuration);
+
+                                                                                    // Check if this slot is the start of selected range
+                                                                                    const isStartSlot = selectedStartTime === slotTime;
+                                                                                    // Check if this slot's end matches the selected end time
+                                                                                    const isEndSlot = selectedEndTime === slotEndTime;
+
+                                                                                    // Check if slot is within selected range
+                                                                                    const isInRange = selectedStartTime !== null && selectedEndTime !== null
+                                                                                        && (() => {
+                                                                                            const startTotal = toMinutes(selectedStartTime);
+                                                                                            const endTotal = toMinutes(selectedEndTime);
+                                                                                            const slotTotal = toMinutes(slotTime);
+                                                                                            const slotEndTotal = slotTotal + slotDuration;
+                                                                                            // Slot is in range if it overlaps with selected range
+                                                                                            return slotTotal < endTotal && slotEndTotal > startTotal;
+                                                                                        })();
+
+                                                                                    const isSlotBooked = !isSlotAvailable(slotTime);
+                                                                                    const isSlotPast = isSlotInPast(slotTime, bookingData.date);
+                                                                                    const isSlotDisabled = isSlotBooked || isSlotPast;
+
+                                                                                    // Determine cell style
+                                                                                    let cellStyle = "bg-white border-r border-gray-200 cursor-pointer hover:bg-emerald-50 transition-colors";
+                                                                                    if (isSlotDisabled) {
+                                                                                        if (isSlotPast) {
+                                                                                            cellStyle = "bg-gray-400 border-r border-gray-200 cursor-not-allowed opacity-60";
+                                                                                        } else {
+                                                                                            cellStyle = "bg-red-500 border-r border-gray-200 cursor-not-allowed opacity-80";
+                                                                                        }
+                                                                                    } else if (isInRange) {
+                                                                                        if (isStartSlot) {
+                                                                                            cellStyle = "bg-emerald-600 border-r border-gray-200 cursor-pointer text-white font-semibold";
+                                                                                        } else if (isEndSlot) {
+                                                                                            cellStyle = "bg-emerald-600 border-r border-gray-200 cursor-pointer text-white font-semibold";
+                                                                                        } else {
+                                                                                            cellStyle = "bg-emerald-400 border-r border-gray-200 cursor-pointer text-white";
+                                                                                        }
+                                                                                    }
+
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={`slot-${slotTime}`}
+                                                                                            className={`flex-1 min-w-[60px] h-12 flex items-center justify-center text-xs relative ${cellStyle}`}
+                                                                                            onClick={() => {
+                                                                                                if (isSlotDisabled) return;
+                                                                                                handleSlotBlockClick(slotTime);
+                                                                                            }}
+                                                                                            title={isSlotPast ? "Đã qua" : isSlotBooked ? "Đã đặt" : `${slotTime} - ${slotEndTime}`}
+                                                                                        >
+                                                                                            {isStartSlot && selectedStartTime && "Bắt đầu"}
+                                                                                            {isEndSlot && selectedEndTime && !isStartSlot && "Kết thúc"}
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 );
-                                                            })}
+                                                            })()}
                                                         </div>
+
+                                                        {/* Selection Info */}
                                                         <div className="mt-3 space-y-1">
-                                                            {selectedStartHour !== null && (
+                                                            {selectedStartTime !== null && (
                                                                 <p className="text-sm text-emerald-600">
-                                                                    Giờ bắt đầu: {String(selectedStartHour).padStart(2, "0")}:00
+                                                                    Giờ bắt đầu: {selectedStartTime}
                                                                 </p>
                                                             )}
-                                                            {selectedEndHour !== null && (
+                                                            {selectedEndTime !== null && (
                                                                 <p className="text-sm text-emerald-600">
-                                                                    Giờ kết thúc: {String(selectedEndHour).padStart(2, "0")}:00
+                                                                    Giờ kết thúc: {selectedEndTime}
                                                                 </p>
                                                             )}
-                                                            {selectedStartHour === null && (
+                                                            {selectedStartTime === null && (
                                                                 <p className="text-sm text-gray-500">
                                                                     Nhấn vào ô để chọn giờ bắt đầu
                                                                 </p>
                                                             )}
-                                                            {selectedStartHour !== null && selectedEndHour === null && (
+                                                            {selectedStartTime !== null && selectedEndTime === null && (
                                                                 <p className="text-sm text-gray-500">
                                                                     Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
                                                                 </p>
-                                                            )}
-
-                                                            {/* Availability status info */}
-                                                            {availabilityData && (
-                                                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                                                    <div className="flex items-center gap-2 text-xs text-gray-600">
-                                                                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                                                        <span>Đã đặt</span>
-                                                                        <div className="w-2 h-2 bg-emerald-500 rounded-full ml-3"></div>
-                                                                        <span>Có thể đặt</span>
-                                                                    </div>
-                                                                    <p className="text-xs text-gray-500 mt-1">
-                                                                        {availabilityData.slots.filter(slot => slot.available).length} / {availabilityData.slots.length} khung giờ có thể đặt
-                                                                    </p>
-                                                                </div>
                                                             )}
                                                         </div>
                                                     </>
@@ -541,13 +724,19 @@ const CoachBookingFlow = () => {
 
     // Step 3: Payment (STK + QR + Upload receipt)
     return (
-        <PaymentV2Coach
-            coachId={coachId || ''}
-            bookingData={bookingData}
-            onBack={handleBack}
-        />
+        <>
+            <NavbarDarkComponent />
+            <PageWrapper>
+                <PageHeader title="Đặt lịch với huấn luyện viên" breadcrumbs={breadcrumbs} />
+                <PaymentV2Coach
+                    coachId={coachId || ''}
+                    bookingData={bookingData}
+                    onBack={handleBack}
+                />
+            </PageWrapper>
+        </>
     );
 };
 
-export default CoachBookingFlow;
+export default CoachBookingPage;
 

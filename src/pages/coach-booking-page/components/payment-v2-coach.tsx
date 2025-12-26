@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle, AlertCircle, ImageIcon, X, Clock, Wallet, Copy, Check, Upload } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, ImageIcon, X, Clock, Copy, Upload } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -134,7 +134,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                 'Content-Type': 'application/json',
             };
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL} /bookings/${heldBookingId}/cancel-hold`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/cancel-hold`, {
                 method: 'PATCH',
                 headers,
                 body: JSON.stringify({
@@ -246,7 +246,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
             bookingData.date &&
             bookingData.startTime &&
             bookingData.endTime &&
-            bookingData.fieldId &&
+            // fieldId is optional for coach bookings
             calculateHours() > 0 &&
             calculateTotal() > 0
         );
@@ -400,9 +400,14 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                 URL.revokeObjectURL(proofPreview);
             }
 
-            setTimeout(() => {
-                navigate(`/bookings/${booking._id || booking.id}`);
-            }, 2000);
+            // Only navigate if NOT rejected
+            if (!isRejected) {
+                setTimeout(() => {
+                    navigate(`/bookings/${booking._id || booking.id}`);
+                }, 2000);
+            } else {
+                console.log('[PaymentV2Coach] AI verification rejected. Staying on page for retry.');
+            }
         } catch (error: any) {
             console.error('[PaymentV2Coach] Error submitting payment proof:', error);
             const errorMessage = error?.message || 'Không thể gửi ảnh chứng minh. Vui lòng thử lại.';
@@ -746,9 +751,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                             onClick={handlePayment}
                             disabled={
                                 !proofImage ||
-                                paymentStatus === 'processing' ||
-                                !bankAccount ||
-                                !!holdError
+                                paymentStatus === 'processing'
                             }
                             className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                         >

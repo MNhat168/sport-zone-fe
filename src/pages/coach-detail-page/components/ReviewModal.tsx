@@ -5,11 +5,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Star } from "lucide-react";
+import { Star, AlertCircle } from "lucide-react";
 
 interface ReviewModalProps {
   open: boolean;
@@ -24,6 +33,10 @@ interface ReviewModalProps {
   onCommentChange: (comment: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  errorMessage?: string | null;
+  showProfanityAlert?: boolean;
+  onProfanityAlertChange?: (open: boolean) => void;
+  flaggedWords?: string[];
 }
 
 export const ReviewModal: React.FC<ReviewModalProps> = ({
@@ -39,15 +52,26 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   onCommentChange,
   onSubmit,
   onCancel,
+  errorMessage,
+  showProfanityAlert = false,
+  onProfanityAlertChange,
+  flaggedWords = [],
 }) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Viết đánh giá</DialogTitle>
           <DialogDescription>Chia sẻ trải nghiệm của bạn với {coachName || "HLV này"}</DialogDescription>
         </DialogHeader>
         <form className="space-y-6 py-4" onSubmit={onSubmit}>
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md flex items-start gap-2 text-sm">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
           {/* Loại đánh giá (cố định là HLV) */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Loại đánh giá</Label>
@@ -69,11 +93,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                     className="transition-transform hover:scale-110 focus:outline-none"
                   >
                     <Star
-                      className={`h-8 w-8 transition-colors ${
-                        star <= (hoveredRating || reviewRating)
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
-                      }`}
+                      className={`h-8 w-8 transition-colors ${star <= (hoveredRating || reviewRating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                        }`}
                     />
                   </button>
                 ))}
@@ -89,16 +112,18 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           {/* Bình luận */}
           <div className="space-y-2">
             <Label htmlFor="review-comment" className="text-sm font-semibold">
-              Bình luận
+              Nhận xét
             </Label>
             <Textarea
               id="review-comment"
-              placeholder="Chia sẻ trải nghiệm của bạn với HLV này..."
-              rows={6}
-              className="resize-none"
+              placeholder="Nhập nội dung đánh giá của bạn (Vui lòng không sử dụng từ ngữ thô tục)..."
               value={reviewComment}
               onChange={(e) => onCommentChange(e.target.value)}
+              className="resize-none min-h-[100px]"
             />
+            <p className="text-xs text-muted-foreground italic">
+              * Vui lòng sử dụng ngôn từ lịch sự. Các đánh giá chứa từ ngữ thô tục sẽ bị hệ thống từ chối.
+            </p>
           </div>
 
           {/* Nút hành động */}
@@ -121,7 +146,41 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           </div>
         </form>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      {/* Profanity Warning Alert Dialog */}
+      <AlertDialog open={showProfanityAlert} onOpenChange={onProfanityAlertChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Phát hiện từ ngữ không phù hợp
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Hệ thống phát hiện nội dung đánh giá của bạn có chứa các từ ngữ chưa phù hợp với tiêu chuẩn cộng đồng.
+              </p>
+              {flaggedWords.length > 0 && (
+                <div className="bg-red-50 p-3 rounded-md border border-red-100">
+                  <span className="font-semibold text-red-700 text-sm">Các từ bị đánh dấu: </span>
+                  <span className="text-red-600 text-sm italic">{flaggedWords.join(', ')}</span>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Vui lòng điều chỉnh lại câu từ lịch sự để tiếp tục gửi đánh giá.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => onProfanityAlertChange?.(false)} 
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Đã hiểu, tôi sẽ chỉnh sửa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
-
