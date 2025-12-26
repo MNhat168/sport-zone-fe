@@ -90,8 +90,11 @@ export function CancelTournamentModal({ isOpen, onClose, tournamentId, onCancell
                     <div className="py-8 flex flex-col items-center gap-4">
                         <CheckCircle className="h-16 w-16 text-green-500" />
                         <p className="text-center text-gray-600">
-                            Đang đóng...
+                            Giải đấu đã được hủy thành công.
                         </p>
+                        <Button variant="outline" onClick={handleClose} className="mt-4">
+                            Đóng
+                        </Button>
                     </div>
                 ) : (
                     <>
@@ -106,9 +109,9 @@ export function CancelTournamentModal({ isOpen, onClose, tournamentId, onCancell
                         <div className="space-y-4 py-4">
                             <Alert className="bg-orange-50 border-orange-200">
                                 <AlertCircle className="h-4 w-4 text-orange-600" />
-                                <AlertTitle className="text-orange-800">Lưu ý</AlertTitle>
+                                <AlertTitle className="text-orange-800">Cảnh báo hệ thống Demerit</AlertTitle>
                                 <AlertDescription className="text-orange-700">
-                                    Sau khi hủy, tất cả các đội đã đăng ký sẽ được hoàn tiền và nhận thông báo qua email.
+                                    Việc hủy giải đấu thường xuyên trong thời gian ngắn sẽ khiến bạn bị <strong>cấm tạo giải đấu mới trong 1 năm</strong>. Vui lòng cân nhắc kỹ trước khi thực hiện.
                                 </AlertDescription>
                             </Alert>
 
@@ -124,11 +127,12 @@ export function CancelTournamentModal({ isOpen, onClose, tournamentId, onCancell
                             </div>
                         </div>
 
-                        <DialogFooter>
-                            <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
-                                Đóng
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                                Hủy bỏ
                             </Button>
                             <Button
+                                type="button"
                                 variant="destructive"
                                 onClick={handleConfirm}
                                 disabled={isSubmitting}

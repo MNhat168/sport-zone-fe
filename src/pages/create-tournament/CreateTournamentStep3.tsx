@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +8,8 @@ import {
   MapPin,
   Users,
   DollarSign,
-  Trophy,
   CheckCircle2,
   AlertCircle,
-  Edit3
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { createTournament } from '@/features/tournament/tournamentThunk';
@@ -19,16 +17,27 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 interface Step3Props {
   formData: any;
   onBack: () => void;
   onUpdate: (data: any) => void;
+  backTrigger?: number;
 }
 
-export default function CreateTournamentStep3({ formData, onBack, onUpdate }: Step3Props) {
+export default function CreateTournamentStep3({ formData, onBack, onUpdate, backTrigger }: Step3Props) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const lastBackTrigger = useRef(backTrigger || 0);
+
+  useEffect(() => {
+    if (backTrigger && backTrigger > lastBackTrigger.current) {
+      lastBackTrigger.current = backTrigger;
+      onBack();
+    }
+  }, [backTrigger]);
 
   // Get both availableCourts and availableFields
   const tournamentState = useAppSelector((state: any) => state.tournament);
@@ -145,354 +154,251 @@ export default function CreateTournamentStep3({ formData, onBack, onUpdate }: St
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-6 w-6" />
-            Xác Nhận Thông Tin Giải Đấu
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+    <div className="max-w-5xl mx-auto p-4 md:p-6 pb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Main Details */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="overflow-hidden border-0 shadow-xl bg-white">
+            <div className="h-3 bg-gradient-to-r from-green-500 to-blue-500 w-full" />
+            <CardHeader className="pb-4">
+              <div className="flex justify-between items-start mb-2">
+                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 px-3 py-1 font-bold">
+                  {formData.sportType}
+                </Badge>
+                <div className="flex items-center gap-1 text-gray-400 text-sm">
+                  <Clock className="h-4 w-4" />
+                  <span>Xác nhận thông tin</span>
+                </div>
+              </div>
+              <CardTitle className="text-3xl font-black text-gray-900 leading-tight">
+                {formData.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {error && (
+                <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-          {/* Registration Fee Setting */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2 flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Thiết Lập Phí Đăng Ký
-            </h3>
+              {/* Description Preview */}
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <p className="text-gray-600 italic">"{formData.description || 'Không có mô tả cho giải đấu này.'}"</p>
+              </div>
 
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="text-center p-3 bg-white rounded-lg border border-blue-200">
-                    <Badge variant="outline" className="mb-2 bg-blue-100 text-blue-700">
-                      Tối Thiểu
-                    </Badge>
-                    <p className="text-2xl font-bold text-blue-600">
-                      {recommendedFees.breakEvenFee.toLocaleString()} VNĐ
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Đủ chi phí sân (nếu full)
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => handleFeeChange(recommendedFees.breakEvenFee)}
-                    >
-                      Chọn
-                    </Button>
+              {/* Key Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <Calendar className="h-6 w-6 text-blue-600" />
                   </div>
-
-                  <div className="text-center p-3 bg-white rounded-lg border-2 border-green-300">
-                    <Badge variant="outline" className="mb-2 bg-green-100 text-green-700">
-                      Đề Xuất
-                    </Badge>
-                    <p className="text-2xl font-bold text-green-600">
-                      {recommendedFees.recommendedFee.toLocaleString()} VNĐ
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Chi phí sân + giải thưởng
-                    </p>
-                    <Button
-                      size="sm"
-                      className="mt-2 w-full bg-green-600 hover:bg-green-700"
-                      onClick={() => handleFeeChange(recommendedFees.recommendedFee)}
-                    >
-                      Chọn
-                    </Button>
-                  </div>
-
-                  <div className="text-center p-3 bg-white rounded-lg border border-purple-200">
-                    <Badge variant="outline" className="mb-2 bg-purple-100 text-purple-700">
-                      Cao Cấp
-                    </Badge>
-                    <p className="text-2xl font-bold text-purple-600">
-                      {recommendedFees.premiumFee.toLocaleString()} VNĐ
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Giải thưởng hấp dẫn
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => handleFeeChange(recommendedFees.premiumFee)}
-                    >
-                      Chọn
-                    </Button>
+                  <div>
+                    <div className="text-xs text-gray-400 uppercase font-bold tracking-wider">Thời gian thi đấu</div>
+                    <div className="font-bold text-gray-900">{formatDate(formData.tournamentDate)}</div>
+                    <div className="text-sm text-blue-600 font-semibold">{formData.startTime} - {formData.endTime}</div>
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="flex items-center gap-2">
-                      <Edit3 className="h-4 w-4" />
-                      Phí Đăng Ký Tùy Chỉnh
-                    </Label>
-                    {!isEditingFee ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditingFee(true)}
-                      >
-                        Tùy chỉnh
-                      </Button>
-                    ) : (
-                      <span className="text-sm text-gray-500">
-                        Đang chỉnh sửa
-                      </span>
-                    )}
+                <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <MapPin className="h-5 w-5 text-red-600" />
                   </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Địa điểm thi đấu</p>
+                    <p className="font-bold">{courtDetails[0]?.field?.location?.address || formData.location || "Chưa xác định"}</p>
+                  </div>
+                </div>
 
-                  {isEditingFee ? (
-                    <div className="space-y-2">
-                      <Input
-                        type="number"
-                        value={formData.registrationFee || 0}
-                        onChange={(e) => handleFeeChange(Number(e.target.value))}
-                        min={0}
-                        className="border-2 border-blue-300"
-                      />
-                      <div className="flex justify-between text-sm">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsEditingFee(false)}
-                        >
-                          Hoàn tất
-                        </Button>
-                        {formData.registrationFee < recommendedFees.breakEvenFee && (
-                          <span className="text-red-500 text-sm">
-                            Cảnh báo: Phí có thể không đủ chi phí sân
-                          </span>
-                        )}
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <Users className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400 uppercase font-bold tracking-wider">Quy mô giải</div>
+                    <div className="font-bold text-gray-900">{formData.numberOfTeams} Đội</div>
+                    <div className="text-sm text-gray-500">Tối đa {formData.maxParticipants} người</div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400 uppercase font-bold tracking-wider">Hạn chót đăng ký</div>
+                    <div className="font-bold text-gray-900">{formatDate(formData.registrationEnd)}</div>
+                    <div className="text-xs text-red-500 font-bold">Xác nhận trước {calculateDeadline()}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Court List Preview */}
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  Sân đấu đã chọn
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {courtDetails.length > 0 ? (
+                    courtDetails.map((court: any) => (
+                      <div key={court._id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-500">
+                            {court.courtNumber}
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-800">{court.field?.name}</div>
+                            <div className="text-xs text-gray-500 line-clamp-1">{court.field?.location?.address}</div>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="bg-gray-100 font-bold">SÂN CON {court.courtNumber}</Badge>
                       </div>
-                    </div>
+                    ))
                   ) : (
-                    <div className="flex justify-between items-center p-3 bg-white rounded border">
-                      <span className="font-semibold text-lg">
-                        {formData.registrationFee?.toLocaleString() || 0} VNĐ
-                      </span>
-                      <Badge variant={
-                        formData.registrationFee >= recommendedFees.recommendedFee ? "default" :
-                          formData.registrationFee >= recommendedFees.breakEvenFee ? "outline" :
-                            "destructive"
-                      }>
-                        {formData.registrationFee >= recommendedFees.recommendedFee ? "Tốt" :
-                          formData.registrationFee >= recommendedFees.breakEvenFee ? "Đủ" :
-                            "Thấp"}
-                      </Badge>
-                    </div>
+                    <div className="p-4 bg-gray-50 rounded-xl text-center italic text-gray-500">Chưa có thông tin chi tiết sân.</div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Basic Info */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Thông Tin Cơ Bản</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Tên Giải Đấu</Label>
-                <p className="font-semibold text-lg">{formData.name}</p>
               </div>
+            </CardContent>
+          </Card>
 
-              <div>
-                <Label>Môn Thể Thao</Label>
-                <Badge className="mt-1">{formData.sportType}</Badge>
-              </div>
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Địa Điểm
-              </Label>
-              <p className="font-semibold">{formData.location}</p>
-            </div>
-
-            {/* Tournament Date */}
-            <div>
-              <Label className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Ngày Diễn Ra Giải Đấu
-              </Label>
-              <p className="font-semibold">{formatDate(formData.tournamentDate)}</p>
-            </div>
-
-            {/* Registration Period */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Thời Gian Đăng Ký</Label>
-                <p className="font-semibold">
-                  {formatDate(formData.registrationStart)} - {formatDate(formData.registrationEnd)}
-                </p>
-              </div>
-
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Thời Gian Thi Đấu
-                </Label>
-                <p className="font-semibold">{formData.startTime} - {formData.endTime}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Số Người Tham Gia
-                </Label>
-                <p className="font-semibold">
-                  Tối đa: {formData.maxParticipants}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <Label>Mô Tả</Label>
-              <p className="text-gray-700">{formData.description}</p>
-            </div>
-          </div>
-
-          {/* Selected Courts */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Sân Đã Chọn</h3>
-
-            <div className="space-y-3">
-              {courtDetails.length > 0 ? (
-                courtDetails.map((court: any) => {
-                  const basePrice = court.pricingOverride?.basePrice || court.field?.basePrice || court.basePrice || 0;
-                  const start = new Date(`2000-01-01T${formData.startTime}`);
-                  const end = new Date(`2000-01-01T${formData.endTime}`);
-                  const durationMs = end.getTime() - start.getTime();
-                  const durationHours = Math.max(0, durationMs / 3600000);
-                  const total = Math.round(basePrice * durationHours);
-
-                  return (
-                    <Card key={court._id} className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold">
-                            {court.field?.name || 'Unknown Field'} - Sân {court.courtNumber}
-                          </h4>
-                          <p className="text-sm text-gray-600">{court.field?.location?.address}</p>
-                          <Badge variant="outline" className="mt-1">
-                            Sân #{court.courtNumber}
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant="outline" className="mb-2">
-                            {total.toLocaleString()} VNĐ
-                          </Badge>
-                          <p className="text-xs text-gray-500">
-                            {basePrice.toLocaleString()} VNĐ/giờ
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })
-              ) : selectedCourtIds.length > 0 ? (
-                // If we have IDs but no details, show basic info
-                selectedCourtIds.map((courtId: string, index: number) => (
-                  <Card key={courtId} className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold">Sân #{index + 1}</h4>
-                        <p className="text-sm text-gray-600">ID: {courtId}</p>
-                      </div>
-                      <Badge variant="outline">Đã chọn</Badge>
-                    </div>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-gray-500 italic">Chưa có sân nào được chọn</p>
-              )}
-            </div>
-          </div>
-
-          {/* Financial Summary */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Tóm Tắt Tài Chính</h3>
-
-            <Card className="bg-gray-50">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex justify-between">
-                  <span>Phí Đăng Ký / Người:</span>
-                  <span className="font-semibold">
-                    {(formData.registrationFee || 0).toLocaleString()} VNĐ
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Tổng Chi Phí Sân:</span>
-                  <span className="font-semibold text-red-600">
-                    {(formData.totalCourtCost || formData.totalFieldCost || 0).toLocaleString()} VNĐ
-                  </span>
-                </div>
-
-
-
-                <div className="flex justify-between">
-                  <span>Doanh Thu Tối Đa ({formData.maxParticipants} người):</span>
-                  <span className="font-semibold text-green-600">
-                    {((formData.registrationFee || 0) * formData.maxParticipants).toLocaleString()} VNĐ
-                  </span>
-                </div>
-
-                <div className="border-t pt-3">
-
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Important Notes */}
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Lưu ý quan trọng:</strong>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                <li>Sân sẽ được đặt tạm thời và không bị tính phí ngay lập tức</li>
-                <li>
-                  Hạn chót xác nhận: <strong>{calculateDeadline()}</strong>
-                </li>
-                <li>
-                  Kiểm tra kỹ thông tin trước khi xác nhận
-                </li>
-                <li>Nếu không đủ người, giải đấu sẽ tự động hủy và hoàn tiền cho người tham gia</li>
-                <li>Phí hoa hồng 10% sẽ được tính trên tổng phí đăng ký</li>
+          {/* Important Rules */}
+          <Card className="border-0 shadow-lg bg-yellow-50/50">
+            <CardContent className="p-6">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                Quy định & Lưu ý
+              </h3>
+              <ul className="space-y-3">
+                {[
+                  "Sân sẽ được giữ tạm thời cho đến khi bạn xác nhận tạo giải.",
+                  "Hệ thống sẽ hoàn phí 100% nếu giải đấu bị hủy do không đủ đội tham gia.",
+                  "Phí hoa hồng 10% sẽ được khấu trừ từ tổng doanh thu đăng ký.",
+                  `Hạn chót để giải đấu đạt đủ số lượng là ${calculateDeadline()}.`,
+                  "Sau khi tạo, thông tin cơ bản sẽ không thể thay đổi trừ khi liên hệ hỗ trợ."
+                ].map((rule, i) => (
+                  <li key={i} className="flex gap-3 text-sm text-gray-700">
+                    <span className="w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center text-[10px] font-bold text-yellow-700 flex-shrink-0">
+                      {i + 1}
+                    </span>
+                    {rule}
+                  </li>
+                ))}
               </ul>
-            </AlertDescription>
-          </Alert>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-between">
-            <Button onClick={onBack} variant="outline" disabled={loading}>
-              Quay Lại
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700"
-              disabled={loading || !formData.registrationFee || formData.registrationFee <= 0}
-            >
-              {loading ? 'Đang Tạo...' : 'Xác Nhận Tạo Giải Đấu'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Right Column - Financial Summary & Action */}
+        <div className="space-y-6">
+          <Card className="border-0 shadow-xl bg-white sticky top-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                Dự tính tài chính
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Registration Fee Selector */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="font-bold text-gray-600">Phí Đăng Ký / Người</Label>
+                  {isEditingFee ? (
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditingFee(false)} className="h-6 text-green-600">Lưu</Button>
+                  ) : (
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditingFee(true)} className="h-6 text-gray-400">Chỉnh sửa</Button>
+                  )}
+                </div>
+
+                {isEditingFee ? (
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-gray-400 font-bold">đ</span>
+                    <Input
+                      type="number"
+                      value={formData.registrationFee || 0}
+                      onChange={(e) => handleFeeChange(Number(e.target.value))}
+                      className="pl-8 text-lg font-bold border-2 border-green-200 focus:border-green-500 rounded-xl"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-4 bg-green-50 rounded-2xl border-2 border-green-100 text-center">
+                    <div className="text-3xl font-black text-green-700">
+                      {(formData.registrationFee || 0).toLocaleString()}đ
+                    </div>
+                    <div className="text-[10px] text-green-600 uppercase font-black tracking-widest mt-1">Mỗi người tham gia</div>
+                  </div>
+                )}
+
+                {/* Recommendations */}
+                {!isEditingFee && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleFeeChange(recommendedFees.breakEvenFee)}
+                      className="text-[10px] h-auto py-2 flex flex-col items-center gap-1"
+                    >
+                      <span className="text-gray-400">Hòa vốn</span>
+                      <span className="font-bold">{recommendedFees.breakEvenFee.toLocaleString()}đ</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleFeeChange(recommendedFees.recommendedFee)}
+                      className="text-[10px] h-auto py-2 flex flex-col items-center gap-1 border-green-200 bg-green-50/50"
+                    >
+                      <span className="text-green-600">Đề xuất</span>
+                      <span className="font-bold text-green-700">{recommendedFees.recommendedFee.toLocaleString()}đ</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Financial Break-down */}
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Tiền thuê sân</span>
+                  <span className="font-bold">{(formData.totalCourtCost || 0).toLocaleString()}đ</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Hoa hồng hệ thống (10%)</span>
+                  <span className="font-bold">-{(((formData.registrationFee || 0) * (formData.maxParticipants || 1)) * 0.1).toLocaleString()}đ</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-200">
+                  <span className="font-bold text-gray-900">Doanh thu dự kiến</span>
+                  <Badge className="bg-blue-600 text-white border-0 font-bold rounded-lg px-2">
+                    {(((formData.registrationFee || 0) * (formData.maxParticipants || 1)) * 0.9 - (formData.totalCourtCost || 0)).toLocaleString()} VNĐ
+                  </Badge>
+                </div>
+                <p className="text-[10px] text-gray-400 italic text-center">
+                  *Doanh thu sau khi đã trừ phí thuê sân và hoa hồng
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-6">
+                <Button
+                  onClick={handleSubmit}
+                  className="w-full py-8 text-xl font-black bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+                  disabled={loading || !formData.registrationFee || formData.registrationFee <= 0}
+                >
+                  {loading ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN TẠO'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={onBack}
+                  className="w-full text-gray-400 font-bold hover:text-gray-600"
+                  disabled={loading}
+                >
+                  Quay lại chỉnh sửa
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
