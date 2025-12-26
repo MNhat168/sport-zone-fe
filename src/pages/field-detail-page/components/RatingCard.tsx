@@ -49,31 +49,9 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
   const dispatch = useAppDispatch()
   const authUser = useAppSelector((state) => state.auth.user)
 
-  // Calculate average rating and review count from actual reviews
-  const calculatedRating = useMemo(() => {
-    if (!fieldReviews || fieldReviews.length === 0) {
-      return ratingValue // Fallback to prop value
-    }
-    const validReviews = fieldReviews.filter(
-      (r) => r && (r.rating !== undefined && r.rating !== null),
-    )
-    if (validReviews.length === 0) {
-      return ratingValue
-    }
-
-    const sum = validReviews.reduce((acc, review) => {
-      const rating = Number(review.rating) || 0
-      return acc + rating
-    }, 0)
-    const avg = sum / validReviews.length
-    const finalRating = Number.isFinite(avg) ? Math.max(0, Math.min(5, avg)) : ratingValue
-    return finalRating
-  }, [fieldReviews, ratingValue])
-
-  const calculatedReviewCount = useMemo(() => {
-    // Use actual review count if available, otherwise fallback to prop
-    return fieldReviews.length > 0 ? fieldReviews.length : reviewCount
-  }, [fieldReviews, reviewCount])
+  // Always use global stats from props for summary
+  const calculatedRating = ratingValue;
+  const calculatedReviewCount = reviewCount;
 
   // Fetch reviews for this field
   const fetchReviews = useCallback(

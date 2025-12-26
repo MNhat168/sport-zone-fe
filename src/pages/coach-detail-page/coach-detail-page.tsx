@@ -536,10 +536,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   reviewsTotalPages={reviewsTotalPages}
                   selectedRatingFilter={selectedRatingFilter}
                   onFilterChange={setSelectedRatingFilter}
-                  onLoadMore={async () => {
-                    if (reviewsLoading) return;
-                    if (reviewsPage >= reviewsTotalPages) return;
-                    await fetchReviews(reviewsPage + 1, true);
+                  onLoadMore={async (page: number) => {
+                    if (reviewsLoading || page === reviewsPage) return;
+                    await fetchReviews(page, false);
                   }}
                   onWriteReview={() => setShowReviewModal(true)}
                 />
@@ -614,11 +613,20 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                 setReviewComment("");
 
                 CustomSuccessToast("Cảm ơn bạn — đánh giá đã được gửi.");
-                // Refresh reviews immediately after successful submission
+                // Refresh reviews and aggregated stats immediately after successful submission
                 try {
-                  await fetchReviews();
+                  await fetchReviews(1, false);
                 } catch (err) {
                   console.error('Failed to refresh reviews after submit', err);
+                }
+                try {
+                  if (effectiveCoachId) {
+                    // refresh aggregated stats stored in redux only —
+                    // avoid fetching full coach entity to prevent full-page reload
+                    await dispatch(getCoachStatsThunk(effectiveCoachId));
+                  }
+                } catch (err) {
+                  console.error('Failed to refresh coach stats after submit', err);
                 }
               } else {
                 const errData = action?.payload || {};
