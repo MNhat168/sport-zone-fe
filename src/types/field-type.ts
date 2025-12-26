@@ -119,9 +119,10 @@ export interface CreateFieldPayload {
     priceRanges: PriceRange[];
     basePrice: number | string; // in VND, can be string for form input
     amenities?: FieldAmenityRequest[]; // Array of amenities with prices
-    numberOfCourts?: number; // Number of courts to create (0-10, default: 1)
+    numberOfCourts?: number | string; // Number of courts to create (0-10, default: 1)
     rules?: string[]; // Field rules
 }
+
 
 // Update Field Payload interface
 export interface UpdateFieldPayload extends Partial<CreateFieldPayload> {
@@ -309,6 +310,13 @@ export type UserId = string;
 // Form data interfaces for image uploads
 export interface CreateFieldWithImagesPayload extends Omit<CreateFieldPayload, 'images'> {
     images: File[];
+}
+
+export interface UpdateFieldWithImagesPayload extends Omit<UpdateFieldPayload, 'images'> {
+    avatar?: File; // New avatar file
+    gallery?: File[]; // New gallery files
+    keptImages?: string[]; // URLs of images to keep
+    courtsToDelete?: string[]; // IDs of courts to delete
 }
 
 // Field statistics interface

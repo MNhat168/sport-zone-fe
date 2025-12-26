@@ -16,10 +16,12 @@ interface BasicInfoCardProps {
     formData: {
         name: string;
         sportType: string;
-        numberOfCourts?: number;
+        numberOfCourts?: number | string;
     };
     onInputChange: (field: string, value: any) => void;
+    showCourtCount?: boolean;
 }
+
 
 // Mapping từ tiếng Anh sang tiếng Việt cho UI
 const sportTypeLabels: Record<string, string> = {
@@ -33,7 +35,7 @@ const sportTypeLabels: Record<string, string> = {
     [SportType.GYM]: 'Phòng gym'
 };
 
-export default function BasicInfoCard({ formData, onInputChange }: BasicInfoCardProps) {
+export default function BasicInfoCard({ formData, onInputChange, showCourtCount = true }: BasicInfoCardProps) {
     const [isExpanded, setIsExpanded] = useState(true);
 
     const toggleExpanded = () => {
@@ -90,36 +92,31 @@ export default function BasicInfoCard({ formData, onInputChange }: BasicInfoCard
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2.5">
-                                <Label>
-                                    Số lượng court
-                                </Label>
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    max="10"
-                                    value={formData.numberOfCourts === undefined ? '' : formData.numberOfCourts}
-                                    onChange={(e) => {
-                                        const inputValue = e.target.value;
-                                        if (inputValue === '') {
-                                            onInputChange('numberOfCourts', undefined);
-                                            return;
-                                        }
-                                        const numValue = parseInt(inputValue, 10);
-                                        if (isNaN(numValue)) return;
-                                        // Giới hạn trong khoảng 0-10
-                                        const clampedValue = Math.max(0, Math.min(10, numValue));
-                                        onInputChange('numberOfCourts', clampedValue);
-                                    }}
-                                />
-                                <p className="text-sm text-gray-500">
-                                    Số lượng court sẽ được tạo tự động (0-10, mặc định: 1)
-                                </p>
-                            </div>
+                            {showCourtCount && (
+                                <div className="space-y-2.5">
+                                    <Label>
+                                        Số lượng sân con <span className="text-gray-500 text-xs">(Auto-generate)</span>
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={10}
+                                        placeholder="Nhập số lượng sân con (mặc định: 1)"
+                                        value={formData.numberOfCourts}
+                                        onChange={(e) => onInputChange('numberOfCourts', e.target.value === '' ? '' : parseInt(e.target.value))}
+                                    />
+
+                                    <p className="text-[10px] text-gray-400">
+                                        Hệ thống sẽ tự động tạo danh sách các sân con tương ứng. ít nhất là 1 và nhiều nhất là 10
+                                    </p>
+                                </div>
+                            )}
                         </div>
+
                     </CardContent>
                 </>
             )}
         </Card>
+
     );
 }

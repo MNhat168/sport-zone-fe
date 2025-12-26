@@ -3,10 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { Loading } from "@/components/ui/loading";
-import { getFieldById, updateField } from '@/features/field/fieldThunk';
+import { getFieldById, updateFieldWithImages } from '@/features/field/fieldThunk';
 import { clearErrors } from '@/features/field/fieldSlice';
 import { getAmenitiesBySportType } from '@/features/amenities';
-import type { CreateFieldPayload, PriceRange, FieldLocation, UpdateFieldPayload } from '@/types/field-type';
+import type { CreateFieldPayload, PriceRange, FieldLocation, UpdateFieldWithImagesPayload } from '@/types/field-type';
 import type { AmenityWithPrice } from '@/types/amenity-with-price';
 import { CustomFailedToast, CustomSuccessToast } from '@/components/toast/notificiation-toast';
 import { FieldOwnerDashboardLayout } from '@/components/layouts/field-owner-dashboard-layout';
@@ -20,7 +20,8 @@ import {
     RulesCard,
     AmenitiesCard,
     GalleryCard,
-    LocationCard
+    LocationCard,
+    CourtGridCard
 } from '@/pages/field-owner-dashboard-page/create/component/field-create';
 
 export default function FieldEditPage() {
@@ -54,15 +55,28 @@ export default function FieldEditPage() {
     });
 
     // UI state
-    const [_avatarFile, setAvatarFile] = useState<File | null>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    const [_galleryFiles, setGalleryFiles] = useState<File[]>([]);
-    const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+    // Image handling state
+    const [keptAvatarUrl, setKeptAvatarUrl] = useState<string | null>(null);
+    const [keptGalleryUrls, setKeptGalleryUrls] = useState<string[]>([]);
+
+    const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
+    const [newAvatarPreview, setNewAvatarPreview] = useState<string | null>(null);
+
+    const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
+    const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
     const [selectedIncludes, setSelectedIncludes] = useState<AmenityWithPrice[]>([]);
     const [selectedAmenities, setSelectedAmenities] = useState<AmenityWithPrice[]>([]);
     const [selectedDays, setSelectedDays] = useState<string[]>([]);
     const [dayAvailability, setDayAvailability] = useState<Record<string, boolean>>({});
     const [editingDay, setEditingDay] = useState<string | null>(null);
+
+    // Court management state
+    const [courtsToDelete, setCourtsToDelete] = useState<string[]>([]);
+    const [pendingNewCourts, setPendingNewCourts] = useState<number>(0);
+
+    // Computed UI values
+    const avatarPreview = newAvatarPreview || keptAvatarUrl;
+    const galleryPreviews = [...keptGalleryUrls, ...newGalleryPreviews];
 
     // Available days and multipliers
     const availableDays = [
@@ -94,6 +108,9 @@ export default function FieldEditPage() {
     // Populate form when field data is loaded
     useEffect(() => {
         if (currentField && currentField.id === fieldId) {
+            console.log("DEBUG: field-edit-page currentField:", currentField);
+            console.log("DEBUG: field-edit-page courts:", currentField.courts);
+            console.log("DEBUG: field-edit-page courts length:", currentField.courts?.length);
             // Extract location data
             const location = currentField.location as any;
             let address = '';
@@ -158,7 +175,8 @@ export default function FieldEditPage() {
                 minSlots: currentField.minSlots || 1,
                 maxSlots: currentField.maxSlots || 4,
                 priceRanges: currentField.priceRanges || [],
-                basePrice: currentField.basePrice?.toString() || ''
+                basePrice: currentField.basePrice?.toString() || '',
+                numberOfCourts: currentField.courts?.length || 1
             });
 
             // Set location data
@@ -170,11 +188,18 @@ export default function FieldEditPage() {
                 }
             });
 
-            // Set image previews
+            // Set image previews and state
             if (currentField.images && currentField.images.length > 0) {
-                setAvatarPreview(currentField.images[0]);
-                setGalleryPreviews(currentField.images.slice(1));
+                setKeptAvatarUrl(currentField.images[0]);
+                setKeptGalleryUrls(currentField.images.slice(1));
+            } else {
+                setKeptAvatarUrl(null);
+                setKeptGalleryUrls([]);
             }
+            setNewAvatarFile(null);
+            setNewAvatarPreview(null);
+            setNewGalleryFiles([]);
+            setNewGalleryPreviews([]);
         }
     }, [currentField, fieldId]);
 
@@ -290,32 +315,46 @@ export default function FieldEditPage() {
     const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
-        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-        setAvatarFile(file);
-        setAvatarPreview(URL.createObjectURL(file));
+
+        // Revoke old new preview if exists
+        if (newAvatarPreview) URL.revokeObjectURL(newAvatarPreview);
+
+        setNewAvatarFile(file);
+        setNewAvatarPreview(URL.createObjectURL(file));
     };
 
     const removeAvatar = () => {
-        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-        setAvatarFile(null);
-        setAvatarPreview(null);
+        if (newAvatarFile) {
+            if (newAvatarPreview) URL.revokeObjectURL(newAvatarPreview);
+            setNewAvatarFile(null);
+            setNewAvatarPreview(null);
+        } else {
+            // Remove kept avatar
+            setKeptAvatarUrl(null);
+        }
     };
 
     const handleGalleryUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(event.target.files || []);
         if (files.length === 0) return;
-        setGalleryFiles(prev => [...prev, ...files]);
-        const newPreviews = files.map(file => URL.createObjectURL(file));
-        setGalleryPreviews(prev => [...prev, ...newPreviews]);
+        setNewGalleryFiles(prev => [...prev, ...files]);
+        const newPreviewsSnapshot = files.map(file => URL.createObjectURL(file));
+        setNewGalleryPreviews(prev => [...prev, ...newPreviewsSnapshot]);
     };
 
     const removeGalleryImage = (index: number) => {
-        setGalleryFiles(prev => prev.filter((_, i) => i !== index));
-        setGalleryPreviews(prev => {
-            const newPreviews = [...prev];
-            URL.revokeObjectURL(newPreviews[index]);
-            return newPreviews.filter((_, i) => i !== index);
-        });
+        const keptCount = keptGalleryUrls.length;
+        if (index < keptCount) {
+            setKeptGalleryUrls(prev => prev.filter((_, i) => i !== index));
+        } else {
+            const newIndex = index - keptCount;
+            // Revoke URL?
+            const urlToRemove = newGalleryPreviews[newIndex];
+            if (urlToRemove) URL.revokeObjectURL(urlToRemove);
+
+            setNewGalleryFiles(prev => prev.filter((_, i) => i !== newIndex));
+            setNewGalleryPreviews(prev => prev.filter((_, i) => i !== newIndex));
+        }
     };
 
     const toggleDay = (day: string) => {
@@ -380,6 +419,23 @@ export default function FieldEditPage() {
         // Placeholder
     };
 
+    // Court management handlers
+    const handleMarkCourtForDeletion = (courtId: string) => {
+        setCourtsToDelete(prev => {
+            if (prev.includes(courtId)) {
+                // Undo deletion
+                return prev.filter(id => id !== courtId);
+            } else {
+                // Mark for deletion
+                return [...prev, courtId];
+            }
+        });
+    };
+
+    const handleAddCourt = () => {
+        setPendingNewCourts(prev => prev + 1);
+    };
+
     // Form validation
     const validateForm = (): boolean => {
         if (!formData.name.trim()) {
@@ -441,7 +497,18 @@ export default function FieldEditPage() {
                 ...selectedAmenities
             ];
 
-            const updatePayload: UpdateFieldPayload = {
+            // Construct keptImages
+            const finalKeptImages: string[] = [];
+            if (keptAvatarUrl && !newAvatarFile) {
+                finalKeptImages.push(keptAvatarUrl);
+            }
+            finalKeptImages.push(...keptGalleryUrls);
+
+            // Calculate new number of courts (existing - deleted + new)
+            const currentCourtsCount = currentField?.courts?.length || 0;
+            const newTotalCourts = currentCourtsCount - courtsToDelete.length + pendingNewCourts;
+
+            const updatePayload: UpdateFieldWithImagesPayload = {
                 name: formData.name,
                 sportType: formData.sportType,
                 description: formData.description,
@@ -452,16 +519,25 @@ export default function FieldEditPage() {
                 maxSlots: formData.maxSlots,
                 priceRanges: filteredPriceRanges,
                 basePrice: Number(formData.basePrice),
-                amenities: amenitiesForAPI
+                amenities: amenitiesForAPI,
+                avatar: newAvatarFile || undefined,
+                gallery: newGalleryFiles.length > 0 ? newGalleryFiles : undefined,
+                keptImages: finalKeptImages.length > 0 ? finalKeptImages : undefined,
+                numberOfCourts: pendingNewCourts > 0 ? newTotalCourts : undefined,
+                courtsToDelete: courtsToDelete.length > 0 ? courtsToDelete : undefined
             };
 
-            await dispatch(updateField({
+            await dispatch(updateFieldWithImages({
                 id: fieldId,
                 payload: updatePayload
             })).unwrap();
 
             CustomSuccessToast('Cập nhật sân thành công!');
-            navigate('/field-owner/fields');
+
+            // Reset court management state and refresh field data
+            setCourtsToDelete([]);
+            setPendingNewCourts(0);
+            dispatch(getFieldById(fieldId));
         } catch (error) {
             console.error('Error updating field:', error);
             CustomFailedToast('Cập nhật sân thất bại. Vui lòng thử lại.');
@@ -519,6 +595,21 @@ export default function FieldEditPage() {
                         <BasicInfoCard
                             formData={formData}
                             onInputChange={handleInputChange}
+                            showCourtCount={false}
+                        />
+
+                    </div>
+
+                    {/* Court Management Section */}
+                    <div id="section-courts">
+                        <CourtGridCard
+                            courts={currentField?.courts || []}
+                            courtsToDelete={courtsToDelete}
+                            pendingNewCourts={pendingNewCourts}
+                            onMarkDelete={handleMarkCourtForDeletion}
+                            onAddCourt={handleAddCourt}
+                            maxCourts={10}
+                            isLoading={updateLoading}
                         />
                     </div>
 
