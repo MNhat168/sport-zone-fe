@@ -269,6 +269,25 @@ export default function CoachBookingsPage() {
     const [timeFilter, setTimeFilter] = useState("all");
     const [bookingTypeTab, setBookingTypeTab] = useState<'coach' | 'field_coach'>('coach');
 
+    const fetchBookings = async () => {
+        if (!authUser) return;
+        setLoading(true);
+        try {
+            const type = bookingTypeTab === 'field_coach' ? 'field_coach' : 'coach';
+            const response = await axiosPrivate.get(`/bookings/coach/my-bookings/by-type?type=${type}`);
+            const data = response.data;
+            const bookingsData = Array.isArray(data) ? data : (data.data || []);
+            setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+            setError(null);
+        } catch (err: any) {
+            console.error("Error fetching bookings:", err);
+            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         const storedUser = sessionStorage.getItem("user");
         if (!storedUser) return;
@@ -285,6 +304,9 @@ export default function CoachBookingsPage() {
     }, []);
 
     useEffect(() => {
+<<<<<<< HEAD
+        fetchBookings();
+=======
         const fetchBookings = async () => {
             setLoading(true);
             try {
@@ -306,6 +328,7 @@ export default function CoachBookingsPage() {
         if (authUser) {
             fetchBookings();
         }
+>>>>>>> cc08a923d7112ef7003fc379214fabba60fd3e46
     }, [authUser, bookingTypeTab]);
 
     const handleCompleteBooking = async (bookingId: string) => {
@@ -758,48 +781,6 @@ export default function CoachBookingsPage() {
                         )}
                     </CardContent>
                 </Card>
-
-                {/* Pagination */}
-                {!loading && paginatedBookings.length > 0 && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-white border rounded-md">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">Hiển thị</span>
-                            <Select value={itemsPerPage.toString()} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
-                                <SelectTrigger className="w-20">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="5">5</SelectItem>
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="20">20</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <span className="text-sm text-gray-600">mục</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage <= 1}
-                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            >
-                                Trước
-                            </Button>
-                            <span className="text-sm text-gray-600">
-                                Trang {currentPage} / {totalPages || 1}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage >= totalPages}
-                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                            >
-                                Sau
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </div>
         </CoachDashboardLayout>
     );

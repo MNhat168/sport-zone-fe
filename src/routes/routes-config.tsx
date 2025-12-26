@@ -35,7 +35,7 @@ import CoachProfileSettingsPage from "../pages/coach-dashboard-page/profile/coac
 import CoachLessonsPage from "../pages/coach-dashboard-page/coach-lessons/coach-lessons-page";
 
 import BookingPage from "../pages/coach-list-page/booking-page.tsx";
-import CoachBookingFlow from "../pages/coach-list-page/coach-booking-flow.tsx";
+import CoachBookingPage from "../pages/coach-booking-page/coach-booking-page.tsx";
 import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
 
 // Field Pages
@@ -134,7 +134,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/coaches", element: <Placeholder title="Danh sách HLV" /> },
   { path: "/coach-detail", element: <CoachDetailPage /> },
   { path: "/coach/:id", element: <CoachDetailPage /> },
-  { path: "/coaches/:id/booking", element: <CoachBookingFlow /> },
+  { path: "/coaches/:id/booking", element: <CoachBookingPage /> },
 
   // About & Contact (Public)
   { path: "/about", element: <AboutPage /> },
