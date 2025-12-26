@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { getCoachStatsThunk } from "@/features/reviews/reviewThunk";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Badge } from "@/components/ui/badge";
@@ -143,6 +144,18 @@ export default function CoachSelfDetailPage() {
     resolveCoachIdLoading, resolveCoachIdError,
     resolvedCoachRaw,
   } = useSelector((state: RootState) => state.coach);
+  // Select coachStats from Redux
+  const coachStats = useSelector((state: RootState) => {
+    const coachId = initialCoachId || currentCoach?.id || resolvedCoachRaw?._id;
+    return coachId ? state.reviews?.coachStats?.[coachId] ?? null : null;
+  });
+    // Fetch coachStats on mount/coachId change
+    useEffect(() => {
+      const coachId = initialCoachId || currentCoach?.id || resolvedCoachRaw?._id;
+      if (coachId) {
+        dispatch(getCoachStatsThunk(coachId));
+      }
+    }, [dispatch, initialCoachId, currentCoach, resolvedCoachRaw]);
   const [activeTab, setActiveTab] = useState("bio");
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
 
@@ -251,9 +264,15 @@ export default function CoachSelfDetailPage() {
     setSelectedRatingFilter(rating);
   };
 
-  const onLoadMore = () => {
-    if (reviewsPage >= reviewsTotalPages) return;
-    fetchReviews(reviewsPage + 1, true);
+  const onLoadMore = async (page?: number) => {
+    const targetPage = typeof page === 'number' ? page : reviewsPage + 1;
+    if (reviewsLoading || targetPage === reviewsPage) return;
+    if (targetPage < 1 || targetPage > reviewsTotalPages) return;
+    try {
+      await fetchReviews(targetPage, false);
+    } catch (err) {
+      console.error('Failed to load reviews page', err);
+    }
   };
 
   const onWriteReview = () => setShowReviewModal(true);
@@ -1192,6 +1211,7 @@ export default function CoachSelfDetailPage() {
               {/* Phần: Đánh giá / Reviews */}
               <ReviewsSection
                 coachData={coachData}
+                coachStats={coachStats}
                 coachReviews={coachReviews}
                 filteredReviews={filteredReviews}
                 reviewsLoading={reviewsLoading}

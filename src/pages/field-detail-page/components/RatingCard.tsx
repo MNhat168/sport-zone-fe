@@ -49,6 +49,16 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
   const dispatch = useAppDispatch()
   const authUser = useAppSelector((state) => state.auth.user)
 
+  const userHasReviewed = useMemo(() => {
+    if (!authUser || !fieldReviews || fieldReviews.length === 0) return false
+    const uid = (authUser as any)?.id || (authUser as any)?._id || (authUser as any)?.userId
+    if (!uid) return false
+    return fieldReviews.some((r) => {
+      const rid = r?.user?.id || r?.user?._id || r?.user
+      return String(rid) === String(uid)
+    })
+  }, [authUser, fieldReviews])
+
   // Always use global stats from props for summary
   const calculatedRating = ratingValue;
   const calculatedReviewCount = reviewCount;
@@ -206,13 +216,18 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
           <div className="flex items-center justify-between">
             <CardTitle className="text-base md:text-lg">Đánh giá</CardTitle>
             <div className="flex items-center gap-3">
-              {authUser && (
+              {authUser && !userHasReviewed && (
                 <Button
                   onClick={() => setShowReviewModal(true)}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   Viết đánh giá
+                </Button>
+              )}
+              {authUser && userHasReviewed && (
+                <Button size="sm" variant="outline" disabled className="text-gray-500">
+                  Bạn đã đánh giá
                 </Button>
               )}
               <ChevronDown

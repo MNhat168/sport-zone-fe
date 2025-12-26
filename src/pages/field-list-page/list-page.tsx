@@ -125,12 +125,46 @@ const FieldBookingPage = () => {
       .then(() => {
         // Refetch profile to update Redux state (defensive)
         dispatch(getUserProfile());
+        // Update UI state to reflect new favourites immediately
+        setIsFilteringByFavorites(Boolean(selectedSports && selectedSports.length > 0));
+
+        // If user cleared all favourites, reset sport filters so the
+        // "Sân yêu thích" button and filters return to normal immediately
+        if (!selectedSports || selectedSports.length === 0) {
+          setSportFilter("all");
+          setFilters((prev) => {
+            const copy: any = { ...prev };
+            delete copy.sportTypes;
+            delete copy.sportType;
+            delete copy.type;
+            copy.page = 1;
+            return copy;
+          });
+        }
+
         setShowFavoriteSportsModal(false);
         try { sessionStorage.setItem(storageKey, '1'); } catch { }
       })
       .catch(() => {
         setShowFavoriteSportsModal(false);
       });
+  };
+
+  const handleFavoriteSportsModalClose = async () => {
+    // Close modal immediately
+    setShowFavoriteSportsModal(false);
+
+    // Refresh profile to get the latest favouriteSports from server
+    try {
+      const action: any = await dispatch(getUserProfile());
+      const payload = action?.payload || {};
+      const updatedFavs =
+        payload?.favouriteSports || payload?.favourite_sports || authUser?.favouriteSports || [];
+      setIsFilteringByFavorites(Boolean(updatedFavs && updatedFavs.length > 0));
+    } catch (err) {
+      // Fallback — rely on current authUser state
+      setIsFilteringByFavorites(Boolean(authUser?.favouriteSports && authUser?.favouriteSports.length > 0));
+    }
   };
 
   const handleResetAllFilters = () => {
@@ -1026,7 +1060,7 @@ const FieldBookingPage = () => {
             `}</style>
       <FavoriteSportsModal
         isOpen={showFavoriteSportsModal}
-        onClose={() => setShowFavoriteSportsModal(false)}
+        onClose={handleFavoriteSportsModalClose}
         onAccept={handleFavoriteSportsAccept}
         onClear={() => {
           setIsFilteringByFavorites(false);
