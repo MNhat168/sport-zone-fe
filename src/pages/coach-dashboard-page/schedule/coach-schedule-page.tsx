@@ -160,12 +160,22 @@ export default function CoachSchedulePage() {
                 {days.map((day, dayIdx) => {
                   const dayBookings = getBookingsForDay(day)
                   return (
-                    <td key={dayIdx} className="border p-0 relative" style={{ height: `${hours.length * hourHeight}px` }}>
+                    <td
+                      key={dayIdx}
+                      className="border p-0 relative"
+                      style={{ height: `${hours.length * hourHeight}px` }}
+                    >
                       {dayBookings.map((b) => {
                         const [startH, startM] = b.startTime.split(":").map(Number)
                         const [endH, endM] = b.endTime.split(":").map(Number)
                         const top = (startH + startM / 60 - firstHour) * hourHeight
                         const height = (endH + endM / 60 - startH - startM / 60) * hourHeight
+                        const bookingUserName =
+                          typeof b.user === "object" && b.user !== null
+                            ? b.user.fullName
+                            : typeof b.user === "string"
+                              ? b.user
+                              : "Unknown User"
                         return (
                           <div
                             key={b._id}
@@ -173,8 +183,15 @@ export default function CoachSchedulePage() {
                             style={{ top, height }}
                             onClick={() => setSelectedBooking(b)}
                           >
-                            <p className="font-medium">{b.field?.name || "Unknown Field"}</p>
-                            <p className="text-gray-500">{getShortLocation(b.field?.location)}</p>
+                            {b.field?.name && (
+                              <p className="font-medium">{b.field.name}</p>
+                            )}
+                            {b.field?.location && (
+                              <p className="text-gray-500">{getShortLocation(b.field.location)}</p>
+                            )}
+                            {!b.field?.name && !b.field?.location && (
+                              <p className="font-medium">{bookingUserName}</p>
+                            )}
                           </div>
                         )
                       })}
@@ -190,7 +207,10 @@ export default function CoachSchedulePage() {
         {selectedBooking && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-[400px] max-w-full relative">
-              <button className="absolute top-2 right-2 p-1" onClick={() => setSelectedBooking(null)}>
+              <button
+                className="absolute top-2 right-2 p-1"
+                onClick={() => setSelectedBooking(null)}
+              >
                 <X className="w-5 h-5 text-gray-700" />
               </button>
 
@@ -205,11 +225,31 @@ export default function CoachSchedulePage() {
                 </p>
               </div>
 
-              <p className="mb-2"><strong>Field:</strong> {selectedBooking.field?.name}</p>
-              <p className="mb-2"><strong>Location:</strong> {getShortLocation(selectedBooking.field?.location)}</p>
-              <p className="mb-2"><strong>Date:</strong> {format(new Date(selectedBooking.date), "MMM dd, yyyy")}</p>
-              <p className="mb-2"><strong>Time:</strong> {selectedBooking.startTime} - {selectedBooking.endTime}</p>
-              <p className="mb-2"><strong>Total Price:</strong> ${selectedBooking.bookingAmount}</p>
+              {/* Only display Field and Location if they exist */}
+              {selectedBooking.field?.name && (
+                <p className="mb-2">
+                  <strong>Field:</strong> {selectedBooking.field.name}
+                </p>
+              )}
+              {selectedBooking.field?.location && (
+                <p className="mb-2">
+                  <strong>Location:</strong> {getShortLocation(selectedBooking.field.location)}
+                </p>
+              )}
+
+              {/* Always show booker info and booking details */}
+              <p className="mb-2">
+                <strong>Booker:</strong> {bookingUser?.fullName ?? "Unknown User"}
+              </p>
+              <p className="mb-2">
+                <strong>Date:</strong> {format(new Date(selectedBooking.date), "MMM dd, yyyy")}
+              </p>
+              <p className="mb-2">
+                <strong>Time:</strong> {selectedBooking.startTime} - {selectedBooking.endTime}
+              </p>
+              <p className="mb-2">
+                <strong>Total Price:</strong> {selectedBooking.bookingAmount} VND
+              </p>
             </div>
           </div>
         )}
