@@ -37,10 +37,10 @@ export function CoachRequests() {
                 <div className='flex flex-wrap items-end justify-between gap-2'>
                     <div>
                         <h2 className='text-2xl font-bold tracking-tight'>
-                            Coach Registration Requests
+                            Yêu cầu đăng ký huấn luyện viên
                         </h2>
                         <p className='text-muted-foreground'>
-                            Review and approve pending coach registrations.
+                            Xem xét và duyệt các yêu cầu đăng ký huấn luyện viên đang chờ.
                         </p>
                     </div>
                 </div>

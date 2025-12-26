@@ -36,7 +36,7 @@ export default function Statistics() {
             return {
                 analytics: analyticsRes.data.data || analyticsRes.data, // Extract nested data
                 fieldOwners: fieldOwnersRes.data.data || fieldOwnersRes.data || [],
-                 coaches: coachesRes.data.data || coachesRes.data || []
+                coaches: coachesRes.data.data || coachesRes.data || []
             }
         } catch (error) {
             console.error('Failed to fetch statistics', error)
@@ -65,13 +65,13 @@ export default function Statistics() {
             setCoachData(aiCoachesRes.data || [])
             setAiGenerated(true)
 
-            toast.success('AI insights generated successfully!', {
-                description: 'Fresh analysis completed with latest data.'
+            toast.success('Tạo phân tích AI thành công!', {
+                description: 'Đã hoàn tất phân tích mới nhất từ dữ liệu hiện tại.'
             })
         } catch (error) {
             console.error('Failed to generate AI insights', error)
-            toast.error('AI analysis failed', {
-                description: 'Using cached data instead.'
+            toast.error('Phân tích AI thất bại', {
+                description: 'Đang dùng dữ liệu đã lưu.'
             })
         } finally {
             setAiThinking(false)
@@ -94,7 +94,7 @@ export default function Statistics() {
             }
         } catch (error) {
             console.error('Failed to fetch statistics', error)
-            setError('Failed to load analytics data')
+            setError('Không thể tải dữ liệu thống kê')
         } finally {
             setLoading(false)
         }
@@ -159,10 +159,10 @@ export default function Statistics() {
             <div className='flex items-center justify-between'>
                 <div>
                     <h2 className='text-3xl font-bold tracking-tight'>
-                        AI-Powered Analytics Dashboard
+                        Bảng điều khiển phân tích AI
                     </h2>
                     <p className='text-muted-foreground'>
-                        Comprehensive insights and performance analytics
+                        Thông tin chuyên sâu và phân tích hiệu suất
                     </p>
                 </div>
 
@@ -174,7 +174,7 @@ export default function Statistics() {
                         disabled={aiThinking}
                     >
                         <RefreshCw className={`h-4 w-4 mr-2 ${aiThinking ? 'animate-spin' : ''}`} />
-                        Refresh Data
+                        Làm mới dữ liệu
                     </Button>
 
                     <Button
@@ -186,12 +186,12 @@ export default function Statistics() {
                         {aiThinking ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                AI Thinking...
+                                AI đang phân tích...
                             </>
                         ) : (
                             <>
                                 <Brain className="h-4 w-4 mr-2" />
-                                {aiGenerated ? 'Refresh AI Insights' : 'Generate AI Insights'}
+                                {aiGenerated ? 'Làm mới phân tích AI' : 'Tạo phân tích AI'}
                             </>
                         )}
                     </Button>
@@ -203,8 +203,7 @@ export default function Statistics() {
                     <div className="flex items-center">
                         <Brain className="h-5 w-5 mr-2" />
                         <p>
-                            <strong>AI Insights Available:</strong> Click "Generate AI Insights" button to get
-                            intelligent analysis of your current data.
+                            <strong>Có phân tích AI:</strong> Nhấn "Tạo phân tích AI" để xem phân tích thông minh từ dữ liệu hiện tại.
                         </p>
                     </div>
                 </div>
@@ -214,7 +213,7 @@ export default function Statistics() {
                 <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                            <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -222,15 +221,15 @@ export default function Statistics() {
                                 ${analyticsData.summary.totalRevenue?.toLocaleString()}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {analyticsData.summary.growthRate}% from last year
-                                {aiGenerated && <span className="ml-2 text-green-600">✓ AI Enhanced</span>}
+                                {analyticsData.summary.growthRate}% so với năm trước
+                                {aiGenerated && <span className="ml-2 text-green-600">✓ Cải thiện bởi AI</span>}
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+                            <CardTitle className="text-sm font-medium">Tổng lượt đặt</CardTitle>
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -238,15 +237,15 @@ export default function Statistics() {
                                 {analyticsData.summary.totalBookings?.toLocaleString()}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Field & Coach bookings combined
-                                {aiGenerated && <span className="ml-2 text-green-600">✓ AI Enhanced</span>}
+                                Tổng hợp đặt sân & đặt huấn luyện viên
+                                {aiGenerated && <span className="ml-2 text-green-600">✓ Cải thiện bởi AI</span>}
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                            <CardTitle className="text-sm font-medium">Tổng người dùng</CardTitle>
                             <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -254,15 +253,15 @@ export default function Statistics() {
                                 {analyticsData.summary.totalUsers?.toLocaleString()}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Active platform users
-                                {aiGenerated && <span className="ml-2 text-green-600">✓ AI Enhanced</span>}
+                                Người dùng đang hoạt động
+                                {aiGenerated && <span className="ml-2 text-green-600">✓ Cải thiện bởi AI</span>}
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
+                            <CardTitle className="text-sm font-medium">Đánh giá trung bình</CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -270,8 +269,8 @@ export default function Statistics() {
                                 {analyticsData.summary.averageRating?.toFixed(1)}/5
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Platform satisfaction score
-                                {aiGenerated && <span className="ml-2 text-green-600">✓ AI Enhanced</span>}
+                                Điểm hài lòng nền tảng
+                                {aiGenerated && <span className="ml-2 text-green-600">✓ Cải thiện bởi AI</span>}
                             </p>
                         </CardContent>
                     </Card>
@@ -280,10 +279,10 @@ export default function Statistics() {
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
                 <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="field-owners">Field Owners</TabsTrigger>
-                    <TabsTrigger value="coaches">Coaches</TabsTrigger>
-                    <TabsTrigger value="analytics">Advanced Analytics</TabsTrigger>
+                    <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+                    <TabsTrigger value="field-owners">Chủ sân</TabsTrigger>
+                    <TabsTrigger value="coaches">Huấn luyện viên</TabsTrigger>
+                    <TabsTrigger value="analytics">Phân tích nâng cao</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
@@ -303,10 +302,10 @@ export default function Statistics() {
 
                 <TabsContent value="field-owners" className="space-y-6">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Field Owners Performance</h3>
+                        <h3 className="text-lg font-semibold">Hiệu suất chủ sân</h3>
                         {aiGenerated && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                AI Enhanced
+                                Cải thiện bởi AI
                             </span>
                         )}
                     </div>
@@ -316,10 +315,10 @@ export default function Statistics() {
 
                 <TabsContent value="coaches" className="space-y-6">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Coaches Performance</h3>
+                        <h3 className="text-lg font-semibold">Hiệu suất huấn luyện viên</h3>
                         {aiGenerated && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                AI Enhanced
+                                Cải thiện bởi AI
                             </span>
                         )}
                     </div>
@@ -333,10 +332,10 @@ export default function Statistics() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Target className="h-5 w-5" />
-                                    Strategic Recommendations
+                                    Khuyến nghị chiến lược
                                     {aiGenerated && (
                                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                            AI Generated
+                                            AI tạo
                                         </span>
                                     )}
                                 </CardTitle>

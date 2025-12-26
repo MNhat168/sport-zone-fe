@@ -135,7 +135,7 @@ export function BookingsTable({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  Loading...
+                  Đang tải...
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -154,7 +154,7 @@ export function BookingsTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}

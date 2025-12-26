@@ -8,7 +8,6 @@ import {
   Wrench,
   UserCog,
   Users,
-  MessagesSquare,
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
@@ -53,28 +52,22 @@ export const sidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
-          title: 'Chats',
-          url: '/chats',
-          badge: '3',
-          icon: MessagesSquare,
-        },
-        {
-          title: 'Users',
+          title: 'Tài khoản',
           url: '/users',
           icon: Users,
         },
         {
-          title: 'Transactions',
+          title: 'Giao dịch',
           url: '/transactions',
           icon: FileCheck,
         },
         {
-          title: 'Bookings',
+          title: 'Đặt chỗ',
           url: '/bookings',
           icon: Calendar,
         },
         {
-          title: 'Reports',
+          title: 'Báo cáo',
           url: '/reports',
           icon: Flag,
         },
@@ -84,72 +77,32 @@ export const sidebarData: SidebarData = {
           icon: CreditCard,
         },
         {
-          title: 'Refund Management',
+          title: 'Quản lý hoàn tiền',
           url: '/refund-management',
           icon: FileSpreadsheet,
         },
         {
-          title: 'Field Owners',
+          title: 'Chủ sân',
           icon: Building2,
           items: [
             {
-              title: 'All Field Owners',
+              title: 'Tất cả chủ sân',
               url: '/field-owners',
             },
             {
-              title: 'Registration Requests',
+              title: 'Yêu cầu đăng ký',
               url: '/field-owners/requests',
               icon: FileCheck,
             },
           ],
         },
         {
-          title: 'Statistics',
+          title: 'Thống kê',
           url: '/admin/statistics',
           icon: AudioWaveform, // Reusing an icon or import a new one like BarChart
         },
       ],
     },
-    {
-      title: 'Other',
-      items: [
-        {
-          title: 'Settings',
-          icon: Settings,
-          items: [
-            {
-              title: 'Profile',
-              url: '/settings',
-              icon: UserCog,
-            },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: Wrench,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: Palette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: Bell,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: Monitor,
-            },
-          ],
-        },
-        {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: HelpCircle,
-        },
-      ],
-    },
+
   ],
 }

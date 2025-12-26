@@ -36,23 +36,23 @@ export function ProfileDetailDialog() {
   }
 
   const createdAt = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+    ? new Date(profile.createdAt).toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : ''
 
   const updatedAt = profile?.updatedAt
-    ? new Date(profile.updatedAt).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+    ? new Date(profile.updatedAt).toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : ''
 
   if (!profile) return null
@@ -61,9 +61,9 @@ export function ProfileDetailDialog() {
     <Dialog open={isOpen} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
       <DialogContent className='max-w-[calc(100%-2rem)] sm:max-w-6xl'>
         <DialogHeader>
-          <DialogTitle>Field Owner Profile</DialogTitle>
+          <DialogTitle>Hồ sơ chủ sân</DialogTitle>
           <DialogDescription>
-            View detailed information about the field owner and their facility.
+            Xem thông tin chi tiết về chủ sân và cơ sở của họ.
           </DialogDescription>
         </DialogHeader>
 
@@ -73,7 +73,7 @@ export function ProfileDetailDialog() {
             <section className='space-y-4'>
               <div className='flex flex-wrap items-center justify-between gap-4'>
                 <div>
-                  <p className='text-sm text-muted-foreground'>Facility</p>
+                  <p className='text-sm text-muted-foreground'>Cơ sở</p>
                   <p className='text-xl font-semibold'>{profile.facilityName || '—'}</p>
                 </div>
                 <div className='flex flex-wrap items-center gap-2'>
@@ -88,12 +88,12 @@ export function ProfileDetailDialog() {
                     {profile.isVerified ? (
                       <>
                         <ShieldCheck className='h-3 w-3 mr-1' />
-                        Verified
+                        Đã xác minh
                       </>
                     ) : (
                       <>
                         <ShieldX className='h-3 w-3 mr-1' />
-                        Pending
+                        Đang chờ
                       </>
                     )}
                   </Badge>
@@ -103,14 +103,14 @@ export function ProfileDetailDialog() {
                 {createdAt && (
                   <div className='flex items-center gap-2'>
                     <CalendarDays className='h-4 w-4' />
-                    Created:&nbsp;
+                    Tạo lúc:&nbsp;
                     <span className='font-medium text-foreground'>{createdAt}</span>
                   </div>
                 )}
                 {updatedAt && (
                   <div className='flex items-center gap-2'>
                     <CalendarDays className='h-4 w-4' />
-                    Updated:&nbsp;
+                    Cập nhật:&nbsp;
                     <span className='font-medium text-foreground'>{updatedAt}</span>
                   </div>
                 )}
@@ -124,11 +124,11 @@ export function ProfileDetailDialog() {
               {/* Left Column: Owner Information */}
               <div className='space-y-2'>
                 <p className='text-sm font-semibold text-muted-foreground'>
-                  Owner Information
+                  Thông tin chủ sân
                 </p>
                 <div className='rounded-md border p-6 space-y-4'>
                   <div>
-                    <p className='text-xs text-muted-foreground mb-1'>Full Name</p>
+                    <p className='text-xs text-muted-foreground mb-1'>Họ và tên</p>
                     <p className='font-medium text-base break-words'>
                       {profile.userFullName || '—'}
                     </p>
@@ -148,7 +148,7 @@ export function ProfileDetailDialog() {
                     <div className='flex items-start gap-2'>
                       <Phone className='h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0' />
                       <div className='flex-1 min-w-0'>
-                        <p className='text-xs text-muted-foreground mb-1'>Phone</p>
+                        <p className='text-xs text-muted-foreground mb-1'>Số điện thoại</p>
                         <p className='font-medium text-base break-words'>
                           {profile.contactPhone}
                         </p>
@@ -162,11 +162,11 @@ export function ProfileDetailDialog() {
               <div className='space-y-6'>
                 <div className='space-y-2'>
                   <p className='text-sm font-semibold text-muted-foreground'>
-                    Facility Details
+                    Chi tiết cơ sở
                   </p>
                   <div className='rounded-md border p-6 space-y-4'>
                     <div>
-                      <p className='text-xs text-muted-foreground mb-1'>Facility Name</p>
+                      <p className='text-xs text-muted-foreground mb-1'>Tên cơ sở</p>
                       <p className='font-medium text-base break-words'>
                         {profile.facilityName || '—'}
                       </p>
@@ -175,7 +175,7 @@ export function ProfileDetailDialog() {
                       <div className='flex items-start gap-2'>
                         <MapPin className='h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0' />
                         <div className='flex-1 min-w-0'>
-                          <p className='text-xs text-muted-foreground mb-1'>Location</p>
+                          <p className='text-xs text-muted-foreground mb-1'>Địa điểm</p>
                           <p className='font-medium text-base break-words'>
                             {profile.facilityLocation}
                           </p>
@@ -184,7 +184,7 @@ export function ProfileDetailDialog() {
                     )}
                     {profile.description && (
                       <div>
-                        <p className='text-xs text-muted-foreground mb-1'>Description</p>
+                        <p className='text-xs text-muted-foreground mb-1'>Mô tả</p>
                         <p className='font-medium text-base break-words'>
                           {profile.description}
                         </p>
@@ -212,21 +212,21 @@ export function ProfileDetailDialog() {
                 {/* Rating & Reviews */}
                 <div className='space-y-2'>
                   <p className='text-sm font-semibold text-muted-foreground'>
-                    Rating & Reviews
+                    Đánh giá & Nhận xét
                   </p>
                   <div className='rounded-md border p-6 space-y-4'>
                     <div className='flex items-center gap-2'>
                       <Star className='h-5 w-5 text-yellow-500 fill-yellow-500' />
                       <div>
-                        <p className='text-xs text-muted-foreground mb-1'>Rating</p>
+                        <p className='text-xs text-muted-foreground mb-1'>Điểm đánh giá</p>
                         <p className='font-medium text-lg'>
                           {profile.rating.toFixed(1)} / 5.0
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className='text-xs text-muted-foreground mb-1'>Total Reviews</p>
-                      <p className='font-medium text-base'>{profile.totalReviews} reviews</p>
+                      <p className='text-xs text-muted-foreground mb-1'>Tổng số nhận xét</p>
+                      <p className='font-medium text-base'>{profile.totalReviews} nhận xét</p>
                     </div>
                   </div>
                 </div>
@@ -238,7 +238,7 @@ export function ProfileDetailDialog() {
                 {profile.supportedSports && profile.supportedSports.length > 0 && (
                   <div className='space-y-2'>
                     <p className='text-sm font-semibold text-muted-foreground'>
-                      Supported Sports
+                      Môn thể thao hỗ trợ
                     </p>
                     <div className='rounded-md border p-6'>
                       <div className='flex flex-wrap gap-2'>
@@ -255,7 +255,7 @@ export function ProfileDetailDialog() {
                 {/* Amenities */}
                 {profile.amenities && profile.amenities.length > 0 && (
                   <div className='space-y-2'>
-                    <p className='text-sm font-semibold text-muted-foreground'>Amenities</p>
+                    <p className='text-sm font-semibold text-muted-foreground'>Tiện ích</p>
                     <div className='rounded-md border p-6'>
                       <div className='flex flex-wrap gap-2'>
                         {profile.amenities.map((amenity, index) => (

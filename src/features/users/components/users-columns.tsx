@@ -18,7 +18,7 @@ export const usersColumns: ColumnDef<User>[] = [
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label='Select all'
+        aria-label='Chọn tất cả'
         className='translate-y-[2px]'
       />
     ),
@@ -29,7 +29,7 @@ export const usersColumns: ColumnDef<User>[] = [
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label='Select row'
+        aria-label='Chọn dòng'
         className='translate-y-[2px]'
       />
     ),
@@ -39,7 +39,7 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'fullName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
+      <DataTableColumnHeader column={column} title='Tên' />
     ),
     cell: ({ row }) => (
       <LongText className='max-w-48 ps-3'>{row.getValue('fullName')}</LongText>
@@ -64,7 +64,7 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title='Trạng thái' />
     ),
     cell: ({ row }) => {
       const { status } = row.original
@@ -86,7 +86,7 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'role',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Role' />
+      <DataTableColumnHeader column={column} title='Vai trò' />
     ),
     cell: ({ row }) => {
       const { role } = row.original
@@ -114,7 +114,7 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'isVerified',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Verified' />
+      <DataTableColumnHeader column={column} title='Xác minh' />
     ),
     cell: ({ row }) => {
       const isVerified = row.getValue<boolean>('isVerified')
@@ -128,7 +128,7 @@ export const usersColumns: ColumnDef<User>[] = [
               : 'bg-slate-200/50 text-slate-700 dark:text-slate-200 border-slate-300'
           )}
         >
-          {isVerified ? 'Yes' : 'No'}
+          {isVerified ? 'Có' : 'Không'}
         </Badge>
       )
     },
@@ -137,14 +137,14 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Created' />
+      <DataTableColumnHeader column={column} title='Tạo ngày' />
     ),
     cell: ({ row }) => {
       const value = row.getValue<string>('createdAt')
       const date = value ? new Date(value) : null
       return (
         <span className='text-sm text-muted-foreground'>
-          {date ? date.toLocaleDateString() : '—'}
+          {date ? date.toLocaleDateString('vi-VN') : '—'}
         </span>
       )
     },

@@ -37,10 +37,10 @@ export function FieldOwnerRequests() {
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>
-              Field Owner Registration Requests
+              Yêu cầu đăng ký chủ sân
             </h2>
             <p className='text-muted-foreground'>
-              Review and approve pending field owner registrations.
+              Xem xét và duyệt các yêu cầu đăng ký chủ sân đang chờ.
             </p>
           </div>
         </div>

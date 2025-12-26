@@ -17,10 +17,10 @@ export function SignIn() {
     <AuthLayout>
       <Card className='gap-4'>
         <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Sign in</CardTitle>
+          <CardTitle className='text-lg tracking-tight'>Đăng nhập</CardTitle>
           <CardDescription>
-            Enter your email and password below to <br />
-            log into your account
+            Nhập email và mật khẩu để <br />
+            đăng nhập vào tài khoản của bạn
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -28,19 +28,19 @@ export function SignIn() {
         </CardContent>
         <CardFooter>
           <p className='text-muted-foreground px-8 text-center text-sm'>
-            By clicking sign in, you agree to our{' '}
+            Khi bấm Đăng nhập, bạn đồng ý với{' '}
             <a
               href='/terms'
               className='hover:text-primary underline underline-offset-4'
             >
-              Terms of Service
+              Điều khoản dịch vụ
             </a>{' '}
-            and{' '}
+            và{' '}
             <a
               href='/privacy'
               className='hover:text-primary underline underline-offset-4'
             >
-              Privacy Policy
+              Chính sách bảo mật
             </a>
             .
           </p>

@@ -97,15 +97,15 @@ export function FieldOwnersTable({
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Filter field owners...'
+        searchPlaceholder='Lọc chủ sân...'
         searchKey='userFullName'
         filters={[
           {
             columnId: 'isVerified',
-            title: 'Verification Status',
+            title: 'Trạng thái xác minh',
             options: [
-              { label: 'Verified', value: 'verified' },
-              { label: 'Pending', value: 'pending' },
+              { label: 'Đã xác minh', value: 'verified' },
+              { label: 'Đang chờ', value: 'pending' },
             ],
           },
         ]}
@@ -129,9 +129,9 @@ export function FieldOwnersTable({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
@@ -145,7 +145,7 @@ export function FieldOwnersTable({
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  Loading...
+                  Đang tải...
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -178,7 +178,7 @@ export function FieldOwnersTable({
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}

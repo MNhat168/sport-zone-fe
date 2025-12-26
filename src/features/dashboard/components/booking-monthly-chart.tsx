@@ -3,18 +3,18 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { useGetBookingMonthlyStatsQuery } from '@/store/services/dashboardApi'
 
 const monthNames = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
+  'Thg 1',
+  'Thg 2',
+  'Thg 3',
+  'Thg 4',
+  'Thg 5',
+  'Thg 6',
+  'Thg 7',
+  'Thg 8',
+  'Thg 9',
+  'Thg 10',
+  'Thg 11',
+  'Thg 12',
 ]
 
 interface BookingMonthlyChartProps {
@@ -39,7 +39,7 @@ export function BookingMonthlyChart({ year }: BookingMonthlyChartProps) {
     // Handle different response formats
     // Check if data is wrapped in an object (e.g., { data: [...] } or { success: true, data: [...] })
     let statsArray: Array<{ year: number; month: number; type: string; count: number }> = []
-    
+
     if (Array.isArray(data)) {
       statsArray = data
     } else if (data && typeof data === 'object' && 'data' in data) {
@@ -48,7 +48,7 @@ export function BookingMonthlyChart({ year }: BookingMonthlyChartProps) {
         statsArray = dataValue as Array<{ year: number; month: number; type: string; count: number }>
       }
     }
-    
+
     if (statsArray.length === 0) {
       // If data is not in expected format, return empty data
       return monthNames.map((name) => ({
@@ -76,7 +76,7 @@ export function BookingMonthlyChart({ year }: BookingMonthlyChartProps) {
   if (error) {
     return (
       <div className='flex h-[350px] items-center justify-center text-sm text-muted-foreground'>
-        Error loading booking statistics
+        Lỗi khi tải thống kê đặt sân
       </div>
     )
   }
@@ -84,7 +84,7 @@ export function BookingMonthlyChart({ year }: BookingMonthlyChartProps) {
   if (isLoading) {
     return (
       <div className='flex h-[350px] items-center justify-center text-sm text-muted-foreground'>
-        Loading...
+        Đang tải...
       </div>
     )
   }

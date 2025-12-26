@@ -8,7 +8,7 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
     id: 'id',
     accessorKey: '_id',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='ID' />
+      <DataTableColumnHeader column={column} title='Mã' />
     ),
     cell: ({ row }) => (
       <div className='font-mono text-xs'>{row.original._id}</div>
@@ -20,11 +20,11 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Created At' />
+      <DataTableColumnHeader column={column} title='Tạo lúc' />
     ),
     cell: ({ row }) => {
       const v = row.original.createdAt
-      return <div>{v ? new Date(v).toLocaleString() : '—'}</div>
+      return <div>{v ? new Date(v).toLocaleString('vi-VN') : '—'}</div>
     },
     enableSorting: true,
     meta: { className: 'min-w-[160px]' },
@@ -32,7 +32,7 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'amount',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Amount' />
+      <DataTableColumnHeader column={column} title='Số tiền' />
     ),
     cell: ({ row }) => <div className='text-right'>{formatAmountVND(row.original.amount)}</div>,
     enableSorting: true,
@@ -41,11 +41,21 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'method',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Method' />
+      <DataTableColumnHeader column={column} title='Phương thức' />
     ),
     cell: ({ row }) => {
       const map: Record<number, string> = {
-        1: 'Cash', 2: 'E-Banking', 3: 'Credit Card', 4: 'Debit Card', 5: 'MoMo', 6: 'ZaloPay', 7: 'VNPay', 8: 'Bank Transfer', 9: 'QR Code', 10: 'Internal', 11: 'PayOS'
+        1: 'Tiền mặt',
+        2: 'Ngân hàng điện tử',
+        3: 'Thẻ tín dụng',
+        4: 'Thẻ ghi nợ',
+        5: 'MoMo',
+        6: 'ZaloPay',
+        7: 'VNPay',
+        8: 'Chuyển khoản',
+        9: 'Mã QR',
+        10: 'Nội bộ',
+        11: 'PayOS',
       }
       const m = row.original.method as unknown as number | undefined
       return <div>{m ? map[m] ?? m : '—'}</div>
@@ -56,18 +66,41 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'type',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Type' />
+      <DataTableColumnHeader column={column} title='Loại' />
     ),
-    cell: ({ row }) => <div className='capitalize'>{String(row.original.type).replace('_', ' ')}</div>,
+    cell: ({ row }) => {
+      const map: Record<string, string> = {
+        payment: 'Thanh toán',
+        refund_full: 'Hoàn tiền (toàn phần)',
+        refund_partial: 'Hoàn tiền (một phần)',
+        reversal: 'Đảo chiều',
+        adjustment: 'Điều chỉnh',
+        payout: 'Chi trả',
+        fee: 'Phí',
+      }
+      const t = String(row.original.type)
+      return <div className='capitalize'>{map[t] ?? t.replace('_', ' ')}</div>
+    },
     enableSorting: true,
     meta: { className: 'w-[140px]' },
   },
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title='Trạng thái' />
     ),
-    cell: ({ row }) => <div className='capitalize'>{row.original.status}</div>,
+    cell: ({ row }) => {
+      const map: Record<string, string> = {
+        pending: 'Đang chờ',
+        processing: 'Đang xử lý',
+        succeeded: 'Thành công',
+        failed: 'Thất bại',
+        cancelled: 'Đã hủy',
+        refunded: 'Đã hoàn tiền',
+      }
+      const s = String(row.original.status)
+      return <div className='capitalize'>{map[s] ?? s}</div>
+    },
     enableSorting: true,
     meta: { className: 'w-[120px]' },
   },
@@ -86,7 +119,7 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
       return fieldName ? `${fieldName}${date ? ` - ${date}` : ''}${time ? ` ${time}` : ''}` : b._id ?? ''
     },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Booking' />
+      <DataTableColumnHeader column={column} title='Đặt sân' />
     ),
     cell: ({ row }) => {
       const booking = row.original.booking
@@ -125,7 +158,7 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
     id: 'user',
     accessorFn: (row) => (typeof row.user === 'string' ? row.user : (row.user as any)?.email ?? (row.user as any)?.fullName ?? ''),
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='User' />
+      <DataTableColumnHeader column={column} title='Người dùng' />
     ),
     cell: ({ row }) => {
       const u = row.original.user as any
@@ -148,7 +181,7 @@ export const transactionsColumns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'externalTransactionId',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='External Txn' />
+      <DataTableColumnHeader column={column} title='Mã giao dịch ngoài' />
     ),
     cell: ({ row }) => <div className='font-mono text-xs'>{row.original.externalTransactionId ?? '—'}</div>,
     enableSorting: false,

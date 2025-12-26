@@ -26,7 +26,7 @@ export function UsersDeleteDialog({
     if (value.trim() !== currentRow.email) return
 
     onOpenChange(false)
-    showSubmittedData(currentRow, 'The following user has been deleted:')
+    showSubmittedData(currentRow, 'Người dùng sau đã bị xóa:')
   }
 
   return (
@@ -41,20 +41,20 @@ export function UsersDeleteDialog({
             className='stroke-destructive me-1 inline-block'
             size={18}
           />{' '}
-          Delete User
+          Xóa người dùng
         </span>
       }
       desc={
         <div className='space-y-4'>
           <p className='mb-2'>
-            Are you sure you want to delete{' '}
+            Bạn có chắc muốn xóa{' '}
             <span className='font-bold'>{currentRow.fullName}</span>?
             <br />
-            This action will permanently remove the user with the role of{' '}
+            Thao tác này sẽ xóa vĩnh viễn người dùng có vai trò{' '}
             <span className='font-bold'>
               {currentRow.role.toUpperCase()}
             </span>{' '}
-            from the system. This cannot be undone.
+            khỏi hệ thống. Thao tác này không thể hoàn tác.
           </p>
 
           <Label className='my-2'>
@@ -62,19 +62,19 @@ export function UsersDeleteDialog({
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder='Enter email to confirm deletion.'
+              placeholder='Nhập email để xác nhận xóa.'
             />
           </Label>
 
           <Alert variant='destructive'>
-            <AlertTitle>Warning!</AlertTitle>
+            <AlertTitle>Cảnh báo!</AlertTitle>
             <AlertDescription>
-              Please be careful, this operation can not be rolled back.
+              Hãy cẩn thận, thao tác này không thể hoàn tác.
             </AlertDescription>
           </Alert>
         </div>
       }
-      confirmText='Delete'
+      confirmText='Xóa'
       destructive
     />
   )

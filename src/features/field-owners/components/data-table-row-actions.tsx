@@ -62,8 +62,8 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     setOpen('reject')
   }
 
-  const isRequest = 
-    'status' in row.original && 
+  const isRequest =
+    'status' in row.original &&
     row.original.status !== undefined &&
     (row.original.status === 'pending' || row.original.status === 'approved' || row.original.status === 'rejected')
   const status = isRequest && 'status' in row.original ? (row.original as FieldOwnerRequest).status : null
@@ -76,12 +76,12 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           className='data-[state=open]:bg-muted flex h-8 w-8 p-0'
         >
           <DotsHorizontalIcon className='h-4 w-4' />
-          <span className='sr-only'>Open menu</span>
+          <span className='sr-only'>Mở menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-[160px]'>
         <DropdownMenuItem onClick={handleView}>
-          View Details
+          Xem chi tiết
           <DropdownMenuShortcut>
             <Eye size={16} />
           </DropdownMenuShortcut>
@@ -90,13 +90,13 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleApprove} className='text-green-600'>
-              Approve
+              Duyệt
               <DropdownMenuShortcut>
                 <CheckCircle size={16} />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleReject} className='text-red-600'>
-              Reject
+              Từ chối
               <DropdownMenuShortcut>
                 <XCircle size={16} />
               </DropdownMenuShortcut>

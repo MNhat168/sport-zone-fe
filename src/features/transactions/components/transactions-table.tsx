@@ -104,11 +104,11 @@ export function TransactionsTable({
     <div className={cn('max-sm:has-[div[role="toolbar"]]:mb-16', 'flex flex-1 flex-col gap-4')}>
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Search transactions...'
+        searchPlaceholder='Lọc giao dịch...'
         filters={[
-          { columnId: 'status', title: 'Status', options: statusOptions },
-          { columnId: 'type', title: 'Type', options: typeOptions },
-          { columnId: 'method', title: 'Method', options: methodOptions },
+          { columnId: 'status', title: 'Trạng thái', options: statusOptions },
+          { columnId: 'type', title: 'Loại', options: typeOptions },
+          { columnId: 'method', title: 'Phương thức', options: methodOptions },
         ]}
       />
       <div className='overflow-hidden rounded-md border'>
@@ -138,7 +138,7 @@ export function TransactionsTable({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  Loading transactions...
+                  Đang tải…
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -161,7 +161,7 @@ export function TransactionsTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}

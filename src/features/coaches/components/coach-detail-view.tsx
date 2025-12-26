@@ -33,7 +33,7 @@ export function CoachDetailView() {
         return (
             <div className='flex flex-col items-center justify-center h-96'>
                 <p className='text-muted-foreground'>
-                    {error ? 'Failed to load coach details' : 'Coach not found'}
+                    {error ? 'Không thể tải chi tiết huấn luyện viên' : 'Không tìm thấy huấn luyện viên'}
                 </p>
                 <Button
                     variant='outline'
@@ -41,7 +41,7 @@ export function CoachDetailView() {
                     className='mt-4'
                 >
                     <ArrowLeft className='mr-2 h-4 w-4' />
-                    Back to List
+                    Về danh sách
                 </Button>
             </div>
         )
@@ -59,14 +59,14 @@ export function CoachDetailView() {
                         onClick={() => navigate({ to: '/coaches/requests' as any })}
                     >
                         <ArrowLeft className='mr-2 h-4 w-4' />
-                        Back
+                        Quay lại
                     </Button>
                     <div>
                         <h2 className='text-2xl font-bold tracking-tight'>
-                            Coach Registration Details
+                            Chi tiết đăng ký huấn luyện viên
                         </h2>
                         <p className='text-muted-foreground'>
-                            Review coach application and credentials
+                            Xem xét hồ sơ và chứng chỉ của huấn luyện viên
                         </p>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ export function CoachDetailView() {
                             }}
                         >
                             <CheckCircle className='mr-2 h-4 w-4' />
-                            Approve
+                            Duyệt
                         </Button>
                         <Button
                             variant='destructive'
@@ -90,7 +90,7 @@ export function CoachDetailView() {
                             }}
                         >
                             <XCircle className='mr-2 h-4 w-4' />
-                            Reject
+                            Từ chối
                         </Button>
                     </div>
                 )}
@@ -102,20 +102,20 @@ export function CoachDetailView() {
                     <CardHeader>
                         <CardTitle className='flex items-center gap-2'>
                             <User className='h-5 w-5' />
-                            Personal Information
+                            Thông tin cá nhân
                         </CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-4'>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Full Name</p>
+                            <p className='text-sm text-muted-foreground'>Họ và tên</p>
                             <p className='font-medium'>{coach.personalInfo.fullName}</p>
                         </div>
                         <div>
-                            <p className='text-sm text-muted-foreground'>ID Number</p>
+                            <p className='text-sm text-muted-foreground'>Số CCCD/CMND</p>
                             <p className='font-medium'>{coach.personalInfo.idNumber}</p>
                         </div>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Address</p>
+                            <p className='text-sm text-muted-foreground'>Địa chỉ</p>
                             <p className='font-medium'>{coach.personalInfo.address}</p>
                         </div>
                     </CardContent>
@@ -126,12 +126,12 @@ export function CoachDetailView() {
                     <CardHeader>
                         <CardTitle className='flex items-center gap-2'>
                             <Award className='h-5 w-5' />
-                            Professional Info
+                            Thông tin chuyên môn
                         </CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-4'>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Sports</p>
+                            <p className='text-sm text-muted-foreground'>Môn thể thao</p>
                             <div className='flex flex-wrap gap-1 mt-1'>
                                 {coach.sports.map((sport: string, idx: number) => (
                                     <Badge key={idx} variant='secondary'>{sport}</Badge>
@@ -139,11 +139,11 @@ export function CoachDetailView() {
                             </div>
                         </div>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Certification</p>
+                            <p className='text-sm text-muted-foreground'>Chứng chỉ</p>
                             <p className='font-medium'>{coach.certification}</p>
                         </div>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Hourly Rate</p>
+                            <p className='text-sm text-muted-foreground'>Đơn giá/giờ</p>
                             <p className='font-medium flex items-center gap-1'>
                                 <DollarSign className='h-4 w-4' />
                                 {new Intl.NumberFormat('vi-VN', {
@@ -160,17 +160,17 @@ export function CoachDetailView() {
                     <CardHeader>
                         <CardTitle className='flex items-center gap-2'>
                             <MapPin className='h-5 w-5' />
-                            Location
+                            Địa điểm
                         </CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-4'>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Training Location</p>
+                            <p className='text-sm text-muted-foreground'>Địa điểm tập luyện</p>
                             <p className='font-medium'>{coach.locationAddress}</p>
                         </div>
                         {coach.locationCoordinates && (
                             <div>
-                                <p className='text-sm text-muted-foreground'>Coordinates</p>
+                                <p className='text-sm text-muted-foreground'>Toạ độ</p>
                                 <p className='font-medium text-sm'>
                                     {coach.locationCoordinates.lat}, {coach.locationCoordinates.lng}
                                 </p>
@@ -182,15 +182,15 @@ export function CoachDetailView() {
                 {/* Bio & Experience */}
                 <Card className='md:col-span-1'>
                     <CardHeader>
-                        <CardTitle>Experience & Bio</CardTitle>
+                        <CardTitle>Kinh nghiệm & Tiểu sử</CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-4'>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Experience</p>
+                            <p className='text-sm text-muted-foreground'>Kinh nghiệm</p>
                             <p className='font-medium whitespace-pre-wrap'>{coach.experience}</p>
                         </div>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Bio</p>
+                            <p className='text-sm text-muted-foreground'>Tiểu sử</p>
                             <p className='font-medium whitespace-pre-wrap'>{coach.bio}</p>
                         </div>
                     </CardContent>
@@ -200,7 +200,7 @@ export function CoachDetailView() {
                 {coach.profilePhoto && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Profile Photo</CardTitle>
+                            <CardTitle>Ảnh hồ sơ</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <img
@@ -215,7 +215,7 @@ export function CoachDetailView() {
                 {coach.certificationPhotos && coach.certificationPhotos.length > 0 && (
                     <Card className={coach.profilePhoto ? 'md:col-span-1' : 'md:col-span-2'}>
                         <CardHeader>
-                            <CardTitle>Certification Documents</CardTitle>
+                            <CardTitle>Tài liệu chứng chỉ</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className='grid grid-cols-2 gap-2'>
@@ -235,11 +235,11 @@ export function CoachDetailView() {
                 {/* Status */}
                 <Card className='md:col-span-2'>
                     <CardHeader>
-                        <CardTitle>Registration Status</CardTitle>
+                        <CardTitle>Trạng thái đăng ký</CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-4'>
                         <div>
-                            <p className='text-sm text-muted-foreground'>Status</p>
+                            <p className='text-sm text-muted-foreground'>Trạng thái</p>
                             <Badge
                                 variant='outline'
                                 className={cn('mt-1', statusColors.get(coach.status))}
@@ -249,19 +249,19 @@ export function CoachDetailView() {
                         </div>
                         {coach.rejectionReason && (
                             <div>
-                                <p className='text-sm text-muted-foreground'>Rejection Reason</p>
+                                <p className='text-sm text-muted-foreground'>Lý do từ chối</p>
                                 <p className='font-medium text-red-600'>{coach.rejectionReason}</p>
                             </div>
                         )}
                         <div>
-                            <p className='text-sm text-muted-foreground'>Submitted At</p>
+                            <p className='text-sm text-muted-foreground'>Nộp lúc</p>
                             <p className='font-medium'>
                                 {new Date(coach.submittedAt).toLocaleString()}
                             </p>
                         </div>
                         {coach.processedAt && (
                             <div>
-                                <p className='text-sm text-muted-foreground'>Processed At</p>
+                                <p className='text-sm text-muted-foreground'>Xử lý lúc</p>
                                 <p className='font-medium'>
                                     {new Date(coach.processedAt).toLocaleString()}
                                 </p>

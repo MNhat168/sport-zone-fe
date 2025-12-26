@@ -33,7 +33,7 @@ const approveFormSchema = z.object({
 })
 
 const rejectFormSchema = z.object({
-    reason: z.string().min(1, 'Rejection reason is required'),
+    reason: z.string().min(1, 'Vui lòng nhập lý do từ chối'),
 })
 
 type ApproveFormValues = z.infer<typeof approveFormSchema>
@@ -72,12 +72,12 @@ export function ApprovalDialog() {
                 id: currentRow.id,
                 data,
             }).unwrap()
-            toast.success('Coach registration approved successfully')
+            toast.success('Đã duyệt đăng ký huấn luyện viên thành công')
             setOpen(null)
             approveForm.reset()
             navigate({ to: '/coaches/requests' })
         } catch (error: any) {
-            toast.error(error?.data?.message || 'Failed to approve registration')
+            toast.error(error?.data?.message || 'Không thể duyệt đăng ký')
         }
     }
 
@@ -89,12 +89,12 @@ export function ApprovalDialog() {
                 id: currentRow.id,
                 data,
             }).unwrap()
-            toast.success('Coach registration rejected')
+            toast.success('Đã từ chối đăng ký huấn luyện viên')
             setOpen(null)
             rejectForm.reset()
             navigate({ to: '/coaches/requests' })
         } catch (error: any) {
-            toast.error(error?.data?.message || 'Failed to reject registration')
+            toast.error(error?.data?.message || 'Không thể từ chối đăng ký')
         }
     }
 
@@ -106,10 +106,10 @@ export function ApprovalDialog() {
             <Dialog open={isApproveOpen} onOpenChange={(open) => !open && setOpen(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Approve Coach Registration</DialogTitle>
+                        <DialogTitle>Duyệt đăng ký huấn luyện viên</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to approve this coach registration?
-                            This action will activate their account.
+                            Bạn có chắc chắn muốn duyệt đăng ký huấn luyện viên này?
+                            Hành động này sẽ kích hoạt tài khoản của họ.
                         </DialogDescription>
                     </DialogHeader>
                     <Form {...approveForm}>
@@ -119,10 +119,10 @@ export function ApprovalDialog() {
                                 name='notes'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Notes (Optional)</FormLabel>
+                                        <FormLabel>Ghi chú (không bắt buộc)</FormLabel>
                                         <FormControl>
                                             <Textarea
-                                                placeholder='Add any notes about this approval...'
+                                                placeholder='Thêm ghi chú cho việc duyệt này...'
                                                 {...field}
                                             />
                                         </FormControl>
@@ -137,18 +137,18 @@ export function ApprovalDialog() {
                                     onClick={() => setOpen(null)}
                                     disabled={isApproving}
                                 >
-                                    Cancel
+                                    Hủy
                                 </Button>
                                 <Button type='submit' disabled={isApproving}>
                                     {isApproving ? (
                                         <>
                                             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                            Approving...
+                                            Đang duyệt...
                                         </>
                                     ) : (
                                         <>
                                             <CheckCircle className='mr-2 h-4 w-4' />
-                                            Approve
+                                            Duyệt
                                         </>
                                     )}
                                 </Button>
@@ -162,10 +162,10 @@ export function ApprovalDialog() {
             <Dialog open={isRejectOpen} onOpenChange={(open) => !open && setOpen(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Reject Coach Registration</DialogTitle>
+                        <DialogTitle>Từ chối đăng ký huấn luyện viên</DialogTitle>
                         <DialogDescription>
-                            Please provide a reason for rejecting this registration. The user
-                            will be notified of this decision.
+                            Vui lòng cung cấp lý do từ chối đăng ký này. Người dùng
+                            sẽ được thông báo về quyết định này.
                         </DialogDescription>
                     </DialogHeader>
                     <Form {...rejectForm}>
@@ -175,10 +175,10 @@ export function ApprovalDialog() {
                                 name='reason'
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Rejection Reason *</FormLabel>
+                                        <FormLabel>Lý do từ chối *</FormLabel>
                                         <FormControl>
                                             <Textarea
-                                                placeholder='Enter the reason for rejection...'
+                                                placeholder='Nhập lý do từ chối...'
                                                 {...field}
                                             />
                                         </FormControl>
@@ -193,18 +193,18 @@ export function ApprovalDialog() {
                                     onClick={() => setOpen(null)}
                                     disabled={isRejecting}
                                 >
-                                    Cancel
+                                    Hủy
                                 </Button>
                                 <Button type='submit' variant='destructive' disabled={isRejecting}>
                                     {isRejecting ? (
                                         <>
                                             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                            Rejecting...
+                                            Đang từ chối...
                                         </>
                                     ) : (
                                         <>
                                             <XCircle className='mr-2 h-4 w-4' />
-                                            Reject
+                                            Từ chối
                                         </>
                                     )}
                                 </Button>

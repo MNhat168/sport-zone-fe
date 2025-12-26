@@ -40,7 +40,7 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
     id: 'applicantName',
     accessorFn: (row) => row.personalInfo.fullName,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Applicant Name' />
+      <DataTableColumnHeader column={column} title='Tên người đăng ký' />
     ),
     cell: ({ row }) => (
       <LongText className='max-w-36 ps-3'>
@@ -59,7 +59,7 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
     id: 'applicantIdNumber',
     accessorFn: (row) => row.personalInfo.idNumber,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='ID Number' />
+      <DataTableColumnHeader column={column} title='Số CCCD/CMND' />
     ),
     cell: ({ row }) => (
       <div className='w-fit ps-2 text-nowrap'>
@@ -71,7 +71,7 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
     id: 'applicantAddress',
     accessorFn: (row) => row.personalInfo.address,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Address' />
+      <DataTableColumnHeader column={column} title='Địa chỉ' />
     ),
     cell: ({ row }) => (
       <LongText className='max-w-52'>{row.original.personalInfo.address}</LongText>
@@ -81,7 +81,7 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title='Trạng thái' />
     ),
     cell: ({ row }) => {
       const status = row.getValue('status') as string
@@ -100,7 +100,7 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
   {
     accessorKey: 'submittedAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Submitted' />
+      <DataTableColumnHeader column={column} title='Nộp lúc' />
     ),
     cell: ({ row }) => {
       const rawDate = row.getValue('submittedAt') as
@@ -114,11 +114,11 @@ export const fieldOwnersRequestsColumns: ColumnDef<FieldOwnerRequest>[] = [
       return (
         <div className='text-sm'>
           {date
-            ? date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })
+            ? date.toLocaleDateString('vi-VN', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })
             : '—'}
         </div>
       )

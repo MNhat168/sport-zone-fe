@@ -38,7 +38,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
   {
     accessorKey: 'userFullName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Owner Name' />
+      <DataTableColumnHeader column={column} title='Tên chủ sân' />
     ),
     cell: ({ row }) => (
       <LongText className='max-w-36 ps-3'>
@@ -56,7 +56,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
   {
     accessorKey: 'facilityName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Facility Name' />
+      <DataTableColumnHeader column={column} title='Tên cơ sở' />
     ),
     cell: ({ row }) => (
       <LongText className='max-w-36'>{row.getValue('facilityName')}</LongText>
@@ -77,7 +77,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
   {
     accessorKey: 'contactPhone',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Phone' />
+      <DataTableColumnHeader column={column} title='Số điện thoại' />
     ),
     cell: ({ row }) => <div>{row.original.contactPhone || '-'}</div>,
     enableSorting: false,
@@ -85,7 +85,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
   {
     accessorKey: 'isVerified',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Verified' />
+      <DataTableColumnHeader column={column} title='Xác minh' />
     ),
     cell: ({ row }) => {
       const isVerified = row.getValue('isVerified') as boolean
@@ -98,7 +98,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
               : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20'
           )}
         >
-          {isVerified ? 'Verified' : 'Pending'}
+          {isVerified ? 'Đã xác minh' : 'Đang chờ'}
         </Badge>
       )
     },
@@ -113,7 +113,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
   {
     accessorKey: 'rating',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Rating' />
+      <DataTableColumnHeader column={column} title='Đánh giá' />
     ),
     cell: ({ row }) => {
       const rating = row.original.rating
@@ -122,7 +122,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
         <div className='flex items-center gap-2'>
           <span className='font-medium'>{rating.toFixed(1)}</span>
           <span className='text-muted-foreground text-sm'>
-            ({totalReviews} reviews)
+            ({totalReviews} đánh giá)
           </span>
         </div>
       )
@@ -132,7 +132,7 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Created' />
+      <DataTableColumnHeader column={column} title='Tạo ngày' />
     ),
     cell: ({ row }) => {
       const rawDate = row.getValue('createdAt') as
@@ -151,11 +151,11 @@ export const fieldOwnersColumns: ColumnDef<FieldOwnerProfileApi>[] = [
       return (
         <div className='text-sm'>
           {date
-            ? date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })
+            ? date.toLocaleDateString('vi-VN', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })
             : '—'}
         </div>
       )

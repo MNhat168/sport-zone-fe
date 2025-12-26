@@ -115,19 +115,19 @@ export function UsersTable({
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Search users...'
+        searchPlaceholder='Lọc người dùng...'
         filters={[
           {
             columnId: 'status',
-            title: 'Status',
+            title: 'Trạng thái',
             options: [
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' },
+              { label: 'Hoạt động', value: 'active' },
+              { label: 'Không hoạt động', value: 'inactive' },
             ],
           },
           {
             columnId: 'role',
-            title: 'Role',
+            title: 'Vai trò',
             options: roleOptions.map((role) => ({ label: role.label, value: role.value })),
           },
         ]}
@@ -151,9 +151,9 @@ export function UsersTable({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
@@ -164,7 +164,7 @@ export function UsersTable({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  Loading users...
+                  Đang tải…
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -197,7 +197,7 @@ export function UsersTable({
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}

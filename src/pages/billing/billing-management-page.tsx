@@ -29,7 +29,7 @@ export function BillingManagementPage() {
     dispatch(getOverdueAccounts({ page, limit }))
       .unwrap()
       .catch((err) => {
-        toast.error(err?.message || 'Failed to load overdue accounts')
+        toast.error(err?.message || 'Không thể tải danh sách tài khoản quá hạn')
       })
   }, [dispatch, page, limit])
 
@@ -54,16 +54,16 @@ export function BillingManagementPage() {
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Billing Management</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Quản lý thanh toán</h2>
             <p className='text-muted-foreground'>
-              View and manage overdue accounts and subscription status.
+              Xem và quản lý tài khoản quá hạn và trạng thái đăng ký.
             </p>
           </div>
         </div>
         {error && (
           <Alert variant='destructive'>
             <AlertCircle className='h-4 w-4' />
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Lỗi</AlertTitle>
             <AlertDescription>{error.message}</AlertDescription>
           </Alert>
         )}

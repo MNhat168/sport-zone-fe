@@ -40,7 +40,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
         id: 'applicantName',
         accessorFn: (row) => row.personalInfo.fullName,
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title='Applicant Name' />
+            <DataTableColumnHeader column={column} title='Tên người đăng ký' />
         ),
         cell: ({ row }) => (
             <LongText className='max-w-36 ps-3'>
@@ -59,7 +59,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
         id: 'sports',
         accessorFn: (row) => row.sports.join(', '),
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title='Sports' />
+            <DataTableColumnHeader column={column} title='Môn thể thao' />
         ),
         cell: ({ row }) => (
             <div className='flex flex-wrap gap-1 max-w-48'>
@@ -82,7 +82,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
         id: 'certification',
         accessorFn: (row) => row.certification,
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title='Certification' />
+            <DataTableColumnHeader column={column} title='Chứng chỉ' />
         ),
         cell: ({ row }) => (
             <LongText className='max-w-40'>{row.original.certification}</LongText>
@@ -93,7 +93,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
         id: 'hourlyRate',
         accessorFn: (row) => row.hourlyRate,
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title='Hourly Rate' />
+            <DataTableColumnHeader column={column} title='Đơn giá/giờ' />
         ),
         cell: ({ row }) => (
             <div className='text-sm font-medium'>
@@ -108,7 +108,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
         id: 'location',
         accessorFn: (row) => row.locationAddress,
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title='Location' />
+            <DataTableColumnHeader column={column} title='Địa điểm' />
         ),
         cell: ({ row }) => (
             <LongText className='max-w-48'>{row.original.locationAddress}</LongText>
@@ -118,7 +118,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
     {
         accessorKey: 'status',
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title='Status' />
+            <DataTableColumnHeader column={column} title='Trạng thái' />
         ),
         cell: ({ row }) => {
             const status = row.getValue('status') as string
@@ -137,7 +137,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
     {
         accessorKey: 'submittedAt',
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title='Submitted' />
+            <DataTableColumnHeader column={column} title='Nộp lúc' />
         ),
         cell: ({ row }) => {
             const rawDate = row.getValue('submittedAt') as
@@ -151,7 +151,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
             return (
                 <div className='text-sm'>
                     {date
-                        ? date.toLocaleDateString('en-US', {
+                        ? date.toLocaleDateString('vi-VN', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',

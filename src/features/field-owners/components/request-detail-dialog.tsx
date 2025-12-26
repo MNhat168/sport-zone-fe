@@ -42,13 +42,13 @@ export function RequestDetailDialog() {
   }
 
   const submittedAt = request
-    ? new Date(request.submittedAt).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+    ? new Date(request.submittedAt).toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : ''
 
   const openDocumentViewer = (title: string, images: string[], initialIndex: number = 0) => {
@@ -66,9 +66,9 @@ export function RequestDetailDialog() {
       <Dialog open={isOpen} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
         <DialogContent className='max-w-[calc(100%-2rem)] sm:max-w-6xl'>
           <DialogHeader>
-            <DialogTitle>Field Owner Registration</DialogTitle>
+            <DialogTitle>Đăng ký chủ sân</DialogTitle>
             <DialogDescription>
-              Review the applicant&apos;s submitted information and documents.
+              Xem thông tin và tài liệu mà người đăng ký đã gửi.
             </DialogDescription>
           </DialogHeader>
 
@@ -78,7 +78,7 @@ export function RequestDetailDialog() {
               <section className='space-y-4'>
                 <div className='flex flex-wrap items-center justify-between gap-4'>
                   <div>
-                    <p className='text-sm text-muted-foreground'>Applicant</p>
+                    <p className='text-sm text-muted-foreground'>Người đăng ký</p>
                     <p className='text-xl font-semibold'>
                       {request.personalInfo.fullName}
                     </p>
@@ -95,12 +95,12 @@ export function RequestDetailDialog() {
                 <div className='flex flex-wrap items-center gap-6 text-sm text-muted-foreground'>
                   <div className='flex items-center gap-2'>
                     <CalendarDays className='h-4 w-4' />
-                    Submitted:&nbsp;
+                    Nộp lúc:&nbsp;
                     <span className='font-medium text-foreground'>{submittedAt}</span>
                   </div>
                   <div className='flex items-center gap-2'>
                     <IdCard className='h-4 w-4' />
-                    ID:&nbsp;
+                    CCCD/CMND:&nbsp;
                     <span className='font-medium text-foreground'>
                       {request.personalInfo.idNumber}
                     </span>
@@ -115,19 +115,19 @@ export function RequestDetailDialog() {
                 {/* Left Column: Personal Information */}
                 <div className='space-y-2'>
                   <p className='text-sm font-semibold text-muted-foreground'>
-                    Personal Information
+                    Thông tin cá nhân
                   </p>
                   <div className='rounded-md border p-6 space-y-4'>
                     <div>
-                      <p className='text-xs text-muted-foreground mb-1'>Full Name</p>
+                      <p className='text-xs text-muted-foreground mb-1'>Họ và tên</p>
                       <p className='font-medium text-base break-words'>{request.personalInfo.fullName}</p>
                     </div>
                     <div>
-                      <p className='text-xs text-muted-foreground mb-1'>ID Number</p>
+                      <p className='text-xs text-muted-foreground mb-1'>Số CCCD/CMND</p>
                       <p className='font-medium text-base break-words'>{request.personalInfo.idNumber}</p>
                     </div>
                     <div>
-                      <p className='text-xs text-muted-foreground mb-1'>Address</p>
+                      <p className='text-xs text-muted-foreground mb-1'>Địa chỉ</p>
                       <p className='font-medium text-base break-words'>{request.personalInfo.address}</p>
                     </div>
                   </div>
@@ -136,12 +136,12 @@ export function RequestDetailDialog() {
                 {/* Middle Column: Additional Details, Identity Verification, Documents */}
                 <div className='space-y-6'>
                   <div className='space-y-2'>
-                  <p className='text-sm font-semibold text-muted-foreground'>
-                    Additional Details
-                  </p>
-                  <div className='rounded-md border p-6 space-y-4'>
+                    <p className='text-sm font-semibold text-muted-foreground'>
+                      Thông tin bổ sung
+                    </p>
+                    <div className='rounded-md border p-6 space-y-4'>
                       <div>
-                        <p className='text-xs text-muted-foreground mb-1'>Status</p>
+                        <p className='text-xs text-muted-foreground mb-1'>Trạng thái</p>
                         <Badge
                           variant='outline'
                           className={statusColors.get(request.status)}
@@ -152,7 +152,7 @@ export function RequestDetailDialog() {
                       <div className='flex items-start gap-2'>
                         <MapPin className='h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0' />
                         <div className='flex-1 min-w-0'>
-                          <p className='text-xs text-muted-foreground mb-1'>Address</p>
+                          <p className='text-xs text-muted-foreground mb-1'>Địa chỉ</p>
                           <p className='font-medium text-base break-words'>{request.personalInfo.address}</p>
                         </div>
                       </div>
@@ -162,9 +162,9 @@ export function RequestDetailDialog() {
                   {/* Identity Verification */}
                   <div className='space-y-3'>
                     <p className='text-sm font-semibold text-muted-foreground'>
-                      Identity Verification
+                      Xác thực danh tính
                     </p>
-                    
+
                     {/* eKYC Status (new method) */}
                     {request.ekycSessionId ? (
                       <div className='rounded-md border p-6 space-y-3'>
@@ -179,7 +179,7 @@ export function RequestDetailDialog() {
                             {(request.ekycStatus === 'pending' || !request.ekycStatus) && (
                               <ShieldAlert className='h-5 w-5 text-yellow-600' />
                             )}
-                            <p className='text-sm font-semibold'>didit eKYC Verification</p>
+                            <p className='text-sm font-semibold'>Xác thực didit eKYC</p>
                           </div>
                           <Badge
                             variant='outline'
@@ -187,24 +187,24 @@ export function RequestDetailDialog() {
                               request.ekycStatus === 'verified'
                                 ? 'border-green-600 text-green-600'
                                 : request.ekycStatus === 'failed'
-                                ? 'border-red-600 text-red-600'
-                                : 'border-yellow-600 text-yellow-600'
+                                  ? 'border-red-600 text-red-600'
+                                  : 'border-yellow-600 text-yellow-600'
                             }
                           >
-                            {request.ekycStatus || 'pending'}
+                            {request.ekycStatus || 'đang chờ'}
                           </Badge>
                         </div>
                         <div className='text-xs text-muted-foreground space-y-1'>
-                          <p>Session ID: {request.ekycSessionId}</p>
+                          <p>Mã phiên: {request.ekycSessionId}</p>
                           {request.ekycVerifiedAt && (
-                            <p>Verified At: {new Date(request.ekycVerifiedAt).toLocaleString()}</p>
+                            <p>Xác minh lúc: {new Date(request.ekycVerifiedAt).toLocaleString('vi-VN')}</p>
                           )}
                           {request.ekycData && (
                             <div className='mt-2 pt-2 border-t'>
-                              <p className='font-medium text-foreground mb-1'>Extracted Data:</p>
-                              <p>Name: {request.ekycData.fullName}</p>
-                              <p>ID: {request.ekycData.idNumber}</p>
-                              <p>Address: {request.ekycData.address}</p>
+                              <p className='font-medium text-foreground mb-1'>Dữ liệu trích xuất:</p>
+                              <p>Họ tên: {request.ekycData.fullName}</p>
+                              <p>CCCD/CMND: {request.ekycData.idNumber}</p>
+                              <p>Địa chỉ: {request.ekycData.address}</p>
                             </div>
                           )}
                         </div>
@@ -216,21 +216,21 @@ export function RequestDetailDialog() {
                           <div className='flex items-center gap-2'>
                             <ShieldAlert className='h-4 w-4 text-yellow-600' />
                             <p className='text-xs font-medium text-yellow-800'>
-                              Legacy: Using deprecated CCCD document upload
+                              Cũ: Sử dụng tính năng tải CCCD đã ngừng hỗ trợ
                             </p>
                           </div>
                           <Button
                             variant='outline'
                             className='justify-start w-full'
                             onClick={() =>
-                              openDocumentViewer('Identity Documents (Legacy)', [
+                              openDocumentViewer('Giấy tờ định danh (cũ)', [
                                 request.documents!.idFront!,
                                 request.documents!.idBack!,
                               ])
                             }
                           >
                             <FileText className='mr-2 h-4 w-4' />
-                            View ID Documents (Legacy)
+                            Xem CCCD (cũ)
                           </Button>
                         </div>
                       )
@@ -242,13 +242,13 @@ export function RequestDetailDialog() {
                         variant='outline'
                         className='justify-start w-full'
                         onClick={() =>
-                          openDocumentViewer('Business License', [
+                          openDocumentViewer('Giấy phép kinh doanh', [
                             request.documents!.businessLicense as string,
                           ])
                         }
                       >
                         <FileText className='mr-2 h-4 w-4' />
-                        View Business License
+                        Xem giấy phép kinh doanh
                       </Button>
                     )}
                   </div>
@@ -259,24 +259,24 @@ export function RequestDetailDialog() {
                   <div className='space-y-3'>
                     <div className='flex items-center justify-between'>
                       <p className='text-sm font-semibold text-muted-foreground'>
-                        Field Images
+                        Hình ảnh sân
                       </p>
-                      <Badge variant='outline'>{request.fieldImages.length} images</Badge>
+                      <Badge variant='outline'>{request.fieldImages.length} ảnh</Badge>
                     </div>
-                    
+
                     <div className='rounded-md border p-6'>
                       <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4'>
                         {request.fieldImages.map((imageUrl, index) => (
                           <button
                             key={index}
                             onClick={() =>
-                              openDocumentViewer('Field Images', request.fieldImages || [], index)
+                              openDocumentViewer('Hình ảnh sân', request.fieldImages || [], index)
                             }
                             className='relative group rounded-md overflow-hidden border-2 border-transparent hover:border-primary transition-all aspect-square'
                           >
                             <img
                               src={imageUrl}
-                              alt={`Field image ${index + 1}`}
+                              alt={`Ảnh sân ${index + 1}`}
                               className='w-full h-full object-cover'
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement
@@ -293,11 +293,11 @@ export function RequestDetailDialog() {
                         variant='outline'
                         className='justify-start w-full mt-4'
                         onClick={() =>
-                          openDocumentViewer('Field Images', request.fieldImages || [])
+                          openDocumentViewer('Hình ảnh sân', request.fieldImages || [])
                         }
                       >
                         <ImageIcon className='mr-2 h-4 w-4' />
-                        View All Field Images ({request.fieldImages.length})
+                        Xem tất cả ảnh sân ({request.fieldImages.length})
                       </Button>
                     </div>
                   </div>

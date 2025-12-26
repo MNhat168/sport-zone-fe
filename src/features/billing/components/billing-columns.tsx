@@ -13,9 +13,9 @@ const formatAmountVND = (amount: number) => {
 
 const getSubscriptionStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-    active: { label: 'Active', variant: 'default' },
-    grace_period: { label: 'Grace Period', variant: 'secondary' },
-    suspended: { label: 'Suspended', variant: 'destructive' },
+    active: { label: 'Đang hoạt động', variant: 'default' },
+    grace_period: { label: 'Ân hạn', variant: 'secondary' },
+    suspended: { label: 'Tạm ngưng', variant: 'destructive' },
   }
   const statusInfo = statusMap[status] || { label: status, variant: 'outline' }
   return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
@@ -23,8 +23,8 @@ const getSubscriptionStatusBadge = (status: string) => {
 
 const getInvoiceStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-    pending: { label: 'Pending', variant: 'secondary' },
-    overdue: { label: 'Overdue', variant: 'destructive' },
+    pending: { label: 'Đang chờ', variant: 'secondary' },
+    overdue: { label: 'Quá hạn', variant: 'destructive' },
   }
   const statusInfo = statusMap[status] || { label: status, variant: 'outline' }
   return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
@@ -45,7 +45,7 @@ export const billingColumns: ColumnDef<OverdueAccount>[] = [
   {
     accessorKey: 'fullName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Full Name' />
+      <DataTableColumnHeader column={column} title='Họ và tên' />
     ),
     cell: ({ row }) => <div>{row.original.fullName || '—'}</div>,
     enableSorting: true,
@@ -54,7 +54,7 @@ export const billingColumns: ColumnDef<OverdueAccount>[] = [
   {
     accessorKey: 'phone',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Phone' />
+      <DataTableColumnHeader column={column} title='Số điện thoại' />
     ),
     cell: ({ row }) => <div>{row.original.phone || '—'}</div>,
     enableSorting: false,
@@ -63,7 +63,7 @@ export const billingColumns: ColumnDef<OverdueAccount>[] = [
   {
     accessorKey: 'subscriptionStatus',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Subscription Status' />
+      <DataTableColumnHeader column={column} title='Trạng thái đăng ký' />
     ),
     cell: ({ row }) => getSubscriptionStatusBadge(row.original.subscriptionStatus),
     enableSorting: true,
@@ -73,7 +73,7 @@ export const billingColumns: ColumnDef<OverdueAccount>[] = [
     id: 'invoice',
     accessorFn: (row) => `${row.month}/${row.year}`,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Invoice' />
+      <DataTableColumnHeader column={column} title='Hóa đơn' />
     ),
     cell: ({ row }) => (
       <div className='flex flex-col'>
@@ -89,7 +89,7 @@ export const billingColumns: ColumnDef<OverdueAccount>[] = [
   {
     accessorKey: 'dueDate',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Due Date' />
+      <DataTableColumnHeader column={column} title='Hạn thanh toán' />
     ),
     cell: ({ row }) => {
       const dueDate = new Date(row.original.dueDate)
@@ -101,13 +101,13 @@ export const billingColumns: ColumnDef<OverdueAccount>[] = [
   {
     accessorKey: 'daysOverdue',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Days Overdue' />
+      <DataTableColumnHeader column={column} title='Số ngày quá hạn' />
     ),
     cell: ({ row }) => {
       const days = row.original.daysOverdue
       return (
         <div className={days > 0 ? 'font-semibold text-destructive' : ''}>
-          {days > 0 ? `${days} days` : '—'}
+          {days > 0 ? `${days} ngày` : '—'}
         </div>
       )
     },
@@ -117,7 +117,7 @@ export const billingColumns: ColumnDef<OverdueAccount>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Invoice Status' />
+      <DataTableColumnHeader column={column} title='Trạng thái hóa đơn' />
     ),
     cell: ({ row }) => getInvoiceStatusBadge(row.original.status),
     enableSorting: true,

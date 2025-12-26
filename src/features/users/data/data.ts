@@ -13,8 +13,8 @@ type RoleOption = {
 }
 
 export const roleOptions: RoleOption[] = [
-  { label: 'Admin', value: 'admin', icon: ShieldCheck },
-  { label: 'User', value: 'user', icon: Users },
-  { label: 'Field Owner', value: 'field_owner', icon: UserCog },
-  { label: 'Coach', value: 'coach', icon: Trophy },
+  { label: 'Quản trị', value: 'admin', icon: ShieldCheck },
+  { label: 'Người dùng', value: 'user', icon: Users },
+  { label: 'Chủ sân', value: 'field_owner', icon: UserCog },
+  { label: 'Huấn luyện viên', value: 'coach', icon: Trophy },
 ]

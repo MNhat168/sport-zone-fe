@@ -19,7 +19,7 @@ interface DocumentViewerProps {
 
 export function DocumentViewer({
   images,
-  title = 'Document Viewer',
+  title = 'Trình xem tài liệu',
   isOpen,
   onClose,
   currentIndex = 0,
@@ -92,13 +92,13 @@ export function DocumentViewer({
                 <ZoomIn className='h-4 w-4' />
               </Button>
               <Button variant='outline' size='sm' onClick={handleResetZoom}>
-                Reset
+                Đặt lại
               </Button>
             </div>
             <div className='flex items-center gap-2'>
               <Button variant='outline' size='sm' onClick={handleDownload}>
                 <Download className='h-4 w-4 mr-2' />
-                Download
+                Tải xuống
               </Button>
               <Button variant='ghost' size='sm' onClick={onClose}>
                 <X className='h-4 w-4' />
@@ -111,7 +111,7 @@ export function DocumentViewer({
             <div className='flex justify-center items-center min-h-[400px]'>
               <img
                 src={currentImage}
-                alt={`Document ${selectedIndex + 1}`}
+                alt={`Tài liệu ${selectedIndex + 1}`}
                 className='max-w-full max-h-[70vh] object-contain transition-transform'
                 style={{ transform: `scale(${zoom / 100})` }}
               />
@@ -129,22 +129,21 @@ export function DocumentViewer({
                       setSelectedIndex(index)
                       setZoom(100)
                     }}
-                    className={`flex-shrink-0 border-2 rounded-md overflow-hidden transition-all ${
-                      selectedIndex === index
+                    className={`flex-shrink-0 border-2 rounded-md overflow-hidden transition-all ${selectedIndex === index
                         ? 'border-primary ring-2 ring-primary'
                         : 'border-transparent hover:border-muted-foreground'
-                    }`}
+                      }`}
                   >
                     <img
                       src={image}
-                      alt={`Thumbnail ${index + 1}`}
+                      alt={`Hình thu nhỏ ${index + 1}`}
                       className='w-20 h-20 object-cover'
                     />
                   </button>
                 ))}
               </div>
               <div className='text-sm text-muted-foreground mt-2 text-center'>
-                {selectedIndex + 1} of {images.length}
+                {selectedIndex + 1} trên {images.length}
               </div>
             </div>
           )}

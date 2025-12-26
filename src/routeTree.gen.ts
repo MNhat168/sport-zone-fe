@@ -33,7 +33,6 @@ import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedRefundManagementIndexRouteImport } from './routes/_authenticated/refund-management/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedFieldOwnersIndexRouteImport } from './routes/_authenticated/field-owners/index'
-import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedBookingsIndexRouteImport } from './routes/_authenticated/bookings/index'
 import { Route as AuthenticatedBillingIndexRouteImport } from './routes/_authenticated/billing/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
@@ -176,11 +175,6 @@ const AuthenticatedFieldOwnersIndexRoute =
     path: '/field-owners/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
-  id: '/chats/',
-  path: '/chats/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedBookingsIndexRoute =
   AuthenticatedBookingsIndexRouteImport.update({
     id: '/bookings/',
@@ -284,7 +278,6 @@ const AuthenticatedCoachesRequestsIdRoute =
 export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
-  '/clerk/': typeof ClerkauthRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/sign-in': typeof authSignInRoute
@@ -311,7 +304,6 @@ export interface FileRoutesByFullPath {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/billing': typeof AuthenticatedBillingIndexRoute
   '/bookings': typeof AuthenticatedBookingsIndexRoute
-  '/chats': typeof AuthenticatedChatsIndexRoute
   '/field-owners': typeof AuthenticatedFieldOwnersIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/refund-management': typeof AuthenticatedRefundManagementIndexRoute
@@ -351,7 +343,6 @@ export interface FileRoutesByTo {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/billing': typeof AuthenticatedBillingIndexRoute
   '/bookings': typeof AuthenticatedBookingsIndexRoute
-  '/chats': typeof AuthenticatedChatsIndexRoute
   '/field-owners': typeof AuthenticatedFieldOwnersIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/refund-management': typeof AuthenticatedRefundManagementIndexRoute
@@ -396,7 +387,6 @@ export interface FileRoutesById {
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/billing/': typeof AuthenticatedBillingIndexRoute
   '/_authenticated/bookings/': typeof AuthenticatedBookingsIndexRoute
-  '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/field-owners/': typeof AuthenticatedFieldOwnersIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/refund-management/': typeof AuthenticatedRefundManagementIndexRoute
@@ -413,7 +403,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/clerk'
     | '/settings'
-    | '/clerk/'
     | '/forgot-password'
     | '/otp'
     | '/sign-in'
@@ -440,7 +429,6 @@ export interface FileRouteTypes {
     | '/apps'
     | '/billing'
     | '/bookings'
-    | '/chats'
     | '/field-owners'
     | '/help-center'
     | '/refund-management'
@@ -480,7 +468,6 @@ export interface FileRouteTypes {
     | '/apps'
     | '/billing'
     | '/bookings'
-    | '/chats'
     | '/field-owners'
     | '/help-center'
     | '/refund-management'
@@ -524,7 +511,6 @@ export interface FileRouteTypes {
     | '/_authenticated/apps/'
     | '/_authenticated/billing/'
     | '/_authenticated/bookings/'
-    | '/_authenticated/chats/'
     | '/_authenticated/field-owners/'
     | '/_authenticated/help-center/'
     | '/_authenticated/refund-management/'
@@ -654,8 +640,8 @@ declare module '@tanstack/react-router' {
     }
     '/clerk/(auth)': {
       id: '/clerk/(auth)'
-      path: '/'
-      fullPath: '/clerk/'
+      path: ''
+      fullPath: '/clerk'
       preLoaderRoute: typeof ClerkauthRouteRouteImport
       parentRoute: typeof ClerkRouteRoute
     }
@@ -720,13 +706,6 @@ declare module '@tanstack/react-router' {
       path: '/field-owners'
       fullPath: '/field-owners'
       preLoaderRoute: typeof AuthenticatedFieldOwnersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/chats/': {
-      id: '/_authenticated/chats/'
-      path: '/chats'
-      fullPath: '/chats'
-      preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bookings/': {
@@ -899,7 +878,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedBillingIndexRoute: typeof AuthenticatedBillingIndexRoute
   AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
-  AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedFieldOwnersIndexRoute: typeof AuthenticatedFieldOwnersIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedRefundManagementIndexRoute: typeof AuthenticatedRefundManagementIndexRoute
@@ -922,7 +900,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedBillingIndexRoute: AuthenticatedBillingIndexRoute,
   AuthenticatedBookingsIndexRoute: AuthenticatedBookingsIndexRoute,
-  AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedFieldOwnersIndexRoute: AuthenticatedFieldOwnersIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedRefundManagementIndexRoute:

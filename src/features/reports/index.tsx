@@ -132,7 +132,7 @@ export function Reports() {
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-start justify-between gap-3'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Reports</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Báo cáo</h2>
             <p className='text-muted-foreground'>
               Theo dõi và xử lý báo cáo do người dùng gửi lên hệ thống.
             </p>
@@ -226,7 +226,7 @@ export function Reports() {
                     }
                   >
                     Xem ảnh báo cáo (
-                      {selectedReport.initialAttachments?.length ?? 0}
+                    {selectedReport.initialAttachments?.length ?? 0}
                     )
                   </Button>
                   <div className='flex items-center gap-2'>
@@ -241,10 +241,10 @@ export function Reports() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value='open'>open</SelectItem>
-                        <SelectItem value='in_review'>in_review</SelectItem>
-                        <SelectItem value='resolved'>resolved</SelectItem>
-                        <SelectItem value='closed'>closed</SelectItem>
+                        <SelectItem value='open'>Mở</SelectItem>
+                        <SelectItem value='in_review'>Đang xem xét</SelectItem>
+                        <SelectItem value='resolved'>Đã xử lý</SelectItem>
+                        <SelectItem value='closed'>Đã đóng</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

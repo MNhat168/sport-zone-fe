@@ -50,9 +50,9 @@ export function FieldOwners() {
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Field Owners</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Chủ sân</h2>
             <p className='text-muted-foreground'>
-              Manage approved field owners and their accounts.
+              Quản lý chủ sân đã được duyệt và tài khoản của họ.
             </p>
           </div>
         </div>

@@ -76,7 +76,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             className='data-[state=open]:bg-muted flex h-8 w-8 p-0'
           >
             <DotsHorizontalIcon className='h-4 w-4' />
-            <span className='sr-only'>Open menu</span>
+            <span className='sr-only'>Mở menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[160px]'>
@@ -85,7 +85,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               onClick={() => setSuspendDialogOpen(true)}
               disabled={suspendLoading}
             >
-              Suspend
+              Tạm ngưng
               <DropdownMenuShortcut>
                 <Ban size={16} />
               </DropdownMenuShortcut>
@@ -95,7 +95,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               onClick={() => setUnsuspendDialogOpen(true)}
               disabled={unsuspendLoading}
             >
-              Unsuspend
+              Gỡ tạm ngưng
               <DropdownMenuShortcut>
                 <CheckCircle2 size={16} />
               </DropdownMenuShortcut>
@@ -108,17 +108,17 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       <AlertDialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Suspend User</AlertDialogTitle>
+            <AlertDialogTitle>Tạm ngưng người dùng</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to suspend {account.email}? This will prevent them from creating or editing listings.
+              Bạn có chắc muốn tạm ngưng {account.email}? Việc này sẽ ngăn họ tạo hoặc chỉnh sửa tin.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor='reason'>Reason (Optional)</Label>
+              <Label htmlFor='reason'>Lý do (không bắt buộc)</Label>
               <Textarea
                 id='reason'
-                placeholder='Enter reason for suspension...'
+                placeholder='Nhập lý do tạm ngưng...'
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
                 rows={3}
@@ -126,13 +126,13 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             </div>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleSuspend}
               disabled={suspendLoading}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              {suspendLoading ? 'Suspending...' : 'Suspend'}
+              {suspendLoading ? 'Đang tạm ngưng...' : 'Tạm ngưng'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -142,18 +142,18 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       <AlertDialog open={unsuspendDialogOpen} onOpenChange={setUnsuspendDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unsuspend User</AlertDialogTitle>
+            <AlertDialogTitle>Gỡ tạm ngưng người dùng</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to unsuspend {account.email}? This will restore their access to create and edit listings.
+              Bạn có chắc muốn gỡ tạm ngưng {account.email}? Việc này sẽ khôi phục quyền tạo và chỉnh sửa tin.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleUnsuspend}
               disabled={unsuspendLoading}
             >
-              {unsuspendLoading ? 'Unsuspending...' : 'Unsuspend'}
+              {unsuspendLoading ? 'Đang gỡ tạm ngưng...' : 'Gỡ tạm ngưng'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

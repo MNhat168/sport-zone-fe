@@ -8,7 +8,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
     id: 'id',
     accessorKey: '_id',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='ID' />
+      <DataTableColumnHeader column={column} title='Mã' />
     ),
     cell: ({ row }) => (
       <div className='font-mono text-xs'>{row.original._id}</div>
@@ -20,7 +20,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Created At' />
+      <DataTableColumnHeader column={column} title='Tạo lúc' />
     ),
     cell: ({ row }) => {
       const v = row.original.createdAt
@@ -32,7 +32,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'date',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Date' />
+      <DataTableColumnHeader column={column} title='Ngày' />
     ),
     cell: ({ row }) => {
       const date = row.original.date
@@ -45,7 +45,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
     id: 'time',
     accessorFn: (row) => `${row.startTime} - ${row.endTime}`,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Time' />
+      <DataTableColumnHeader column={column} title='Giờ' />
     ),
     cell: ({ row }) => {
       const { startTime, endTime } = row.original
@@ -61,7 +61,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
       return field?.name ?? ''
     },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Field' />
+      <DataTableColumnHeader column={column} title='Sân' />
     ),
     cell: ({ row }) => {
       const field = typeof row.original.field === 'string' ? null : row.original.field
@@ -81,17 +81,17 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
     id: 'court',
     accessorFn: (row) => {
       const court = typeof (row as any).court === 'string' ? null : (row as any).court
-      return court?.name ?? (court?.courtNumber ? `Court ${court.courtNumber}` : '')
+      return court?.name ?? (court?.courtNumber ? `Sân ${court.courtNumber}` : '')
     },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Court' />
+      <DataTableColumnHeader column={column} title='Sân (số)' />
     ),
     cell: ({ row }) => {
       const court = typeof (row.original as any).court === 'string' ? null : (row.original as any).court
       if (!court) return <div>—</div>
       return (
         <div className='flex flex-col gap-0.5'>
-          <span className='font-medium'>{court.name ?? (court.courtNumber ? `Court ${court.courtNumber}` : '—')}</span>
+          <span className='font-medium'>{court.name ?? (court.courtNumber ? `Sân ${court.courtNumber}` : '—')}</span>
           {court.courtNumber !== undefined && (
             <span className='text-muted-foreground text-xs'>#{court.courtNumber}</span>
           )}
@@ -105,7 +105,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
     id: 'user',
     accessorFn: (row) => (typeof row.user === 'string' ? row.user : (row.user as any)?.email ?? (row.user as any)?.fullName ?? ''),
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='User' />
+      <DataTableColumnHeader column={column} title='Người dùng' />
     ),
     cell: ({ row }) => {
       const u = row.original.user as any
@@ -128,7 +128,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'type',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Type' />
+      <DataTableColumnHeader column={column} title='Loại' />
     ),
     cell: ({ row }) => {
       const type = row.original.type
@@ -141,7 +141,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title='Trạng thái' />
     ),
     cell: ({ row }) => {
       const status = row.original.status
@@ -154,7 +154,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'paymentStatus',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Payment' />
+      <DataTableColumnHeader column={column} title='Thanh toán' />
     ),
     cell: ({ row }) => {
       const status = row.original.paymentStatus
@@ -168,7 +168,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'approvalStatus',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Approval' />
+      <DataTableColumnHeader column={column} title='Duyệt' />
     ),
     cell: ({ row }) => {
       const status = row.original.approvalStatus
@@ -182,7 +182,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'bookingAmount',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Amount' />
+      <DataTableColumnHeader column={column} title='Số tiền' />
     ),
     cell: ({ row }) => {
       const amount = row.original.bookingAmount
@@ -193,7 +193,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
           <span>{formatAmountVND(total)}</span>
           {platformFee > 0 && (
             <span className='text-muted-foreground text-xs'>
-              (Fee: {formatAmountVND(platformFee)})
+              (Phí: {formatAmountVND(platformFee)})
             </span>
           )}
         </div>
@@ -209,7 +209,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
       return coach?.fullName ?? ''
     },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Coach' />
+      <DataTableColumnHeader column={column} title='Huấn luyện viên' />
     ),
     cell: ({ row }) => {
       const coach = typeof row.original.requestedCoach === 'string' ? null : row.original.requestedCoach
@@ -221,7 +221,7 @@ export const bookingsColumns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'note',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Note' />
+      <DataTableColumnHeader column={column} title='Ghi chú' />
     ),
     cell: ({ row }) => {
       const note = row.original.note

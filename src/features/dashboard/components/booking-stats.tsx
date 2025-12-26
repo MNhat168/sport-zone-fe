@@ -38,7 +38,7 @@ export function BookingStats() {
           onValueChange={(value) => setSelectedYear(parseInt(value, 10))}
         >
           <SelectTrigger className='w-[120px]'>
-            <SelectValue placeholder='Select year' />
+            <SelectValue placeholder='Chọn năm' />
           </SelectTrigger>
           <SelectContent>
             {years.map((year) => (
@@ -56,9 +56,9 @@ export function BookingStats() {
       {/* Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Booking Monthly Stats</CardTitle>
+          <CardTitle>Thống kê đặt sân theo tháng</CardTitle>
           <CardDescription>
-            Field bookings per month in {selectedYear}
+            Lượt đặt sân theo tháng năm {selectedYear}
           </CardDescription>
         </CardHeader>
         <CardContent className='ps-2'>

@@ -50,9 +50,9 @@ export function Bookings() {
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Bookings</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Đặt sân</h2>
             <p className='text-muted-foreground'>
-              Xem và lọc tất cả booking trong hệ thống.
+              Xem và lọc tất cả đơn đặt sân trong hệ thống.
             </p>
           </div>
         </div>

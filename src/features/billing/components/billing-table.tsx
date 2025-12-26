@@ -94,7 +94,7 @@ export function BillingTable({
 
   return (
     <div className='space-y-4'>
-      <DataTableToolbar table={table} />
+      <DataTableToolbar table={table} searchPlaceholder='Lọc tài khoản quá hạn...' />
       <div className='rounded-md border'>
         <Table>
           <TableHeader>
@@ -119,7 +119,7 @@ export function BillingTable({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  Loading overdue accounts...
+                  Đang tải…
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -141,7 +141,7 @@ export function BillingTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center text-muted-foreground'>
-                  No overdue accounts found.
+                  Không có tài khoản quá hạn.
                 </TableCell>
               </TableRow>
             )}

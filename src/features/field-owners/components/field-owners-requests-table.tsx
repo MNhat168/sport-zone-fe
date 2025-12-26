@@ -98,12 +98,12 @@ export function FieldOwnersRequestsTable({
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Filter requests...'
+        searchPlaceholder='Lọc yêu cầu...'
         searchKey='applicantName'
         filters={[
           {
             columnId: 'status',
-            title: 'Status',
+            title: 'Trạng thái',
             options: registrationStatuses.map((status: { label: string; value: string }) => ({
               label: status.label,
               value: status.value,
@@ -130,9 +130,9 @@ export function FieldOwnersRequestsTable({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
@@ -146,7 +146,7 @@ export function FieldOwnersRequestsTable({
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  Loading...
+                  Đang tải...
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -179,7 +179,7 @@ export function FieldOwnersRequestsTable({
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}

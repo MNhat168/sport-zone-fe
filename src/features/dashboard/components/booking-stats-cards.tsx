@@ -8,18 +8,18 @@ import {
 import { useGetBookingMonthlyStatsQuery } from '@/store/services/dashboardApi'
 
 const monthNames = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
+  'Thg 1',
+  'Thg 2',
+  'Thg 3',
+  'Thg 4',
+  'Thg 5',
+  'Thg 6',
+  'Thg 7',
+  'Thg 8',
+  'Thg 9',
+  'Thg 10',
+  'Thg 11',
+  'Thg 12',
 ]
 
 interface BookingStatsCardsProps {
@@ -108,7 +108,7 @@ export function BookingStatsCards({ year }: BookingStatsCardsProps) {
         {[1, 2, 3, 4].map((i) => (
           <Card key={i}>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Loading...</CardTitle>
+              <CardTitle className='text-sm font-medium'>Đang tải...</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold'>-</div>
@@ -124,7 +124,7 @@ export function BookingStatsCards({ year }: BookingStatsCardsProps) {
       <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
           <CardTitle className='text-sm font-medium'>
-            Total Bookings (Year)
+            Tổng số đặt sân (năm)
           </CardTitle>
           <svg
             xmlns='http://www.w3.org/2000/svg'
@@ -143,13 +143,13 @@ export function BookingStatsCards({ year }: BookingStatsCardsProps) {
         <CardContent>
           <div className='text-2xl font-bold'>{stats.totalYear.toLocaleString()}</div>
           <p className='text-muted-foreground text-xs'>
-            Total bookings in {year}
+            Tổng lượt đặt sân năm {year}
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-          <CardTitle className='text-sm font-medium'>Current Month</CardTitle>
+          <CardTitle className='text-sm font-medium'>Tháng hiện tại</CardTitle>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             viewBox='0 0 24 24'
@@ -177,7 +177,7 @@ export function BookingStatsCards({ year }: BookingStatsCardsProps) {
       </Card>
       <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-          <CardTitle className='text-sm font-medium'>Average per Month</CardTitle>
+          <CardTitle className='text-sm font-medium'>Trung bình mỗi tháng</CardTitle>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             viewBox='0 0 24 24'
@@ -197,13 +197,13 @@ export function BookingStatsCards({ year }: BookingStatsCardsProps) {
             {stats.averagePerMonth.toLocaleString()}
           </div>
           <p className='text-muted-foreground text-xs'>
-            Average bookings per month
+            Trung bình lượt đặt sân mỗi tháng
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-          <CardTitle className='text-sm font-medium'>Peak Month</CardTitle>
+          <CardTitle className='text-sm font-medium'>Tháng cao điểm</CardTitle>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             viewBox='0 0 24 24'
