@@ -1,23 +1,14 @@
 import {
-  Construction,
   LayoutDashboard,
   Monitor,
-  Bug,
-  ListTodo,
-  FileX,
   HelpCircle,
-  Lock,
   Bell,
-  Package,
   Palette,
-  ServerOff,
   Settings,
   Wrench,
   UserCog,
-  UserX,
   Users,
   MessagesSquare,
-  ShieldCheck,
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
@@ -26,8 +17,8 @@ import {
   Flag,
   Calendar,
   CreditCard,
+  FileSpreadsheet,
 } from 'lucide-react'
-import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
@@ -91,6 +82,11 @@ export const sidebarData: SidebarData = {
           title: 'Billing',
           url: '/billing',
           icon: CreditCard,
+        },
+        {
+          title: 'Refund Management',
+          url: '/refund-management',
+          icon: FileSpreadsheet,
         },
         {
           title: 'Field Owners',

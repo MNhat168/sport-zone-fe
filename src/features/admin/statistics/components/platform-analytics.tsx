@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp, Users, Star, Target, Award, Brain } from 'lucide-react'
+import { TrendingUp, Users, Award, Brain } from 'lucide-react'
 
 interface PlatformAnalyticsProps {
   data: any

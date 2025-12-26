@@ -36,7 +36,6 @@ export function StatisticsList({
     data, 
     loading, 
     activeTab, 
-    viewMode = 'detailed',
     aiGenerated = false
 }: StatisticsListProps) {
     const [expandedCard, setExpandedCard] = useState<string | null>(null)

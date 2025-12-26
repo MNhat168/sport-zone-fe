@@ -50,7 +50,6 @@ export function BillingTable({
     columnFilters,
     onColumnFiltersChange,
     pagination,
-    onPaginationChange,
     ensurePageInRange,
     globalFilter,
     onGlobalFilterChange,
@@ -149,7 +148,7 @@ export function BillingTable({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} total={total} />
+      <DataTablePagination table={table} />
     </div>
   )
 }

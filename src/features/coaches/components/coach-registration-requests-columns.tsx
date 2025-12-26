@@ -70,7 +70,7 @@ export const coachRegistrationRequestsColumns: ColumnDef<CoachRegistrationReques
                 ))}
             </div>
         ),
-        filterFn: (row, id, value) => {
+        filterFn: (row, _id, value) => {
             const sports = row.original.sports
             return Array.isArray(value) && value.length > 0
                 ? value.some(v => sports.includes(v))
