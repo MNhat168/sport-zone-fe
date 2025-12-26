@@ -7,3 +7,4 @@ export { default as RulesCard } from './RulesCard';
 export { default as AmenitiesCard } from './AmenitiesCard';
 export { default as GalleryCard } from './GalleryCard';
 export { default as LocationCard } from './LocationCard';
+export { default as CourtGridCard } from './CourtGridCard';

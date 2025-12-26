@@ -16,29 +16,13 @@ import { CheckCircle2, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
 import { Loading } from '@/components/ui/loading'
 import { CustomSuccessToast, CustomFailedToast } from '@/components/toast/notificiation-toast'
 
-// QR Code Display component
-const QRCodeDisplay = ({ data }: { data: string }) => {
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data)}`
-
-  return (
-    <img
-      src={qrImageUrl}
-      alt="QR Code"
-      className="w-[300px] h-[300px] object-contain mx-auto"
-      onError={(e) => {
-        // Fallback to Google Charts API
-        (e.target as HTMLImageElement).src = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(data)}`
-      }}
-    />
-  )
-}
+// QR Code Display component removed as requested
 
 interface BankAccountVerificationModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   accountId: string
   verificationUrl?: string
-  qrCodeUrl?: string
 }
 
 export function BankAccountVerificationModal({
@@ -46,7 +30,6 @@ export function BankAccountVerificationModal({
   onOpenChange,
   accountId,
   verificationUrl,
-  qrCodeUrl,
 }: BankAccountVerificationModalProps) {
   const dispatch = useAppDispatch()
   const [status, setStatus] = useState<'pending' | 'verified' | 'failed'>('pending')
@@ -55,14 +38,12 @@ export function BankAccountVerificationModal({
   const [pollingAttempts, setPollingAttempts] = useState(0)
   const maxPollingAttempts = 100 // 5 minutes (100 * 3 seconds)
 
-  const [currentQrCodeUrl, setCurrentQrCodeUrl] = useState(qrCodeUrl)
   const [currentVerificationUrl, setCurrentVerificationUrl] = useState(verificationUrl)
 
   // Reset state when props change
   useEffect(() => {
-    setCurrentQrCodeUrl(qrCodeUrl)
     setCurrentVerificationUrl(verificationUrl)
-  }, [qrCodeUrl, verificationUrl])
+  }, [verificationUrl])
 
   // Start polling when modal opens
   useEffect(() => {
@@ -90,7 +71,6 @@ export function BankAccountVerificationModal({
         setPollingAttempts(attempts)
         setStatus(result.status)
 
-        if (result.qrCodeUrl) setCurrentQrCodeUrl(result.qrCodeUrl)
         if (result.verificationUrl) setCurrentVerificationUrl(result.verificationUrl)
 
         const noLongerNeedsVerification = result.needsVerification === false
@@ -172,23 +152,6 @@ export function BankAccountVerificationModal({
             )}
           </div>
 
-          {/* QR Code */}
-          {status === 'pending' && (currentQrCodeUrl || currentVerificationUrl) && (
-            <div className="flex justify-center">
-              <div className="bg-white p-4 rounded-lg border-4 border-green-500 shadow-xl">
-                {currentQrCodeUrl ? (
-                  <img
-                    src={currentQrCodeUrl}
-                    alt="QR Code"
-                    className="w-[300px] h-[300px] object-contain"
-                  />
-                ) : (
-                  <QRCodeDisplay data={currentVerificationUrl || ''} />
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Success Icon */}
           {status === 'verified' && (
             <div className="flex justify-center">
@@ -200,29 +163,39 @@ export function BankAccountVerificationModal({
 
           {/* Instructions */}
           {status === 'pending' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">Hướng dẫn thanh toán:</h4>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
-                <li>Mở ứng dụng Banking trên điện thoại</li>
-                <li>Chọn chức năng "Quét mã QR" hoặc "Chuyển khoản"</li>
-                <li>Quét mã QR bên trên hoặc nhập số tài khoản</li>
-                <li>Chuyển 10,000 VND để xác thực</li>
-                <li>Hệ thống sẽ tự động xác thực sau khi nhận được thanh toán</li>
-              </ol>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
+              <h4 className="font-semibold text-blue-900 mb-3">Hướng dẫn thanh toán:</h4>
+              <ul className="space-y-3 text-sm text-blue-800">
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                  <span>Nhấn vào nút <strong>"Thanh toán ngay"</strong> bên dưới để mở trang thanh toán PayOS.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                  <span>Thực hiện thanh toán <strong>10,000 VND</strong> theo hướng dẫn của PayOS (Quét mã QR hoặc chuyển khoản).</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                  <span>Sau khi thanh toán thành công, quay lại trang này. Hệ thống sẽ tự động cập nhật trạng thái trong giây lát.</span>
+                </li>
+              </ul>
             </div>
           )}
 
           {/* Payment URL Link */}
           {status === 'pending' && currentVerificationUrl && (
-            <div className="flex justify-center">
+            <div className="flex justify-center flex-col gap-3">
               <Button
-                variant="outline"
+                size="lg"
                 onClick={handleOpenPaymentUrl}
-                className="w-full"
+                className="w-full bg-green-600 hover:bg-green-700 h-12 text-base font-semibold shadow-md"
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Mở link thanh toán
+                <ExternalLink className="w-5 h-5 mr-2" />
+                Thanh toán ngay
               </Button>
+              <p className="text-center text-xs text-muted-foreground italic">
+                (Link sẽ được mở trong tab mới)
+              </p>
             </div>
           )}
 

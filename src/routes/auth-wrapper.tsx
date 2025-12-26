@@ -23,32 +23,11 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
     console.log('AuthWrapper - User:', user);
     console.log('AuthWrapper - isAuthenticated:', isAuthenticated);
 
-    // Auto-redirect logic sau khi login thành công (chỉ từ trang auth/login)
-    if (isAuthenticated && (location.pathname === '/auth')) {
-      console.log('AuthWrapper - Redirecting from auth page for role:', user.role);
-      
-      // Check for redirect URL from booking page (stored in localStorage)
-      try {
-        const redirectUrl = localStorage.getItem('bookingRedirectUrl');
-        if (redirectUrl && (redirectUrl.includes('/field-booking') || redirectUrl.includes('/fields'))) {
-          console.log('AuthWrapper - Found booking redirect URL, redirecting to:', redirectUrl);
-          localStorage.removeItem('bookingRedirectUrl');
-          navigate(redirectUrl, { replace: true });
-          return;
-        }
-      } catch (error) {
-        console.warn('AuthWrapper - Failed to check redirect URL:', error);
-      }
-      
-      // Default redirect based on user role
-      if (user.role === "field_owner") {
-        navigate("/field-owner-dashboard", { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
-      return; // Ngừng thực hiện logic khác
-    }
-
+    // Note: Redirect logic chính được xử lý trong authentication-page.tsx với window.location.href
+    // Không cần redirect ở đây nữa để tránh double redirect
+    // Chỉ giữ logic này cho các trường hợp edge case (nếu user đã authenticated nhưng vẫn ở /auth)
+    // Nhưng không redirect tự động để tránh conflict với login redirect
+    
     // KHÔNG redirect nếu đang ở public routes
     // Sử dụng utility function từ routes-config.tsx để tránh duplicate code
     if (isPublicRoute(location.pathname)) {

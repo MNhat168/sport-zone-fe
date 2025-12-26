@@ -5,18 +5,19 @@ import { Loading } from "@/components/ui/loading"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
 import { getFieldById } from "@/features/field/fieldThunk"
+import { clearCurrentField } from "@/features/field/fieldSlice"
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
 import { FieldSelectionPlaceholder } from "./components/field-selection-placeholder"
 import { ChevronLeft, ChevronRight, MapPin, Edit } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { QuickNavPills } from "@/pages/field-detail-page/components/QuickNavPills"
-import { OverviewCard } from "@/pages/field-detail-page/components/OverviewCard"
-import { RulesCard } from "@/pages/field-detail-page/components/RulesCard"
-import { AmenitiesCard } from "@/pages/field-detail-page/components/AmenitiesCard"
-import { GalleryCard } from "@/pages/field-detail-page/components/GalleryCard"
-import { RatingCard } from "@/pages/field-detail-page/components/RatingCard"
-import { LocationCard } from "@/pages/field-detail-page/components/LocationCard"
+import { QuickNavPills } from "./components/QuickNavPills"
+import { OverviewCard } from "./components/OverviewCard"
+import { RulesCard } from "./components/RulesCard"
+import { AmenitiesCard } from "./components/AmenitiesCard"
+import { GalleryCard } from "./components/GalleryCard"
+import { RatingCard } from "./components/RatingCard"
+import { LocationCard } from "./components/LocationCard"
 import { getSportDisplayNameVN } from "@/components/enums/ENUMS"
 
 const mockDescription = "Sân cầu lông hiện đại với 4 sân tiêu chuẩn, máy đánh bóng tự động, tiện ích đầy đủ. Phù hợp tập luyện và thi đấu."
@@ -36,12 +37,33 @@ export default function FieldViewPage() {
     const dispatch = useAppDispatch()
 
     const { currentField, loading } = useAppSelector((s) => s.field)
+    const previousFieldIdRef = useRef<string | undefined>(undefined)
 
+    // Clear currentField and fetch new field when fieldId changes
     useEffect(() => {
-        if (fieldId && (!currentField || currentField.id !== fieldId)) {
-            dispatch(getFieldById(fieldId))
+        if (!fieldId) {
+            previousFieldIdRef.current = undefined
+            return
         }
-    }, [fieldId, currentField, dispatch])
+
+        // If fieldId changed, clear previous field data and fetch new one
+        if (previousFieldIdRef.current !== fieldId) {
+            // Clear previous field data immediately when fieldId changes
+            // This prevents showing old field data while new field is loading
+            dispatch(clearCurrentField())
+            
+            // Fetch the new field
+            dispatch(getFieldById(fieldId))
+            previousFieldIdRef.current = fieldId
+        } else {
+            // FieldId hasn't changed, but verify currentField matches
+            // Only fetch if currentField is missing or doesn't match
+            const currentFieldId = currentField?.id
+            if (!currentFieldId || currentFieldId !== fieldId) {
+                dispatch(getFieldById(fieldId))
+            }
+        }
+    }, [fieldId, dispatch, currentField?.id])
 
     const overviewRef = useRef<HTMLDivElement | null>(null)
     const rulesRef = useRef<HTMLDivElement | null>(null)
@@ -213,12 +235,14 @@ export default function FieldViewPage() {
         return () => clearTimeout(timer)
     }, [currentIndex, isTransitioning, displayImages.length])
 
-    const itemsPerView = 5
+    const itemsPerView = 4
     const gapPx = 12
     const itemWidthPx = viewportWidth > 0 ? Math.floor((viewportWidth - gapPx * (itemsPerView - 1)) / itemsPerView) : 0
     const translateXPx = -(currentIndex * (itemWidthPx + gapPx))
 
-    if (loading) {
+    // Show loading state while fetching field data
+    // This handles both initial load and navigation between fields
+    if (loading || (fieldId && !currentField)) {
         return (
             <FieldOwnerDashboardLayout>
                 <div className="flex items-center justify-center min-h-screen">
@@ -231,7 +255,18 @@ export default function FieldViewPage() {
         )
     }
 
-    if (!currentField && !loading) {
+    // If no fieldId in URL, show placeholder
+    if (!fieldId) {
+        return (
+            <FieldOwnerDashboardLayout>
+                <FieldSelectionPlaceholder />
+            </FieldOwnerDashboardLayout>
+        )
+    }
+
+    // Show placeholder if fieldId exists but no field data after loading completes
+    // This handles error cases where field couldn't be loaded
+    if (!currentField) {
         return (
             <FieldOwnerDashboardLayout>
                 <FieldSelectionPlaceholder />
@@ -241,14 +276,14 @@ export default function FieldViewPage() {
 
     return (
         <FieldOwnerDashboardLayout>
-            <div className="min-h-screen bg-white">
-                <div className="p-6">
+            <div key={fieldId} className="min-h-screen bg-white">
+                <div className="p-4">
 
                     {/* Image Carousel */}
                     {extendedImages.length > 0 && (
                         <div
                             ref={viewportRef}
-                            className="relative w-full h-56 md:h-72 lg:h-80 mb-6 overflow-hidden select-none rounded-lg"
+                            className="relative w-full h-40 md:h-48 lg:h-56 mb-4 overflow-hidden select-none rounded-lg"
                         >
                             <div
                                 ref={carouselRef}
@@ -293,7 +328,7 @@ export default function FieldViewPage() {
                     )}
 
                     {/* Header Section */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
                                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -337,7 +372,7 @@ export default function FieldViewPage() {
                     </div>
 
                     {/* Content Section */}
-                    <div className="bg-[#FAFAFA] rounded-lg p-6">
+                    <div className="bg-[#FAFAFA] rounded-lg p-4">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2 space-y-4">
                                 <QuickNavPills
@@ -412,7 +447,7 @@ export default function FieldViewPage() {
                                         <CardContent className="space-y-4">
                                             <div>
                                                 <p className="text-xs text-gray-500 mb-1">Giá cơ bản</p>
-                                                <p className="text-3xl font-bold text-green-600">
+                                                <p className="text-2xl font-bold text-green-600">
                                                     {currentField?.price ||
                                                         (currentField?.basePrice ? `${currentField.basePrice.toLocaleString()}đ/h` : "Liên hệ")}
                                                 </p>

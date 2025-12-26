@@ -38,7 +38,8 @@ export const NavbarDarkComponent = () => {
         await new Promise(resolve => setTimeout(resolve, 800));
         clearUserAuth();
         dispatch(logout());
-        navigate("/");
+        // Force reload to ensure clean state - 1 refresh
+        window.location.href = "/";
     };
 
     const linkClass = "text-base font-medium text-gray-900 hover:text-green-600";

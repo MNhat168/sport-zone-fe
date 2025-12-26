@@ -368,7 +368,6 @@ export function BankAccountManagement() {
           }}
           accountId={verificationAccount.id}
           verificationUrl={verificationAccount.verificationUrl}
-          qrCodeUrl={verificationAccount.verificationQrCode}
         />
       )}
     </div>

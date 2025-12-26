@@ -280,8 +280,9 @@ export default function FieldCreatePage() {
                 operatingHours: filteredOperatingHours,
                 priceRanges: filteredPriceRanges,
                 amenities: amenitiesForAPI,
-                numberOfCourts: formData.numberOfCourts ?? 1,
+                numberOfCourts: (formData.numberOfCourts === '' || formData.numberOfCourts === undefined) ? 1 : Number(formData.numberOfCourts),
                 rules: rules.filter(r => r.trim() !== '')
+
             };
 
             // Debug: log payload prior to submit

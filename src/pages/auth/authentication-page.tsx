@@ -110,6 +110,7 @@ export default function AuthenticationPage() {
   };
 
   // Helper function to handle redirect after successful login
+  // Use window.location.href to ensure 1 clean refresh after login
   const handleRedirectAfterLogin = (user: any) => {
     const redirectUrl = getRedirectUrl();
 
@@ -118,11 +119,11 @@ export default function AuthenticationPage() {
 
     // If we have a redirect URL and it's a valid booking page, redirect there
     if (redirectUrl && (redirectUrl.includes('/field-booking') || redirectUrl.includes('/fields'))) {
-      navigate(redirectUrl, { replace: true });
+      window.location.href = redirectUrl;
       return;
     }
 
-    // Otherwise, use default redirect logic
+    // Otherwise, use default redirect logic - use window.location.href for 1 clean refresh
     if (user.role === "field_owner") {
       window.location.href = "/field-owner-dashboard";
     } else if (user.role === "coach") {

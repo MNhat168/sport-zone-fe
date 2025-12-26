@@ -5,6 +5,7 @@ import type {
     FieldAvailabilityResponse,
     CreateFieldPayload,
     UpdateFieldPayload,
+    UpdateFieldWithImagesPayload,
     GetFieldsParams,
     GetMyFieldsParams,
     CheckAvailabilityParams,
@@ -28,6 +29,7 @@ import {
     CREATE_FIELD_API,
     CREATE_FIELD_WITH_IMAGES_API,
     UPDATE_FIELD_API,
+    UPDATE_FIELD_WITH_IMAGES_API,
     DELETE_FIELD_API,
     SCHEDULE_PRICE_UPDATE_API,
     CANCEL_SCHEDULED_PRICE_UPDATE_API,
@@ -567,6 +569,128 @@ export const updateField = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to update field",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Update field with images (Owner only)
+export const updateFieldWithImages = createAsyncThunk<
+    FieldResponse,
+    { id: string; payload: UpdateFieldWithImagesPayload },
+    { rejectValue: ErrorResponse }
+>("field/updateFieldWithImages", async ({ id, payload }, thunkAPI) => {
+    try {
+        const formData = new FormData();
+
+        console.log("🚀 [FIELD THUNK] Starting updateFieldWithImages:", {
+            fieldId: id,
+            avatarIncluded: !!payload.avatar,
+            galleryCount: payload.gallery?.length || 0,
+            keptImagesCount: payload.keptImages?.length || 0,
+            timestamp: new Date().toISOString()
+        });
+
+        // Add basic field data if present
+        if (payload.name) formData.append("name", payload.name);
+        if (payload.sportType) formData.append("sportType", payload.sportType);
+        if (payload.description) formData.append("description", payload.description);
+        if (payload.basePrice !== undefined) formData.append("basePrice", payload.basePrice.toString());
+        if (payload.isActive !== undefined) formData.append("isActive", String(payload.isActive));
+        if (payload.slotDuration) formData.append("slotDuration", payload.slotDuration.toString());
+        if (payload.minSlots) formData.append("minSlots", payload.minSlots.toString());
+        if (payload.maxSlots) formData.append("maxSlots", payload.maxSlots.toString());
+
+        // Complex fields
+        if (payload.location) {
+            let locationObject;
+            if (typeof payload.location === 'object' && payload.location && 'geo' in payload.location) {
+                locationObject = payload.location;
+            } else if (typeof payload.location === 'string') {
+                locationObject = {
+                    address: payload.location,
+                    geo: { type: "Point", coordinates: [0, 0] }
+                };
+            } else {
+                locationObject = payload.location;
+            }
+            if (locationObject) formData.append("location", JSON.stringify(locationObject));
+        }
+
+        if (payload.operatingHours) {
+            const oh = payload.operatingHours.map(o => ({
+                ...o,
+                duration: o.duration.toString()
+            }));
+            formData.append("operatingHours", JSON.stringify(oh));
+        }
+
+        if (payload.priceRanges) {
+            const pr = payload.priceRanges.map(p => ({
+                ...p,
+                multiplier: p.multiplier.toString()
+            }));
+            formData.append("priceRanges", JSON.stringify(pr));
+        }
+
+        if (payload.amenities) {
+            const am = payload.amenities.map(a => ({
+                ...a,
+                price: a.price.toString()
+            }));
+            formData.append("amenities", JSON.stringify(am));
+        }
+
+        // Handle Images
+        if (payload.keptImages && payload.keptImages.length > 0) {
+            formData.append("keptImages", JSON.stringify(payload.keptImages));
+        }
+
+        if (payload.avatar) {
+            formData.append("avatar", payload.avatar);
+        }
+
+        if (payload.gallery && payload.gallery.length > 0) {
+            payload.gallery.forEach((image) => {
+                formData.append("gallery", image);
+            });
+        }
+
+        // Add courts to delete
+        if (payload.courtsToDelete && payload.courtsToDelete.length > 0) {
+            formData.append("courtsToDelete", JSON.stringify(payload.courtsToDelete));
+            console.log("🗑️ [FIELD THUNK] Courts to delete:", payload.courtsToDelete);
+        }
+
+        // Add number of courts if specified
+        if (payload.numberOfCourts !== undefined) {
+            formData.append("numberOfCourts", payload.numberOfCourts.toString());
+            console.log("🏟️ [FIELD THUNK] Number of courts:", payload.numberOfCourts);
+        }
+
+
+        console.log("🚀 [FIELD THUNK] Sending request to:", UPDATE_FIELD_WITH_IMAGES_API(id));
+        const response = await axiosPrivate.put(UPDATE_FIELD_WITH_IMAGES_API(id), formData);
+
+        console.log("✅ [FIELD THUNK] Update field with images response:", response.data);
+
+        const raw = response.data;
+        const apiField = raw?.data ?? raw;
+        const mapped = mapApiFieldToAppField(apiField);
+        return { success: true, data: mapped, message: raw?.message } as unknown as FieldResponse;
+
+    } catch (error: any) {
+        console.error("❌ [FIELD THUNK] Error updating field with images:", {
+            error: error.message,
+            status: error.response?.status,
+            responseData: error.response?.data,
+            timestamp: new Date().toISOString()
+        });
+
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to update field with images",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };
