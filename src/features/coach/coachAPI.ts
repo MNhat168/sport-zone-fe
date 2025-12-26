@@ -4,6 +4,7 @@ import { BASE_URL } from "../../utils/constant-value/constant";
 export const COACHES_API = `${BASE_URL}/coaches`;
 export const COACH_BY_ID_API = (id: string) => `${BASE_URL}/coaches/${id}`;
 export const ALL_COACHES_API = `${BASE_URL}/coaches/all`;
+export const COACHES_PUBLIC_API = `${BASE_URL}/coaches/public`;
 // Resolve coach profile by user id
 export const COACH_ID_BY_USER_ID_API = (userId: string) => `${BASE_URL}/profiles/coach-id/${userId}`;
 // Get coach bank account

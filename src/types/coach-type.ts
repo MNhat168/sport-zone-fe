@@ -42,6 +42,25 @@ export interface LegacyCoach {
     nextAvailability: null; // TODO: Will be implemented
 }
 
+// Public coach shape returned by GET /coaches/public
+export interface PublicCoach {
+    id: string;
+    name: string;
+    location: string;
+    description?: string;
+    rating?: number;
+    totalReviews?: number;
+    price?: number;
+    rank?: string;
+    sports?: SportType[];
+}
+
+export interface PublicCoachesResponse {
+    success: boolean;
+    data: PublicCoach[];
+    message?: string;
+}
+
 // Location data structure with geo coordinates
 export interface LocationData {
     address?: string;

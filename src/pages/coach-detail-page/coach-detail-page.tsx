@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { User, Users } from "lucide-react";
 import L from "leaflet";
-import { getCoachById, clearCurrentCoach } from "@/features/coach";
+import { getCoachById, clearCurrentCoach, getPublicCoaches } from "@/features/coach";
 import { setFavouriteCoaches, removeFavouriteCoaches, getUserProfile } from "@/features/user";
 import { createCoachReviewThunk, getCoachStatsThunk } from "@/features/reviews/reviewThunk";
 import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
@@ -422,8 +422,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
   const similarCoaches = [
     {
+      id: 'sample-kevin',
       name: "Kevin Anderson",
-      sport: "Tennis Coach",
+      sport: "basketball,badminton",
       location: "Los Angeles, CA",
       rating: 4.9,
       reviews: 89,
@@ -435,8 +436,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       color: "bg-pink-100",
     },
     {
+      id: 'sample-angela',
       name: "Angela Rodriguez",
-      sport: "Basketball Coach",
+      sport: "basketball,badminton",
       location: "Chicago, IL",
       rating: 4.8,
       reviews: 124,
@@ -448,8 +450,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       color: "bg-orange-100",
     },
     {
+      id: 'sample-evan',
       name: "Evan Roddick",
-      sport: "Soccer Coach",
+      sport: "basketball,badminton",
       location: "Miami, FL",
       rating: 4.7,
       reviews: 67,
@@ -461,6 +464,48 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       color: "bg-blue-100",
     },
   ];
+
+  const [similarCoachesState, setSimilarCoachesState] = useState<any[]>([]);
+
+  // Fetch public coaches similar to this coach (by sports) and map to UI shape
+  useEffect(() => {
+    let mounted = true;
+    const fetchSimilar = async () => {
+      try {
+        const sports = Array.isArray(currentCoach?.sports) ? (currentCoach!.sports as string[]) : [];
+        const action: any = await dispatch(getPublicCoaches({ sports }));
+        if (action?.meta?.requestStatus === "fulfilled") {
+          const items = action.payload?.data ?? [];
+          const mapped = (items as any[])
+            .filter((c) => (c?.id || "") !== (currentCoach?.id || ""))
+            .slice(0, 6)
+            .map((c) => ({
+              id: c.id || c._id || "",
+              name: c.name || c.fullName || "HLV",
+              sport: Array.isArray(c.sports) && c.sports.length ? (c.sports as string[]).join(',') : (c.sport || "Coach"),
+              location: c.location || "",
+              rating: Number(c.rating ?? 0),
+              reviews: Number(c.totalReviews ?? 0),
+              sessions: Number(c.completedSessions ?? 0),
+              availability: c.nextAvailability ?? "",
+              price: Number(c.price ?? c.hourlyRate ?? 0),
+              image: c.avatarUrl || c.profileImage || `/placeholder.svg?height=400&width=320&query=${encodeURIComponent(Array.isArray(c.sports) && c.sports[0] ? c.sports[0] : 'coach')}`,
+              featured: (String(c.rank || c.level || '').toLowerCase() === 'professional') || Number(c.rating ?? 0) >= 4.8,
+              color: 'bg-green-100',
+            }));
+
+          if (mounted) setSimilarCoachesState(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to fetch similar coaches', err);
+      }
+    };
+
+    if (currentCoach) fetchSimilar();
+    return () => { mounted = false; };
+  }, [currentCoach?.id, dispatch]);
+
+  
 
   // Trạng thái tải dữ liệu HLV
   if (detailLoading) {
@@ -597,9 +642,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
-        <SimilarCoachesSection coaches={similarCoaches} />
+          <SimilarCoachesSection coaches={similarCoachesState.length ? similarCoachesState : similarCoaches} />
 
         {/* Modals */}
         <LessonDetailModal
