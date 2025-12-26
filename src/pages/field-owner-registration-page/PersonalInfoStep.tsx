@@ -8,7 +8,6 @@ import { createEkycSession } from "@/features/field-owner-registration/registrat
 import { useEkycPolling } from "@/hooks/useEkycPolling"
 import { CustomFailedToast, CustomSuccessToast } from "@/components/toast/notificiation-toast"
 import type { CreateRegistrationRequestPayload } from "@/features/field-owner-registration"
-
 interface PersonalInfoStepProps {
   formData: Partial<CreateRegistrationRequestPayload>
   onFormDataChange: (data: Partial<CreateRegistrationRequestPayload>) => void
@@ -307,7 +306,13 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
           </div>
         </div>
       </div>
-
+      <div className="space-y-2">
+        <div className="inline-block rounded-md bg-green-100 px-3 py-1">
+          <p className="text-sm font-medium text-green-700">
+            Bạn sẽ có 3 ngày dùng các chức năng của website miễn phí.
+          </p>
+        </div>
+      </div>
       <div className="space-y-2">
         <Label className="text-sm font-medium">
           Họ tên đầy đủ
