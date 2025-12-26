@@ -300,7 +300,7 @@ const FieldCoachBookingPage = () => {
                 endTime: bookingData.field.endTime,
                 selectedAmenities: bookingData.field.amenityIds,
                 coachId: bookingData.coach.coachId,
-                paymentMethod: 8, // 8: Bank Transfer
+                paymentMethod: 11, // 11: PayOS (Fixed for combined bookings)
                 note: bookingData.coach.note || '',
                 paymentNote: 'Đặt Combo Sân + HLV',
                 guestName: formData.name || '',

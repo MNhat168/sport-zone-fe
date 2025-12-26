@@ -71,7 +71,7 @@ export interface Booking {
     startTime: string; // HH:mm
     endTime: string; // HH:mm
     numSlots?: number;
-    type: 'field' | 'coach';
+    type: 'field' | 'coach' | 'field_coach';
     coachStatus?: CoachStatus;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     // New price structure
@@ -116,7 +116,7 @@ export interface GetCoachScheduleParams {
 
 export interface GetMyBookingsParams {
     status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-    type?: 'field' | 'coach';
+    type?: 'field' | 'coach' | 'field_coach';
     page?: number;
     limit?: number;
 }
