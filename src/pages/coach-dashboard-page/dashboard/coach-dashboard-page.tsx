@@ -184,34 +184,6 @@ export default function CoachDashboardPage() {
       setStatsLoading(false)
     }
   }
-  const handleCompleteBooking = async (bookingId: string) => {
-    if (!coachId) return
-    await axiosPublic.patch(
-      `/bookings/coach/${coachId}/${bookingId}/complete`
-    )
-    setBookingRequests((prev) =>
-      prev.map((b) =>
-        normalizeId(b._id) === bookingId
-          ? { ...b, status: "completed" }
-          : b
-      )
-    )
-  }
-
-
-  const handleCancelBooking = async (bookingId: string) => {
-    if (!coachId) return
-    await axiosPublic.patch(
-      `/bookings/coach/${coachId}/${bookingId}/cancel`
-    )
-    setBookingRequests((prev) =>
-      prev.map((b) =>
-        normalizeId(b._id) === bookingId
-          ? { ...b, coachStatus: "declined" }
-          : b
-      )
-    )
-  }
 
   const handleConfirm = async (
     bookingId: string,

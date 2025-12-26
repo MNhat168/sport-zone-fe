@@ -1,12 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
 import {
-    ADD_BANK_ACCOUNT_API,
-    GET_MY_BANK_ACCOUNTS_API,
-    UPDATE_BANK_ACCOUNT_API,
-    DELETE_BANK_ACCOUNT_API,
-    SET_DEFAULT_BANK_ACCOUNT_API,
-    GET_VERIFICATION_STATUS_API,
+
     getBankAccountBasePath,
     getBankAccountListPath,
 } from "./bankAccountAPI";
@@ -87,7 +82,7 @@ export const addBankAccount = createAsyncThunk<
         // Get user role from Redux state
         const state = thunkAPI.getState() as any;
         const userRole = state?.auth?.user?.role;
-        
+
         // Use appropriate API endpoint based on role
         const apiUrl = getBankAccountBasePath(userRole);
         const response = await axiosPrivate.post(apiUrl, payload);
@@ -114,7 +109,7 @@ export const getMyBankAccounts = createAsyncThunk<
         // Get user role from Redux state
         const state = thunkAPI.getState() as any;
         const userRole = state?.auth?.user?.role;
-        
+
         // Use appropriate API endpoint based on role
         const apiUrl = getBankAccountListPath(userRole);
         const response = await axiosPrivate.get(apiUrl);

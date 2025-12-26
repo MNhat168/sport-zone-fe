@@ -1,5 +1,5 @@
 // File: src/pages/tournaments/MyTournaments.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loading } from '@/components/ui/loading';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -141,25 +141,10 @@ const MyTournaments = () => {
 
         <div className="container mx-auto px-12 py-8">
           {loading ? (
-            <div className="container mx-auto px-4 py-8">
-              <Skeleton className="h-8 w-48 mb-6" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => (
-                  <Card key={i}>
-                    <CardHeader>
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-1/2 mt-2" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-4 w-full mb-2" />
-                      <Skeleton className="h-4 w-full mb-2" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </CardContent>
-                    <CardFooter>
-                      <Skeleton className="h-10 w-full" />
-                    </CardFooter>
-                  </Card>
-                ))}
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loading size={48} className="text-green-600 mx-auto mb-4" />
+                <p className="text-muted-foreground">Đang tải danh sách giải đấu...</p>
               </div>
             </div>
           ) : (

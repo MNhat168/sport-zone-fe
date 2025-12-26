@@ -12,6 +12,8 @@ import {
   MY_TOURNAMENTS_API,
   MY_PARTICIPATIONS_API,
   UPDATE_TOURNAMENT_API,
+  AVAILABLE_COURTS_API, // Added
+  buildAvailableCourtsQuery, // Added
 } from './tournamentAPI';
 import {
   setLoading,
@@ -27,7 +29,7 @@ import {
   setTournamentRequests,
   type Tournament,
 } from './tournamentSlice';
-import { BASE_URL } from '@/utils/constant-value/constant';
+
 
 
 
@@ -494,10 +496,3 @@ export const getCancellationFee = createAsyncThunk(
   }
 );
 
-// Add API endpoint
-export const AVAILABLE_COURTS_API = `${BASE_URL}/tournaments/available-courts`;
-
-export const buildAvailableCourtsQuery = (params: { sportType: string; location: string; date: string }) => {
-  const queryParams = new URLSearchParams(params);
-  return queryParams.toString();
-};

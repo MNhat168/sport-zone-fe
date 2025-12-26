@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 
@@ -24,9 +24,7 @@ interface CoachingSectionProps {
 }
 
 export function CoachingSection({
-  coachingSummary,
   isEditMode,
-  onCoachingSummaryChange,
   certification,
   experienceText,
   onCertificationChange,
@@ -146,7 +144,7 @@ export function CoachingSection({
                           type="checkbox"
                           value={s}
                           checked={checked}
-                          onChange={(e) => {
+                          onChange={() => {
                             const next = checked ? localSports.filter(x => x !== s) : [...localSports, s];
                             setLocalSports(next);
                             if (typeof onSportsChange === 'function') onSportsChange(next);

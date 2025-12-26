@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
+import { lazy } from "react";
 import { type RouteObject } from "react-router-dom";
 import ProtectedRoute, { UnauthorizedPage, UserRole } from "./protected-routes-config";
 
 // ===== PAGE IMPORTS =====
-// Auth & Landing Pages
+// Critical Pages - Keep Static (needed immediately on app load)
 import AuthenticationPage from "../pages/auth/authentication-page";
 import VerifyTokenPage from "../pages/auth/verify-token-page";
 import ForgotPasswordPage from "../pages/auth/forgot-password-page";
@@ -11,75 +12,72 @@ import ResetPasswordPage from "../pages/auth/reset-password-page";
 import LandingPage from "../pages/landing/landing-page";
 import AboutPage from "../pages/about/about-page";
 
+// ===== LAZY-LOADED PAGES =====
 // User Pages
-import UserDashboardPage from "../pages/user-dashboard-page/user-dashboard-page";
-import UserBookingHistoryPage from "../pages/user-dashboard-page/user-booking-history-page";
-import UserInvoicesPage from "../pages/user-dashboard-page/user-invoices-page";
-import MyTournaments from "../pages/user-dashboard-page/user-tournamets.tsx";
-import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
-import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
+const UserDashboardPage = lazy(() => import("../pages/user-dashboard-page/user-dashboard-page"));
+const UserBookingHistoryPage = lazy(() => import("../pages/user-dashboard-page/user-booking-history-page"));
+const UserInvoicesPage = lazy(() => import("../pages/user-dashboard-page/user-invoices-page"));
+const MyTournaments = lazy(() => import("../pages/user-dashboard-page/user-tournamets.tsx"));
+const UserWalletPage = lazy(() => import("../pages/user-dashboard-page/user-wallet-page"));
+const UserProfilePage = lazy(() => import("../pages/user-dashboard-page/user-profile-page"));
 
 // Coach Pages
-// Coach dashboard pages
-import CoachDashboardPage from "../pages/coach-dashboard-page/dashboard/coach-dashboard-page.tsx";
-import CoachSchedulePage from "../pages/coach-dashboard-page/schedule/coach-schedule-page.tsx";
-import CoachWalletPage from "../pages/coach-dashboard-page/wallet/coach-wallet-page.tsx";
-import CoachVerifyPaymentsPage from "../pages/coach-dashboard-page/verify-payments/verify-payments-page.tsx";
-import CoachBookingsPage from "../pages/coach-dashboard-page/bookings/coach-bookings-page.tsx";
-// Coach profile self-page for coaches only
-import CoachSelfDetailPage from "../pages/coach-dashboard-page/coach-self-detail-page/coach-profile-page";
-// Coach profile settings page
-import CoachProfileSettingsPage from "../pages/coach-dashboard-page/profile/coach-profile-page";
+const CoachDashboardPage = lazy(() => import("../pages/coach-dashboard-page/dashboard/coach-dashboard-page.tsx"));
+const CoachSchedulePage = lazy(() => import("../pages/coach-dashboard-page/schedule/coach-schedule-page.tsx"));
+const CoachWalletPage = lazy(() => import("../pages/coach-dashboard-page/wallet/coach-wallet-page.tsx"));
+const CoachVerifyPaymentsPage = lazy(() => import("../pages/coach-dashboard-page/verify-payments/verify-payments-page.tsx"));
+const CoachBookingsPage = lazy(() => import("../pages/coach-dashboard-page/bookings/coach-bookings-page.tsx"));
+const CoachSelfDetailPage = lazy(() => import("../pages/coach-dashboard-page/coach-self-detail-page/coach-profile-page"));
+const CoachProfileSettingsPage = lazy(() => import("../pages/coach-dashboard-page/profile/coach-profile-page"));
+const CoachLessonsPage = lazy(() => import("../pages/coach-dashboard-page/coach-lessons/coach-lessons-page"));
+const CoachChatPage = lazy(() => import("../pages/coach-dashboard-page/chat/CoachChatPage"));
 
-// Coach lessons page
-import CoachLessonsPage from "../pages/coach-dashboard-page/coach-lessons/coach-lessons-page";
-
-import BookingPage from "../pages/coach-list-page/booking-page.tsx";
-import CoachBookingPage from "../pages/coach-booking-page/coach-booking-page.tsx";
-import CoachDetailPage from "../pages/coach-detail-page/coach-detail-page";
+// Coach Discovery Pages
+const BookingPage = lazy(() => import("../pages/coach-list-page/booking-page.tsx"));
+const CoachBookingPage = lazy(() => import("../pages/coach-booking-page/coach-booking-page.tsx"));
+const CoachDetailPage = lazy(() => import("../pages/coach-detail-page/coach-detail-page"));
 
 // Field Pages
-import FieldBookingPage from "../pages/field-list-page/list-page";
-import FieldBookingFlowPage from "../pages/field-booking-page/field-booking-page";
-import FieldCoachBookingPage from "../pages/field-coach-booking-page/field-coach-booking-page";
-import FieldCreatePage from "../pages/field-owner-dashboard-page/create/field-create-page";
-import FieldDetailPage from "../pages/field-detail-page/field-detail-page";
+const FieldBookingPage = lazy(() => import("../pages/field-list-page/list-page"));
+const FieldBookingFlowPage = lazy(() => import("../pages/field-booking-page/field-booking-page"));
+const FieldCoachBookingPage = lazy(() => import("../pages/field-coach-booking-page/field-coach-booking-page"));
+const FieldCreatePage = lazy(() => import("../pages/field-owner-dashboard-page/create/field-create-page"));
+const FieldDetailPage = lazy(() => import("../pages/field-detail-page/field-detail-page"));
 
-// Payment Pages (only VNPay related pages)
-import VNPayReturnPage from "../pages/transactions/vnpay-return-page.tsx";
-import VNPayQRPage from "../pages/transactions/vnpay-qr-page.tsx";
-import PayOSReturnPage from "../pages/transactions/payos-return-page.tsx";
-import PayOSCancelPage from "../pages/transactions/payos-cancel-page.tsx";
+// Payment Pages
+const VNPayReturnPage = lazy(() => import("../pages/transactions/vnpay-return-page.tsx"));
+const VNPayQRPage = lazy(() => import("../pages/transactions/vnpay-qr-page.tsx"));
+const PayOSReturnPage = lazy(() => import("../pages/transactions/payos-return-page.tsx"));
+const PayOSCancelPage = lazy(() => import("../pages/transactions/payos-cancel-page.tsx"));
 
 // Field Owner Pages
-import OwnerFieldListPage from "../pages/field-owner-dashboard-page/fields/owner-field-list-page";
-import FieldOwnerDashboardPage from "../pages/field-owner-dashboard-page/dashboard/field-owner-dashboard-page";
-import FieldOwnerWalletPage from "../pages/field-owner-dashboard-page/wallet/field-owner-wallet-page";
-import FieldHistoryBookingPage from "../pages/field-owner-dashboard-page/booking-list/field-booking-list-page.tsx";
-import FieldOwnerAnalyticsPage from "../pages/field-owner-dashboard-page/analytics/field-owner-analytics-page";
-import FieldOwnerRevenuePage from "../pages/field-owner-dashboard-page/revenue/field-owner-revenue-page";
-import FieldOwnerProfilePage from "../pages/field-owner-dashboard-page/profile/field-owner-profile-page";
-import FieldEditPage from "../pages/field-owner-dashboard-page/fields/field-edit-page";
-import FieldViewPage from "../pages/field-owner-dashboard-page/fields/field-view-page";
-import TournamentRequestsPage from "../pages/field-owner-dashboard-page/tournament-requests/tournament-requests-page";
+const OwnerFieldListPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/owner-field-list-page"));
+const FieldOwnerDashboardPage = lazy(() => import("../pages/field-owner-dashboard-page/dashboard/field-owner-dashboard-page"));
+const FieldOwnerWalletPage = lazy(() => import("../pages/field-owner-dashboard-page/wallet/field-owner-wallet-page"));
+const FieldHistoryBookingPage = lazy(() => import("../pages/field-owner-dashboard-page/booking-list/field-booking-list-page.tsx"));
+const FieldOwnerAnalyticsPage = lazy(() => import("../pages/field-owner-dashboard-page/analytics/field-owner-analytics-page"));
+const FieldOwnerRevenuePage = lazy(() => import("../pages/field-owner-dashboard-page/revenue/field-owner-revenue-page"));
+const FieldOwnerProfilePage = lazy(() => import("../pages/field-owner-dashboard-page/profile/field-owner-profile-page"));
+const FieldEditPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/field-edit-page"));
+const FieldViewPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/field-view-page"));
+const TournamentRequestsPage = lazy(() => import("../pages/field-owner-dashboard-page/tournament-requests/tournament-requests-page"));
+const FieldOwnerChatDashboard = lazy(() => import("@/pages/field-owner-dashboard-page/chat/FieldOwnerChatPage.tsx"));
 
 // Field Owner Registration Pages
-import FieldOwnerRegistrationPage from "../pages/field-owner-registration-page/field-owner-registration-page";
-import FieldOwnerRegistrationStatusPage from "../pages/field-owner-registration-status-page/field-owner-registration-status-page";
-import EkycCallbackPage from "../pages/field-owner-registration-page/EkycCallbackPage";
+const FieldOwnerRegistrationPage = lazy(() => import("../pages/field-owner-registration-page/field-owner-registration-page"));
+const FieldOwnerRegistrationStatusPage = lazy(() => import("../pages/field-owner-registration-status-page/field-owner-registration-status-page"));
+const EkycCallbackPage = lazy(() => import("../pages/field-owner-registration-page/EkycCallbackPage"));
 
 // Coach Registration Pages
-import CoachRegistrationPage from "../pages/coach-registration-page/coach-registration-page";
-import CoachRegistrationStatusPage from "../pages/coach-registration-status-page/coach-registration-status-page";
+const CoachRegistrationPage = lazy(() => import("../pages/coach-registration-page/coach-registration-page"));
+const CoachRegistrationStatusPage = lazy(() => import("../pages/coach-registration-status-page/coach-registration-status-page"));
 
-//Notification
-import NotificationsPage from "../pages/notifications/page";
-import TournamentListPage from "@/pages/list-tournament/TournamentListPage.tsx";
-import CreateTournamentPage from "@/pages/create-tournament/CreateTournamentPage.tsx";
-import TournamentDetailPage from "@/pages/tournament-detail-page/tournament-detail-page.tsx";
-import MyReportsPage from "../pages/my-reports-page/my-reports-page";
-import FieldOwnerChatDashboard from "@/pages/field-owner-dashboard-page/chat/FieldOwnerChatPage.tsx";
-import CoachChatPage from "../pages/coach-dashboard-page/chat/CoachChatPage";
+// Other Pages
+const NotificationsPage = lazy(() => import("../pages/notifications/page"));
+const TournamentListPage = lazy(() => import("@/pages/list-tournament/TournamentListPage.tsx"));
+const CreateTournamentPage = lazy(() => import("@/pages/create-tournament/CreateTournamentPage.tsx"));
+const TournamentDetailPage = lazy(() => import("@/pages/tournament-detail-page/tournament-detail-page.tsx"));
+const MyReportsPage = lazy(() => import("../pages/my-reports-page/my-reports-page"));
 
 /**
  * Placeholder component for pages under development

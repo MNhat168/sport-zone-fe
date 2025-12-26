@@ -635,7 +635,10 @@ export default function FieldEditPage() {
 
                     {/* Venue Rules Section */}
                     <div id="section-rules">
-                        <RulesCard />
+                        <RulesCard
+                            rules={formData.rules || []}
+                            onRulesChange={(newRules) => handleInputChange('rules', newRules)}
+                        />
                     </div>
 
                     {/* Amenities Section */}

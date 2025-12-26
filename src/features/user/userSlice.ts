@@ -3,7 +3,6 @@ import {
     getUserProfile,
     updateUserProfile,
     setFavouriteSports,
-    setFavouriteCoaches,
     removeFavouriteCoaches,
     setFavouriteFields,
     removeFavouriteFields,
@@ -11,8 +10,6 @@ import {
     getFavouriteFields,
     getFavouriteCoaches,
     forgotPassword,
-    resetPassword,
-    changePassword,
 } from "./userThunk";
 import type { User, ErrorResponse } from "../../types/user-type";
 
@@ -99,14 +96,14 @@ const userSlice = createSlice({
             state.user = action.payload;
         });
 
-            // Remove All Favourite Sports
-            builder.addCase(removeAllFavouriteSports.fulfilled, (state, action) => {
-                state.user = action.payload;
-            });
+        // Remove All Favourite Sports
+        builder.addCase(removeAllFavouriteSports.fulfilled, (state, action) => {
+            state.user = action.payload;
+        });
 
         // Get favourite fields
         builder
-            .addCase(getFavouriteFields.pending, (state) => {
+            .addCase(getFavouriteFields.pending, () => {
                 // no-op or set a loading flag if desired
             })
             .addCase(getFavouriteFields.fulfilled, (state, action) => {
@@ -118,7 +115,7 @@ const userSlice = createSlice({
 
         // Get favourite coaches
         builder
-            .addCase(getFavouriteCoaches.pending, (state) => {
+            .addCase(getFavouriteCoaches.pending, () => {
                 // no-op or set loading
             })
             .addCase(getFavouriteCoaches.fulfilled, (state, action) => {

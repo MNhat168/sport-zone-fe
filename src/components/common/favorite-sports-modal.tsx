@@ -100,7 +100,7 @@ export function FavoriteSportsModal({
   const [selectedSports, setSelectedSports] = useState<string[]>(() => initialSelected ?? []);
   const dispatch = useAppDispatch();
   const [clearing, setClearing] = useState(false);
-  const [saving, setSaving] = useState(false);
+
 
   // When opened, initialize selection from initialSelected
   useEffect(() => {
@@ -117,7 +117,7 @@ export function FavoriteSportsModal({
 
   const handleRemoveSport = async (sportId: string) => {
     try {
-      setSaving(true);
+
       await dispatch(removeFavouriteSport(sportId) as any).unwrap();
       // refresh profile
       await dispatch(getUserProfile() as any).unwrap();
@@ -128,7 +128,7 @@ export function FavoriteSportsModal({
       const message = e?.message || e?.response?.data?.message || 'Failed to remove favourite sport';
       toast.error(message);
     } finally {
-      setSaving(false);
+
     }
   };
 
@@ -138,10 +138,7 @@ export function FavoriteSportsModal({
     onClose();
   };
 
-  const handleCancel = () => {
-    setSelectedSports([]);
-    onClose();
-  };
+
 
   const handleClear = () => {
     // Clear local selection first for immediate feedback
@@ -156,7 +153,7 @@ export function FavoriteSportsModal({
         await dispatch(getUserProfile() as any).unwrap();
         toast.success("Favourite sports cleared");
         // Notify parent that clear completed so it can turn off favorite filter
-        try { onClear && onClear(); } catch {}
+        try { onClear && onClear(); } catch { }
       } catch (e: any) {
         console.error("Failed to clear favourite sports on server", e);
         const message = e?.message || e?.response?.data?.message || "Failed to clear favourite sports";
@@ -203,10 +200,9 @@ export function FavoriteSportsModal({
                     group relative overflow-hidden rounded-lg p-3
                     transition-all duration-300 ease-out
                     border-2 
-                    ${
-                      isSelected
-                        ? "border-primary bg-primary/5 shadow-md scale-105"
-                        : "border-border bg-card hover:border-primary/50 hover:shadow-sm hover:scale-102"
+                    ${isSelected
+                      ? "border-primary bg-primary/5 shadow-md scale-105"
+                      : "border-border bg-card hover:border-primary/50 hover:shadow-sm hover:scale-102"
                     }
                   `}
                 >
@@ -214,20 +210,18 @@ export function FavoriteSportsModal({
                     <div
                       className={`
                       p-2 rounded-full transition-all duration-300
-                      ${
-                        isSelected
+                      ${isSelected
                           ? `bg-gradient-to-br ${sport.color}`
                           : "bg-muted group-hover:bg-gradient-to-br group-hover:" +
-                            sport.color
-                      }
+                          sport.color
+                        }
                     `}
                     >
                       <Icon
-                        className={`w-5 h-5 transition-colors duration-300 ${
-                          isSelected
-                            ? "text-white"
-                            : "text-muted-foreground group-hover:text-white"
-                        }`}
+                        className={`w-5 h-5 transition-colors duration-300 ${isSelected
+                          ? "text-white"
+                          : "text-muted-foreground group-hover:text-white"
+                          }`}
                       />
                     </div>
                     <span
@@ -279,7 +273,7 @@ export function FavoriteSportsModal({
               size="sm"
               disabled={selectedSports.length === 0}
             >
-                Xóa tất cả {clearing ? "..." : ""}
+              Xóa tất cả {clearing ? "..." : ""}
             </Button>
 
             <Button

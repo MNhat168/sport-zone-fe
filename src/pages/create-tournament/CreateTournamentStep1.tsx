@@ -18,10 +18,9 @@ import {
 } from "../../../src/components/enums/ENUMS"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format, addDays, differenceInDays, isBefore, isAfter, addWeeks, startOfDay, subDays } from "date-fns"
+import { format, addDays, differenceInDays, isBefore, isAfter, addWeeks, startOfDay } from "date-fns"
 import { vi } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import { Separator } from "@/components/ui/separator"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
@@ -344,7 +343,7 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext }: St
   // Unified Clock Layout Component
   const UnifiedClockLayout = () => {
     const hourValues = Array.from({ length: 12 }, (_, i) => i) // 0-11 for AM
-    const hourLabels = ["12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+
 
     const minuteValues = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
     const minuteLabels = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]

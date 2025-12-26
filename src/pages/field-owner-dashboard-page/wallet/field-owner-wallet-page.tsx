@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Loading } from "@/components/ui/loading"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   WalletSummaryCard,
@@ -108,9 +108,8 @@ export default function FieldOwnerWalletPage() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   {loading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-40" />
-                      <Skeleton className="h-4 w-20" />
+                    <div className="flex items-center justify-center py-4">
+                      <Loading size={24} className="text-green-600" />
                     </div>
                   ) : (
                     <>

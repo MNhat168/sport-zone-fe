@@ -5,7 +5,6 @@ import {
     MessageSquare,
     Wallet,
     LayoutDashboard,
-    MapPin,
     UserCheck,
     DollarSign,
     User,
