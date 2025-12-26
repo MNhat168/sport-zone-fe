@@ -44,6 +44,10 @@ export interface ChatRoom {
   lastMessageBy?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  // Additional fields for floating widget
+  actorType?: 'field' | 'coach';
+  actorName?: string;
+  actorId?: string;
 }
 
 export interface StartChatPayload {
@@ -67,6 +71,9 @@ export interface ChatState {
   unreadCount: number;
   connected: boolean;
   typingUsers: Record<string, boolean>;
+  // Widget state
+  widgetOpen: boolean;
+  widgetView: 'list' | 'chat';
 }
 
 export interface SocketMessageEvent {

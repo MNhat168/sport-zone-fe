@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
+import { Loading } from "@/components/ui/loading";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
 import { getCoachChatRooms, getChatRoom, markAsRead } from "@/features/chat/chatThunk";
 import { setCurrentRoom } from "@/features/chat/chatSlice";
@@ -165,7 +166,10 @@ const CoachChatPage: React.FC = () => {
 
                         <ScrollArea className="h-[600px]">
                             {loading ? (
-                                <div className="p-8 text-center text-gray-500">Đang tải...</div>
+                                <div className="flex flex-col items-center justify-center p-12 gap-2">
+                                    <Loading size={32} className="text-blue-500" />
+                                    <div className="text-gray-500 text-sm">Đang tải...</div>
+                                </div>
                             ) : filteredRooms.length === 0 ? (
                                 <div className="p-8 text-center">
                                     <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />

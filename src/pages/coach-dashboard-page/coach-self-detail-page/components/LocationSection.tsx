@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +122,7 @@ export function LocationSection({
                 className="px-4"
               >
                 {isSearching ? (
-                  <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                  <Loading size={16} />
                 ) : (
                   <Search className="w-4 h-4" />
                 )}

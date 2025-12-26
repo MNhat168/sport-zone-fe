@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Star, DollarSign, Search, ChevronLeft, ChevronRight, Trophy, Filter, X, Calendar } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { VIETNAM_CITIES, SPORT_TYPE_OPTIONS, PRICE_SORT_OPTIONS, RATING_OPTIONS, WEEKDAY_OPTIONS, AMENITY_OPTIONS } from "@/utils/constant-value/constant";
 
 interface FieldListSelectionProps {
@@ -385,7 +386,7 @@ export const FieldListSelection = ({ onSelect }: FieldListSelectionProps) => {
                         {loading ? (
                             <div className="flex items-center justify-center py-20">
                                 <div className="text-center">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+                                    <Loading size={48} className="mx-auto mb-4" />
                                     <p className="text-muted-foreground">
                                         Đang tải danh sách sân...
                                     </p>

@@ -8,6 +8,7 @@ import { FooterComponent } from "../../components/footer/footer-component"
 import { useGeolocation } from "../../hooks/useGeolocation"
 import { Navigation, MapPin, AlertCircle, Filter } from "lucide-react"
 import { PageWrapper } from "../../components/layouts/page-wrapper"
+import { Loading } from "@/components/ui/loading"
 import { useAppDispatch, useAppSelector } from "../../store/hook"
 import { getCoaches } from "../../features/coach/coachThunk"
 import type { Coach } from "../../types/coach-type"
@@ -296,7 +297,7 @@ const BookingPage = () => {
                                             >
                                                 {geolocationLoading ? (
                                                     <>
-                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                        <Loading size={16} className="mr-2" />
                                                         Đang lấy vị trí...
                                                     </>
                                                 ) : (
@@ -338,7 +339,12 @@ const BookingPage = () => {
                                 }}
                             >
                                 <div className="space-y-4">
-                                    {coachesLoading && <div>Đang tải danh sách huấn luyện viên...</div>}
+                                    {coachesLoading && (
+                                        <div className="flex flex-col items-center justify-center p-12 gap-4 border-2 border-dashed border-gray-200 rounded-xl">
+                                            <Loading size={40} className="text-green-600" />
+                                            <div className="text-gray-500 font-medium">Đang tải danh sách huấn luyện viên...</div>
+                                        </div>
+                                    )}
                                     {coachesError && <div className="text-red-500">{coachesError.message || 'Lỗi khi lấy danh sách huấn luyện viên'}</div>}
                                     {!coachesLoading && !coachesError && coaches.length === 0 && (
                                         <div>Không có huấn luyện viên nào.</div>

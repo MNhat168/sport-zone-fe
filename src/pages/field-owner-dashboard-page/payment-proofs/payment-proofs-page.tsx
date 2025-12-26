@@ -5,7 +5,8 @@ import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dash
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, CheckCircle, XCircle, Eye } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { formatCurrency } from "@/utils/format-currency";
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -137,8 +138,8 @@ export default function PaymentProofsPage() {
                 {loading ? (
                     <Card>
                         <CardContent className="p-12 text-center">
-                            <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-                            <p className="mt-4 text-gray-600">Đang tải danh sách...</p>
+                            <Loading size={32} className="mx-auto mb-4" />
+                            <p className="text-gray-600">Đang tải danh sách...</p>
                         </CardContent>
                     </Card>
                 ) : error ? (
@@ -226,7 +227,7 @@ export default function PaymentProofsPage() {
                                             </div>
                                             {booking.transaction?.paymentProofStatus === 'pending' && (
                                                 <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg">
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <Loading size={16} />
                                                     <span className="text-sm font-medium">Đang xác minh...</span>
                                                 </div>
                                             )}

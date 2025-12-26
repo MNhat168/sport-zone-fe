@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -108,13 +109,13 @@ export default function CoachLessonsPage() {
 
   const uiFields = (fieldsFromStore.length > 0
     ? fieldsFromStore.map((f: any) => ({
-        id: f.id,
-        name: f.name,
-        location: typeof f.location === 'string' ? f.location : (f.location?.address ?? ""),
-        price: f.price || formatPrice(f.basePrice),
-        avatar: Array.isArray(f.images) && f.images.length > 0 ? f.images[0] : undefined,
-        sportType: f.sportType || "",
-      }))
+      id: f.id,
+      name: f.name,
+      location: typeof f.location === 'string' ? f.location : (f.location?.address ?? ""),
+      price: f.price || formatPrice(f.basePrice),
+      avatar: Array.isArray(f.images) && f.images.length > 0 ? f.images[0] : undefined,
+      sportType: f.sportType || "",
+    }))
     : mockFields) as any[];
 
   const filteredFields = uiFields.filter((field) => {
@@ -145,9 +146,7 @@ export default function CoachLessonsPage() {
     setStep(1);
   };
 
-  const handleCreateLesson = () => {
-    // placeholder — replaced by async handler below
-  };
+
 
   const [creating, setCreating] = useState(false);
 
@@ -201,14 +200,12 @@ export default function CoachLessonsPage() {
           {/* Progress indicator */}
           <div className="mb-8 flex items-center gap-2">
             <div
-              className={`flex-1 h-2 rounded-full ${
-                step >= 1 ? "bg-green-600" : "bg-gray-200"
-              }`}
+              className={`flex-1 h-2 rounded-full ${step >= 1 ? "bg-green-600" : "bg-gray-200"
+                }`}
             />
             <div
-              className={`flex-1 h-2 rounded-full ${
-                step >= 2 ? "bg-green-600" : "bg-gray-200"
-              }`}
+              className={`flex-1 h-2 rounded-full ${step >= 2 ? "bg-green-600" : "bg-gray-200"
+                }`}
             />
           </div>
 
@@ -228,17 +225,16 @@ export default function CoachLessonsPage() {
                       <button
                         key={type}
                         onClick={() => setLessonType(type)}
-                        className={`p-4 rounded-lg border-2 transition-all font-semibold capitalize ${
-                          lessonType === type
-                            ? "border-green-600 bg-green-50 text-green-700"
-                            : "border-gray-200 hover:border-green-300"
-                        }`}
+                        className={`p-4 rounded-lg border-2 transition-all font-semibold capitalize ${lessonType === type
+                          ? "border-green-600 bg-green-50 text-green-700"
+                          : "border-gray-200 hover:border-green-300"
+                          }`}
                       >
                         {type === "single"
                           ? "Cá nhân"
                           : type === "pair"
-                          ? "Cặp đôi"
-                          : "Nhóm"}
+                            ? "Cặp đôi"
+                            : "Nhóm"}
                       </button>
                     ))}
                   </div>
@@ -406,7 +402,12 @@ export default function CoachLessonsPage() {
                   </div>
 
                   <div className="space-y-3">
-                    {filteredFields.length === 0 ? (
+                    {fieldState.loading ? (
+                      <div className="flex flex-col items-center justify-center py-12 gap-3">
+                        <Loading size={40} className="text-green-600" />
+                        <p className="text-gray-500 text-sm">Đang tải danh sách sân...</p>
+                      </div>
+                    ) : filteredFields.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <p>Không tìm thấy sân phù hợp với bộ lọc</p>
                       </div>
@@ -414,11 +415,10 @@ export default function CoachLessonsPage() {
                       filteredFields.map((field) => (
                         <div
                           key={field.id}
-                          className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                            selectedFields.includes(field.id)
-                              ? "border-green-600 bg-green-50"
-                              : "border-gray-200 hover:border-green-300"
-                          }`}
+                          className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer ${selectedFields.includes(field.id)
+                            ? "border-green-600 bg-green-50"
+                            : "border-gray-200 hover:border-green-300"
+                            }`}
                           onClick={() => handleFieldToggle(field.id)}
                         >
                           <Checkbox
@@ -479,8 +479,9 @@ export default function CoachLessonsPage() {
                     <Button
                       onClick={handleCreateLessonAsync}
                       disabled={creating || selectedFields.length === 0}
-                      className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg font-semibold"
+                      className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg font-semibold gap-2"
                     >
+                      {creating && <Loading size={20} />}
                       {creating ? "Đang tạo..." : "Tạo Buổi Học"}
                     </Button>
                   </div>

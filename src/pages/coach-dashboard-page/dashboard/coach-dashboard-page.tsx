@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout"
 import { useState, useEffect } from "react"
+import { Loading } from "@/components/ui/loading"
 import { useSelector, useDispatch } from "react-redux"
 import type { Booking } from "@/types/booking-type"
 import axiosPublic from "@/utils/axios/axiosPublic"
@@ -188,7 +189,9 @@ export default function CoachDashboardPage() {
     return (
       <CoachDashboardLayout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin h-12 w-12 border-b-2 border-green-600 rounded-full" />
+          <div className="flex-1 flex items-center justify-center p-12">
+            <Loading size={48} className="text-green-600" />
+          </div>
         </div>
       </CoachDashboardLayout>
     )

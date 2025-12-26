@@ -6,26 +6,25 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   QrCode,
-  Loader2,
   CheckCircle2,
   XCircle,
   Clock,
   Smartphone,
   AlertCircle,
-  RefreshCw,
   ArrowLeft,
   Shield,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import axiosPublic from '@/utils/axios/axiosPublic';
 
 // Simple QR Code Display using external API
 const QRCodeDisplay = ({ data }: { data: string }) => {
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data)}`;
-  
+
   return (
-    <img 
-      src={qrImageUrl} 
-      alt="QR Code" 
+    <img
+      src={qrImageUrl}
+      alt="QR Code"
       className="w-[300px] h-[300px] object-contain"
       onError={(e) => {
         // Fallback to Google Charts API
@@ -69,12 +68,12 @@ export default function VNPayQRPage() {
 
   // Try to get data from location state first
   const locationState = (location.state as LocationState) || {};
-  
+
   // Also try to get from URL params as fallback
   const searchParams = new URLSearchParams(location.search);
   const urlPaymentId = searchParams.get('paymentId');
   const urlBookingId = searchParams.get('bookingId');
-  
+
   // Use location state if available, otherwise try URL params
   const [paymentState, setPaymentState] = useState<LocationState>({
     paymentId: locationState.paymentId || urlPaymentId || '',
@@ -130,19 +129,19 @@ export default function VNPayQRPage() {
         console.log('[QR Payment] Payment succeeded!');
         setStatus('success');
         stopPolling();
-        
+
         setTimeout(() => {
           navigate('/user-booking-history', {
-            state: { 
+            state: {
               message: 'Thanh toán thành công!',
-              bookingId: bookingId 
+              bookingId: bookingId
             }
           });
         }, 2000);
       } else if (data.status === 'failed') {
         console.log('[QR Payment] Payment failed');
         stopPolling();
-        
+
         // Show error state instead of navigating
         setError('Thanh toán QR thất bại. Vui lòng thử lại.');
         setStatus('error');
@@ -165,36 +164,36 @@ export default function VNPayQRPage() {
   // Fetch payment info from backend if missing
   const fetchPaymentInfo = useCallback(async (bookingIdOrPaymentId: string) => {
     if (isFetchingPaymentInfo) return;
-    
+
     setIsFetchingPaymentInfo(true);
     try {
       console.log('[VNPay QR] Fetching payment info for:', bookingIdOrPaymentId);
-      
+
       // Try to get transaction by booking ID first
       const response = await axiosPublic.get(`/transactions/booking/${bookingIdOrPaymentId}`);
       const payment = response.data?.data || response.data;
-      
+
       if (payment) {
         console.log('[VNPay QR] ✅ Payment info fetched:', {
           paymentId: payment._id || payment.id,
           bookingId: payment.booking || bookingIdOrPaymentId,
           amount: payment.amount,
         });
-        
+
         setPaymentState({
           paymentId: payment._id || payment.id || payment.paymentId,
           bookingId: payment.booking || bookingIdOrPaymentId,
           amount: payment.amount || 0,
           bookingData: paymentState.bookingData,
         });
-        
+
         return {
           paymentId: payment._id || payment.id || payment.paymentId,
           bookingId: payment.booking || bookingIdOrPaymentId,
           amount: payment.amount || 0,
         };
       }
-      
+
       return null;
     } catch (err: any) {
       console.error('[VNPay QR] Failed to fetch payment info:', err);
@@ -202,7 +201,7 @@ export default function VNPayQRPage() {
       try {
         const response = await axiosPublic.get(`/transactions/${bookingIdOrPaymentId}`);
         const payment = response.data?.data || response.data;
-        
+
         if (payment) {
           setPaymentState({
             paymentId: payment._id || payment.id || bookingIdOrPaymentId,
@@ -210,7 +209,7 @@ export default function VNPayQRPage() {
             amount: payment.amount || 0,
             bookingData: paymentState.bookingData,
           });
-          
+
           return {
             paymentId: payment._id || payment.id || bookingIdOrPaymentId,
             bookingId: payment.booking || '',
@@ -220,7 +219,7 @@ export default function VNPayQRPage() {
       } catch (err2) {
         console.error('[VNPay QR] Failed to fetch by payment ID:', err2);
       }
-      
+
       return null;
     } finally {
       setIsFetchingPaymentInfo(false);
@@ -236,18 +235,18 @@ export default function VNPayQRPage() {
     if (!finalPaymentId || !finalAmount) {
       console.log('[VNPay QR] ⚠️ Missing payment info, attempting to fetch...');
       console.log('[VNPay QR] Current state:', { paymentId, bookingId, amount });
-      
+
       // Try bookingId first, then paymentId
       const idToFetch = finalBookingId || finalPaymentId;
-      
+
       if (idToFetch) {
         const paymentInfo = await fetchPaymentInfo(idToFetch);
-        
+
         if (paymentInfo) {
           finalPaymentId = paymentInfo.paymentId;
           finalAmount = paymentInfo.amount;
           finalBookingId = paymentInfo.bookingId;
-          
+
           console.log('[VNPay QR] ✅ Payment info loaded:', { finalPaymentId, finalAmount, finalBookingId });
         } else {
           console.error('[VNPay QR] ❌ Could not fetch payment info');
@@ -266,7 +265,7 @@ export default function VNPayQRPage() {
     try {
       setStatus('loading');
       console.log('[VNPay QR] Creating QR code with:', { paymentId: finalPaymentId, amount: finalAmount });
-      
+
       const response = await axiosPublic.post<QRCodeData>('/transactions/create-vnpay-qr', {
         paymentId: finalPaymentId,
         amount: finalAmount,
@@ -275,10 +274,10 @@ export default function VNPayQRPage() {
       const data = response.data;
       setQrCodeUrl(data.qrCodeUrl);
       setRemainingTime(data.expiresIn);
-      
+
       setStatus('ready');
       startPolling();
-      
+
     } catch (err: any) {
       console.error('[VNPay QR] Failed to create QR code:', err);
       setError(err.response?.data?.message || 'Không thể tạo mã QR. Vui lòng thử lại.');
@@ -300,7 +299,7 @@ export default function VNPayQRPage() {
         setRemainingTime((prev) => prev + 300);
         setExtensionCount((prev) => prev + 1);
         setShowTimeoutWarning(false);
-        
+
         console.log('[QR Payment] Time extended successfully');
       }
     } catch (err: any) {
@@ -322,12 +321,12 @@ export default function VNPayQRPage() {
           stopPolling();
           return 0;
         }
-        
+
         // Show warning when 2 minutes (120 seconds) or less remaining
         if (prev <= 120 && !showTimeoutWarning) {
           setShowTimeoutWarning(true);
         }
-        
+
         return prev - 1;
       });
     }, 1000);
@@ -366,7 +365,7 @@ export default function VNPayQRPage() {
         console.error('[QR Payment] Failed to cancel payment:', err);
       }
     }
-    
+
     stopPolling();
     navigate(-1);
   };
@@ -384,7 +383,7 @@ export default function VNPayQRPage() {
       case 'loading':
         return (
           <div className="text-center py-12">
-            <Loader2 className="h-16 w-16 text-green-600 mx-auto mb-4 animate-spin" />
+            <Loading size={64} className="mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Đang tạo mã QR...</h3>
             <p className="text-gray-600">Vui lòng đợi trong giây lát</p>
           </div>
@@ -399,7 +398,7 @@ export default function VNPayQRPage() {
                 <QRCodeDisplay data={qrCodeUrl} />
                 {status === 'scanning' && (
                   <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center rounded-lg">
-                    <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
+                    <Loading size={48} />
                   </div>
                 )}
               </div>
@@ -451,7 +450,7 @@ export default function VNPayQRPage() {
                     >
                       {isExtending ? (
                         <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          <Loading size={16} className="mr-2" />
                           Đang gia hạn...
                         </>
                       ) : (
@@ -471,8 +470,8 @@ export default function VNPayQRPage() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-red-600" />
                 <p className="text-sm text-red-800">
-                  {remainingTime < 30 
-                    ? '🚨 Mã QR sắp hết hạn trong vài giây! Vui lòng hoàn tất thanh toán ngay!' 
+                  {remainingTime < 30
+                    ? '🚨 Mã QR sắp hết hạn trong vài giây! Vui lòng hoàn tất thanh toán ngay!'
                     : 'Mã QR sắp hết hạn. Vui lòng hoàn tất thanh toán ngay!'}
                 </p>
               </div>
@@ -485,7 +484,11 @@ export default function VNPayQRPage() {
                 className="flex-1"
                 disabled={status === 'scanning'}
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${status === 'scanning' ? 'animate-spin' : ''}`} />
+                {status === 'scanning' ? (
+                  <Loading size={16} className="mr-2" />
+                ) : (
+                  <Loading size={16} className="mr-2" /> // Standardized even if not rotating
+                )}
                 Kiểm tra thanh toán
               </Button>
               <Button variant="outline" onClick={handleCancel} className="flex-1">
@@ -523,9 +526,9 @@ export default function VNPayQRPage() {
             </p>
             <Button
               onClick={() => navigate('/user-booking-history', {
-                state: { 
+                state: {
                   message: 'Thanh toán thành công!',
-                  bookingId: bookingId 
+                  bookingId: bookingId
                 }
               })}
               className="bg-green-600 hover:bg-green-700 text-white"
@@ -546,7 +549,7 @@ export default function VNPayQRPage() {
               Thời gian thanh toán đã hết. Vui lòng tạo mã QR mới.
             </p>
             <Button onClick={handleRetry} className="bg-orange-600 hover:bg-orange-700">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <Loading size={16} className="mr-2" />
               Tạo mã QR mới
             </Button>
           </div>
@@ -560,7 +563,7 @@ export default function VNPayQRPage() {
             <p className="text-gray-600 mb-6">{error || 'Không thể tạo mã QR'}</p>
             <div className="flex gap-3 justify-center">
               <Button onClick={handleRetry} variant="default">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <Loading size={16} className="mr-2" />
                 Thử lại
               </Button>
               <Button onClick={handleCancel} variant="outline">

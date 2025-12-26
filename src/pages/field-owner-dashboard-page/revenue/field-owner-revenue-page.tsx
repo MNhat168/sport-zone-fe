@@ -8,11 +8,11 @@ import {
     Calendar,
     Download,
     Filter,
-    Loader2,
     ChevronLeft,
     ChevronRight,
     MoreHorizontal
 } from "lucide-react"
+import { Loading } from "@/components/ui/loading"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
 import { useMemo, useState, useEffect } from "react"
 import { getMyFieldsBookings } from "@/features/field/fieldThunk"
@@ -272,9 +272,9 @@ export default function FieldOwnerRevenuePage() {
 
                 {/* Loading State */}
                 {fieldOwnerBookingsLoading && (
-                    <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-                        <span className="ml-2 text-gray-600">Đang tải dữ liệu doanh thu...</span>
+                    <div className="flex items-center justify-center py-12 text-green-600">
+                        <Loading size={32} className="mr-2" />
+                        <span className="text-gray-600">Đang tải dữ liệu doanh thu...</span>
                     </div>
                 )}
 

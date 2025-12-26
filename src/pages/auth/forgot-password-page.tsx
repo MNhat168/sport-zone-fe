@@ -5,6 +5,7 @@ import { forgotPassword } from "../../features/authentication/authThunk";
 import { Mail, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import { CustomFailedToast, CustomSuccessToast } from "../../components/toast/notificiation-toast";
+import { Loading } from "@/components/ui/loading";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -137,7 +138,7 @@ export default function ForgotPasswordPage() {
                                 className="w-full bg-green-700 hover:bg-green-600 text-white py-4 px-6 rounded-xl text-base font-medium focus:ring-4 focus:ring-green-200 transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {forgotPasswordLoading ? (
-                                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                                    <Loading size={20} className="border-white" />
                                 ) : (
                                     <>
                                         <span>Gửi yêu cầu</span>

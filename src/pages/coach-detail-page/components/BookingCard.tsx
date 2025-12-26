@@ -28,7 +28,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           <p className="text-sm text-muted-foreground mb-2">Giá từ</p>
           <div className="flex items-baseline justify-center gap-1">
             <span className="text-4xl font-bold text-green-600">
-              ${coachData?.price ?? "-"}
+              {coachData?.price 
+                ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(coachData.price)
+                : "-"}
             </span>
             <span className="text-lg text-muted-foreground">/giờ</span>
           </div>

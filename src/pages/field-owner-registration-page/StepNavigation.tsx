@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
+import { Loading } from "@/components/ui/loading"
 
 type RegistrationStep = 1 | 2 | 3 | 4
 
@@ -44,7 +45,7 @@ export function StepNavigation({
         >
           {submitting ? (
             <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <Loading size={16} className="border-white" />
               Đang gửi...
             </span>
           ) : (

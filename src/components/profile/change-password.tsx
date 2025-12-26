@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Loading } from "@/components/ui/loading"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { changePassword } from "@/features/authentication/authThunk"
 import { clearSuccessStates } from "@/features/authentication/authSlice"
@@ -230,7 +230,7 @@ export default function ChangePassword() {
                             className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {changePasswordLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                <Loading size={16} className="mr-2" />
                             ) : null}
                             Lưu thay đổi
                         </Button>

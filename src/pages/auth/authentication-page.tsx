@@ -12,6 +12,7 @@ import {
 } from "../../components/toast/notificiation-toast";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Phone } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Loading } from "@/components/ui/loading";
 
 //axios
 import axios from "axios";
@@ -123,11 +124,11 @@ export default function AuthenticationPage() {
 
     // Otherwise, use default redirect logic
     if (user.role === "field_owner") {
-      navigate("/field-owner-dashboard", { replace: true });
+      window.location.href = "/field-owner-dashboard";
     } else if (user.role === "coach") {
-      navigate("/coach/dashboard", { replace: true });
+      window.location.href = "/coach/dashboard";
     } else {
-      navigate("/", { replace: true });
+      window.location.href = "/";
     }
   };
 
@@ -279,6 +280,9 @@ export default function AuthenticationPage() {
 
           CustomSuccessToast("Đăng nhập thành công!");
 
+          // Add a small delay for animation
+          await new Promise(resolve => setTimeout(resolve, 800));
+
           // Handle redirect after successful login
           handleRedirectAfterLogin(user);
         }
@@ -295,6 +299,7 @@ export default function AuthenticationPage() {
 
         if (result) {
           CustomSuccessToast("Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản. Link xác thực có hiệu lực trong 5 phút.");
+          await new Promise(resolve => setTimeout(resolve, 800));
           setIsLogin(true);
         }
       }
@@ -317,6 +322,11 @@ export default function AuthenticationPage() {
 
   return (
     <div className="h-screen w-screen fixed inset-0 overflow-hidden">
+      {isLoading && (
+        <div className="fixed inset-0 z-[9999] bg-white/60 backdrop-blur-sm flex items-center justify-center transition-all duration-300">
+          <Loading size={100} />
+        </div>
+      )}
       {/* Full Screen Background Carousel */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         {loginBanners.map((banner, index) => (
@@ -542,7 +552,7 @@ export default function AuthenticationPage() {
               className="w-full bg-green-700 hover:bg-green-600 text-white py-4 px-6 rounded-xl text-base font-medium focus:ring-4 focus:ring-green-200 transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                <Loading size={20} className="border-white" />
               ) : (
                 <>
                   <span>{isLogin ? "Đăng Nhập" : "Đăng Ký"}</span>
@@ -578,7 +588,7 @@ export default function AuthenticationPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
+            <div className="mt-6 flex flex-col gap-4">
               <button
                 onClick={() => handleGoogleLogin()}
                 className="w-full transform duration-300 hover:scale-105 inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -602,12 +612,6 @@ export default function AuthenticationPage() {
                   />
                 </svg>
                 <span className="ml-2">Google</span>
-              </button>
-              <button className="transform transition-transform duration-300 hover:scale-105 w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-                <span className="ml-2">Facebook</span>
               </button>
             </div>
           </div>

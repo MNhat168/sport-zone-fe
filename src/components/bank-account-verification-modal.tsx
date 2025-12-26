@@ -12,17 +12,18 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle2, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
+import { CheckCircle2, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
+import { Loading } from '@/components/ui/loading'
 import { CustomSuccessToast, CustomFailedToast } from '@/components/toast/notificiation-toast'
 
 // QR Code Display component
 const QRCodeDisplay = ({ data }: { data: string }) => {
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data)}`
-  
+
   return (
-    <img 
-      src={qrImageUrl} 
-      alt="QR Code" 
+    <img
+      src={qrImageUrl}
+      alt="QR Code"
       className="w-[300px] h-[300px] object-contain mx-auto"
       onError={(e) => {
         // Fallback to Google Charts API
@@ -85,7 +86,7 @@ export function BankAccountVerificationModal({
       try {
         attempts++
         const result = await dispatch(getVerificationStatus(accountId)).unwrap()
-        
+
         setPollingAttempts(attempts)
         setStatus(result.status)
 
@@ -153,7 +154,7 @@ export function BankAccountVerificationModal({
           <div className="flex justify-center">
             {status === 'pending' && (
               <Badge className="bg-yellow-500">
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                <Loading size={12} className="mr-1" />
                 Đang chờ thanh toán
               </Badge>
             )}
@@ -176,9 +177,9 @@ export function BankAccountVerificationModal({
             <div className="flex justify-center">
               <div className="bg-white p-4 rounded-lg border-4 border-green-500 shadow-xl">
                 {currentQrCodeUrl ? (
-                  <img 
-                    src={currentQrCodeUrl} 
-                    alt="QR Code" 
+                  <img
+                    src={currentQrCodeUrl}
+                    alt="QR Code"
                     className="w-[300px] h-[300px] object-contain"
                   />
                 ) : (

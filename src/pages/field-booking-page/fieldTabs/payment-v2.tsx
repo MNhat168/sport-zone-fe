@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle, AlertCircle, Loader2, Wallet, Upload, X, ImageIcon, Copy, Check, Trash2, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Wallet, Upload, X, ImageIcon, Clock } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
@@ -635,8 +636,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
 
                                 {verificationResult?.status !== 'confirmed' && (
                                     <div className={`p-4 rounded-lg border text-sm ${verificationResult?.status === 'rejected'
-                                            ? 'bg-red-100 border-red-200 text-red-800'
-                                            : 'bg-amber-100 border-amber-200 text-amber-800'
+                                        ? 'bg-red-100 border-red-200 text-red-800'
+                                        : 'bg-amber-100 border-amber-200 text-amber-800'
                                         }`}>
                                         {verificationResult?.status === 'rejected' ? (
                                             <>
@@ -650,8 +651,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                             variant="outline"
                                             size="sm"
                                             className={`mt-2 ${verificationResult?.status === 'rejected'
-                                                    ? 'border-red-300 text-red-800 hover:bg-red-200'
-                                                    : 'border-amber-300 text-amber-800 hover:bg-amber-200'
+                                                ? 'border-red-300 text-red-800 hover:bg-red-200'
+                                                : 'border-amber-300 text-amber-800 hover:bg-amber-200'
                                                 }`}
                                             onClick={() => setPaymentStatus('idle')}
                                         >
@@ -730,7 +731,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                 {/* Bank Account Info */}
                                 {loadingBankAccount ? (
                                     <div className="flex items-center justify-center p-8">
-                                        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                                        <Loading size={24} className="text-gray-400" />
                                         <span className="ml-2 text-gray-600">Đang tải thông tin tài khoản...</span>
                                     </div>
                                 ) : bankAccount ? (
@@ -830,7 +831,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                 >
                                     {paymentStatus === 'processing' ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            <Loading size={16} className="mr-2" />
                                             Đang xử lý...
                                         </>
                                     ) : !proofImage ? (
