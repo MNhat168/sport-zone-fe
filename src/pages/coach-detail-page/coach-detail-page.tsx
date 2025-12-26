@@ -16,7 +16,15 @@ import {
 import type { RootState, AppDispatch } from "@/store/store";
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
-import { Loading } from "@/components/ui/loading";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Import components
 import { CoachInfoCard } from "./components/CoachInfoCard";
@@ -108,6 +116,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   const [hoveredRating, setHoveredRating] = useState(0);
 
   const [reviewComment, setReviewComment] = useState<string>("");
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [showProfanityAlert, setShowProfanityAlert] = useState(false);
+  const [flaggedWords, setFlaggedWords] = useState<string[]>([]);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [coachReviews, setCoachReviews] = useState<any[]>([]);
   // Coach aggregated stats from redux
@@ -437,7 +448,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     return () => { mounted = false; };
   }, [currentCoach?.id, dispatch]);
 
-  
+
 
   // Trạng thái tải dữ liệu HLV
   if (detailLoading) {
@@ -564,9 +575,9 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
               </div>
             </div>
           </div>
-          </div>
+        </div>
 
-          <SimilarCoachesSection coaches={similarCoachesState.length ? similarCoachesState : similarCoaches} />
+        <SimilarCoachesSection coaches={similarCoachesState.length ? similarCoachesState : similarCoaches} />
 
         {/* Modals */}
         <ReviewModal
@@ -619,11 +630,36 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   console.error('Failed to refresh reviews after submit', err);
                 }
               } else {
-                const message = action?.payload || "Gửi đánh giá thất bại";
-                CustomFailedToast(String(message));
+                const errData = action?.payload || {};
+                const message = typeof errData === 'string' ? errData : (errData.message || "Gửi đánh giá thất bại");
+                const flaggedWords = Array.isArray(errData.flaggedWords) ? errData.flaggedWords : [];
+
+                if (String(message).toLowerCase().includes('inappropriate') ||
+                  String(message).toLowerCase().includes('profanity') ||
+                  String(message).toLowerCase().includes('content')) {
+                  let finalMsg = String(message);
+                  if (flaggedWords.length > 0) {
+                    finalMsg += ` Flagged words: ${flaggedWords.join(', ')}`;
+                  }
+                  setReviewError(finalMsg);
+                  setFlaggedWords(flaggedWords);
+                  setShowProfanityAlert(true);
+                } else {
+                  CustomFailedToast(String(message));
+                }
               }
             } catch (err: any) {
-              CustomFailedToast(err?.message || "Gửi đánh giá thất bại");
+              const msg = err?.message || "Gửi đánh giá thất bại";
+              // We check specific strings based on backend response
+              if (String(msg).toLowerCase().includes('inappropriate') ||
+                String(msg).toLowerCase().includes('profanity')) {
+                setReviewError(String(msg));
+                // Since generic catch might not have flaggedWords easily without parsing default err structure,
+                // we just show the alert with the message.
+                setShowProfanityAlert(true);
+              } else {
+                CustomFailedToast(msg);
+              }
             } finally {
               setIsSubmittingReview(false);
             }
@@ -632,7 +668,12 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
             setShowReviewModal(false);
             setReviewRating(0);
             setHoveredRating(0);
+            setReviewError(null);
           }}
+          errorMessage={reviewError}
+          showProfanityAlert={showProfanityAlert}
+          onProfanityAlertChange={setShowProfanityAlert}
+          flaggedWords={flaggedWords}
         />
 
         {/* Coach Chat Popup */}

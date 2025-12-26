@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Loading } from "@/components/ui/loading"
-import { Star, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { Star, ChevronDown, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -36,6 +36,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
   const [hoveredRating, setHoveredRating] = useState(0)
   const [reviewTitle, setReviewTitle] = useState("")
   const [reviewComment, setReviewComment] = useState("")
+  const [reviewError, setReviewError] = useState<string | null>(null)
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false)
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
   const [fieldReviews, setFieldReviews] = useState<any[]>([])
@@ -131,6 +132,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
       setHoveredRating(0)
       setReviewTitle("")
       setReviewComment("")
+      setReviewError(null)
       setHasAcceptedTerms(false)
       setIsSubmittingReview(false)
     }
@@ -138,6 +140,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
+    setReviewError(null)
 
     if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
       CustomFailedToast("Vui lòng chọn điểm đánh giá từ 1 đến 5")
@@ -189,11 +192,30 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
           }
         }, 800) // 800ms delay to ensure database has saved
       } else {
-        const message = action?.payload || "Gửi đánh giá thất bại"
-        CustomFailedToast(String(message))
+        const errData = action?.payload || {};
+        const message = typeof errData === 'string' ? errData : (errData.message || "Gửi đánh giá thất bại");
+        const flaggedWords = Array.isArray(errData.flaggedWords) ? errData.flaggedWords : [];
+
+        if (String(message).toLowerCase().includes('inappropriate') ||
+          String(message).toLowerCase().includes('profanity') ||
+          String(message).toLowerCase().includes('content')) {
+          let finalMsg = String(message);
+          if (flaggedWords.length > 0) {
+            finalMsg += ` Flagged words: ${flaggedWords.join(', ')}`;
+          }
+          setReviewError(finalMsg);
+        } else {
+          CustomFailedToast(String(message))
+        }
       }
     } catch (err: any) {
-      CustomFailedToast(err?.message || "Gửi đánh giá thất bại")
+      const msg = err?.message || "Gửi đánh giá thất bại";
+      if (String(msg).toLowerCase().includes('inappropriate') ||
+        String(msg).toLowerCase().includes('profanity')) {
+        setReviewError(String(msg));
+      } else {
+        CustomFailedToast(msg)
+      }
     } finally {
       setIsSubmittingReview(false)
     }
@@ -437,6 +459,12 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
           </DialogHeader>
           <form className="space-y-6 py-4" onSubmit={handleSubmitReview}>
             {/* Tiêu đề đánh giá (optional) */}
+            {reviewError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md flex items-start gap-2 text-sm mb-4">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <span>{reviewError}</span>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="review-title" className="text-sm font-semibold">
                 Tiêu đề đánh giá
@@ -528,6 +556,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
                   setHoveredRating(0)
                   setReviewTitle("")
                   setReviewComment("")
+                  setReviewError(null)
                   setHasAcceptedTerms(false)
                 }}
                 className="flex-1 hover:bg-gray-50 bg-transparent"
