@@ -5,7 +5,8 @@ import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layou
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, CheckCircle, XCircle, Eye } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { formatCurrency } from "@/utils/format-currency";
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -182,202 +183,202 @@ export default function CoachVerifyPaymentsPage() {
     return (
         <CoachDashboardLayout>
             <div className="w-full mx-auto py-8 px-4">
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-3xl font-bold">Xác minh thanh toán</h1>
-                                <p className="text-gray-600 mt-1">
-                                    Duyệt hoặc từ chối ảnh chứng minh thanh toán từ học viên
-                                </p>
-                            </div>
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold">Xác minh thanh toán</h1>
+                            <p className="text-gray-600 mt-1">
+                                Duyệt hoặc từ chối ảnh chứng minh thanh toán từ học viên
+                            </p>
                         </div>
+                    </div>
 
-                        {loading ? (
-                            <Card>
-                                <CardContent className="p-12 text-center">
-                                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-                                    <p className="mt-4 text-gray-600">Đang tải danh sách...</p>
-                                </CardContent>
-                            </Card>
-                        ) : error ? (
-                            <Alert variant="destructive">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        ) : bookings.length === 0 ? (
-                            <Card>
-                                <CardContent className="p-12 text-center">
-                                    <CheckCircle className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                                    <p className="text-lg text-gray-600">Không có booking nào cần xác minh</p>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <div className="space-y-4">
-                                {bookings.map((booking) => (
-                                    <Card key={booking._id || booking.id} className="border border-gray-200">
-                                        <CardContent className="p-6">
-                                            <div className="flex flex-col md:flex-row gap-6">
-                                                {/* Booking Info */}
-                                                <div className="flex-1 space-y-4">
-                                                    <div>
-                                                        <h3 className="text-lg font-semibold mb-2">
-                                                            {booking.field?.name || 'Sân thể thao'}
-                                                        </h3>
-                                                        <div className="space-y-1 text-sm text-gray-600">
+                    {loading ? (
+                        <Card>
+                            <CardContent className="p-12 text-center">
+                                <Loading size={32} className="mx-auto" />
+                                <p className="mt-4 text-gray-600">Đang tải danh sách...</p>
+                            </CardContent>
+                        </Card>
+                    ) : error ? (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    ) : bookings.length === 0 ? (
+                        <Card>
+                            <CardContent className="p-12 text-center">
+                                <CheckCircle className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                                <p className="text-lg text-gray-600">Không có booking nào cần xác minh</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="space-y-4">
+                            {bookings.map((booking) => (
+                                <Card key={booking._id || booking.id} className="border border-gray-200">
+                                    <CardContent className="p-6">
+                                        <div className="flex flex-col md:flex-row gap-6">
+                                            {/* Booking Info */}
+                                            <div className="flex-1 space-y-4">
+                                                <div>
+                                                    <h3 className="text-lg font-semibold mb-2">
+                                                        {booking.field?.name || 'Sân thể thao'}
+                                                    </h3>
+                                                    <div className="space-y-1 text-sm text-gray-600">
+                                                        <p>
+                                                            <span className="font-medium">Học viên:</span> {booking.user.fullName}
+                                                        </p>
+                                                        <p>
+                                                            <span className="font-medium">Email:</span> {booking.user.email}
+                                                        </p>
+                                                        {booking.user.phone && (
                                                             <p>
-                                                                <span className="font-medium">Học viên:</span> {booking.user.fullName}
+                                                                <span className="font-medium">SĐT:</span> {booking.user.phone}
                                                             </p>
-                                                            <p>
-                                                                <span className="font-medium">Email:</span> {booking.user.email}
-                                                            </p>
-                                                            {booking.user.phone && (
-                                                                <p>
-                                                                    <span className="font-medium">SĐT:</span> {booking.user.phone}
-                                                                </p>
-                                                            )}
-                                                            <p>
-                                                                <span className="font-medium">Ngày:</span> {formatDate(booking.date)}
-                                                            </p>
-                                                            <p>
-                                                                <span className="font-medium">Thời gian:</span> {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
-                                                            </p>
-                                                            <p>
-                                                                <span className="font-medium">Số tiền:</span> {formatCurrency(totalAmount(booking))}
-                                                            </p>
-                                                        </div>
+                                                        )}
+                                                        <p>
+                                                            <span className="font-medium">Ngày:</span> {formatDate(booking.date)}
+                                                        </p>
+                                                        <p>
+                                                            <span className="font-medium">Thời gian:</span> {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+                                                        </p>
+                                                        <p>
+                                                            <span className="font-medium">Số tiền:</span> {formatCurrency(totalAmount(booking))}
+                                                        </p>
                                                     </div>
                                                 </div>
-
-                                                {/* Payment Proof Image */}
-                                                <div className="md:w-48 flex flex-col items-center justify-center space-y-4">
-                                                    {booking.transaction?.paymentProofImageUrl ? (
-                                                        <>
-                                                            <div className="relative w-full h-32 border-2 border-gray-200 rounded-lg overflow-hidden">
-                                                                <img
-                                                                    src={booking.transaction.paymentProofImageUrl}
-                                                                    alt="Payment proof"
-                                                                    className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                                                                    onClick={() => handleViewImage(booking)}
-                                                                />
-                                                            </div>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleViewImage(booking)}
-                                                                className="w-full"
-                                                            >
-                                                                <Eye className="w-4 h-4 mr-2" />
-                                                                Xem ảnh
-                                                            </Button>
-                                                        </>
-                                                    ) : (
-                                                        <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                                                            <p className="text-sm text-gray-500">Không có ảnh</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Actions */}
-                                                <div className="flex flex-col gap-2 justify-center">
-                                                    <Button
-                                                        onClick={() => handleVerify(booking, 'approve')}
-                                                        className="bg-emerald-600 hover:bg-emerald-700"
-                                                    >
-                                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                                        Xác nhận đã nhận tiền
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        onClick={() => handleVerify(booking, 'reject')}
-                                                    >
-                                                        <XCircle className="w-4 h-4 mr-2" />
-                                                        Từ chối
-                                                    </Button>
-                                                </div>
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
 
-                        {/* Image View Dialog */}
-                        <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-                            <DialogContent className="max-w-4xl">
-                                <DialogHeader>
-                                    <DialogTitle>Ảnh chứng minh thanh toán</DialogTitle>
-                                    <DialogDescription>
-                                        {selectedBooking && (
-                                            <>
-                                                Booking: {selectedBooking.field?.name || 'Sân thể thao'} - {formatDate(selectedBooking.date)}
-                                            </>
-                                        )}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                {selectedBooking?.transaction?.paymentProofImageUrl && (
-                                    <div className="mt-4">
-                                        <img
-                                            src={selectedBooking.transaction.paymentProofImageUrl}
-                                            alt="Payment proof"
-                                            className="w-full h-auto rounded-lg"
-                                        />
-                                    </div>
-                                )}
-                            </DialogContent>
-                        </Dialog>
+                                            {/* Payment Proof Image */}
+                                            <div className="md:w-48 flex flex-col items-center justify-center space-y-4">
+                                                {booking.transaction?.paymentProofImageUrl ? (
+                                                    <>
+                                                        <div className="relative w-full h-32 border-2 border-gray-200 rounded-lg overflow-hidden">
+                                                            <img
+                                                                src={booking.transaction.paymentProofImageUrl}
+                                                                alt="Payment proof"
+                                                                className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                                                onClick={() => handleViewImage(booking)}
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleViewImage(booking)}
+                                                            className="w-full"
+                                                        >
+                                                            <Eye className="w-4 h-4 mr-2" />
+                                                            Xem ảnh
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <div className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                                                        <p className="text-sm text-gray-500">Không có ảnh</p>
+                                                    </div>
+                                                )}
+                                            </div>
 
-                        {/* Verify Dialog */}
-                        <Dialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>
-                                        {verifyAction === 'approve' ? 'Xác nhận đã nhận tiền' : 'Từ chối thanh toán'}
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                        {verifyAction === 'approve'
-                                            ? 'Bạn có chắc chắn đã nhận tiền từ học viên? Booking sẽ được xác nhận và lịch sẽ được khóa.'
-                                            : 'Vui lòng nhập lý do từ chối thanh toán này.'}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                {verifyAction === 'reject' && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rejectionReason">Lý do từ chối *</Label>
-                                        <Textarea
-                                            id="rejectionReason"
-                                            value={rejectionReason}
-                                            onChange={(e) => setRejectionReason(e.target.value)}
-                                            placeholder="Nhập lý do từ chối..."
-                                            rows={4}
-                                        />
-                                    </div>
-                                )}
-                                <DialogFooter>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setShowVerifyDialog(false)}
-                                        disabled={verifying}
-                                    >
-                                        Hủy
-                                    </Button>
-                                    <Button
-                                        onClick={handleConfirmVerify}
-                                        disabled={verifying || (verifyAction === 'reject' && !rejectionReason.trim())}
-                                        variant={verifyAction === 'approve' ? 'default' : 'destructive'}
-                                    >
-                                        {verifying ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Đang xử lý...
-                                            </>
-                                        ) : (
-                                            verifyAction === 'approve' ? 'Xác nhận đã nhận tiền' : 'Xác nhận từ chối'
-                                        )}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
+                                            {/* Actions */}
+                                            <div className="flex flex-col gap-2 justify-center">
+                                                <Button
+                                                    onClick={() => handleVerify(booking, 'approve')}
+                                                    className="bg-emerald-600 hover:bg-emerald-700"
+                                                >
+                                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                                    Xác nhận đã nhận tiền
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    onClick={() => handleVerify(booking, 'reject')}
+                                                >
+                                                    <XCircle className="w-4 h-4 mr-2" />
+                                                    Từ chối
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Image View Dialog */}
+                    <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+                        <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                                <DialogTitle>Ảnh chứng minh thanh toán</DialogTitle>
+                                <DialogDescription>
+                                    {selectedBooking && (
+                                        <>
+                                            Booking: {selectedBooking.field?.name || 'Sân thể thao'} - {formatDate(selectedBooking.date)}
+                                        </>
+                                    )}
+                                </DialogDescription>
+                            </DialogHeader>
+                            {selectedBooking?.transaction?.paymentProofImageUrl && (
+                                <div className="mt-4">
+                                    <img
+                                        src={selectedBooking.transaction.paymentProofImageUrl}
+                                        alt="Payment proof"
+                                        className="w-full h-auto rounded-lg"
+                                    />
+                                </div>
+                            )}
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Verify Dialog */}
+                    <Dialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>
+                                    {verifyAction === 'approve' ? 'Xác nhận đã nhận tiền' : 'Từ chối thanh toán'}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    {verifyAction === 'approve'
+                                        ? 'Bạn có chắc chắn đã nhận tiền từ học viên? Booking sẽ được xác nhận và lịch sẽ được khóa.'
+                                        : 'Vui lòng nhập lý do từ chối thanh toán này.'}
+                                </DialogDescription>
+                            </DialogHeader>
+                            {verifyAction === 'reject' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="rejectionReason">Lý do từ chối *</Label>
+                                    <Textarea
+                                        id="rejectionReason"
+                                        value={rejectionReason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                        placeholder="Nhập lý do từ chối..."
+                                        rows={4}
+                                    />
+                                </div>
+                            )}
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowVerifyDialog(false)}
+                                    disabled={verifying}
+                                >
+                                    Hủy
+                                </Button>
+                                <Button
+                                    onClick={handleConfirmVerify}
+                                    disabled={verifying || (verifyAction === 'reject' && !rejectionReason.trim())}
+                                    variant={verifyAction === 'approve' ? 'default' : 'destructive'}
+                                >
+                                    {verifying ? (
+                                        <>
+                                            <Loading size={16} className="mr-2" />
+                                            Đang xử lý...
+                                        </>
+                                    ) : (
+                                        verifyAction === 'approve' ? 'Xác nhận đã nhận tiền' : 'Xác nhận từ chối'
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
+            </div>
         </CoachDashboardLayout>
     );
 }

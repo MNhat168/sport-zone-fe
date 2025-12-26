@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import {
     MapPin,
     DollarSign,
-    Clock,
     CheckCircle2,
     AlertCircle,
     Building,
@@ -20,11 +19,9 @@ import {
     Star,
     Users,
     Calendar,
-    X,
-    Loader2,
-    Minus,
-    Plus
+    X
 } from 'lucide-react';
+import { Loading } from "@/components/ui/loading";
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { fetchAvailableCourts } from '@/features/tournament/tournamentThunk';
 import { SPORT_RULES_MAP, SportType } from '../../../src/components/enums/ENUMS';
@@ -153,12 +150,6 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
         }, 300);
     };
 
-    const handleChange = (field: string, value: any) => {
-        onUpdate({ ...formData, [field]: value });
-        if (errors[field]) {
-            setErrors({ ...errors, [field]: '' });
-        }
-    };
 
     const safeAvailableCourts: Court[] = (() => {
         if (!availableCourts) return [];
@@ -360,7 +351,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                             >
                                 {loading ? (
                                     <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                        <Loading size={20} className="mr-2" />
                                         Đang tìm kiếm...
                                     </>
                                 ) : (
@@ -512,7 +503,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                 <div className="space-y-3 overflow-y-auto max-h-[500px] pr-2">
                                     {loading ? (
                                         <div className="text-center py-8">
-                                            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-green-600" />
+                                            <Loading size={32} className="mx-auto mb-3 text-green-600" />
                                             <p className="text-gray-500">Đang tải danh sách sân...</p>
                                         </div>
                                     ) : filteredFields.length === 0 ? (

@@ -3,7 +3,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Upload, User as Loader2 } from "lucide-react"
+import { Upload } from "lucide-react"
+import { Loading } from "@/components/ui/loading"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
@@ -119,7 +120,7 @@ export default function Profile() {
         return (
             <Card className="w-full bg-white rounded-[10px] shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)] border-0">
                 <CardContent className="p-6 flex justify-center items-center min-h-[400px]">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <Loading size={32} />
                 </CardContent>
             </Card>
         )
@@ -314,7 +315,7 @@ export default function Profile() {
                             className="min-w-36 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 text-white rounded-[10px] text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {updateLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                <Loading size={16} className="mr-2" />
                             ) : null}
                             Lưu thay đổi
                         </Button>

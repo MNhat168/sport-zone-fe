@@ -76,7 +76,7 @@ export const SimilarCoachesSection: React.FC<SimilarCoachesSectionProps> = ({
                 {/* Nhãn giá ở dưới */}
                 <div className="absolute bottom-4 left-4">
                   <Badge className="bg-[#1a2332] hover:bg-[#1a2332]/90 text-white border-0 px-3 py-1.5 text-sm font-semibold">
-                    Từ ${coach.price}/giờ
+                    Từ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(coach.price)}/giờ
                   </Badge>
                 </div>
               </div>

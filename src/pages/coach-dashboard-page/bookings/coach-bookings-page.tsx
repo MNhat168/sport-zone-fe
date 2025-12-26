@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, Clock, User, FileText, AlertCircle, Loader2, CalendarIcon, Search, MessageCircle } from "lucide-react";
+import { Calendar, Clock, User, FileText, AlertCircle, CalendarIcon, Search, MessageCircle } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { TransactionStatus } from "@/components/enums/ENUMS";
 import { formatCurrency } from "@/utils/format-currency";
 import { format, parseISO } from "date-fns";
@@ -255,11 +256,57 @@ const convertTo24Hour = (time12h: string): string => {
 };
 
 export default function CoachBookingsPage() {
+<<<<<<< HEAD
+    const authUser = useAppSelector((state) => state.auth.user)
+    const [bookings, setBookings] = useState<any[]>([])
+    const [combinedBookings, setCombinedBookings] = useState<any[]>([]) // FIELD_COACH bookings
+    const [loading, setLoading] = useState(true)
+    const [loadingCombined, setLoadingCombined] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [errorCombined, setErrorCombined] = useState<string | null>(null)
+    const [coachId, setCoachId] = useState<string | null>(null)
+    const fetchBookings = async () => {
+        try {
+            // Fetch regular COACH bookings
+            const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=coach')
+            const data = response.data;
+            const bookingsData = Array.isArray(data) ? data : (data.data || []);
+            setBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        } catch (err: any) {
+            console.error("Error fetching bookings:", err)
+            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
+            setError(errorMessage)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fetchCombinedBookings = async () => {
+        try {
+            // Fetch FIELD_COACH combined bookings
+            const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=field_coach')
+            const data = response.data;
+            const bookingsData = Array.isArray(data) ? data : (data.data || []);
+            setCombinedBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        } catch (err: any) {
+            console.error("Error fetching combined bookings:", err)
+            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch kết hợp";
+            setErrorCombined(errorMessage)
+        } finally {
+            setLoadingCombined(false)
+        }
+    }
+
+    useEffect(() => {
+        const storedUser = sessionStorage.getItem("user")
+        if (!storedUser) return
+=======
     const authUser = useAppSelector((state) => state.auth.user);
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [coachId, setCoachId] = useState<string | null>(null);
+>>>>>>> 0b390e403d8210b9c930bea448baffac2d6eb081
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -280,6 +327,12 @@ export default function CoachBookingsPage() {
             .then((res) => {
                 setCoachId(res.data?.data?.id);
             })
+<<<<<<< HEAD
+            .catch(console.error)
+    }, [])
+
+    useEffect(() => {
+=======
             .catch(console.error);
     }, []);
 
@@ -302,6 +355,7 @@ export default function CoachBookingsPage() {
             }
         };
 
+>>>>>>> 0b390e403d8210b9c930bea448baffac2d6eb081
         if (authUser) {
             fetchBookings();
         }
@@ -588,7 +642,7 @@ export default function CoachBookingsPage() {
                         {/* Loading State */}
                         {loading ? (
                             <div className="flex items-center justify-center py-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                <Loading size={32} />
                             </div>
                         ) : (
                             <>
@@ -801,5 +855,10 @@ export default function CoachBookingsPage() {
                 )}
             </div>
         </CoachDashboardLayout>
+<<<<<<< HEAD
+    )}
+    
+=======
     );
 }
+>>>>>>> 0b390e403d8210b9c930bea448baffac2d6eb081

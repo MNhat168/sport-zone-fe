@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { getMyRegistrationStatus } from '@/features/field-owner-registration';
+import { Loading } from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -50,7 +51,10 @@ export default function FieldOwnerRegistrationStatusPage() {
                     <div className="max-w-4xl mx-auto p-6">
                         <Card>
                             <CardContent className="pt-6">
-                                <p className="text-center">Đang tải...</p>
+                                <div className="flex flex-col items-center justify-center py-10 gap-4">
+                                    <Loading size={48} className="text-green-600" />
+                                    <p className="text-center text-gray-600">Đang tải...</p>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -251,99 +255,99 @@ export default function FieldOwnerRegistrationStatusPage() {
                         currentRequest.facilityLocation ||
                         currentRequest.description ||
                         currentRequest.contactPhone) && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Building2 className="w-5 h-5 text-primary" />
-                                    Thông tin cơ sở vật chất
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {currentRequest.facilityName && (
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-1">Tên cơ sở</p>
-                                            <p className="font-medium">{currentRequest.facilityName}</p>
-                                        </div>
-                                    )}
-                                    {currentRequest.facilityLocation && (
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-                                                <MapPin className="w-4 h-4" />
-                                                Địa điểm
-                                            </p>
-                                            <p className="font-medium">{currentRequest.facilityLocation}</p>
-                                        </div>
-                                    )}
-                                    {currentRequest.contactPhone && (
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-                                                <Phone className="w-4 h-4" />
-                                                Số điện thoại
-                                            </p>
-                                            <p className="font-medium">{currentRequest.contactPhone}</p>
-                                        </div>
-                                    )}
-                                    {currentRequest.website && (
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-                                                <Globe className="w-4 h-4" />
-                                                Website
-                                            </p>
-                                            <a
-                                                href={currentRequest.website}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="font-medium text-primary hover:underline flex items-center gap-1"
-                                            >
-                                                {currentRequest.website}
-                                                <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                        </div>
-                                    )}
-                                    {currentRequest.businessHours && (
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-                                                <ClockIcon className="w-4 h-4" />
-                                                Giờ hoạt động
-                                            </p>
-                                            <p className="font-medium">{currentRequest.businessHours}</p>
-                                        </div>
-                                    )}
-                                </div>
-                                {currentRequest.description && (
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Mô tả</p>
-                                        <p className="text-sm">{currentRequest.description}</p>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Building2 className="w-5 h-5 text-primary" />
+                                        Thông tin cơ sở vật chất
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {currentRequest.facilityName && (
+                                            <div>
+                                                <p className="text-sm text-gray-600 mb-1">Tên cơ sở</p>
+                                                <p className="font-medium">{currentRequest.facilityName}</p>
+                                            </div>
+                                        )}
+                                        {currentRequest.facilityLocation && (
+                                            <div>
+                                                <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                                                    <MapPin className="w-4 h-4" />
+                                                    Địa điểm
+                                                </p>
+                                                <p className="font-medium">{currentRequest.facilityLocation}</p>
+                                            </div>
+                                        )}
+                                        {currentRequest.contactPhone && (
+                                            <div>
+                                                <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                                                    <Phone className="w-4 h-4" />
+                                                    Số điện thoại
+                                                </p>
+                                                <p className="font-medium">{currentRequest.contactPhone}</p>
+                                            </div>
+                                        )}
+                                        {currentRequest.website && (
+                                            <div>
+                                                <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                                                    <Globe className="w-4 h-4" />
+                                                    Website
+                                                </p>
+                                                <a
+                                                    href={currentRequest.website}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="font-medium text-primary hover:underline flex items-center gap-1"
+                                                >
+                                                    {currentRequest.website}
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            </div>
+                                        )}
+                                        {currentRequest.businessHours && (
+                                            <div>
+                                                <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                                                    <ClockIcon className="w-4 h-4" />
+                                                    Giờ hoạt động
+                                                </p>
+                                                <p className="font-medium">{currentRequest.businessHours}</p>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                {currentRequest.supportedSports && currentRequest.supportedSports.length > 0 && (
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-2">Môn thể thao hỗ trợ</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {currentRequest.supportedSports.map((sport, index) => (
-                                                <Badge key={index} variant="outline">
-                                                    {sport}
-                                                </Badge>
-                                            ))}
+                                    {currentRequest.description && (
+                                        <div>
+                                            <p className="text-sm text-gray-600 mb-1">Mô tả</p>
+                                            <p className="text-sm">{currentRequest.description}</p>
                                         </div>
-                                    </div>
-                                )}
-                                {currentRequest.amenities && currentRequest.amenities.length > 0 && (
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-2">Tiện ích</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {currentRequest.amenities.map((amenity, index) => (
-                                                <Badge key={index} variant="secondary">
-                                                    {amenity}
-                                                </Badge>
-                                            ))}
+                                    )}
+                                    {currentRequest.supportedSports && currentRequest.supportedSports.length > 0 && (
+                                        <div>
+                                            <p className="text-sm text-gray-600 mb-2">Môn thể thao hỗ trợ</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {currentRequest.supportedSports.map((sport, index) => (
+                                                    <Badge key={index} variant="outline">
+                                                        {sport}
+                                                    </Badge>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    )}
+                                    )}
+                                    {currentRequest.amenities && currentRequest.amenities.length > 0 && (
+                                        <div>
+                                            <p className="text-sm text-gray-600 mb-2">Tiện ích</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {currentRequest.amenities.map((amenity, index) => (
+                                                    <Badge key={index} variant="secondary">
+                                                        {amenity}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
 
                     {/* Documents & Verification Section */}
                     <Card>
@@ -371,7 +375,7 @@ export default function FieldOwnerRegistrationStatusPage() {
                                     </div>
                                 </div>
                             )}
-                            <hr className="my-4"/>
+                            <hr className="my-4" />
                             {/* Business License */}
                             {currentRequest.documents?.businessLicense && (
                                 <div>
@@ -409,7 +413,7 @@ export default function FieldOwnerRegistrationStatusPage() {
                                     </div>
                                 </div>
                             )}
-                            <hr className="my-4"/>
+                            <hr className="my-4" />
                             {/* Field Images Gallery */}
                             {currentRequest.fieldImages && currentRequest.fieldImages.length > 0 && (
                                 <div>
@@ -493,13 +497,12 @@ export default function FieldOwnerRegistrationStatusPage() {
                                     <div className="flex items-start gap-4">
                                         <div className="flex flex-col items-center">
                                             <div
-                                                className={`w-3 h-3 rounded-full ${
-                                                    currentRequest.status === 'approved'
+                                                className={`w-3 h-3 rounded-full ${currentRequest.status === 'approved'
                                                         ? 'bg-green-500'
                                                         : currentRequest.status === 'rejected'
-                                                          ? 'bg-red-500'
-                                                          : 'bg-yellow-500'
-                                                }`}
+                                                            ? 'bg-red-500'
+                                                            : 'bg-yellow-500'
+                                                    }`}
                                             ></div>
                                         </div>
                                         <div className="flex-1">
@@ -507,8 +510,8 @@ export default function FieldOwnerRegistrationStatusPage() {
                                                 {currentRequest.status === 'approved'
                                                     ? 'Đã duyệt'
                                                     : currentRequest.status === 'rejected'
-                                                      ? 'Đã từ chối'
-                                                      : 'Đã xử lý'}
+                                                        ? 'Đã từ chối'
+                                                        : 'Đã xử lý'}
                                             </p>
                                             <p className="text-xs text-gray-600">{formatDate(currentRequest.processedAt)}</p>
                                             {currentRequest.processedBy && (

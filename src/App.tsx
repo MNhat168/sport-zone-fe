@@ -19,7 +19,10 @@ import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { UserSyncProvider } from "./components/providers";
+import FloatingChatWidget from "./components/chat/floating-chat-widget";
 import './App.css';
+import { useEffect } from 'react';
+import { webSocketService } from '@/features/chat/websocket.service';
 // const RequireAuth = ({ children }: { children: ReactElement }) => {
 //   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 //   if (!token) {
@@ -77,10 +80,22 @@ function App() {
   //   // courseCacheService.preloadCourses();
   // }, []);
 
+  // Connect chat socket globally when user is logged in
+  useEffect(() => {
+    try {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        webSocketService.connect();
+      }
+    } catch { /* ignore */ }
+    // No cleanup here to keep chat available across routes; individual pages may disconnect explicitly
+  }, []);
+
   return (
     <Provider store={store}>
       <UserSyncProvider>
         <RouterProvider router={router} />
+        <FloatingChatWidget />
         {/* <ChatbotWidget /> */}
       </UserSyncProvider>
     </Provider>

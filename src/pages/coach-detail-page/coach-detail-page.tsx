@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { User, Users } from "lucide-react";
 import L from "leaflet";
 import { getCoachById, clearCurrentCoach, getPublicCoaches } from "@/features/coach";
 import { setFavouriteCoaches, removeFavouriteCoaches, getUserProfile } from "@/features/user";
@@ -17,61 +16,19 @@ import {
 import type { RootState, AppDispatch } from "@/store/store";
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
+import { Loading } from "@/components/ui/loading";
 
 // Import components
 import { CoachInfoCard } from "./components/CoachInfoCard";
 import { CoachTabs } from "./components/CoachTabs";
 import { BioSection } from "./components/BioSection";
-import { LessonsSection } from "./components/LessonsSection";
 import { GallerySection } from "./components/GallerySection";
 import { ReviewsSection } from "./components/ReviewsSection";
 import { LocationSection } from "./components/LocationSection";
 import { BookingCard } from "./components/BookingCard";
-import { RequestFormCard } from "./components/RequestFormCard";
 import { SimilarCoachesSection } from "./components/SimilarCoachesSection";
-import { LessonDetailModal } from "./components/LessonDetailModal";
 import { ReviewModal } from "./components/ReviewModal";
 import CoachDetailChatWindow from "@/components/chat/CoachDetailChatWindow";
-
-interface LessonType {
-  id: string;
-  type: "single" | "pair" | "group";
-  name: string;
-  description: string;
-  icon: typeof User;
-  iconBg: string;
-  iconColor: string;
-  badge: string;
-  lessonPrice?: number | string;
-}
-
-// Mock lesson types - sẽ được thay thế bằng dữ liệu thật từ API khi có
-const mockLessonTypes: LessonType[] = [
-  {
-    id: "1",
-    type: "single",
-    name: "Buổi học kèm 1-1",
-    description:
-      "Buổi huấn luyện cá nhân hóa theo nhu cầu và trình độ của bạn. Nhận sự hướng dẫn tập trung từ HLV để cải thiện kỹ thuật, chiến thuật và nâng cao kỹ năng nhanh chóng.",
-    icon: User,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-    badge: "1 kèm 1",
-    lessonPrice: 200000,
-  },
-  {
-    id: "2",
-    type: "group",
-    name: "Buổi học nhóm nhỏ",
-    description:
-      "Luyện tập cùng 2-4 người trong môi trường hợp tác và hỗ trợ. Học hỏi từ HLV và bạn tập, phát triển kỹ năng phối hợp và thi đấu.",
-    icon: Users,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    badge: "2-4 người",
-    lessonPrice: 120000,
-  },
-];
 
 interface CoachDetailPageProps {
   coachId?: string;
@@ -137,17 +94,15 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
       try {
         // refresh profile to sync favouriteCoaches state with server
         dispatch(getUserProfile());
-      } catch (e) {
-        // ignore
+      } catch (err: any) {
+        console.error('Failed to refresh profile', err);
       }
     }
   };
 
   const [activeTab, setActiveTab] = useState("bio");
-  const [showRequestForm, setShowRequestForm] = useState(false);
   const [showCoachChat, setShowCoachChat] = useState(false);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
-  const [selectedLesson, setSelectedLesson] = useState<LessonType | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -183,27 +138,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
   }, [coachReviews, selectedRatingFilter]);
 
   // Booking states (removed - no longer needed)
-
-  // Get lesson types from real coach data or fallback to mock data
-  const getLessonTypes = (): LessonType[] => {
-    if (currentCoach?.lessonTypes?.length) {
-      return currentCoach.lessonTypes.map((lesson) => ({
-        id: lesson._id,
-        type: lesson.type as "single" | "pair" | "group",
-        name: lesson.name,
-        description: lesson.description,
-        icon: lesson.type === "single" ? User : Users,
-        iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
-        iconColor:
-          lesson.type === "single" ? "text-green-600" : "text-blue-600",
-        badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
-        lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? undefined,
-      }));
-    }
-    return mockLessonTypes;
-  };
-
-  const lessonTypes = getLessonTypes();
 
   // Fetch coach data when component mounts or coachId changes
   useEffect(() => {
@@ -315,7 +249,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     const handleScroll = () => {
       const sections = [
         "bio",
-        "lessons",
         "coaching",
         "gallery",
         "reviews",
@@ -370,7 +303,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
   const tabs = [
     { id: "bio", label: "Giới thiệu" },
-    { id: "lessons", label: "Buổi học cùng tôi" },
     { id: "coaching", label: "Huấn luyện" },
     { id: "gallery", label: "Thư viện ảnh" },
     { id: "reviews", label: "Đánh giá" },
@@ -512,7 +444,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <Loading size={48} className="text-green-600 mx-auto mb-4" />
           <p className="text-muted-foreground">Đang tải thông tin huấn luyện viên...</p>
         </div>
       </div>
@@ -583,11 +515,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
               <div className="space-y-6">
                 <BioSection coachData={coachData} />
 
-                <LessonsSection
-                  lessonTypes={lessonTypes}
-                  onLessonClick={setSelectedLesson}
-                />
-
                 {/* <CoachingSection /> */}
 
                 <GallerySection
@@ -615,7 +542,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                   onWriteReview={() => setShowReviewModal(true)}
                 />
 
-                {/* Location moved to sidebar under RequestFormCard */}
+                {/* Location moved to sidebar */}
               </div>
             </div>
 
@@ -625,11 +552,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
                 <BookingCard
                   coachData={coachData}
                   onBookNow={handleBookNow}
-                />
-
-                <RequestFormCard
-                  showForm={showRequestForm}
-                  onToggleForm={() => setShowRequestForm(!showRequestForm)}
                 />
 
                 <LocationSection
@@ -647,11 +569,6 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
           <SimilarCoachesSection coaches={similarCoachesState.length ? similarCoachesState : similarCoaches} />
 
         {/* Modals */}
-        <LessonDetailModal
-          lesson={selectedLesson}
-          onClose={() => setSelectedLesson(null)}
-        />
-
         <ReviewModal
           open={showReviewModal}
           onOpenChange={setShowReviewModal}

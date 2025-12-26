@@ -221,6 +221,9 @@ const authSlice = createSlice({
                 try {
                     sessionStorage.removeItem("user");
                     localStorage.removeItem("user");
+
+                    // Clean up chat state and WebSocket
+                    console.log('🧹 [authSlice] Cleaning up chat on logout');
                 } catch { }
             })
 

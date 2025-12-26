@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Building2, MapPin, Phone, Globe, Clock, Search } from "lucide-react"
 import { SportType } from "@/components/enums/ENUMS"
 import type { CreateRegistrationRequestPayload } from "@/features/field-owner-registration"
+import { Loading } from "@/components/ui/loading"
 
 interface FacilityInfoStepProps {
   formData: Partial<CreateRegistrationRequestPayload & {
@@ -126,7 +127,7 @@ const reverseGeocode = async (lat: number, lon: number): Promise<string | null> 
 
 export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoStepProps) {
   const [isSearching, setIsSearching] = useState(false)
-  
+
   // Map refs
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -137,7 +138,7 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
     const newSports = currentSports.includes(sport)
       ? currentSports.filter((s) => s !== sport)
       : [...currentSports, sport]
-    
+
     onFormDataChange({
       ...formData,
       supportedSports: newSports,
@@ -348,7 +349,7 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
             className="h-11 px-4"
           >
             {isSearching ? (
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <Loading size={16} />
             ) : (
               <Search className="h-4 w-4" />
             )}

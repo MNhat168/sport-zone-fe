@@ -5,7 +5,8 @@ import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dash
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Clock, Trophy, MapPin, Check, X } from "lucide-react";
+import { Calendar, Clock, Trophy, MapPin, Check, X } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import {
     fetchFieldOwnerTournamentRequests,
@@ -170,7 +171,7 @@ export default function TournamentRequestsPage() {
 
                 {loading && (
                     <div className="flex justify-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <Loading size={32} />
                     </div>
                 )}
 

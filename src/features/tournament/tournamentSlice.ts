@@ -81,6 +81,7 @@ interface TournamentState {
   availableFields: any[];
   availableCourts: any[]; // Add this
   tournamentRequests: any[];
+  participatedTournaments: Tournament[];
   loading: boolean;
   error: string | null;
   selectedTeam: number | null;
@@ -92,6 +93,7 @@ const initialState: TournamentState = {
   availableFields: [],
   availableCourts: [], // Initialize
   tournamentRequests: [],
+  participatedTournaments: [],
   loading: false,
   error: null,
   selectedTeam: null,
@@ -112,6 +114,9 @@ const tournamentSlice = createSlice({
     },
     setCurrentTournament: (state, action: PayloadAction<Tournament | null>) => {
       state.currentTournament = action.payload;
+    },
+    setParticipatedTournaments: (state, action: PayloadAction<Tournament[]>) => {
+      state.participatedTournaments = action.payload;
     },
     setAvailableFields: (state, action: PayloadAction<any[]>) => {
       state.availableFields = action.payload;
@@ -165,6 +170,7 @@ export const {
   setError,
   setTournaments,
   setCurrentTournament,
+  setParticipatedTournaments,
   setAvailableFields,
   setAvailableCourts, // Export
   setTournamentRequests,

@@ -16,13 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -40,18 +33,14 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  Users,
-  User,
   //   ChevronUp,
 } from "lucide-react";
 import { getCoachById, clearCurrentCoach, updateCoach, uploadCoachGalleryImages } from "@/features/coach";
-import { deleteLessonType } from "@/features/lesson-types/lessonTypesThunk";
 import { CustomSuccessToast, CustomFailedToast } from "@/components/toast/notificiation-toast";
 import type { RootState, AppDispatch } from "@/store/store";
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
+import { Loading } from "@/components/ui/loading";
 import { BioSection } from "./components/BioSection";
-import { LessonsSection } from "../../coach-detail-page/components/LessonsSection";
-import { CoachingSection } from "./components/CoachingSection";
 import { GallerySection } from "./components/GallerySection";
 import { LocationSection } from "./components/LocationSection";
 import { ReviewsSection } from "../../coach-detail-page/components/ReviewsSection";
@@ -59,45 +48,6 @@ import { ReviewModal } from "../../coach-detail-page/components/ReviewModal";
 import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
 import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
 
-interface LessonType {
-  id: string;
-  type: "single" | "pair" | "group";
-  name: string;
-  description: string;
-  icon: typeof User;
-  iconBg: string;
-  iconColor: string;
-  badge: string;
-  lessonPrice?: number | string;
-}
-
-// Mock lesson types - sẽ được thay thế bằng dữ liệu thật từ API khi có
-const mockLessonTypes: LessonType[] = [
-  {
-    id: "1",
-    type: "single",
-    name: "Buổi học kèm 1-1",
-    description:
-      "Buổi huấn luyện cá nhân hóa theo nhu cầu và trình độ của bạn. Nhận sự hướng dẫn tập trung từ HLV để cải thiện kỹ thuật, chiến thuật và nâng cao kỹ năng nhanh chóng.",
-    icon: User,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-    badge: "1 kèm 1",
-    lessonPrice: 200000,
-  },
-  {
-    id: "2",
-    type: "group",
-    name: "Buổi học nhóm nhỏ",
-    description:
-      "Luyện tập cùng 2-4 người trong môi trường hợp tác và hỗ trợ. Học hỏi từ HLV và bạn tập, phát triển kỹ năng phối hợp và thi đấu.",
-    icon: Users,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    badge: "2-4 người",
-    lessonPrice: 120000,
-  },
-];
 
 // Constants for map
 const DEFAULT_CENTER: [number, number] = [10.776889, 106.700806]; // Ho Chi Minh City
@@ -195,7 +145,6 @@ export default function CoachSelfDetailPage() {
   } = useSelector((state: RootState) => state.coach);
   const [activeTab, setActiveTab] = useState("bio");
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
-  const [selectedLesson, setSelectedLesson] = useState<LessonType | null>(null);
 
   // Reviews state
   const [coachReviews, setCoachReviews] = useState<any[]>([]);
@@ -232,39 +181,6 @@ export default function CoachSelfDetailPage() {
   }
   const [galleryItems, setGalleryItems] = useState<GalleryItemState[]>([]);
 
-  // Local copy of lessonTypes to support optimistic UI updates (deletion)
-  const [localLessonTypes, setLocalLessonTypes] = useState<LessonType[]>([]);
-  useEffect(() => {
-    const fromCurrent = (currentCoach?.lessonTypes && currentCoach.lessonTypes.length)
-      ? currentCoach.lessonTypes.map((lesson: any) => ({
-        id: lesson.id || lesson._id || "",
-        type: lesson.type as "single" | "pair" | "group",
-        name: lesson.name,
-        description: lesson.description,
-        icon: lesson.type === "single" ? User : Users,
-        iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
-        iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
-        badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
-        lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? (lesson as any).hourlyRate ?? undefined,
-      }))
-      : null;
-
-    const fromResolved = (resolvedCoachRaw?.lessonTypes && resolvedCoachRaw.lessonTypes.length)
-      ? resolvedCoachRaw.lessonTypes.map((lesson: any) => ({
-        id: lesson.id || lesson._id || "",
-        type: lesson.type as "single" | "pair" | "group",
-        name: lesson.name,
-        description: lesson.description,
-        icon: lesson.type === "single" ? User : Users,
-        iconBg: lesson.type === "single" ? "bg-green-100" : "bg-blue-100",
-        iconColor: lesson.type === "single" ? "text-green-600" : "text-blue-600",
-        badge: lesson.type === "single" ? "1-on-1" : "2-4 people",
-        lessonPrice: (lesson as any).lessonPrice ?? (lesson as any).price ?? (lesson as any).hourlyRate ?? undefined,
-      }))
-      : null;
-
-    setLocalLessonTypes(fromCurrent ?? fromResolved ?? mockLessonTypes);
-  }, [currentCoach, resolvedCoachRaw]);
 
   // Leaflet map refs
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -481,8 +397,6 @@ export default function CoachSelfDetailPage() {
     const handleScroll = () => {
       const sections = [
         "bio",
-        "lessons",
-        "coaching",
         "gallery",
         "location",
       ];
@@ -835,8 +749,6 @@ export default function CoachSelfDetailPage() {
 
   const tabs = [
     { id: "bio", label: "Giới thiệu" },
-    { id: "lessons", label: "Buổi học cùng tôi" },
-    { id: "coaching", label: "Huấn luyện" },
     { id: "gallery", label: "Thư viện ảnh" },
     { id: "location", label: "Vị trí" },
   ];
@@ -886,7 +798,7 @@ export default function CoachSelfDetailPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <Loading size={48} className="text-green-600 mx-auto mb-4" />
           <p className="text-muted-foreground">Đang tải thông tin huấn luyện viên...</p>
         </div>
       </div>
@@ -931,8 +843,9 @@ export default function CoachSelfDetailPage() {
   if (resolveCoachIdLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center text-muted-foreground">
-          Đang tìm mã HLV của bạn...
+        <div className="text-center">
+          <Loading size={48} className="text-green-600 mx-auto mb-4" />
+          <p className="text-muted-foreground">Đang tìm mã HLV của bạn...</p>
         </div>
       </div>
     );
@@ -1245,47 +1158,6 @@ export default function CoachSelfDetailPage() {
                 onSummaryChange={(val) => { setEditableSummary(val); setIsDirty(true); }}
               />
 
-              {/* Phần: Buổi học cùng tôi */}
-              <LessonsSection
-                lessonTypes={localLessonTypes}
-                onLessonClick={setSelectedLesson}
-                isEditMode={isEditMode}
-                onDelete={async (lessonId: string) => {
-                  // optimistic removal
-                  const prev = localLessonTypes;
-                  setLocalLessonTypes((cur) => cur.filter((l) => l.id !== lessonId));
-
-                  try {
-                    const action: any = await dispatch(deleteLessonType({ id: lessonId }));
-                    if (action?.meta?.requestStatus === 'fulfilled') {
-                      CustomSuccessToast('Xoá buổi học thành công');
-                      // kept optimistic UI; no full refresh to keep UX snappy
-                    } else {
-                      // revert
-                      setLocalLessonTypes(prev);
-                      CustomFailedToast(String(action?.payload?.message || 'Xoá thất bại'));
-                    }
-                  } catch (err) {
-                    console.error('Delete lesson failed', err);
-                    setLocalLessonTypes(prev);
-                    CustomFailedToast('Xoá buổi học thất bại');
-                  }
-                }}
-              />
-
-              {/* Phần: Coaching summary */}
-              <CoachingSection
-                coachingSummary={editableCoachingSummary}
-                isEditMode={isEditMode}
-                onCoachingSummaryChange={(val) => { setEditableCoachingSummary(val); setIsDirty(true); }}
-                certification={currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? resolvedCoachRaw?.certification}
-                experienceText={currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? resolvedCoachRaw?.experience}
-                rank={editableRank}
-                sports={editableSports}
-                onRankChange={(val) => { setEditableRank(val); setIsDirty(true); }}
-                onSportsChange={(val) => { setEditableSports(val); setIsDirty(true); }}
-              />
-
               {/* Phần: Thư viện ảnh */}
               <GallerySection
                 images={galleryImages}
@@ -1498,71 +1370,6 @@ export default function CoachSelfDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* Modal chi tiết buổi học */}
-      <Dialog
-        open={!!selectedLesson}
-        onOpenChange={() => setSelectedLesson(null)}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">{selectedLesson?.name}</DialogTitle>
-            <DialogDescription className="sr-only">Chi tiết và thông tin buổi học</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Loại buổi học */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Loại buổi học</Label>
-              <div className="flex items-center gap-3">
-                {selectedLesson && (
-                  <>
-                    <div
-                      className={`${selectedLesson.iconBg} p-2.5 rounded-lg`}
-                    >
-                      <selectedLesson.icon
-                        className={`h-5 w-5 ${selectedLesson.iconColor}`}
-                      />
-                    </div>
-                    <div>
-                      <Badge variant="secondary" className="font-semibold">
-                        {selectedLesson.badge}
-                      </Badge>
-                      <p className="text-sm text-muted-foreground mt-1 capitalize">Phiên {selectedLesson.type}</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Tên buổi học */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Tên</Label>
-              <p className="text-lg font-semibold">{selectedLesson?.name}</p>
-            </div>
-
-            {/* Mô tả */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Mô tả</Label>
-              <p className="text-muted-foreground leading-relaxed">
-                {selectedLesson?.description}
-              </p>
-            </div>
-
-            {/* Nút hành động */}
-            <div className="flex gap-3 pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => setSelectedLesson(null)}
-                className="flex-1 hover:bg-muted bg-transparent"
-              >Đóng</Button>
-              <Button className="flex-1 bg-[#1a2332] hover:bg-[#1a2332]/90 text-white">
-                <Calendar className="h-4 w-4 mr-2" />
-                Đặt buổi học này
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Review modal - placed with other modals */}
       <ReviewModal

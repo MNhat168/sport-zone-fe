@@ -8,6 +8,7 @@ import { useAppSelector } from "@/store/hook";
 import { useLocation } from "react-router-dom";
 import type { Field } from "@/types/field-type";
 import axiosPrivate from "@/utils/axios/axiosPrivate";
+import { Loading } from "@/components/ui/loading";
 
 /**
  * Interface for booking form data
@@ -357,7 +358,7 @@ export const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 >
                     {isHoldingSlot ? (
                         <>
-                            <span className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <Loading size={16} className="mr-2 border-white" />
                             Đang xử lý...
                         </>
                     ) : (

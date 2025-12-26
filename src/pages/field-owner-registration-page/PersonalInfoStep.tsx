@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Shield, Loader2, CheckCircle2, XCircle } from "lucide-react"
+import { Shield, CheckCircle2, XCircle } from "lucide-react"
+import { Loading } from "@/components/ui/loading"
 import { createEkycSession } from "@/features/field-owner-registration/registrationAPI"
 import { useEkycPolling } from "@/hooks/useEkycPolling"
 import { CustomFailedToast, CustomSuccessToast } from "@/components/toast/notificiation-toast"
@@ -255,7 +256,7 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
               >
                 {isCreatingSession ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loading size={16} className="mr-2 inline-block" />
                     Đang khởi tạo...
                   </>
                 ) : (
@@ -269,7 +270,7 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
 
             {isEkycPending && (
               <div className="flex items-center gap-2 text-blue-600">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loading size={16} />
                 <span className="text-xs sm:text-sm font-medium">
                   Đang chờ xác thực... Vui lòng hoàn thành trên cửa sổ didit.
                 </span>

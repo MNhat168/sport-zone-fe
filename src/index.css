@@ -193,6 +193,37 @@ body {
   .CollapsibleContent[data-state='closed'] {
     animation: accordion-up 300ms ease-out;
   }
+
+  /* Chat widget animations */
+  .chat-widget-enter {
+    animation: slideUp 300ms ease-out;
+  }
+  
+  .chat-widget-exit {
+    animation: slideDown 300ms ease-in;
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideDown {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
 }
 
 /* Sidebar variables for light theme */

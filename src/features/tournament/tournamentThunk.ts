@@ -10,6 +10,7 @@ import {
   buildTournamentsQuery,
   buildAvailableFieldsQuery,
   MY_TOURNAMENTS_API,
+  MY_PARTICIPATIONS_API,
   UPDATE_TOURNAMENT_API,
 } from './tournamentAPI';
 import {
@@ -17,6 +18,7 @@ import {
   setError,
   setTournaments,
   setCurrentTournament,
+  setParticipatedTournaments,
   setAvailableFields,
   addTournament,
   updateTournament,
@@ -338,6 +340,33 @@ export const fetchMyTournaments = createAsyncThunk(
       return validTournaments;
     } catch (error: any) {
       console.error('Error fetching my tournaments:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch tournaments';
+      dispatch(setError(errorMsg));
+      return rejectWithValue(errorMsg);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+);
+
+export const fetchMyParticipatedTournaments = createAsyncThunk(
+  'tournament/fetchMyParticipatedTournaments',
+  async (_, { dispatch, rejectWithValue }) => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+
+    try {
+      const response = await axiosPrivate.get(MY_PARTICIPATIONS_API);
+      console.log('My participations response:', response.data);
+
+      const tournaments = response.data.data || response.data || [];
+      const mappedTournaments = tournaments.map(mapApiTournamentToAppTournament);
+      const validTournaments = mappedTournaments.filter((t): t is Tournament => t !== null);
+
+      dispatch(setParticipatedTournaments(validTournaments));
+      return validTournaments;
+    } catch (error: any) {
+      console.error('Error fetching my participations:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch tournaments';
       dispatch(setError(errorMsg));
       return rejectWithValue(errorMsg);

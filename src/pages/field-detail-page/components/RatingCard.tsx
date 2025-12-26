@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Loading } from "@/components/ui/loading"
 import { Star, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -99,7 +100,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
         } else {
           setFieldReviews(items)
         }
-        
+
         const pagination = resp?.pagination || resp?.data?.pagination || {}
         setReviewsPage(pagination.page ?? page)
         setReviewsTotalPages(pagination.totalPages ?? 1)
@@ -137,7 +138,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
       CustomFailedToast("Vui lòng chọn điểm đánh giá từ 1 đến 5")
       return
@@ -171,9 +172,9 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
         setReviewTitle("")
         setReviewComment("")
         setHasAcceptedTerms(false)
-        
+
         CustomSuccessToast("Cảm ơn bạn — đánh giá đã được gửi.")
-        
+
         // Wait a bit for database to save, then refresh both reviews and field data
         setTimeout(async () => {
           try {
@@ -216,9 +217,8 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
               )}
               <ChevronDown
                 onClick={() => setIsExpanded(!isExpanded)}
-                className={`w-5 h-5 transition-transform duration-200 cursor-pointer ${
-                  isExpanded ? "rotate-180" : "rotate-0"
-                }`}
+                className={`w-5 h-5 transition-transform duration-200 cursor-pointer ${isExpanded ? "rotate-180" : "rotate-0"
+                  }`}
               />
             </div>
           </div>
@@ -227,83 +227,85 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
           <>
             <hr className="border-t border-gray-300 my-0 mx-6" />
             <CardContent className="pt-6">
-            {/* Rating Summary Section */}
-            <div className="bg-gray-50 rounded-lg p-6 mb-6">
-              <div className="flex items-start gap-8">
-                {/* Left: Rating Score */}
-                <div className="flex flex-col items-center justify-center bg-white rounded-lg shadow-sm min-w-[140px]">
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {calculatedRating.toFixed(1)}
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2">trên 5.0</div>
-                  <div className="flex gap-0.5 mb-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < Math.round(calculatedRating)
+              {/* Rating Summary Section */}
+              <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                <div className="flex items-start gap-8">
+                  {/* Left: Rating Score */}
+                  <div className="flex flex-col items-center justify-center bg-white rounded-lg shadow-sm min-w-[140px]">
+                    <div className="text-3xl font-bold text-gray-900 mb-2">
+                      {calculatedRating.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-2">trên 5.0</div>
+                    <div className="flex gap-0.5 mb-3">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${i < Math.round(calculatedRating)
                             ? "fill-yellow-400 text-yellow-400"
                             : "text-gray-300"
-                        }`}
-                      />
-                    ))}
+                            }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500">{calculatedReviewCount} đánh giá</p>
                   </div>
-                  <p className="text-xs text-gray-500">{calculatedReviewCount} đánh giá</p>
-                </div>
 
-                {/* Right: Rating Breakdown */}
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                    Được giới thiệu bởi {calculatedReviewCount > 0 ? Math.round((calculatedRating / 5) * 100) : 0}% người chơi
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {["Chất lượng sân", "Dịch vụ", "Vị trí", "Giá cả"].map((category, idx) => (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600">{category}</span>
-                          <span className="font-semibold text-gray-900">{calculatedRating.toFixed(1)}</span>
+                  {/* Right: Rating Breakdown */}
+                  <div className="flex-1 space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                      Được giới thiệu bởi {calculatedReviewCount > 0 ? Math.round((calculatedRating / 5) * 100) : 0}% người chơi
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {["Chất lượng sân", "Dịch vụ", "Vị trí", "Giá cả"].map((category, idx) => (
+                        <div key={idx} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-600">{category}</span>
+                            <span className="font-semibold text-gray-900">{calculatedRating.toFixed(1)}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${(calculatedRating / 5) * 100}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${(calculatedRating / 5) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
               {/* Reviews List */}
-                {/* Filter controls */}
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-sm text-gray-600">Lọc theo:</span>
+              {/* Filter controls */}
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-sm text-gray-600">Lọc theo:</span>
+                <button
+                  onClick={() => setSelectedRatingFilter(null)}
+                  className={`text-sm px-2 py-1 rounded ${selectedRatingFilter === null ? 'bg-green-600 text-white' : 'bg-transparent text-gray-700 hover:bg-gray-100'}`}
+                >
+                  Tất cả
+                </button>
+                {Array.from({ length: 5 }, (_, i) => 5 - i).map((star) => (
                   <button
-                    onClick={() => setSelectedRatingFilter(null)}
-                    className={`text-sm px-2 py-1 rounded ${selectedRatingFilter === null ? 'bg-green-600 text-white' : 'bg-transparent text-gray-700 hover:bg-gray-100'}`}
+                    key={star}
+                    onClick={() => setSelectedRatingFilter(star)}
+                    className={`inline-flex items-center gap-1 text-sm px-2 py-1 rounded ${selectedRatingFilter === star ? 'bg-green-600 text-white' : 'bg-transparent text-gray-700 hover:bg-gray-100'}`}
                   >
-                    Tất cả
+                    <div className="flex items-center gap-0.5">
+                      {Array.from({ length: star }).map((_, s) => (
+                        <Star key={s} className="h-3 w-3 text-yellow-400" />
+                      ))}
+                    </div>
+                    <span className="ml-1">{star}</span>
                   </button>
-                  {Array.from({ length: 5 }, (_, i) => 5 - i).map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setSelectedRatingFilter(star)}
-                      className={`inline-flex items-center gap-1 text-sm px-2 py-1 rounded ${selectedRatingFilter === star ? 'bg-green-600 text-white' : 'bg-transparent text-gray-700 hover:bg-gray-100'}`}
-                    >
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: star }).map((_, s) => (
-                          <Star key={s} className="h-3 w-3 text-yellow-400" />
-                        ))}
-                      </div>
-                      <span className="ml-1">{star}</span>
-                    </button>
-                  ))}
-                </div>
-              <div className="space-y-3">
+                ))}
+              </div>
+              <div className="space-y-3 min-h-[100px] flex flex-col justify-center">
                 {reviewsLoading ? (
-                  <div className="text-center text-gray-500 py-4 text-sm">Đang tải đánh giá...</div>
+                  <div className="flex flex-col items-center justify-center py-6 gap-2">
+                    <Loading size={24} className="text-green-600" />
+                    <div className="text-gray-500 text-xs">Đang tải đánh giá...</div>
+                  </div>
                 ) : fieldReviews && fieldReviews.length > 0 ? (
                   filteredReviews.length === 0 ? (
                     <div className="text-gray-500 text-center py-4 text-sm">Không có đánh giá phù hợp với bộ lọc.</div>
@@ -321,7 +323,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
                         minute: '2-digit'
                       }) : ''
                       const avatarUrl = r.user?.avatarUrl
-                      
+
                       return (
                         <Card key={idx} className="py-0 rounded-none border-0">
                           <CardContent className="">
@@ -341,11 +343,11 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
                                   <h4 className="font-semibold text-sm text-gray-900">{author}</h4>
                                   <span className="text-xs text-gray-500">{date}</span>
                                 </div>
-                              {r.title && (
-                                <p className="text-sm font-semibold text-gray-800 leading-snug">
-                                  {r.title}
-                                </p>
-                              )}
+                                {r.title && (
+                                  <p className="text-sm font-semibold text-gray-800 leading-snug">
+                                    {r.title}
+                                  </p>
+                                )}
                                 <div className="flex items-center gap-2">
                                   <p className="text-sm text-gray-700 leading-snug flex-1 min-w-0">{comment}</p>
                                   <div className="flex items-center gap-1 shrink-0">
@@ -387,17 +389,16 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  
+
                   {Array.from({ length: reviewsTotalPages }, (_, i) => i + 1).map((page) => (
                     <Button
                       key={page}
                       variant={page === reviewsPage ? "default" : "outline"}
                       size="sm"
-                      className={`h-8 w-8 p-0 ${
-                        page === reviewsPage
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "hover:bg-gray-50"
-                      }`}
+                      className={`h-8 w-8 p-0 ${page === reviewsPage
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "hover:bg-gray-50"
+                        }`}
                       onClick={async () => {
                         if (reviewsLoading || page === reviewsPage) return
                         await fetchReviews(page, false)
@@ -407,7 +408,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
                       {page}
                     </Button>
                   ))}
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -465,11 +466,10 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
                       className="transition-transform hover:scale-110 focus:outline-none"
                     >
                       <Star
-                        className={`h-8 w-8 transition-colors ${
-                          star <= (hoveredRating || reviewRating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
+                        className={`h-8 w-8 transition-colors ${star <= (hoveredRating || reviewRating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                          }`}
                       />
                     </button>
                   ))}
@@ -536,9 +536,10 @@ export const RatingCard: React.FC<RatingCardProps> = ({ refObj, id, ratingValue,
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2"
                 disabled={isSubmittingReview}
               >
+                {isSubmittingReview && <Loading size={16} />}
                 {isSubmittingReview ? "Đang gửi..." : "Gửi đánh giá"}
               </Button>
             </div>

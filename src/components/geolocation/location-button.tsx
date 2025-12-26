@@ -3,6 +3,7 @@ import { Navigation, MapPin, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { locationAPIService } from '@/utils/geolocation';
+import { Loading } from '@/components/ui/loading';
 
 interface LocationButtonProps {
   onLocationObtained?: (lat: number, lng: number) => void;
@@ -38,15 +39,15 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
     try {
       console.log('📍 [LOCATION BUTTON] Getting user location...');
       const coordinates = await getCoordinates();
-      
+
       if (coordinates && coordinates.lat !== undefined && coordinates.lng !== undefined) {
         const location = { lat: coordinates.lat, lng: coordinates.lng };
         setUserLocation(location);
         console.log('✅ [LOCATION BUTTON] Location obtained:', location);
-        
+
         // Call callback if provided
         onLocationObtained?.(location.lat, location.lng);
-        
+
         // Send to backend if enabled
         if (autoSendToBackend) {
           await sendLocationToBackend(location.lat, location.lng);
@@ -65,7 +66,7 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
     setIsSendingLocation(true);
     try {
       console.log('📡 [LOCATION BUTTON] Sending location to backend:', { lat, lng });
-      
+
       const result = await locationAPIService.sendLocation({
         latitude: lat,
         longitude: lng,
@@ -108,7 +109,7 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
       >
         {geolocationLoading || isSendingLocation ? (
           <>
-            <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            <Loading size={16} className="border-emerald-600" />
             {isSendingLocation ? 'Đang gửi...' : 'Đang lấy vị trí...'}
           </>
         ) : (
@@ -118,7 +119,7 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
           </>
         )}
       </Button>
-      
+
       {showCoordinates && userLocation && (
         <div className="flex items-center gap-2 text-sm text-emerald-600">
           <MapPin className="w-4 h-4" />
@@ -127,7 +128,7 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
           </span>
         </div>
       )}
-      
+
       {geolocationError && (
         <div className="text-sm text-red-600 flex items-center gap-1">
           <AlertCircle className="w-4 h-4" />

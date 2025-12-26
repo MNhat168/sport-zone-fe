@@ -3,7 +3,8 @@ import { BASE_URL } from "../../utils/constant-value/constant";
 // Base tournament endpoints
 export const TOURNAMENTS_API = `${BASE_URL}/tournaments`;
 export const TOURNAMENT_BY_ID_API = (id: string) => `${BASE_URL}/tournaments/${id}`;
-export const MY_TOURNAMENTS_API = `${BASE_URL}/tournaments/my-tournaments`; // Add this
+export const MY_TOURNAMENTS_API = `${BASE_URL}/tournaments/my-tournaments`;
+export const MY_PARTICIPATIONS_API = `${BASE_URL}/tournaments/my-participations`;
 export const CREATE_TOURNAMENT_API = `${BASE_URL}/tournaments`;
 export const UPDATE_TOURNAMENT_API = (id: string) => `${BASE_URL}/tournaments/${id}`; // Add this
 export const CANCEL_TOURNAMENT_API = (id: string) => `${BASE_URL}/tournaments/${id}`; // Add this

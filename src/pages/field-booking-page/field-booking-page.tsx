@@ -17,7 +17,7 @@ import { PageWrapper } from "@/components/layouts/page-wrapper";
 import { useAuth } from "@/routes/auth-wrapper";
 import axiosPublic from "@/utils/axios/axiosPublic";
 import { FIELD_COURTS_API } from "@/features/field/fieldAPI";
- 
+
 
 const FieldBookingPage = () => {
     const breadcrumbs = [{ label: "Trang chủ", href: "/" }, { label: "Đặt sân" }];
@@ -41,7 +41,7 @@ const FieldBookingPage = () => {
     });
     const [courts, setCourts] = useState<Array<{ id: string; name: string; courtNumber?: number }>>([]);
     const [courtsError, setCourtsError] = useState<string | null>(null);
-    
+
 
     // State để quản lý banner khuyến khích đăng nhập
     const [showBenefitsBanner, setShowBenefitsBanner] = useState(true);
@@ -49,7 +49,7 @@ const FieldBookingPage = () => {
     // Amenities selection data
     const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
 
-    
+
 
     // Restore selected field on refresh: from URL ?fieldId= or sessionStorage
     useEffect(() => {
@@ -80,7 +80,7 @@ const FieldBookingPage = () => {
         }
     }, [location.search, location.state, currentField, dispatch]);
 
-    
+
 
     // Persist currently selected field id for refresh
     useEffect(() => {
@@ -115,7 +115,7 @@ const FieldBookingPage = () => {
                             email: parsed.email ?? prev.email,
                             phone: parsed.phone ?? prev.phone,
                         }));
-                        
+
                         // If we have complete booking data, move to amenities step
                         if (parsed.date && parsed.startTime && parsed.endTime) {
                             setCurrentStep(BookingStep.AMENITIES);
@@ -208,7 +208,7 @@ const FieldBookingPage = () => {
         console.log('Payment completed:', formData);
 
         // TODO: Implement API call to create booking
-        alert('Booking and payment completed successfully!');
+        // Booking and payment completed successfully
     };
 
 
@@ -217,17 +217,17 @@ const FieldBookingPage = () => {
             <NavbarDarkComponent />
             <PageWrapper>
                 <PageHeader title="Đặt sân" breadcrumbs={breadcrumbs} />
-                
+
                 {/* Banner khuyến khích đăng nhập - chỉ hiển thị khi chưa đăng nhập */}
                 {!isAuthenticated && showBenefitsBanner && (
                     <div className="w-full max-w-[1320px] mx-auto px-3 mt-4">
-                        <LoginBenefitsBanner 
+                        <LoginBenefitsBanner
                             onClose={() => setShowBenefitsBanner(false)}
                             showCloseButton={true}
                         />
                     </div>
                 )}
-                
+
                 <BookingFieldTabs
                     currentStep={currentStep}
                 />
