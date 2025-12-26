@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
+import { useAppSelector } from "@/store/hook";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -41,6 +42,16 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   showWriteReview = true,
 }) => {
   const reviewsRef = useRef<HTMLDivElement | null>(null);
+  const authUser = useAppSelector((s: any) => s.auth.user)
+  const userHasReviewed = useMemo(() => {
+    if (!authUser || !coachReviews || coachReviews.length === 0) return false
+    const uid = (authUser as any)?.id || (authUser as any)?._id || (authUser as any)?.userId
+    if (!uid) return false
+    return coachReviews.some((r) => {
+      const rid = r?.user?.id || r?.user?._id || r?.user
+      return String(rid) === String(uid)
+    })
+  }, [authUser, coachReviews])
   // Note: do not auto-scroll when page changes; keep user position stable
   const avgRating = coachStats?.averageRating ?? (coachData?.rating ? Number(coachData.rating) : 0);
   const totalReviews = coachStats?.totalReviews ?? (coachData as any)?.numberOfReviews ?? coachReviews.length ?? 0;
@@ -54,12 +65,23 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
         <div className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl">Đánh giá</CardTitle>
           {showWriteReview && (
-            <Button
-              onClick={onWriteReview}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              Viết đánh giá
-            </Button>
+            <>
+              {!authUser && (
+                <Button onClick={onWriteReview} className="bg-green-600 hover:bg-green-700 text-white">
+                  Viết đánh giá
+                </Button>
+              )}
+              {authUser && !userHasReviewed && (
+                <Button onClick={onWriteReview} className="bg-green-600 hover:bg-green-700 text-white">
+                  Viết đánh giá
+                </Button>
+              )}
+              {authUser && userHasReviewed && (
+                <Button size="sm" variant="outline" disabled className="text-gray-500">
+                  Bạn đã đánh giá
+                </Button>
+              )}
+            </>
           )}
         </div>
         <hr className="my-2 border-gray-200 w-full" />
