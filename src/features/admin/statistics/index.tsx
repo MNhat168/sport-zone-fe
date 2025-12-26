@@ -218,7 +218,7 @@ export default function Statistics() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                ${analyticsData.summary.totalRevenue?.toLocaleString()}
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(analyticsData.summary.totalRevenue || 0)}
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 {analyticsData.summary.growthRate}% so với năm trước

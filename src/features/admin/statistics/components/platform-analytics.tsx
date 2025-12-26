@@ -16,11 +16,11 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Revenue Analysis
+            Phân tích doanh thu
             {aiGenerated && (
               <Badge variant="outline" className="ml-2">
                 <Brain className="h-3 w-3 mr-1" />
-                AI Enhanced
+                Cải thiện bởi AI
               </Badge>
             )}
           </CardTitle>
@@ -28,9 +28,9 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
         <CardContent>
           <Tabs defaultValue="sports">
             <TabsList>
-              <TabsTrigger value="sports">By Sport</TabsTrigger>
-              <TabsTrigger value="type">By Type</TabsTrigger>
-              <TabsTrigger value="periods">Peak Periods</TabsTrigger>
+              <TabsTrigger value="sports">Theo môn thể thao</TabsTrigger>
+              <TabsTrigger value="type">Theo loại</TabsTrigger>
+              <TabsTrigger value="periods">Giờ cao điểm</TabsTrigger>
             </TabsList>
             
             <TabsContent value="sports" className="space-y-4">
@@ -43,7 +43,7 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
                     <div>
                       <p className="font-medium">{item.sport}</p>
                       <p className="text-sm text-muted-foreground">
-                        ${item.revenue.toLocaleString()}
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.revenue || 0)}
                       </p>
                     </div>
                   </div>
@@ -62,7 +62,7 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
                     <Badge>{item.percentage}%</Badge>
                   </div>
                   <div className="text-2xl font-bold">
-                    ${item.revenue.toLocaleString()}
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.revenue || 0)}
                   </div>
                 </div>
               ))}
@@ -75,11 +75,11 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Award className="h-5 w-5" />
-            Sports Popularity Ranking
+            Xếp hạng độ phổ biến thể thao
             {aiGenerated && (
               <Badge variant="outline" className="ml-2">
                 <Brain className="h-3 w-3 mr-1" />
-                AI Enhanced
+                Cải thiện bởi AI
               </Badge>
             )}
           </CardTitle>
@@ -99,15 +99,15 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
                   <div>
                     <p className="font-bold text-lg">{sport.sport}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{sport.bookings} bookings</span>
-                      <span>{sport.tournaments} tournaments</span>
-                      <span>{sport.favorites} favorites</span>
+                      <span>{sport.bookings} lượt đặt</span>
+                      <span>{sport.tournaments} giải đấu</span>
+                      <span>{sport.favorites} yêu thích</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold">{sport.score}/100</div>
-                  <div className="text-sm text-muted-foreground">Popularity Score</div>
+                  <div className="text-sm text-muted-foreground">Điểm phổ biến</div>
                 </div>
               </div>
             ))}
@@ -120,11 +120,11 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              User Behavior Insights
+              Phân tích hành vi người dùng
               {aiGenerated && (
                 <Badge variant="outline" className="ml-2">
                   <Brain className="h-3 w-3 mr-1" />
-                  AI Enhanced
+                  Cải thiện bởi AI
                 </Badge>
               )}
             </CardTitle>
@@ -132,46 +132,46 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="font-semibold">Booking Patterns</h4>
+                <h4 className="font-semibold">Mẫu đặt chỗ</h4>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Peak Days</span>
+                    <span className="text-sm text-muted-foreground">Ngày cao điểm</span>
                     <span className="font-medium">
                       {data.userBehavior.bookingPatterns.peakBookingDays.join(', ')}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Peak Hours</span>
+                    <span className="text-sm text-muted-foreground">Giờ cao điểm</span>
                     <span className="font-medium">
                       {data.userBehavior.bookingPatterns.peakBookingHours.join(', ')}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Avg Duration</span>
+                    <span className="text-sm text-muted-foreground">Thời lượng trung bình</span>
                     <span className="font-medium">
-                      {data.userBehavior.bookingPatterns.averageBookingDuration} hours
+                      {data.userBehavior.bookingPatterns.averageBookingDuration} giờ
                     </span>
                   </div>
                 </div>
               </div>
               
               <div className="space-y-4">
-                <h4 className="font-semibold">Retention Metrics</h4>
+                <h4 className="font-semibold">Chỉ số giữ chân</h4>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Repeat Booking Rate</span>
+                    <span className="text-sm text-muted-foreground">Tỷ lệ đặt lại</span>
                     <span className="font-medium text-green-600">
                       {data.userBehavior.retentionMetrics.repeatBookingRate}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Favorite Conversion</span>
+                    <span className="text-sm text-muted-foreground">Chuyển đổi yêu thích</span>
                     <span className="font-medium text-blue-600">
                       {data.userBehavior.retentionMetrics.favoriteToBookingConversion}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Satisfaction Score</span>
+                    <span className="text-sm text-muted-foreground">Điểm hài lòng</span>
                     <span className="font-medium text-purple-600">
                       {data.userBehavior.retentionMetrics.userSatisfactionScore}/5
                     </span>

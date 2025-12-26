@@ -120,18 +120,18 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
         return (
             <Card className='mb-8 mt-4'>
                 <CardHeader>
-                    <CardTitle>Performance Analytics</CardTitle>
+                    <CardTitle>Phân tích hiệu suất</CardTitle>
                     <CardDescription>
-                        {activeTab === 'field-owners' ? 'Field Owner Performance' : 
-                         activeTab === 'coaches' ? 'Coach Performance' : 
-                         activeTab === 'overview' ? 'Platform Performance' : 'Analytics'}
+                        {activeTab === 'field-owners' ? 'Hiệu suất chủ sân' : 
+                         activeTab === 'coaches' ? 'Hiệu suất huấn luyện viên' : 
+                         activeTab === 'overview' ? 'Hiệu suất nền tảng' : 'Phân tích'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className='h-[400px] flex items-center justify-center'>
                     <div className='text-center'>
-                        <p className='text-muted-foreground mb-2'>No chart data available</p>
+                        <p className='text-muted-foreground mb-2'>Không có dữ liệu biểu đồ</p>
                         <p className='text-xs text-muted-foreground'>
-                            Data structure: {Array.isArray(data) ? 'Array' : 'Object'} with {Array.isArray(data) ? data.length : Object.keys(data || {}).length} items
+                            Cấu trúc dữ liệu: {Array.isArray(data) ? 'Mảng' : 'Đối tượng'} với {Array.isArray(data) ? data.length : Object.keys(data || {}).length} mục
                         </p>
                     </div>
                 </CardContent>
@@ -243,7 +243,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                                 <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
-                        <Tooltip formatter={(value) => [value, 'Count']} />
+                        <Tooltip formatter={(value) => [value, 'Số lượng']} />
                         <Legend />
                     </PieChart>
                 )
@@ -257,15 +257,15 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         <YAxis yAxisId="right" orientation="right" />
                         <Tooltip 
                             formatter={(value, name) => {
-                                if (name === 'revenue') return [`$${Number(value).toLocaleString()}`, 'Revenue']
-                                if (name === 'growth') return [`${value}%`, 'Growth']
+                                if (name === 'revenue') return [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value)), 'Doanh thu']
+                                if (name === 'growth') return [`${value}%`, 'Tăng trưởng']
                                 return [value, name]
                             }}
                         />
                         <Legend />
-                        <Bar yAxisId="left" dataKey="revenue" fill="#8884d8" name="Revenue ($)" />
+                        <Bar yAxisId="left" dataKey="revenue" fill="#8884d8" name="Doanh thu (VND)" />
                         {chartData[0]?.growth !== undefined && (
-                            <Line yAxisId="right" type="monotone" dataKey="growth" stroke="#ff7300" name="Growth (%)" />
+                            <Line yAxisId="right" type="monotone" dataKey="growth" stroke="#ff7300" name="Tăng trưởng (%)" />
                         )}
                     </BarChart>
                 )
@@ -278,8 +278,8 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         <YAxis />
                         <Tooltip 
                             formatter={(value, name) => {
-                                if (name === 'revenue') return [`$${value}`, 'Revenue']
-                                if (name === 'bookings') return [value, 'Bookings']
+                                if (name === 'revenue') return [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value)), 'Doanh thu']
+                                if (name === 'bookings') return [value, 'Lượt đặt']
                                 return [value, name]
                             }}
                         />
@@ -287,14 +287,14 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         <Bar 
                             dataKey="bookings" 
                             fill="#8884d8" 
-                            name="Total Bookings"
+                            name="Tổng lượt đặt"
                             radius={[4, 4, 0, 0]}
                         />
                         {chartData[0]?.revenue !== undefined && chartData[0]?.revenue > 0 && (
                             <Bar 
                                 dataKey="revenue" 
                                 fill="#82ca9d" 
-                                name="Revenue ($)"
+                                name="Doanh thu (VND)"
                                 radius={[4, 4, 0, 0]}
                             />
                         )}
@@ -308,41 +308,41 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
             <CardHeader className='flex flex-row items-center justify-between'>
                 <div>
                     <CardTitle>
-                        {selectedChart === 'revenue' ? 'Revenue Analysis' : 
-                         selectedChart === 'pie' ? 'Distribution Analysis' : 
-                         activeTab === 'field-owners' ? 'Field Owners Performance' :
-                         activeTab === 'coaches' ? 'Coaches Performance' : 'Performance Analytics'}
+                        {selectedChart === 'revenue' ? 'Phân tích doanh thu' : 
+                         selectedChart === 'pie' ? 'Phân tích phân bổ' : 
+                         activeTab === 'field-owners' ? 'Hiệu suất chủ sân' :
+                         activeTab === 'coaches' ? 'Hiệu suất huấn luyện viên' : 'Phân tích hiệu suất'}
                     </CardTitle>
                     <CardDescription>
-                        {selectedChart === 'pie' && activeTab === 'field-owners' ? 'Sports Distribution Across Field Owners' :
-                         activeTab === 'field-owners' ? 'Top performing field owners by bookings' : 
-                         activeTab === 'coaches' ? 'Coach Performance Metrics' : 
-                         activeTab === 'overview' ? 'Platform Performance' : 'Analytics'}
+                        {selectedChart === 'pie' && activeTab === 'field-owners' ? 'Phân bổ thể thao theo chủ sân' :
+                         activeTab === 'field-owners' ? 'Chủ sân hoạt động tốt nhất theo lượt đặt' : 
+                         activeTab === 'coaches' ? 'Chỉ số hiệu suất huấn luyện viên' : 
+                         activeTab === 'overview' ? 'Hiệu suất nền tảng' : 'Phân tích'}
                     </CardDescription>
                 </div>
                 <div className='flex gap-2'>
                     <Select value={timeRange} onValueChange={setTimeRange}>
                         <SelectTrigger className="w-[130px]">
-                            <SelectValue placeholder="Time Range" />
+                            <SelectValue placeholder="Khoảng thời gian" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="3months">Last 3 Months</SelectItem>
-                            <SelectItem value="6months">Last 6 Months</SelectItem>
-                            <SelectItem value="1year">Last Year</SelectItem>
-                            <SelectItem value="all">All Time</SelectItem>
+                            <SelectItem value="3months">3 tháng qua</SelectItem>
+                            <SelectItem value="6months">6 tháng qua</SelectItem>
+                            <SelectItem value="1year">Năm trước</SelectItem>
+                            <SelectItem value="all">Tất cả</SelectItem>
                         </SelectContent>
                     </Select>
                     
                     <Select value={selectedChart} onValueChange={(value) => setSelectedChart(value as 'bar' | 'line' | 'pie' | 'revenue')}>
                         <SelectTrigger className="w-[130px]">
-                            <SelectValue placeholder="Chart Type" />
+                            <SelectValue placeholder="Loại biểu đồ" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="bar">Bar Chart</SelectItem>
-                            <SelectItem value="line">Trend Line</SelectItem>
-                            <SelectItem value="pie">Distribution</SelectItem>
+                            <SelectItem value="bar">Biểu đồ cột</SelectItem>
+                            <SelectItem value="line">Đường xu hướng</SelectItem>
+                            <SelectItem value="pie">Phân bổ</SelectItem>
                             {activeTab === 'field-owners' && (
-                                <SelectItem value="revenue">Revenue Analysis</SelectItem>
+                                <SelectItem value="revenue">Phân tích doanh thu</SelectItem>
                             )}
                         </SelectContent>
                     </Select>

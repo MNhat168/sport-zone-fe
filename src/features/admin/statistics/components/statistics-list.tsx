@@ -55,11 +55,11 @@ export function StatisticsList({
                      []
 
     if (!Array.isArray(dataArray)) {
-        return <p className='text-center text-destructive'>Error loading data. Expected array but got {typeof data}</p>
+        return <p className='text-center text-destructive'>Lỗi tải dữ liệu. Mong đợi mảng nhưng nhận được {typeof data}</p>
     }
 
     if (dataArray.length === 0) {
-        return <p className='text-center text-muted-foreground'>No data found.</p>
+        return <p className='text-center text-muted-foreground'>Không tìm thấy dữ liệu.</p>
     }
 
     const toggleExpand = (id: string) => {
@@ -67,10 +67,10 @@ export function StatisticsList({
     }
 
     const getPerformanceBadge = (score: number) => {
-        if (score >= 80) return { label: 'Excellent', variant: 'default' as const, color: 'bg-green-100 text-green-800' }
-        if (score >= 60) return { label: 'Good', variant: 'secondary' as const, color: 'bg-blue-100 text-blue-800' }
-        if (score >= 40) return { label: 'Average', variant: 'outline' as const, color: 'bg-yellow-100 text-yellow-800' }
-        return { label: 'Needs Improvement', variant: 'destructive' as const, color: 'bg-red-100 text-red-800' }
+        if (score >= 80) return { label: 'Xuất sắc', variant: 'default' as const, color: 'bg-green-100 text-green-800' }
+        if (score >= 60) return { label: 'Tốt', variant: 'secondary' as const, color: 'bg-blue-100 text-blue-800' }
+        if (score >= 40) return { label: 'Trung bình', variant: 'outline' as const, color: 'bg-yellow-100 text-yellow-800' }
+        return { label: 'Cần cải thiện', variant: 'destructive' as const, color: 'bg-red-100 text-red-800' }
     }
 
     return (
@@ -92,12 +92,12 @@ export function StatisticsList({
                                         <CardTitle className='text-xl font-bold'>{name}</CardTitle>
                                         <CardDescription className='flex items-center gap-2'>
                                             {activeTab === 'field-owners' 
-                                                ? `${item.totalFields || item.fieldsCount || 0} Fields` 
-                                                : `${item.sports?.join(', ') || item.sport || 'Multiple Sports'}`}
+                                                ? `${item.totalFields || item.fieldsCount || 0} Sân` 
+                                                : `${item.sports?.join(', ') || item.sport || 'Nhiều môn thể thao'}`}
                                             {aiGenerated && (
                                                 <Badge variant="outline" className='text-xs'>
                                                     <Brain className="h-3 w-3 mr-1" />
-                                                    AI Enhanced
+                                                    Cải thiện bởi AI
                                                 </Badge>
                                             )}
                                         </CardDescription>
@@ -113,7 +113,7 @@ export function StatisticsList({
                                         size="sm" 
                                         onClick={() => toggleExpand(id)}
                                     >
-                                        {isExpanded ? 'Show Less' : 'View Details'}
+                                        {isExpanded ? 'Thu gọn' : 'Xem chi tiết'}
                                     </Button>
                                 </div>
                             </div>
@@ -122,7 +122,7 @@ export function StatisticsList({
                                 <div className='flex flex-col'>
                                     <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                                         <Star className='h-4 w-4' />
-                                        Rating
+                                        Đánh giá
                                     </div>
                                     <div className='flex items-center gap-2 mt-1'>
                                         <span className='text-2xl font-bold'>{(item.averageRating || item.rating || 0).toFixed(1)}</span>
@@ -134,7 +134,7 @@ export function StatisticsList({
                                 <div className='flex flex-col'>
                                     <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                                         <Calendar className='h-4 w-4' />
-                                        Bookings
+                                        Lượt đặt
                                     </div>
                                     <span className='text-2xl font-bold'>{(item.totalBookings || item.bookings || 0).toLocaleString()}</span>
                                     <div className='flex items-center gap-1 text-xs'>
@@ -156,7 +156,7 @@ export function StatisticsList({
                                 <div className='flex flex-col'>
                                     <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                                         <Users className='h-4 w-4' />
-                                        Favorites
+                                        Yêu thích
                                     </div>
                                     <span className='text-2xl font-bold'>{(item.totalFavorites || item.favorites || 0).toLocaleString()}</span>
                                     <span className='text-xs text-muted-foreground'>
@@ -170,9 +170,9 @@ export function StatisticsList({
                                     <div className='flex flex-col'>
                                         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                                             <DollarSign className='h-4 w-4' />
-                                            Revenue
+                                            Doanh thu
                                         </div>
-                                        <span className='text-2xl font-bold'>${(item.revenue || 0).toLocaleString()}</span>
+                                        <span className='text-2xl font-bold'>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.revenue || 0)}</span>
                                         <div className='flex items-center gap-1 text-xs'>
                                             {item.revenueTrend === 'increasing' ? (
                                                 <TrendingUp className='h-3 w-3 text-green-600' />
@@ -180,7 +180,7 @@ export function StatisticsList({
                                                 <TrendingDown className='h-3 w-3 text-red-600' />
                                             )}
                                             <span>
-                                                Last 30 days
+                                                30 ngày qua
                                                 {aiGenerated && ' (AI)'}
                                             </span>
                                         </div>
@@ -195,9 +195,9 @@ export function StatisticsList({
                                     <div className='flex gap-3 rounded-lg bg-muted/50 p-4'>
                                         <Target className='h-6 w-6 flex-shrink-0 text-primary' />
                                         <div>
-                                            <h4 className='mb-1 text-sm font-semibold'>AI Insight</h4>
+                                            <h4 className='mb-1 text-sm font-semibold'>Phân tích AI</h4>
                                             <p className='text-sm text-muted-foreground line-clamp-2'>
-                                                {item.aiInsight || item.insight || 'No insights available. Click "Generate AI Insights" button.'}
+                                                {item.aiInsight || item.insight || 'Chưa có phân tích. Nhấn nút "Tạo phân tích AI".'}
                                             </p>
                                         </div>
                                     </div>
@@ -218,7 +218,7 @@ export function StatisticsList({
                                         <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-md">
                                             <div className="flex items-center gap-2">
                                                 <Brain className="h-4 w-4" />
-                                                <span className="text-sm font-medium">AI Enhanced Analysis</span>
+                                                <span className="text-sm font-medium">Phân tích cải thiện bởi AI</span>
                                             </div>
                                         </div>
                                     )}
@@ -227,13 +227,13 @@ export function StatisticsList({
                                         <div className='space-y-4'>
                                             <h4 className='font-semibold flex items-center gap-2'>
                                                 <Award className='h-5 w-5 text-primary' />
-                                                Performance Metrics
+                                                Chỉ số hiệu suất
                                             </h4>
                                             
                                             <div className='space-y-3'>
                                                 <div>
                                                     <div className='flex justify-between text-sm mb-1'>
-                                                        <span>Performance Score</span>
+                                                        <span>Điểm hiệu suất</span>
                                                         <span className='font-semibold'>{item.performanceScore || 'N/A'}/100</span>
                                                     </div>
                                                     <Progress value={item.performanceScore || 0} className='h-2' />
@@ -241,14 +241,14 @@ export function StatisticsList({
                                                 
                                                 <div>
                                                     <div className='flex justify-between text-sm mb-1'>
-                                                        <span>Market Position</span>
-                                                        <span className='font-semibold capitalize'>{item.marketPosition || 'Unknown'}</span>
+                                                        <span>Vị trí thị trường</span>
+                                                        <span className='font-semibold capitalize'>{item.marketPosition || 'Chưa xác định'}</span>
                                                     </div>
                                                 </div>
                                                 
                                                 <div>
                                                     <div className='flex justify-between text-sm mb-1'>
-                                                        <span>Growth Potential</span>
+                                                        <span>Tiềm năng tăng trưởng</span>
                                                         <span className='font-semibold'>{item.growthPotential || 'N/A'}%</span>
                                                     </div>
                                                     <Progress value={item.growthPotential || 0} className='h-2' />
@@ -258,16 +258,16 @@ export function StatisticsList({
                                         
                                         {item.monthlyBookings && item.monthlyBookings.length > 0 && (
                                             <div className='space-y-4'>
-                                                <h4 className='font-semibold'>Monthly Performance</h4>
+                                                <h4 className='font-semibold'>Hiệu suất theo tháng</h4>
                                                 <div className='space-y-2'>
                                                     {item.monthlyBookings.slice(-3).map((month: any, idx: number) => (
                                                         <div key={idx} className='flex justify-between items-center text-sm'>
                                                             <span className='text-muted-foreground'>{month.month}</span>
                                                             <div className='flex items-center gap-4'>
-                                                                <span className='font-medium'>{month.count} bookings</span>
+                                                                <span className='font-medium'>{month.count} lượt đặt</span>
                                                                 {month.revenue > 0 && (
                                                                     <span className='font-semibold text-green-600'>
-                                                                        ${month.revenue?.toLocaleString()}
+                                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(month.revenue || 0)}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -281,7 +281,7 @@ export function StatisticsList({
                                     <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                                         {item.strengths && item.strengths.length > 0 && (
                                             <div className='space-y-3'>
-                                                <h4 className='font-semibold text-green-700'>Strengths</h4>
+                                                <h4 className='font-semibold text-green-700'>Điểm mạnh</h4>
                                                 <ul className='space-y-2'>
                                                     {item.strengths.map((strength: string, idx: number) => (
                                                         <li key={idx} className='flex items-start gap-2 text-sm'>
@@ -295,7 +295,7 @@ export function StatisticsList({
                                         
                                         {item.opportunities && item.opportunities.length > 0 && (
                                             <div className='space-y-3'>
-                                                <h4 className='font-semibold text-amber-700'>Opportunities</h4>
+                                                <h4 className='font-semibold text-amber-700'>Cơ hội</h4>
                                                 <ul className='space-y-2'>
                                                     {item.opportunities.map((opportunity: string, idx: number) => (
                                                         <li key={idx} className='flex items-start gap-2 text-sm'>
@@ -310,7 +310,7 @@ export function StatisticsList({
                                     
                                     {item.recommendations && item.recommendations.length > 0 && (
                                         <div className='space-y-4'>
-                                            <h4 className='font-semibold text-primary'>AI Recommendations</h4>
+                                            <h4 className='font-semibold text-primary'>Khuyến nghị AI</h4>
                                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                                                 {item.recommendations.map((rec: string, idx: number) => (
                                                     <div key={idx} className='p-3 border rounded-lg bg-primary/5'>
@@ -323,7 +323,7 @@ export function StatisticsList({
                                     
                                     {item.sportsDistribution && item.sportsDistribution.length > 0 && (
                                         <div className='space-y-4'>
-                                            <h4 className='font-semibold'>Sports Distribution</h4>
+                                            <h4 className='font-semibold'>Phân bổ thể thao</h4>
                                             <div className='flex flex-wrap gap-2'>
                                                 {item.sportsDistribution.map((sport: any, idx: number) => (
                                                     <Badge key={idx} variant="secondary">

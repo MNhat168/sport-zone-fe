@@ -27,7 +27,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="text-center text-muted-foreground p-8">
-            No detailed insights available
+            Không có phân tích chi tiết
           </div>
         </CardContent>
       </Card>
@@ -46,10 +46,10 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
   const getTitle = () => {
     if (title) return title;
     switch(type) {
-      case 'revenue': return 'Revenue Analytics';
-      case 'popularity': return 'Popularity Analysis';
-      case 'sports': return 'Sports Performance';
-      default: return 'Detailed Insights';
+      case 'revenue': return 'Phân tích doanh thu';
+      case 'popularity': return 'Phân tích độ phổ biến';
+      case 'sports': return 'Hiệu suất thể thao';
+      default: return 'Phân tích chi tiết';
     }
   };
 
@@ -66,7 +66,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
         {/* Summary */}
         {insights.summary && (
           <div className="rounded-lg bg-primary/5 p-4 border">
-            <h4 className="font-semibold mb-2 text-primary">Executive Summary</h4>
+            <h4 className="font-semibold mb-2 text-primary">Tóm tắt điều hành</h4>
             <p className="text-sm">{insights.summary}</p>
           </div>
         )}
@@ -78,7 +78,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
             {insights.metrics.monthlyGrowth !== undefined && (
               <div className="flex flex-col p-4 bg-card rounded-lg border">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">MoM Growth</span>
+                  <span className="text-sm text-muted-foreground">Tăng trưởng tháng</span>
                   {insights.metrics.monthlyGrowth >= 0 ? (
                     <TrendingUp className="h-4 w-4 text-green-600" />
                   ) : (
@@ -98,10 +98,10 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
               <div className="flex flex-col p-4 bg-card rounded-lg border">
                 <div className="flex items-center gap-2 mb-2">
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Avg Monthly</span>
+                  <span className="text-sm text-muted-foreground">Trung bình tháng</span>
                 </div>
                 <span className="text-2xl font-bold">
-                  ${(insights.metrics.avgRevenue / 1000).toFixed(1)}K
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(insights.metrics.avgRevenue || 0)}
                 </span>
               </div>
             )}
@@ -111,7 +111,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
               <div className="flex flex-col p-4 bg-card rounded-lg border">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Avg Conversion</span>
+                  <span className="text-sm text-muted-foreground">Tỷ lệ chuyển đổi TB</span>
                 </div>
                 <span className={`text-2xl font-bold ${
                   insights.metrics.avgConversionRate >= 30 ? 'text-green-600' :
@@ -128,7 +128,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
               <div className="flex flex-col p-4 bg-card rounded-lg border">
                 <div className="flex items-center gap-2 mb-2">
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Correlation</span>
+                  <span className="text-sm text-muted-foreground">Tương quan</span>
                 </div>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-bold">
@@ -145,9 +145,9 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
             {/* YTD Revenue */}
             {insights.metrics.ytdRevenue !== undefined && (
               <div className="flex flex-col p-4 bg-card rounded-lg border">
-                <div className="text-sm text-muted-foreground mb-2">YTD Revenue</div>
+                <div className="text-sm text-muted-foreground mb-2">Doanh thu năm</div>
                 <span className="text-2xl font-bold">
-                  ${(insights.metrics.ytdRevenue / 1000).toFixed(1)}K
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(insights.metrics.ytdRevenue || 0)}
                 </span>
               </div>
             )}
@@ -155,10 +155,10 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
             {/* Platform Health */}
             {insights.metrics.platformHealth && (
               <div className="flex flex-col p-4 bg-card rounded-lg border">
-                <div className="text-sm text-muted-foreground mb-2">Platform Health</div>
+                <div className="text-sm text-muted-foreground mb-2">Sức khỏe nền tảng</div>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold">
-                    {insights.metrics.platformHealth}
+                    {insights.metrics.platformHealth === 'Excellent' ? 'Xuất sắc' : insights.metrics.platformHealth}
                   </span>
                   {insights.metrics.platformHealth === 'Excellent' && (
                     <Award className="h-5 w-5 text-green-600" />
@@ -171,7 +171,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
             {insights.metrics.overallGrowth !== undefined && (
               <div className="flex flex-col p-4 bg-card rounded-lg border">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Overall Growth</span>
+                  <span className="text-sm text-muted-foreground">Tăng trưởng tổng thể</span>
                   <UpTrend className="h-4 w-4 text-green-600" />
                 </div>
                 <span className="text-2xl font-bold text-green-600">
@@ -183,7 +183,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
             {/* User Satisfaction */}
             {insights.metrics.userSatisfaction !== undefined && (
               <div className="flex flex-col p-4 bg-card rounded-lg border">
-                <div className="text-sm text-muted-foreground mb-2">User Satisfaction</div>
+                <div className="text-sm text-muted-foreground mb-2">Mức độ hài lòng người dùng</div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold">
                     {insights.metrics.userSatisfaction.toFixed(1)}
@@ -198,17 +198,17 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
         {/* Sports Ranking Table */}
         {insights.metrics?.sportsRanking && insights.metrics.sportsRanking.length > 0 && (
           <div>
-            <h4 className="font-semibold mb-3">Sports Popularity Ranking</h4>
+            <h4 className="font-semibold mb-3">Xếp hạng độ phổ biến thể thao</h4>
             <div className="overflow-x-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
-                    <th className="text-left p-3">Rank</th>
-                    <th className="text-left p-3">Sport</th>
-                    <th className="text-left p-3">Tier</th>
-                    <th className="text-left p-3">Bookings</th>
-                    <th className="text-left p-3">Revenue</th>
-                    <th className="text-left p-3">Popularity Score</th>
+                    <th className="text-left p-3">Hạng</th>
+                    <th className="text-left p-3">Môn thể thao</th>
+                    <th className="text-left p-3">Hạng mục</th>
+                    <th className="text-left p-3">Lượt đặt</th>
+                    <th className="text-left p-3">Doanh thu</th>
+                    <th className="text-left p-3">Điểm phổ biến</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -227,7 +227,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
                         </span>
                       </td>
                       <td className="p-3">{sport.fieldBookings?.toLocaleString() || 0}</td>
-                      <td className="p-3">${sport.fieldRevenue ? (sport.fieldRevenue / 1000).toFixed(1) + 'K' : '0'}</td>
+                      <td className="p-3">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(sport.fieldRevenue || 0)}</td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{sport.popularityScore.toFixed(1)}</span>
@@ -248,7 +248,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
         {/* Top Performers */}
         {insights.metrics?.topPerformers && insights.metrics.topPerformers.length > 0 && (
           <div>
-            <h4 className="font-semibold mb-3">Top Performers</h4>
+            <h4 className="font-semibold mb-3">Người thực hiện hàng đầu</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {insights.metrics.topPerformers.map((performer: any, index: number) => (
                 <div key={index} className="p-4 bg-card rounded-lg border">
@@ -268,7 +268,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <div className="text-muted-foreground">Conversion</div>
+                      <div className="text-muted-foreground">Chuyển đổi</div>
                       <div className={`font-medium ${
                         performer.conversionRate >= 30 ? 'text-green-600' :
                         performer.conversionRate >= 15 ? 'text-yellow-600' :
@@ -278,17 +278,17 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
                       </div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Bookings</div>
+                      <div className="text-muted-foreground">Lượt đặt</div>
                       <div className="font-medium">{performer.bookings?.toLocaleString()}</div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Revenue</div>
+                      <div className="text-muted-foreground">Doanh thu</div>
                       <div className="font-medium">
-                        ${performer.totalRevenue ? (performer.totalRevenue / 1000).toFixed(1) + 'K' : '0'}
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(performer.totalRevenue || 0)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Rating</div>
+                      <div className="text-muted-foreground">Đánh giá</div>
                       <div className="font-medium">{performer.avgRating?.toFixed(1) || 'N/A'}/5</div>
                     </div>
                   </div>
@@ -301,7 +301,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
         {/* Detailed Analysis */}
         {insights.detailedAnalysis && insights.detailedAnalysis.length > 0 && (
           <div>
-            <h4 className="font-semibold mb-3">Detailed Analysis</h4>
+            <h4 className="font-semibold mb-3">Phân tích chi tiết</h4>
             <div className="space-y-3">
               {insights.detailedAnalysis.map((point: string, index: number) => (
                 <div key={index} className="flex items-start p-3 bg-card rounded-lg border">
@@ -321,7 +321,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
         {insights.recommendations && insights.recommendations.length > 0 && (
           <div className="rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-4 border border-green-200 dark:border-green-800">
             <h4 className="font-semibold mb-3 text-green-700 dark:text-green-400">
-              Strategic Recommendations
+              Khuyến nghị chiến lược
             </h4>
             <ul className="space-y-2">
               {insights.recommendations.map((rec: string, index: number) => (
@@ -337,7 +337,7 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
         {/* Growth Rates Chart */}
         {insights.metrics?.growthRates && Object.keys(insights.metrics.growthRates).length > 0 && (
           <div>
-            <h4 className="font-semibold mb-3">Growth Rates by Category</h4>
+            <h4 className="font-semibold mb-3">Tỷ lệ tăng trưởng theo danh mục</h4>
             <div className="space-y-3">
               {Object.entries(insights.metrics.growthRates).map(([category, rate]: [string, any]) => (
                 <div key={category} className="flex items-center justify-between p-3 bg-card rounded-lg border">
@@ -364,14 +364,14 @@ export function DetailedInsightsPanel({ insights, type, loading, title }: Detail
         {insights.metrics?.topOpportunities && insights.metrics.topOpportunities.length > 0 && (
           <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-4 border border-blue-200 dark:border-blue-800">
             <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-400">
-              Key Opportunities
+              Cơ hội chính
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {insights.metrics.topOpportunities.map((opportunity: string, index: number) => (
                 <div key={index} className="p-3 bg-white dark:bg-blue-900/30 rounded border border-blue-100 dark:border-blue-800">
                   <div className="font-medium text-sm mb-1">{opportunity}</div>
                   <div className="text-xs text-muted-foreground">
-                    High potential area for growth and optimization
+                    Khu vực tiềm năng cao cho tăng trưởng và tối ưu hóa
                   </div>
                 </div>
               ))}
