@@ -96,10 +96,14 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
         };
 
         // Prefer an existing room snapshot from current Redux state (single read)
-        const existingRoom = rooms.find(room =>
-            room.fieldOwner._id === fieldOwnerId &&
-            room.field?._id === fieldId
-        );
+        const existingRoom = Array.isArray(rooms)
+            ? rooms.find((room) => {
+                if (!room) return false;
+                const ownerId = (room as any)?.fieldOwner?._id ?? (room as any)?.fieldOwner;
+                const rFieldId = (room as any)?.field?._id ?? (room as any)?.fieldId;
+                return ownerId === fieldOwnerId && (!fieldId || rFieldId === fieldId);
+            })
+            : undefined;
 
         if (existingRoom) {
             dispatch(setCurrentRoom(existingRoom));
@@ -132,6 +136,13 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
             }
         })();
     }, [isOpen, fieldOwnerId, fieldId]);
+
+    // Ensure we stay joined to the active room for realtime events
+    useEffect(() => {
+        if (currentRoom?._id) {
+            webSocketService.joinChatRoom(currentRoom._id);
+        }
+    }, [currentRoom?._id]);
 
     // Persist messages locally per room for quick rehydrate
     useEffect(() => {
