@@ -56,6 +56,8 @@ export default function UserBookingsPage() {
       params.type = "field"
     } else if (viewType === "coaches") {
       params.type = "coach"
+    } else if (viewType === "combined") {
+      params.type = "field_coach"
     }
 
     dispatch(getMyBookings(params))
@@ -109,7 +111,7 @@ export default function UserBookingsPage() {
   // Helper function to format booking data for display
   const formatBookingData = (booking: Booking) => {
     const field = typeof booking.field === 'object' ? booking.field : null
-    
+
     // Format date
     const bookingDate = new Date(booking.date)
     const formattedDate = bookingDate.toLocaleDateString('vi-VN', {
@@ -117,13 +119,13 @@ export default function UserBookingsPage() {
       month: 'short',
       day: 'numeric'
     })
-    
+
     // Format price with Vietnamese currency
     const formattedPrice = new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
     }).format(booking.totalPrice || 0)
-    
+
     return {
       id: booking._id,
       courtName: field?.name || 'Unknown Field',
@@ -186,265 +188,273 @@ export default function UserBookingsPage() {
         <UserDashboardTabs />
         <div className="container mx-auto px-12 py-8">
           <div className="space-y-8">
-              {/* Status Tabs and Filters */}
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 space-y-4 lg:space-y-0">
-                <div className="flex space-x-1">
-                  <Button
-                    variant={activeTab === "confirmed" ? "default" : "outline"}
-                    onClick={() => setActiveTab("confirmed")}
-                    className={`${activeTab === "confirmed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
-                      } transition-all duration-200`}
-                  >
-                    Đã đặt
-                  </Button>
-                  <Button
-                    variant={activeTab === "pending" ? "default" : "outline"}
-                    onClick={() => setActiveTab("pending")}
-                    className={`${activeTab === "pending" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
-                      } transition-all duration-200`}
-                  >
-                    Đang chờ
-                  </Button>
-                  <Button
-                    variant={activeTab === "cancelled" ? "default" : "outline"}
-                    onClick={() => setActiveTab("cancelled")}
-                    className={`${activeTab === "cancelled" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
-                      } transition-all duration-200`}
-                  >
-                    Đã hủy
-                  </Button>
-                </div>
-
-                <div className="flex space-x-4">
-                  <Select value={timeFilter} onValueChange={setTimeFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="This Week">Tuần này</SelectItem>
-                      <SelectItem value="This Month">Tháng này</SelectItem>
-                      <SelectItem value="Last Month">Tháng trước</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Relevance">Sắp xếp: Liên quan</SelectItem>
-                      <SelectItem value="Date">Sắp xếp: Ngày</SelectItem>
-                      <SelectItem value="Price">Sắp xếp: Giá</SelectItem>
-                      <SelectItem value="Status">Sắp xếp: Trạng thái</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            {/* Status Tabs and Filters */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 space-y-4 lg:space-y-0">
+              <div className="flex space-x-1">
+                <Button
+                  variant={activeTab === "confirmed" ? "default" : "outline"}
+                  onClick={() => setActiveTab("confirmed")}
+                  className={`${activeTab === "confirmed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                    } transition-all duration-200`}
+                >
+                  Đã đặt
+                </Button>
+                <Button
+                  variant={activeTab === "pending" ? "default" : "outline"}
+                  onClick={() => setActiveTab("pending")}
+                  className={`${activeTab === "pending" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                    } transition-all duration-200`}
+                >
+                  Đang chờ
+                </Button>
+                <Button
+                  variant={activeTab === "cancelled" ? "default" : "outline"}
+                  onClick={() => setActiveTab("cancelled")}
+                  className={`${activeTab === "cancelled" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                    } transition-all duration-200`}
+                >
+                  Đã hủy
+                </Button>
               </div>
 
-              {/* My Bookings Section */}
-              <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-2xl font-bold">Đặt sân của tôi</CardTitle>
-                      <p className="text-gray-600">
-                        Quản lý và theo dõi tất cả các đặt sân sắp tới của bạn.
-                        {pagination && (
-                          <span className="ml-2 text-sm text-gray-500">
-                            ({pagination.total} booking{pagination.total !== 1 ? 's' : ''})
-                          </span>
-                        )}
-                      </p>
+              <div className="flex space-x-4">
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="This Week">Tuần này</SelectItem>
+                    <SelectItem value="This Month">Tháng này</SelectItem>
+                    <SelectItem value="Last Month">Tháng trước</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Relevance">Sắp xếp: Liên quan</SelectItem>
+                    <SelectItem value="Date">Sắp xếp: Ngày</SelectItem>
+                    <SelectItem value="Price">Sắp xếp: Giá</SelectItem>
+                    <SelectItem value="Status">Sắp xếp: Trạng thái</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* My Bookings Section */}
+            <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-bold">Đặt sân của tôi</CardTitle>
+                    <p className="text-gray-600">
+                      Quản lý và theo dõi tất cả các đặt sân sắp tới của bạn.
+                      {pagination && (
+                        <span className="ml-2 text-sm text-gray-500">
+                          ({pagination.total} booking{pagination.total !== 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Tìm kiếm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-64 hover:border-[#00775C] focus:border-[#00775C] transition-colors"
+                      />
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Tìm kiếm"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 w-64 hover:border-[#00775C] focus:border-[#00775C] transition-colors"
-                        />
-                      </div>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Tìm kiếm"
-                          value={filterCourt}
-                          onChange={(e) => setFilterCourt(e.target.value)}
-                          className="pl-10 w-48 hover:border-[#00775C] focus:border-[#00775C] transition-colors"
-                        />
-                      </div>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Tìm kiếm"
+                        value={filterCourt}
+                        onChange={(e) => setFilterCourt(e.target.value)}
+                        className="pl-10 w-48 hover:border-[#00775C] focus:border-[#00775C] transition-colors"
+                      />
                     </div>
                   </div>
-                  <div className="flex space-x-1 mt-4">
-                    <Button
-                      variant={viewType === "courts" ? "default" : "outline"}
-                      onClick={() => setViewType("courts")}
-                      className={`${viewType === "courts" ? "bg-green-600 text-white hover:bg-green-700" : "hover:bg-gray-100"
-                        } transition-all duration-200`}
-                    >
-                      Sân
-                    </Button>
-                    <Button
-                      variant={viewType === "coaches" ? "default" : "outline"}
-                      onClick={() => setViewType("coaches")}
-                      className={`${viewType === "coaches" ? "bg-green-600 text-white hover:bg-green-700" : "hover:bg-gray-100"
-                        } transition-all duration-200`}
-                    >
-                      Huấn luyện viên
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {/* Bookings Table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-4 px-2 font-medium text-gray-700">Tên sân</th>
-                          <th className="text-left py-4 px-2 font-medium text-gray-700">Ngày & Giờ</th>
-                          <th className="text-left py-4 px-2 font-medium text-gray-700">Thanh toán</th>
-                          <th className="text-left py-4 px-2 font-medium text-gray-700">Trạng thái</th>
-                          <th className="text-left py-4 px-2 font-medium text-gray-700">Chi tiết</th>
-                          <th className="text-left py-4 px-2 font-medium text-gray-700">Chat</th>
-                          <th className="text-left py-4 px-2 font-medium text-gray-700">Thêm</th>
+                </div>
+                <div className="flex space-x-1 mt-4">
+                  <Button
+                    variant={viewType === "courts" ? "default" : "outline"}
+                    onClick={() => setViewType("courts")}
+                    className={`${viewType === "courts" ? "bg-green-600 text-white hover:bg-green-700" : "hover:bg-gray-100"
+                      } transition-all duration-200`}
+                  >
+                    Sân
+                  </Button>
+                  <Button
+                    variant={viewType === "coaches" ? "default" : "outline"}
+                    onClick={() => setViewType("coaches")}
+                    className={`${viewType === "coaches" ? "bg-green-600 text-white hover:bg-green-700" : "hover:bg-gray-100"
+                      } transition-all duration-200`}
+                  >
+                    Huấn luyện viên
+                  </Button>
+                  <Button
+                    variant={viewType === "combined" ? "default" : "outline"}
+                    onClick={() => setViewType("combined")}
+                    className={`${viewType === "combined" ? "bg-green-600 text-white hover:bg-green-700" : "hover:bg-gray-100"
+                      } transition-all duration-200`}
+                  >
+                    Sân + HLV
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Bookings Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Tên sân</th>
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Ngày & Giờ</th>
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Thanh toán</th>
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Trạng thái</th>
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Chi tiết</th>
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Chat</th>
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Thêm</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loadingBookings ? (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center">
+                            <div className="text-gray-500">Đang tải...</div>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {loadingBookings ? (
-                          <tr>
-                            <td colSpan={7} className="py-8 text-center">
-                              <div className="text-gray-500">Đang tải...</div>
-                            </td>
-                          </tr>
-                        ) : error ? (
-                          <tr>
-                            <td colSpan={7} className="py-8 text-center">
-                              <div className="text-red-600">Lỗi: {error.message}</div>
-                            </td>
-                          </tr>
-                        ) : bookings.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="py-8 text-center">
-                              <div className="text-gray-500">Không có booking nào</div>
-                            </td>
-                          </tr>
-                        ) : (
-                          bookings.map((booking) => {
-                            const formattedBooking = formatBookingData(booking)
-                            return (
-                              <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-2">
-                                  <div className="flex items-center space-x-3">
-                                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                                      <img
-                                        src={formattedBooking.image}
-                                        alt={formattedBooking.courtName}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div>
-                                      <div className="font-medium text-gray-900">{formattedBooking.courtName}</div>
-                                      <div className="text-sm text-gray-500">{formattedBooking.courtId}</div>
-                                    </div>
+                      ) : error ? (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center">
+                            <div className="text-red-600">Lỗi: {error.message}</div>
+                          </td>
+                        </tr>
+                      ) : bookings.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center">
+                            <div className="text-gray-500">Không có booking nào</div>
+                          </td>
+                        </tr>
+                      ) : (
+                        bookings.map((booking) => {
+                          const formattedBooking = formatBookingData(booking)
+                          return (
+                            <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                              <td className="py-4 px-2">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                                    <img
+                                      src={formattedBooking.image}
+                                      alt={formattedBooking.courtName}
+                                      className="w-full h-full object-cover"
+                                    />
                                   </div>
-                                </td>
-                                <td className="py-4 px-2">
-                                  <div className="text-sm">
-                                    <div className="font-medium text-gray-900">{formattedBooking.date}</div>
-                                    <div className="text-gray-500">{formattedBooking.time}</div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{formattedBooking.courtName}</div>
+                                    <div className="text-sm text-gray-500">{formattedBooking.courtId}</div>
                                   </div>
-                                </td>
-                                <td className="py-4 px-2">
-                                  <span className="font-medium text-gray-900">{formattedBooking.payment}</span>
-                                </td>
-                                <td className="py-4 px-2">
-                                  <Badge className={`${getStatusColor(booking.status)} transition-colors`}>
-                                    {getStatusIcon(booking.status)} {getStatusText(booking.status)}
-                                  </Badge>
-                                </td>
-                                <td className="py-4 px-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleViewDetails(booking)}
-                                    className="hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200 bg-transparent text-blue-500 border-blue-500"
-                                  >
-                                    👁 Xem chi tiết
-                                  </Button>
-                                </td>
-                                <td className="py-4 px-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="hover:bg-blue-500 hover:text-white transition-all duration-200 text-blue-500"
-                                  >
-                                    💬 Trò chuyện
-                                  </Button>
-                                </td>
-                                <td className="py-4 px-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleCancelBooking(booking._id)}
-                                  >
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </td>
-                              </tr>
-                            )
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-2">
+                                <div className="text-sm">
+                                  <div className="font-medium text-gray-900">{formattedBooking.date}</div>
+                                  <div className="text-gray-500">{formattedBooking.time}</div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-2">
+                                <span className="font-medium text-gray-900">{formattedBooking.payment}</span>
+                              </td>
+                              <td className="py-4 px-2">
+                                <Badge className={`${getStatusColor(booking.status)} transition-colors`}>
+                                  {getStatusIcon(booking.status)} {getStatusText(booking.status)}
+                                </Badge>
+                              </td>
+                              <td className="py-4 px-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleViewDetails(booking)}
+                                  className="hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200 bg-transparent text-blue-500 border-blue-500"
+                                >
+                                  👁 Xem chi tiết
+                                </Button>
+                              </td>
+                              <td className="py-4 px-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="hover:bg-blue-500 hover:text-white transition-all duration-200 text-blue-500"
+                                >
+                                  💬 Trò chuyện
+                                </Button>
+                              </td>
+                              <td className="py-4 px-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="hover:bg-gray-100 transition-colors"
+                                  onClick={() => handleCancelBooking(booking._id)}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-                  {/* Pagination */}
-                  {pagination && (
-                    <div className="flex items-center justify-between mt-6">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">Hiển thị</span>
-                        <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
-                          <SelectTrigger className="w-16">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="10">10</SelectItem>
-                            <SelectItem value="25">25</SelectItem>
-                            <SelectItem value="50">50</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <span className="text-sm text-gray-600">mỗi trang</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
-                          disabled={!pagination.hasPrevPage}
-                          onClick={() => setCurrentPage(currentPage - 1)}
-                        >
-                          &lt;
-                        </Button>
-                        <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                          {pagination.page}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
-                          disabled={!pagination.hasNextPage}
-                          onClick={() => setCurrentPage(currentPage + 1)}
-                        >
-                          &gt;
-                        </Button>
-                      </div>
+                {/* Pagination */}
+                {pagination && (
+                  <div className="flex items-center justify-between mt-6">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Hiển thị</span>
+                      <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
+                        <SelectTrigger className="w-16">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="25">25</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-sm text-gray-600">mỗi trang</span>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
+                        disabled={!pagination.hasPrevPage}
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                      >
+                        &lt;
+                      </Button>
+                      <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                        {pagination.page}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
+                        disabled={!pagination.hasNextPage}
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                      >
+                        &gt;
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </PageWrapper>

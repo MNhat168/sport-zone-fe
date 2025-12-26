@@ -15,7 +15,7 @@ import AboutPage from "../pages/about/about-page";
 import UserDashboardPage from "../pages/user-dashboard-page/user-dashboard-page";
 import UserBookingHistoryPage from "../pages/user-dashboard-page/user-booking-history-page";
 import UserInvoicesPage from "../pages/user-dashboard-page/user-invoices-page";
-import MyTournaments from "../pages/user-dashboard-page/user-chat-page";
+import MyTournaments from "../pages/user-dashboard-page/user-tournamets.tsx";
 import UserWalletPage from "../pages/user-dashboard-page/user-wallet-page";
 import UserProfilePage from "../pages/user-dashboard-page/user-profile-page";
 

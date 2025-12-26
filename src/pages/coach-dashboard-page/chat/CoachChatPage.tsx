@@ -90,6 +90,24 @@ const CoachChatPage: React.FC = () => {
         setMessage("");
     };
 
+    // Always join active room on change
+    useEffect(() => {
+        if (currentRoom?._id) {
+            webSocketService.joinChatRoom(currentRoom._id);
+        }
+    }, [currentRoom?._id]);
+
+    // Mark as read when viewing and receiving new user messages
+    useEffect(() => {
+        if (!currentRoom || localMessages.length === 0) return;
+        const last = localMessages[localMessages.length - 1];
+        const customerId = currentRoom.user?._id;
+        if (last && last.sender === customerId) {
+            dispatch(markAsRead(currentRoom._id));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localMessages.length, currentRoom?._id]);
+
     const isUserMessage = (senderId: string) => {
         const customerId = currentRoom?.user?._id;
         return senderId === customerId;

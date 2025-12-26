@@ -92,54 +92,39 @@ const FieldOwnerChatDashboard: React.FC = () => {
     // In FieldOwnerChatPage.tsx, update the useEffect for fetching profile:
 
     useEffect(() => {
-        // Get user data from sessionStorage
         const userData = sessionStorage.getItem("user");
-        if (!userData) {
-            console.error("No user data found in sessionStorage");
-            return;
-        }
+        if (!userData) return;
 
         const user = JSON.parse(userData);
         const userId = user.id || user._id;
+        if (!userId) return;
 
-        if (!userId) {
-            console.error("No user ID found in sessionStorage");
-            return;
-        }
-
-        // Connect to WebSocket
+        // Ensure socket is connected for realtime updates
         webSocketService.connect();
 
-        // Fetch field owner profile first
-        const fetchProfileAndRooms = async () => {
+        // Load profile and rooms (kept lightweight; rooms also loaded via thunk)
+        const init = async () => {
             try {
                 const response = await axiosPrivate.get(`/field-owner/profile/`);
-                if (response.data.success) {
-                    const profile = response.data.data;
-                    setFieldOwnerProfile(profile);
-                    console.log('Field Owner Profile loaded:', profile);
-
-                    // Now fetch chat rooms using the profile ID
-                    // We need to dispatch an action that uses the profile ID
-                    // Since getFieldOwnerChatRooms doesn't take parameters, we need to adjust
-
-                    // Temporary solution: Refetch the endpoint directly
-                    const roomsResponse = await axiosPrivate.get('/chat/field-owner/rooms');
-                    if (roomsResponse.data) {
-                        // Dispatch to Redux manually or update state
-                        console.log('Chat rooms fetched:', roomsResponse.data);
-                    }
+                if (response.data?.success) {
+                    setFieldOwnerProfile(response.data.data);
                 }
             } catch (error) {
                 console.error("Error fetching field owner profile:", error);
             }
         };
+        init();
 
-        fetchProfileAndRooms();
-
-        // Also try the standard dispatch
+        // Fetch rooms for owner
         dispatch(getFieldOwnerChatRooms());
     }, [dispatch]);
+
+    // Always join active room on change so incoming messages arrive instantly
+    useEffect(() => {
+        if (currentRoom?._id) {
+            webSocketService.joinChatRoom(currentRoom._id);
+        }
+    }, [currentRoom?._id]);
 
 
     useEffect(() => {
@@ -199,6 +184,18 @@ const FieldOwnerChatDashboard: React.FC = () => {
         setLocalMessages(prev => [...prev, newMessage]);
         setMessage("");
     };
+
+    // Mark messages as read when viewing the active room and new incoming arrives
+    useEffect(() => {
+        if (!currentRoom || localMessages.length === 0) return;
+        const last = localMessages[localMessages.length - 1];
+        // Only mark as read if the last message is from the other participant
+        const customerId = currentRoom.user?._id;
+        if (last && last.sender === customerId) {
+            dispatch(markAsRead(currentRoom._id));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localMessages.length, currentRoom?._id]);
 
     const isUserMessage = (senderId: string) => {
         // Owner view: a user message if the sender equals the room's user._id

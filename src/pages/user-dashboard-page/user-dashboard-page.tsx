@@ -38,8 +38,8 @@ export default function UserDashboardPage() {
     const loadingBookings = bookingState?.loadingBookings || false
     const loadingInvoices = bookingState?.loadingInvoices || false
     const error = bookingState?.error || null
-    
-    const [selectedTab, setSelectedTab] = useState<'court' | 'coaching'>('court')
+
+    const [selectedTab, setSelectedTab] = useState<'court' | 'coaching' | 'combined'>('court')
     const [favouriteTab, setFavouriteTab] = useState<'court' | 'coaching'>('court')
     // Local pagination state for invoices; data is loaded into Redux via `getMyInvoices`
     const [invoicesPage, setInvoicesPage] = useState<number>(1)
@@ -71,15 +71,21 @@ export default function UserDashboardPage() {
             ).unwrap()
             setOpenDropdown(null)
             // Refresh bookings after cancellation
-            dispatch(getMyBookings({ type: selectedTab === 'court' ? 'field' : 'coach' }))
+            let typeParam: 'field' | 'coach' | 'field_coach' = 'field';
+            if (selectedTab === 'coaching') typeParam = 'coach';
+            else if (selectedTab === 'combined') typeParam = 'field_coach';
+            dispatch(getMyBookings({ type: typeParam }))
         } catch (error) {
             console.error('Failed to cancel booking:', error)
         }
     }
 
-    // Load bookings when component mounts and when selectedTab changes
     useEffect(() => {
-        dispatch(getMyBookings({ type: selectedTab === 'court' ? 'field' : 'coach' }))
+        let typeParam: 'field' | 'coach' | 'field_coach' = 'field';
+        if (selectedTab === 'coaching') typeParam = 'coach';
+        else if (selectedTab === 'combined') typeParam = 'field_coach';
+
+        dispatch(getMyBookings({ type: typeParam }))
     }, [dispatch, selectedTab])
 
     // Fetch invoices via Redux thunk when pagination changes
@@ -133,13 +139,13 @@ export default function UserDashboardPage() {
             month: '2-digit',
             day: '2-digit'
         })
-        
+
         // Format price with Vietnamese currency
         const formattedPrice = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
         }).format(booking.totalPrice || 0)
-        
+
         return {
             id: booking._id,
             name: field?.name || 'Unknown Field',
@@ -149,9 +155,9 @@ export default function UserDashboardPage() {
             price: formattedPrice,
             status: booking.status,
             image: (field as any)?.images?.[0] || "-",
-            color: booking.status === 'confirmed' ? 'from-green-500 to-green-600' : 
-                   booking.status === 'pending' ? 'from-yellow-500 to-yellow-600' :
-                   booking.status === 'cancelled' ? 'from-red-500 to-red-600' : 'from-gray-500 to-gray-600'
+            color: booking.status === 'confirmed' ? 'from-green-500 to-green-600' :
+                booking.status === 'pending' ? 'from-yellow-500 to-yellow-600' :
+                    booking.status === 'cancelled' ? 'from-red-500 to-red-600' : 'from-gray-500 to-gray-600'
         }
     }
 
@@ -165,8 +171,10 @@ export default function UserDashboardPage() {
     const filteredBookings = bookings.filter(booking => {
         if (selectedTab === 'court') {
             return booking.type === 'field'
-        } else {
+        } else if (selectedTab === 'coaching') {
             return booking.type === 'coach'
+        } else {
+            return booking.type === 'field_coach'
         }
     })
 
@@ -302,13 +310,13 @@ export default function UserDashboardPage() {
                                             </li>
                                         </ul>
                                         <div className="flex gap-3">
-                                        <Button
-                                            onClick={() => navigate('/become-field-owner')}
-                                            className="bg-white text-green-600 hover:bg-green-50 font-semibold"
-                                        >
-                                            Đăng ký ngay
-                                            <ArrowRight className="ml-2 h-4 w-4" />
-                                        </Button>
+                                            <Button
+                                                onClick={() => navigate('/become-field-owner')}
+                                                className="bg-white text-green-600 hover:bg-green-50 font-semibold"
+                                            >
+                                                Đăng ký ngay
+                                                <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Button>
                                             <Button
                                                 onClick={() => navigate('/field-owner-registration-status')}
                                                 variant="outline"
@@ -339,7 +347,7 @@ export default function UserDashboardPage() {
                                 <div className="flex items-center gap-4 p-4 rounded-lg">
                                     <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                                         <span className="text-white font-semibold text-sm text-start">
-                                            {typeof nextBooking.field === 'object' && nextBooking.field 
+                                            {typeof nextBooking.field === 'object' && nextBooking.field
                                                 ? nextBooking.field.name.split(' ').map(w => w[0]).join('')
                                                 : 'SC'
                                             }
@@ -349,8 +357,8 @@ export default function UserDashboardPage() {
                                         <div className="text-start">
                                             <p className="font-medium text-start">Tên sân</p>
                                             <p className="text-muted-foreground text-start">
-                                                {typeof nextBooking.field === 'object' && nextBooking.field 
-                                                    ? nextBooking.field.name 
+                                                {typeof nextBooking.field === 'object' && nextBooking.field
+                                                    ? nextBooking.field.name
                                                     : 'Unknown Field'
                                                 }
                                             </p>
@@ -404,7 +412,7 @@ export default function UserDashboardPage() {
                                     <div className="flex flex-col space-y-1">
                                         <CardTitle className="text-xl font-semibold mb-2 text-start">Lịch sử đặt sân của bạn</CardTitle>
                                         <p className="text-muted-foreground text-start">
-                                            
+
                                             {pagination && (
                                                 <span className="ml-2 text-sm">
                                                     ({pagination.total} booking{pagination.total !== 1 ? 's' : ''})
@@ -418,14 +426,21 @@ export default function UserDashboardPage() {
                                             className={`px-4 py-2 text-sm font-medium ${selectedTab === 'court' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer'}`}
                                             onClick={() => setSelectedTab('court')}
                                         >
-                                            Court
+                                            Sân
                                         </Badge>
                                         <Badge
                                             variant={selectedTab === 'coaching' ? 'default' : 'outline'}
                                             className={`px-4 py-2 text-sm font-medium ${selectedTab === 'coaching' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer'}`}
                                             onClick={() => setSelectedTab('coaching')}
                                         >
-                                            Coaching
+                                            Huấn luyện viên
+                                        </Badge>
+                                        <Badge
+                                            variant={selectedTab === 'combined' ? 'default' : 'outline'}
+                                            className={`px-4 py-2 text-sm font-medium ${selectedTab === 'combined' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer'}`}
+                                            onClick={() => setSelectedTab('combined')}
+                                        >
+                                            Sân + HLV
                                         </Badge>
                                     </div>
                                 </CardHeader>
@@ -613,8 +628,8 @@ export default function UserDashboardPage() {
                                     <div className="border-t border-gray-100 pt-4">
                                         {(
                                             favouriteTab === 'court'
-                                            ? (Array.isArray(favouriteFields) && favouriteFields.length > 0 ? favouriteFields : mockFavorites)
-                                            : (Array.isArray(favouriteCoaches) && favouriteCoaches.length > 0 ? favouriteCoaches : mockFavorites)
+                                                ? (Array.isArray(favouriteFields) && favouriteFields.length > 0 ? favouriteFields : mockFavorites)
+                                                : (Array.isArray(favouriteCoaches) && favouriteCoaches.length > 0 ? favouriteCoaches : mockFavorites)
                                         ).map((favorite: any, index: number) => (
                                             <div key={favorite.id || `favorite-${index}`}>
                                                 <div className="flex items-center gap-3 p-3 rounded-lg">

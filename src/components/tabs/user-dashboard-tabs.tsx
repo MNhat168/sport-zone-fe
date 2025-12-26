@@ -50,22 +50,31 @@ export function UserDashboardTabs() {
 
                         <Button
                             variant="ghost"
-                            className={baseTabClasses(isActive("/user-tournaments"))}
-                            onClick={() => handleNavigation("/user-tournaments")}
+                            className={baseTabClasses(isActive("/user-chat"))}
+                            onClick={() => handleNavigation("/user-chat")}
                         >
                             <Trophy className="w-6 h-6" />
                             <div className="text-center text-base font-medium">My Tournaments</div>
                         </Button>
 
-                        <Button
+                        {/* <Button
                             variant="ghost"
                             className={baseTabClasses(isActive("/user-invoices"))}
                             onClick={() => handleNavigation("/user-invoices")}
                         >
                             <FileText className="w-6 h-6" />
                             <div className="text-center text-base font-medium">Invoices</div>
+                        </Button> */}
+                        
+                        <Button
+                            variant="ghost"
+                            className={baseTabClasses(isActive("/user-tournaments"))}
+                            onClick={() => handleNavigation("/user-tournaments")}
+                        >
+                            <Wallet className="w-6 h-6" />
+                            <div className="text-center text-base font-medium">Tournaments</div>
                         </Button>
-
+                        
                         <Button
                             variant="ghost"
                             className={baseTabClasses(isActive("/user-wallet"))}
