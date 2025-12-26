@@ -61,6 +61,38 @@ export default function CoachBookingsPage() {
     const [error, setError] = useState<string | null>(null)
     const [errorCombined, setErrorCombined] = useState<string | null>(null)
     const [coachId, setCoachId] = useState<string | null>(null)
+    const fetchBookings = async () => {
+        try {
+            // Fetch regular COACH bookings
+            const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=coach')
+            const data = response.data;
+            const bookingsData = Array.isArray(data) ? data : (data.data || []);
+            setBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        } catch (err: any) {
+            console.error("Error fetching bookings:", err)
+            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
+            setError(errorMessage)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fetchCombinedBookings = async () => {
+        try {
+            // Fetch FIELD_COACH combined bookings
+            const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=field_coach')
+            const data = response.data;
+            const bookingsData = Array.isArray(data) ? data : (data.data || []);
+            setCombinedBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        } catch (err: any) {
+            console.error("Error fetching combined bookings:", err)
+            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch kết hợp";
+            setErrorCombined(errorMessage)
+        } finally {
+            setLoadingCombined(false)
+        }
+    }
+
     useEffect(() => {
         const storedUser = sessionStorage.getItem("user")
         if (!storedUser) return
@@ -75,38 +107,6 @@ export default function CoachBookingsPage() {
             })
             .catch(console.error)
     }, [])
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                // Fetch regular COACH bookings
-                const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=coach')
-                const data = response.data;
-                const bookingsData = Array.isArray(data) ? data : (data.data || []);
-                setBookings(Array.isArray(bookingsData) ? bookingsData : [])
-            } catch (err: any) {
-                console.error("Error fetching bookings:", err)
-                const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
-                setError(errorMessage)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        const fetchCombinedBookings = async () => {
-            try {
-                // Fetch FIELD_COACH combined bookings
-                const response = await axiosPrivate.get('/bookings/coach/my-bookings/by-type?type=field_coach')
-                const data = response.data;
-                const bookingsData = Array.isArray(data) ? data : (data.data || []);
-                setCombinedBookings(Array.isArray(bookingsData) ? bookingsData : [])
-            } catch (err: any) {
-                console.error("Error fetching combined bookings:", err)
-                const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch kết hợp";
-                setErrorCombined(errorMessage)
-            } finally {
-                setLoadingCombined(false)
-            }
-        }
 
     useEffect(() => {
         if (authUser) {
@@ -390,5 +390,5 @@ export default function CoachBookingsPage() {
                 </div>
             </div>
         </CoachDashboardLayout>
-    )
-}
+    )}
+    

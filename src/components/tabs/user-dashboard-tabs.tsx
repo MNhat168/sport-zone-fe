@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import {
     LayoutDashboard,
     Calendar,
-    MessageSquare,
+    Trophy,
     FileText,
     Wallet,
     User,
@@ -53,8 +53,8 @@ export function UserDashboardTabs() {
                             className={baseTabClasses(isActive("/user-tournaments"))}
                             onClick={() => handleNavigation("/user-tournaments")}
                         >
-                            <MessageSquare className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Chat</div>
+                            <Trophy className="w-6 h-6" />
+                            <div className="text-center text-base font-medium">My Tournaments</div>
                         </Button>
 
                         <Button
