@@ -2,7 +2,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Star, Calendar, Heart, Eye } from "lucide-react";
+import { MapPin, Star, Calendar, Eye } from "lucide-react";
 
 interface SimilarCoach {
   id?: string;

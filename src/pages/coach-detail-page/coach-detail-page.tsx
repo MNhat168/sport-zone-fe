@@ -16,16 +16,6 @@ import {
 import type { RootState, AppDispatch } from "@/store/store";
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
 // Import components
 import { CoachInfoCard } from "./components/CoachInfoCard";
 import { CoachTabs } from "./components/CoachTabs";
@@ -37,6 +27,7 @@ import { BookingCard } from "./components/BookingCard";
 import { SimilarCoachesSection } from "./components/SimilarCoachesSection";
 import { ReviewModal } from "./components/ReviewModal";
 import CoachDetailChatWindow from "@/components/chat/CoachDetailChatWindow";
+import { Loading } from "@/components/ui/loading";
 
 interface CoachDetailPageProps {
   coachId?: string;

@@ -4,7 +4,6 @@ import {
     LayoutDashboard,
     Calendar,
     Trophy,
-    FileText,
     Wallet,
     User,
 } from "lucide-react"
@@ -65,7 +64,7 @@ export function UserDashboardTabs() {
                             <FileText className="w-6 h-6" />
                             <div className="text-center text-base font-medium">Invoices</div>
                         </Button> */}
-                        
+
                         <Button
                             variant="ghost"
                             className={baseTabClasses(isActive("/user-tournaments"))}
@@ -74,7 +73,7 @@ export function UserDashboardTabs() {
                             <Wallet className="w-6 h-6" />
                             <div className="text-center text-base font-medium">Tournaments</div>
                         </Button>
-                        
+
                         <Button
                             variant="ghost"
                             className={baseTabClasses(isActive("/user-wallet"))}

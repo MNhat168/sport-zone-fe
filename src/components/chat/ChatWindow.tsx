@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, X, MessageCircle, Building } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
-import { markAsRead } from "@/features/chat/chatThunk";
-import { setCurrentRoom, clearTyping } from "@/features/chat/chatSlice";
+import { clearTyping } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

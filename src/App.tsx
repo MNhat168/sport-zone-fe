@@ -21,8 +21,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { UserSyncProvider } from "./components/providers";
 import FloatingChatWidget from "./components/chat/floating-chat-widget";
 import './App.css';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { webSocketService } from '@/features/chat/websocket.service';
+import { Loading } from '@/components/ui/loading';
 // const RequireAuth = ({ children }: { children: ReactElement }) => {
 //   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 //   if (!token) {
@@ -94,7 +95,9 @@ function App() {
   return (
     <Provider store={store}>
       <UserSyncProvider>
-        <RouterProvider router={router} />
+        <Suspense fallback={<Loading size="lg" className="min-h-screen flex items-center justify-center" />}>
+          <RouterProvider router={router} />
+        </Suspense>
         <FloatingChatWidget />
         {/* <ChatbotWidget /> */}
       </UserSyncProvider>

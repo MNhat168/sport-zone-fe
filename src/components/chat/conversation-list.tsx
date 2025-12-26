@@ -39,7 +39,7 @@ const ConversationList: React.FC = () => {
             ...room,
             actorType: (isCoachRoom ? 'coach' : 'field') as 'field' | 'coach',
             actorName: isCoachRoom
-                ? room.coach?.displayName || room.coach?.hourlyRate?.toString() || 'Coach'
+                ? room.coach?.displayName || 'Coach'
                 : room.fieldOwner?.facilityName || 'Field Owner',
             actorId: isCoachRoom ? room.coach?._id : room.fieldOwner?._id,
         };

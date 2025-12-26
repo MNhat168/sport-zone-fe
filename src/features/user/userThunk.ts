@@ -242,7 +242,7 @@ export const removeFavouriteFields = createAsyncThunk<
 });
 
 // Get favourite fields
-import type { FavouriteField, FavouriteFieldsResponse } from '../../types/favourite-field';
+import type { FavouriteField } from '../../types/favourite-field';
 export const getFavouriteFields = createAsyncThunk<
     FavouriteField[],
     void,
