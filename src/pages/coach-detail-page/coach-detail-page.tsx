@@ -410,7 +410,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
           const items = action.payload?.data ?? [];
           const mapped = (items as any[])
             .filter((c) => (c?.id || "") !== (currentCoach?.id || ""))
-            .slice(0, 6)
+            .slice(0, 3)
             .map((c) => ({
               id: c.id || c._id || "",
               name: c.name || c.fullName || "HLV",
