@@ -10,6 +10,7 @@ export {
     getCoaches,
     getCoachById,
     getAllCoaches,
+    getPublicCoaches,
     getCoachIdByUserId,
     updateCoach,
     uploadCoachGalleryImages,
@@ -20,6 +21,7 @@ export {
     COACHES_API,
     COACH_BY_ID_API,
     ALL_COACHES_API,
+    COACHES_PUBLIC_API,
     COACH_ID_BY_USER_ID_API,
 } from './coachAPI';
 
@@ -37,3 +39,4 @@ export type {
     LessonType,
     SportType,
 } from '../../types/coach-type';
+export type { PublicCoach, PublicCoachesResponse } from '../../types/coach-type';
