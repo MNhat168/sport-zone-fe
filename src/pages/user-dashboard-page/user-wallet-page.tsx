@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Loading } from "@/components/ui/loading"
 import {
   WalletSummaryCard,
   WalletEmptyState,
@@ -164,9 +164,8 @@ export default function UserWalletPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 {loading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-4 w-24" />
+                  <div className="flex items-center justify-center py-4">
+                    <Loading size={24} className="text-green-600" />
                   </div>
                 ) : wallet ? (
                   <>

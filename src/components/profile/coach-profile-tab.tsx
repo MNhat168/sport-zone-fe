@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -12,7 +12,7 @@ import { Trophy, Star } from "lucide-react"
 
 export default function CoachProfileTab() {
     const dispatch = useAppDispatch()
-    const { user } = useAppSelector((state) => state.auth)
+
     const authUser = useAppSelector((state) => state.auth.user)
 
     const [formData, setFormData] = useState({
@@ -129,7 +129,7 @@ export default function CoachProfileTab() {
                                     Specialization *
                                 </Label>
                                 <div className="flex flex-wrap gap-2">
-                                    {['football','basketball','tennis','badminton','swimming','volleyball','pickleball','gym'].map((spec) => (
+                                    {['football', 'basketball', 'tennis', 'badminton', 'swimming', 'volleyball', 'pickleball', 'gym'].map((spec) => (
                                         <label key={spec} className="inline-flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-md cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -202,7 +202,7 @@ export default function CoachProfileTab() {
 
                         <div className="space-y-2.5">
                             <Label className="text-base font-normal text-start">
-                                Bio 
+                                Bio
                             </Label>
                             <Textarea
                                 value={formData.bio}

@@ -64,7 +64,7 @@ const ownerProfileSlice = createSlice({
                 state.loading = false;
                 state.myProfile = action.payload;
             })
-            .addCase(fetchFieldOwnerProfile.rejected, (state, action) => {
+            .addCase(fetchFieldOwnerProfile.rejected, (state) => {
                 state.loading = false;
             });
         // Create

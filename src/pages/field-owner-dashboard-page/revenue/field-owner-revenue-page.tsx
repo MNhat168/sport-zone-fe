@@ -23,7 +23,6 @@ const CustomPagination = ({
     totalPages,
     onPageChange,
     totalItems,
-    itemsPerPage,
     currentStart,
     currentEnd
 }: {
@@ -31,7 +30,6 @@ const CustomPagination = ({
     totalPages: number;
     onPageChange: (page: number) => void;
     totalItems: number;
-    itemsPerPage: number;
     currentStart: number;
     currentEnd: number;
 }) => {
@@ -460,7 +458,7 @@ export default function FieldOwnerRevenuePage() {
                                                 totalPages={totalPages}
                                                 onPageChange={handlePageChange}
                                                 totalItems={totalBookings}
-                                                itemsPerPage={itemsPerPage}
+
                                                 currentStart={startIndex}
                                                 currentEnd={endIndex}
                                             />

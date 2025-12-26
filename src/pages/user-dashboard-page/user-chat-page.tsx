@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loading } from '@/components/ui/loading';
 import {
   Dialog,
   DialogContent,
@@ -116,24 +116,12 @@ const MyTournaments = () => {
     }
   };
 
-  const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[1, 2, 3].map(i => (
-        <Card key={i}>
-          <CardHeader>
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-2/3" />
-          </CardContent>
-          <CardFooter>
-            <Skeleton className="h-10 w-full" />
-          </CardFooter>
-        </Card>
-      ))}
+  const LoadingComponent = () => (
+    <div className="flex items-center justify-center py-12">
+      <div className="text-center">
+        <Loading size={48} className="text-green-600 mx-auto mb-4" />
+        <p className="text-muted-foreground">Đang tải danh sách giải đấu...</p>
+      </div>
     </div>
   );
 
@@ -177,7 +165,7 @@ const MyTournaments = () => {
             </TabsList>
 
             <TabsContent value="created" className="space-y-6">
-              {loading ? <LoadingSkeleton /> : (
+              {loading ? <LoadingComponent /> : (
                 tournaments.length === 0 ? (
                   <Card className="border-dashed">
                     <CardContent className="py-12">
@@ -217,7 +205,7 @@ const MyTournaments = () => {
             </TabsContent>
 
             <TabsContent value="participated" className="space-y-6">
-              {loading ? <LoadingSkeleton /> : (
+              {loading ? <LoadingComponent /> : (
                 participatedTournaments.length === 0 ? (
                   <Card className="border-dashed">
                     <CardContent className="py-12">

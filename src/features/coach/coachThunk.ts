@@ -6,6 +6,7 @@ import type {
     CoachFilters,
     ErrorResponse,
     CoachProfileResponse,
+    PublicCoachesResponse,
     SportType as SportTypeType,
 } from "../../types/coach-type";
 import { SportType as SPORT_TYPE_CONST } from "../../types/coach-type";

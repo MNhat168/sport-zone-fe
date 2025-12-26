@@ -263,30 +263,13 @@ export default function CoachBookingsPage() {
     const [coachId, setCoachId] = useState<string | null>(null);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage] = useState(10);
     const [activeTab, setActiveTab] = useState<TransactionStatus>(TransactionStatus.PENDING);
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
     const [bookingTypeTab, setBookingTypeTab] = useState<'coach' | 'field_coach'>('coach');
 
-    const fetchBookings = async () => {
-        if (!authUser) return;
-        setLoading(true);
-        try {
-            const type = bookingTypeTab === 'field_coach' ? 'field_coach' : 'coach';
-            const response = await axiosPrivate.get(`/bookings/coach/my-bookings/by-type?type=${type}`);
-            const data = response.data;
-            const bookingsData = Array.isArray(data) ? data : (data.data || []);
-            setBookings(Array.isArray(bookingsData) ? bookingsData : []);
-            setError(null);
-        } catch (err: any) {
-            console.error("Error fetching bookings:", err);
-            const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
     useEffect(() => {
         const storedUser = sessionStorage.getItem("user");
@@ -304,9 +287,6 @@ export default function CoachBookingsPage() {
     }, []);
 
     useEffect(() => {
-<<<<<<< HEAD
-        fetchBookings();
-=======
         const fetchBookings = async () => {
             setLoading(true);
             try {
@@ -328,7 +308,6 @@ export default function CoachBookingsPage() {
         if (authUser) {
             fetchBookings();
         }
->>>>>>> cc08a923d7112ef7003fc379214fabba60fd3e46
     }, [authUser, bookingTypeTab]);
 
     const handleCompleteBooking = async (bookingId: string) => {
@@ -628,154 +607,192 @@ export default function CoachBookingsPage() {
                                         </p>
                                     </div>
                                 ) : (
-                                    /* Booking Table */
-                                    <div className="w-full bg-white">
-                                        <div className="overflow-x-auto">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow className="bg-gray-50 border-b">
-                                                        <TableHead className="w-48 font-semibold text-gray-900 text-left py-4">
-                                                            Khách Hàng
-                                                        </TableHead>
-                                                        <TableHead className="w-48 font-semibold text-gray-900 text-left py-4">
-                                                            Ngày & Giờ
-                                                        </TableHead>
-                                                        <TableHead className="w-48 font-semibold text-gray-900 text-left py-4">
-                                                            Sân
-                                                        </TableHead>
-                                                        <TableHead className="w-32 text-left font-semibold text-gray-900 py-4">
-                                                            Thanh Toán
-                                                        </TableHead>
-                                                        <TableHead className="w-32 font-semibold text-gray-900 text-left py-4">
-                                                            Trạng Thái
-                                                        </TableHead>
-                                                        <TableHead className="w-24 font-semibold text-gray-900 text-left py-4">
-                                                            Chat
-                                                        </TableHead>
-                                                        <TableHead className="w-48 py-4">Hành Động</TableHead>
-                                                        <TableHead className="w-32 font-semibold text-gray-900 text-left py-4">
-                                                            Ghi Chú
-                                                        </TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {paginatedBookings.map((booking) => (
-                                                        <TableRow key={booking.id} className="border-b hover:bg-gray-50">
-                                                            <TableCell className="py-3.5 text-left">
-                                                                <div className="flex items-center gap-2">
-                                                                    <User className="h-4 w-4 text-gray-400" />
-                                                                    <div className="flex flex-col">
-                                                                        <span className="font-medium text-gray-900">{booking.customerName}</span>
-                                                                        <span className="text-xs text-gray-500">{booking.customerPhone}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell className="py-3.5 text-left">
-                                                                <div className="flex flex-col gap-0.5">
-                                                                    <div className="flex items-center gap-2 text-sm">
-                                                                        <Calendar className="h-3 w-3 text-gray-400" />
-                                                                        <span className="text-gray-900">{booking.date}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2 text-sm">
-                                                                        <Clock className="h-3 w-3 text-gray-400" />
-                                                                        <span className="text-gray-900">{convertTo24Hour(booking.time)}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell className="py-3.5 text-left">
-                                                                <div className="text-sm">
-                                                                    <p className="font-medium text-gray-900">{booking.fieldName}</p>
-                                                                    <p className="text-xs text-gray-500 truncate max-w-[150px]">{booking.fieldAddress}</p>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell className="py-5 text-left">
-                                                                <span className="text-base font-medium text-gray-900">
-                                                                    {booking.payment}
-                                                                </span>
-                                                            </TableCell>
-                                                            <TableCell className="py-5 text-left">
-                                                                <Badge
-                                                                    variant="secondary"
-                                                                    className={`${getStatusBadgeStyles(booking.status)} rounded-sm`}
-                                                                >
-                                                                    {booking.statusText}
-                                                                </Badge>
-                                                            </TableCell>
-                                                            <TableCell className="py-6 text-left">
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="ghost"
-                                                                    className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal gap-2"
-                                                                    onClick={() => handleChat(booking.id)}
-                                                                >
-                                                                    <MessageCircle className="h-3.5 w-3.5" />
-                                                                    Chat
-                                                                </Button>
-                                                            </TableCell>
-                                                            <TableCell className="py-5 text-left">
-                                                                {/* Show Accept/Reject for pending coach requests */}
-                                                                {(booking.coachStatus === 'pending' || booking.transactionStatus === 'pending') ? (
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Button
-                                                                            type="button"
-                                                                            variant="default"
-                                                                            className="bg-green-600 hover:bg-green-700 text-white h-8"
-                                                                            disabled={!coachId}
-                                                                            onClick={() => handleAcceptBooking(booking.id)}
-                                                                        >
-                                                                            Chấp Nhận
-                                                                        </Button>
-                                                                        <Button
-                                                                            type="button"
-                                                                            variant="default"
-                                                                            className="h-8 bg-red-600 hover:bg-red-700 text-white"
-                                                                            disabled={!coachId}
-                                                                            onClick={() => handleDeclineBooking(booking.id)}
-                                                                        >
-                                                                            Từ Chối
-                                                                        </Button>
-                                                                    </div>
-                                                                ) : booking.transactionStatus === 'succeeded' || booking.originalBooking.status === 'confirmed' ? (
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Button
-                                                                            type="button"
-                                                                            variant="default"
-                                                                            className="bg-blue-600 hover:bg-blue-700 text-white h-8"
-                                                                            disabled={!coachId}
-                                                                            onClick={() => handleCompleteBooking(booking.id)}
-                                                                        >
-                                                                            Hoàn Thành
-                                                                        </Button>
-                                                                        <Button
-                                                                            type="button"
-                                                                            variant="destructive"
-                                                                            className="h-8 bg-red-600 hover:bg-red-700 text-white"
-                                                                            disabled={!coachId}
-                                                                            onClick={() => handleCancelBooking(booking.id)}
-                                                                        >
-                                                                            Hủy Đặt
-                                                                        </Button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="text-sm text-gray-500">Không có hành động</div>
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell className="py-3.5 text-left">
-                                                                {booking.note ? (
-                                                                    <div className="flex items-start gap-1 max-w-[150px]" title={booking.note}>
-                                                                        <FileText className="h-3 w-3 text-gray-400 mt-1 flex-shrink-0" />
-                                                                        <span className="text-sm truncate">{booking.note}</span>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-gray-400 text-xs">-</span>
-                                                                )}
-                                                            </TableCell>
+                                    <>
+                                        {/* Booking Table */}
+                                        <div className="w-full bg-white">
+                                            <div className="overflow-x-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="bg-gray-50 border-b">
+                                                            <TableHead className="w-48 font-semibold text-gray-900 text-left py-4">
+                                                                Khách Hàng
+                                                            </TableHead>
+                                                            <TableHead className="w-48 font-semibold text-gray-900 text-left py-4">
+                                                                Ngày & Giờ
+                                                            </TableHead>
+                                                            <TableHead className="w-48 font-semibold text-gray-900 text-left py-4">
+                                                                Sân
+                                                            </TableHead>
+                                                            <TableHead className="w-32 text-left font-semibold text-gray-900 py-4">
+                                                                Thanh Toán
+                                                            </TableHead>
+                                                            <TableHead className="w-32 font-semibold text-gray-900 text-left py-4">
+                                                                Trạng Thái
+                                                            </TableHead>
+                                                            <TableHead className="w-24 font-semibold text-gray-900 text-left py-4">
+                                                                Chat
+                                                            </TableHead>
+                                                            <TableHead className="w-48 py-4">Hành Động</TableHead>
+                                                            <TableHead className="w-32 font-semibold text-gray-900 text-left py-4">
+                                                                Ghi Chú
+                                                            </TableHead>
                                                         </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {paginatedBookings.map((booking) => (
+                                                            <TableRow key={booking.id} className="border-b hover:bg-gray-50">
+                                                                <TableCell className="py-3.5 text-left">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <User className="h-4 w-4 text-gray-400" />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-medium text-gray-900">{booking.customerName}</span>
+                                                                            <span className="text-xs text-gray-500">{booking.customerPhone}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="py-3.5 text-left">
+                                                                    <div className="flex flex-col gap-0.5">
+                                                                        <div className="flex items-center gap-2 text-sm">
+                                                                            <Calendar className="h-3 w-3 text-gray-400" />
+                                                                            <span className="text-gray-900">{booking.date}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 text-sm">
+                                                                            <Clock className="h-3 w-3 text-gray-400" />
+                                                                            <span className="text-gray-900">{convertTo24Hour(booking.time)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="py-3.5 text-left">
+                                                                    <div className="text-sm">
+                                                                        <p className="font-medium text-gray-900">{booking.fieldName}</p>
+                                                                        <p className="text-xs text-gray-500 truncate max-w-[150px]">{booking.fieldAddress}</p>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="py-5 text-left">
+                                                                    <span className="text-base font-medium text-gray-900">
+                                                                        {booking.payment}
+                                                                    </span>
+                                                                </TableCell>
+                                                                <TableCell className="py-5 text-left">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className={`${getStatusBadgeStyles(booking.status)} rounded-sm`}
+                                                                    >
+                                                                        {booking.statusText}
+                                                                    </Badge>
+                                                                </TableCell>
+                                                                <TableCell className="py-6 text-left">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal gap-2"
+                                                                        onClick={() => handleChat(booking.id)}
+                                                                    >
+                                                                        <MessageCircle className="h-3.5 w-3.5" />
+                                                                        Chat
+                                                                    </Button>
+                                                                </TableCell>
+                                                                <TableCell className="py-5 text-left">
+                                                                    {/* Show Accept/Reject for pending coach requests */}
+                                                                    {(booking.coachStatus === 'pending' || booking.transactionStatus === 'pending') ? (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="default"
+                                                                                className="bg-green-600 hover:bg-green-700 text-white h-8"
+                                                                                disabled={!coachId}
+                                                                                onClick={() => handleAcceptBooking(booking.id)}
+                                                                            >
+                                                                                Chấp Nhận
+                                                                            </Button>
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="default"
+                                                                                className="h-8 bg-red-600 hover:bg-red-700 text-white"
+                                                                                disabled={!coachId}
+                                                                                onClick={() => handleDeclineBooking(booking.id)}
+                                                                            >
+                                                                                Từ Chối
+                                                                            </Button>
+                                                                        </div>
+                                                                    ) : booking.transactionStatus === 'succeeded' || booking.originalBooking.status === 'confirmed' ? (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="default"
+                                                                                className="bg-blue-600 hover:bg-blue-700 text-white h-8"
+                                                                                disabled={!coachId}
+                                                                                onClick={() => handleCompleteBooking(booking.id)}
+                                                                            >
+                                                                                Hoàn Thành
+                                                                            </Button>
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="destructive"
+                                                                                className="h-8 bg-red-600 hover:bg-red-700 text-white"
+                                                                                disabled={!coachId}
+                                                                                onClick={() => handleCancelBooking(booking.id)}
+                                                                            >
+                                                                                Hủy Đặt
+                                                                            </Button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-sm text-gray-500">Không có hành động</div>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell className="py-3.5 text-left">
+                                                                    {booking.note ? (
+                                                                        <div className="flex items-start gap-1 max-w-[150px]" title={booking.note}>
+                                                                            <FileText className="h-3 w-3 text-gray-400 mt-1 flex-shrink-0" />
+                                                                            <span className="text-sm truncate">{booking.note}</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-gray-400 text-xs">-</span>
+                                                                    )}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
                                         </div>
-                                    </div>
+                                        <div className="flex items-center justify-between py-4">
+                                            <div className="text-sm text-gray-500">
+                                                Hiển thị {paginatedBookings.length} trên tổng số {mappedBookings.length} đặt lịch
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                    disabled={currentPage === 1}
+                                                >
+                                                    Trước
+                                                </Button>
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                        <Button
+                                                            key={page}
+                                                            variant={currentPage === page ? "default" : "outline"}
+                                                            size="sm"
+                                                            onClick={() => setCurrentPage(page)}
+                                                            className={`w-8 h-8 p-0 ${currentPage === page ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                                                        >
+                                                            {page}
+                                                        </Button>
+                                                    ))}
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                >
+                                                    Sau
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                             </>
                         )}

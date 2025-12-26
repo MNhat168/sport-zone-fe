@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Send, X, MessageCircle } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { getChatRoom, markAsRead, startCoachChat } from "@/features/chat/chatThunk";
+import { getChatRoom, startCoachChat } from "@/features/chat/chatThunk";
 import { clearTyping, setCurrentRoom } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
 import { Button } from "@/components/ui/button";
