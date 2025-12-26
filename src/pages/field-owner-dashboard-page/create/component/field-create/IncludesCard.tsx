@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Loading } from '@/components/ui/loading';
 import { ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -107,8 +108,9 @@ export default function IncludesCard({ selectedIncludes, onIncludesChange, sport
                                 </div>
                             </div>
                         ) : loading ? (
-                            <div className="text-center py-4">
-                                <div className="text-gray-500">Đang tải cơ sở vật chất...</div>
+                            <div className="flex flex-col items-center justify-center py-8 gap-2">
+                                <Loading size={24} className="text-emerald-600" />
+                                <div className="text-gray-500 text-sm">Đang tải cơ sở vật chất...</div>
                             </div>
                         ) : facilityAmenities.length === 0 ? (
                             <div className="text-center py-4">
@@ -141,18 +143,18 @@ export default function IncludesCard({ selectedIncludes, onIncludesChange, sport
                                                     {/* <Label htmlFor={`price-${amenityId}`} className="text-sm text-gray-500 mb-1 block">
                                                     Giá tiền (VND)
                                                 </Label> */}
-                                            <Input
-                                                id={`price-${amenityId}`}
-                                                type="text"
-                                                inputMode="numeric"
-                                                placeholder="Nhập giá tiền"
-                                                value={currentPrice ? Number(currentPrice).toLocaleString('vi-VN') : ''}
-                                                onChange={(e) => {
-                                                    const rawValue = e.target.value.replace(/[^\d]/g, '');
-                                                    handlePriceChange(amenityId, rawValue === '' ? '0' : rawValue);
-                                                }}
-                                                className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                            />
+                                                    <Input
+                                                        id={`price-${amenityId}`}
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        placeholder="Nhập giá tiền"
+                                                        value={currentPrice ? Number(currentPrice).toLocaleString('vi-VN') : ''}
+                                                        onChange={(e) => {
+                                                            const rawValue = e.target.value.replace(/[^\d]/g, '');
+                                                            handlePriceChange(amenityId, rawValue === '' ? '0' : rawValue);
+                                                        }}
+                                                        className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    />
                                                 </div>
                                             )}
                                         </div>

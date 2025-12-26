@@ -4,7 +4,8 @@ import { useAppDispatch } from '@/store/hook';
 import { verifyPayOSPayment } from '@/features/transactions/transactionsThunk';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 /**
  * PayOS Return Page
@@ -14,7 +15,7 @@ export default function PayOSReturnPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dispatch = useAppDispatch();
-  
+
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [error, setError] = useState<string | null>(null);
   const [orderCode, setOrderCode] = useState<string | null>(null);
@@ -31,20 +32,20 @@ export default function PayOSReturnPage() {
         console.log('[PayOS Return] Starting payment verification...');
         console.log('[PayOS Return] Full URL:', window.location.href);
         console.log('[PayOS Return] Location search:', location.search);
-        
+
         // Get complete query string from PayOS redirect
         const rawQueryString = location.search || window.location.search || '';
-        
+
         console.log('[PayOS Return] Raw query string:', rawQueryString);
-        
+
         // Parse query params according to guide
         // Guide endpoint: GET /transactions/payos/return?orderCode=123456789
         const queryParams = new URLSearchParams(rawQueryString.startsWith('?') ? rawQueryString.slice(1) : rawQueryString);
-        
+
         // Extract orderCode according to guide (required parameter)
         const orderCodeParam = queryParams.get('orderCode');
         const statusParam = queryParams.get('status');
-        
+
         console.log('[PayOS Return] PayOS params:', {
           orderCode: orderCodeParam,
           status: statusParam,
@@ -74,11 +75,11 @@ export default function PayOSReturnPage() {
         // The backend should handle the query string properly
         console.log('[PayOS Return] ✅ Calling verify API with orderCode:', orderCodeNumber);
         console.log('[PayOS Return] Query string:', rawQueryString);
-        
+
         const result = await dispatch(
           verifyPayOSPayment(rawQueryString)
         ).unwrap();
-        
+
         console.log('[PayOS Return] ✅ Verification result:', result);
 
         // Check if payment succeeded based on status from query params
@@ -91,37 +92,37 @@ export default function PayOSReturnPage() {
         if (isSucceeded && result.success) {
           // Payment successful
           console.log('[PayOS Return] ✅ PayOS payment successful!');
-          
+
           setAmount(result.amount);
           setBookingId(result.bookingId || null);
           setStatus('success');
-          
+
           // Redirect to user booking history page after 2 seconds
           setTimeout(() => {
             navigate('/user-booking-history', {
-              state: { 
+              state: {
                 message: 'Thanh toán thành công!',
-                bookingId: result.bookingId 
+                bookingId: result.bookingId
               }
             });
           }, 2000);
         } else {
           // Payment failed
           console.log('[PayOS Return] ❌ PayOS payment failed');
-          
+
           const errorMessage =
             result.reason ||
             result.message ||
             (derivedStatus ? `Thanh toán thất bại (status: ${derivedStatus})` : 'Thanh toán thất bại');
           setError(errorMessage);
           setStatus('error');
-          
+
           // Redirect to user booking history after 3 seconds
           setTimeout(() => {
             navigate('/user-booking-history', {
-              state: { 
+              state: {
                 message: 'Thanh toán thất bại',
-                error: errorMessage 
+                error: errorMessage
               }
             });
           }, 3000);
@@ -130,11 +131,11 @@ export default function PayOSReturnPage() {
         console.error('[PayOS Return] ❌ Verification error:', error);
         setError(error.message || 'Có lỗi xảy ra khi xác thực thanh toán');
         setStatus('error');
-        
+
         // Redirect to user booking history after 3 seconds
         setTimeout(() => {
           navigate('/user-booking-history', {
-            state: { 
+            state: {
               message: 'Có lỗi xảy ra khi xác thực thanh toán'
             }
           });
@@ -151,7 +152,7 @@ export default function PayOSReturnPage() {
         <CardContent className="pt-6">
           {status === 'verifying' && (
             <div className="text-center py-8">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-600 animate-spin" />
+              <Loading size={64} className="mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Đang xác nhận thanh toán...
               </h2>
@@ -190,9 +191,9 @@ export default function PayOSReturnPage() {
               </p>
               <Button
                 onClick={() => navigate('/user-booking-history', {
-                  state: { 
+                  state: {
                     message: 'Thanh toán thành công!',
-                    bookingId: bookingId 
+                    bookingId: bookingId
                   }
                 })}
                 className="mt-2"

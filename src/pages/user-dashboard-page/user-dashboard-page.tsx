@@ -23,6 +23,7 @@ import { getFavouriteFields, getFavouriteCoaches } from "../../features/user/use
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
+import { Loading } from "@/components/ui/loading"
 import { getMyBookings, cancelFieldBooking, getMyInvoices, getUpcomingBooking } from "../../features/booking/bookingThunk"
 import type { Booking } from "../../types/booking-type"
 
@@ -189,7 +190,8 @@ export default function UserDashboardPage() {
             <>
                 <NavbarDarkComponent />
                 <PageWrapper className="min-h-screen">
-                    <div className="flex items-center justify-center py-8">
+                    <div className="flex flex-col items-center justify-center py-8 gap-3">
+                        <Loading size={40} />
                         <div className="text-muted-foreground">Đang khởi tạo...</div>
                     </div>
                 </PageWrapper>
@@ -447,7 +449,8 @@ export default function UserDashboardPage() {
                                 <CardContent className="space-y-4 text-start">
                                     <div className="border-t border-gray-100" />
                                     {loadingBookings ? (
-                                        <div className="flex items-center justify-center py-8">
+                                        <div className="flex flex-col items-center justify-center py-8 gap-3">
+                                            <Loading size={32} />
                                             <div className="text-muted-foreground">Đang tải...</div>
                                         </div>
                                     ) : error ? (
@@ -562,8 +565,9 @@ export default function UserDashboardPage() {
                                 <CardContent>
                                     <div className="border-t border-gray-100 pt-4">
                                         {bookingState.loading ? (
-                                            <div className="flex items-center justify-center py-6">
-                                                <div className="text-muted-foreground">Đang tải lịch hẹn...</div>
+                                            <div className="flex flex-col items-center justify-center py-6 gap-2">
+                                                <Loading size={24} />
+                                                <div className="text-muted-foreground text-xs">Đang tải lịch hẹn...</div>
                                             </div>
                                         ) : bookingState.error ? (
                                             <div className="flex items-center justify-center py-6">
@@ -692,7 +696,10 @@ export default function UserDashboardPage() {
                                             {loadingInvoices ? (
                                                 <tr>
                                                     <td colSpan={5} className="py-8 text-center">
-                                                        <div className="text-gray-500">Đang tải hóa đơn...</div>
+                                                        <div className="flex flex-col items-center justify-center gap-2">
+                                                            <Loading size={24} />
+                                                            <div className="text-gray-500">Đang tải hóa đơn...</div>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ) : bookingState.error ? (

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapPin, Search } from 'lucide-react'
+import { Loading } from '@/components/ui/loading'
 import {
   Dialog,
   DialogContent,
@@ -387,7 +388,7 @@ export function LocationPickerModal({
                 disabled={!searchQuery.trim() || isSearching}
               >
                 {isSearching ? (
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <Loading size={16} />
                 ) : (
                   <Search className="w-4 h-4" />
                 )}
@@ -399,8 +400,8 @@ export function LocationPickerModal({
           <div className="space-y-2">
             <Label>Bản đồ</Label>
             <div className="h-96 rounded-lg relative overflow-hidden border bg-gray-100">
-              <div 
-                ref={mapContainerRef} 
+              <div
+                ref={mapContainerRef}
                 className="absolute inset-0 z-0 w-full h-full"
                 style={{ minHeight: '384px' }}
               />

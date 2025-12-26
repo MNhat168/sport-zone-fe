@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { getMyCoachRegistration } from '@/features/coach-registration';
+import { Loading } from "@/components/ui/loading";
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import PageHeader from "@/components/header-banner/page-header"
@@ -21,7 +22,7 @@ const CoachRegistrationStatusPage: React.FC = () => {
         <NavbarDarkComponent />
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <Loading size={48} className="text-green-600 mx-auto" />
             <p className="mt-4 text-gray-600">Đang tải...</p>
           </div>
         </div>

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar as CalendarIcon, Clock, ArrowRight } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { getCoachById } from "../../features/coach/coachThunk";
@@ -30,7 +31,7 @@ const CoachBookingFlow = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { currentCoach, detailLoading } = useAppSelector((state) => state.coach);
-    
+
     const coachId = params.id || (location.state as any)?.coachId;
     const initialData = (location.state as any) || {};
 
@@ -75,7 +76,7 @@ const CoachBookingFlow = () => {
             } else if (data.data && Array.isArray(data.data)) {
                 slots = data.data;
             }
-            
+
             // Convert to availability data format (similar to field booking)
             // Create slots for hours 8-21 (coach typical hours)
             const allHours = Array.from({ length: 14 }, (_, i) => i + 8); // 8 to 21
@@ -88,7 +89,7 @@ const CoachBookingFlow = () => {
                     available: apiSlot ? apiSlot.available : true // Default to available if not found
                 };
             });
-            
+
             setAvailabilityData({ slots: availabilitySlots });
         } catch (error) {
             console.error('Failed to fetch available slots', error);
@@ -97,7 +98,7 @@ const CoachBookingFlow = () => {
             setLoadingSlots(false);
         }
     }, [coachId]);
-    
+
     // Check if slot is available
     const isSlotAvailable = (hour: number): boolean => {
         if (!availabilityData || !availabilityData.slots) {
@@ -107,7 +108,7 @@ const CoachBookingFlow = () => {
         const slot = availabilityData.slots.find(s => s.startTime === timeString);
         return slot ? slot.available : true;
     };
-    
+
     // Handle time slot click (similar to field booking)
     const handleTimeSlotClick = (hour: number, type: "start" | "end") => {
         if (type === "start") {
@@ -126,12 +127,12 @@ const CoachBookingFlow = () => {
             }));
         }
     };
-    
+
     // Get available time slots (8-21 for coach)
     const getAvailableTimeSlots = (): number[] => {
         return Array.from({ length: 14 }, (_, i) => i + 8); // 8 to 21
     };
-    
+
     // Calculate booking amount
     const calculateBookingAmount = (): number => {
         if (!currentCoach?.price || !bookingData.startTime || !bookingData.endTime) return 0;
@@ -141,7 +142,7 @@ const CoachBookingFlow = () => {
         const hours = endHour - startHour;
         return Math.round((currentCoach.price || 0) * hours);
     };
-    
+
     const formatVND = (value: number): string => {
         try {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
@@ -156,7 +157,7 @@ const CoachBookingFlow = () => {
             fetchAvailableSlots(bookingData.date);
         }
     }, [coachId, bookingData.date, fetchAvailableSlots]);
-    
+
     // Update selected hours when bookingData changes
     useEffect(() => {
         if (bookingData.startTime) {
@@ -202,7 +203,7 @@ const CoachBookingFlow = () => {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <Loading size={48} className="text-green-600 mx-auto mb-4" />
                     <p className="text-muted-foreground">Đang tải thông tin huấn luyện viên...</p>
                 </div>
             </div>
@@ -215,7 +216,7 @@ const CoachBookingFlow = () => {
                 <NavbarDarkComponent />
                 <PageWrapper>
                     <PageHeader title="Đặt lịch với huấn luyện viên" breadcrumbs={breadcrumbs} />
-                    
+
                     <div className="w-full max-w-[1320px] mx-auto px-3 flex flex-col gap-10">
                         {/* Header Card */}
                         <Card className="border border-gray-200">
@@ -286,27 +287,27 @@ const CoachBookingFlow = () => {
                                                     const dd = String(day.getDate()).padStart(2, '0');
                                                     const ymd = `${yyyy}-${mm}-${dd}`;
                                                     setBookingData(prev => ({ ...prev, date: ymd }));
-                                                    
+
                                                     // Reset time selection when date changes
                                                     setSelectedStartHour(null);
                                                     setSelectedEndHour(null);
-                                                    
+
                                                     // Fetch availability data for selected date
                                                     fetchAvailableSlots(ymd);
                                                 }}
                                                 disabled={(d) => {
                                                     // past dates => disabled
                                                     const today = new Date();
-                                                    today.setHours(0,0,0,0);
+                                                    today.setHours(0, 0, 0, 0);
                                                     const date = new Date(d);
-                                                    date.setHours(0,0,0,0);
+                                                    date.setHours(0, 0, 0, 0);
                                                     return date < today;
                                                 }}
                                                 buttonClassName="h-14 bg-white border-0 text-left"
                                                 popoverAlign="start"
                                                 captionLayout="dropdown-months"
-                                                fromDate={(() => { const t=new Date(); t.setHours(0,0,0,0); return t; })()}
-                                                toDate={(() => { const t=new Date(); t.setHours(0,0,0,0); t.setMonth(t.getMonth()+3); return t; })()}
+                                                fromDate={(() => { const t = new Date(); t.setHours(0, 0, 0, 0); return t; })()}
+                                                toDate={(() => { const t = new Date(); t.setHours(0, 0, 0, 0); t.setMonth(t.getMonth() + 3); return t; })()}
                                             />
                                         </div>
 
@@ -321,7 +322,7 @@ const CoachBookingFlow = () => {
                                                 ) : loadingSlots ? (
                                                     <div className="flex items-center justify-center py-8">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                                            <Loading size={20} className="text-emerald-600" />
                                                             <p className="text-sm text-gray-600">
                                                                 Đang tải thông tin khả dụng...
                                                             </p>
@@ -344,7 +345,7 @@ const CoachBookingFlow = () => {
                                                                         disabled={isSlotBooked}
                                                                         onClick={() => {
                                                                             if (isSlotBooked) return;
-                                                                            
+
                                                                             if (selectedStartHour === null) {
                                                                                 // Chọn giờ bắt đầu
                                                                                 handleTimeSlotClick(hour, "start");
@@ -360,15 +361,15 @@ const CoachBookingFlow = () => {
                                                                         w-14 h-14 rounded-lg border-2 font-semibold text-base
                                                                         transition-all duration-200 relative
                                                                         ${isSlotBooked
-                                                                            ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed opacity-60"
-                                                                            : isStartHour
-                                                                                ? "bg-emerald-600 border-emerald-600 text-white shadow-md hover:scale-105"
-                                                                                : isEndHour
-                                                                                    ? "bg-emerald-500 border-emerald-500 text-white shadow-md hover:scale-105"
-                                                                                    : isInRange
-                                                                                        ? "bg-emerald-100 border-emerald-300 text-emerald-700 hover:scale-105"
-                                                                                        : "bg-white border-gray-200 text-gray-700 hover:border-emerald-400 hover:scale-105"
-                                                                        }
+                                                                                ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed opacity-60"
+                                                                                : isStartHour
+                                                                                    ? "bg-emerald-600 border-emerald-600 text-white shadow-md hover:scale-105"
+                                                                                    : isEndHour
+                                                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-md hover:scale-105"
+                                                                                        : isInRange
+                                                                                            ? "bg-emerald-100 border-emerald-300 text-emerald-700 hover:scale-105"
+                                                                                            : "bg-white border-gray-200 text-gray-700 hover:border-emerald-400 hover:scale-105"
+                                                                            }
                                                                     `}
                                                                     >
                                                                         <div className="flex flex-col items-center leading-none">
@@ -402,7 +403,7 @@ const CoachBookingFlow = () => {
                                                                     Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
                                                                 </p>
                                                             )}
-                                                            
+
                                                             {/* Availability status info */}
                                                             {availabilityData && (
                                                                 <div className="mt-2 pt-2 border-t border-gray-200">
@@ -505,8 +506,8 @@ const CoachBookingFlow = () => {
                                     onClick={handleStep1Submit}
                                     disabled={!bookingData.date || !bookingData.startTime || !bookingData.endTime}
                                     className={`px-5 py-3 text-white ${(bookingData.date && bookingData.startTime && bookingData.endTime)
-                                            ? 'bg-gray-800 hover:bg-gray-900'
-                                            : 'bg-gray-400 cursor-not-allowed'
+                                        ? 'bg-gray-800 hover:bg-gray-900'
+                                        : 'bg-gray-400 cursor-not-allowed'
                                         }`}
                                 >
                                     Tiếp tục

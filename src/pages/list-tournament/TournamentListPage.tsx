@@ -17,6 +17,8 @@ import { SportType, SportCategories, getSportDisplayNameVN, getCategoryDisplayNa
 
 const ITEMS_PER_PAGE = 10;
 
+import Loading from "@/components/ui/loading"
+
 export default function TournamentListPage() {
   const dispatch = useAppDispatch()
   const { tournaments, loading, error } = useAppSelector((state) => state.tournament)
@@ -219,8 +221,8 @@ export default function TournamentListPage() {
                 setCurrentPage(1) // Reset to first page when filters change
               }}
               className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${maxFee === value
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
             >
               {label}
@@ -238,7 +240,7 @@ export default function TournamentListPage() {
         <div className="min-h-screen bg-gray-50 pt-24 pb-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+              <Loading size={100} />
               <p className="mt-4 text-gray-600">Loading tournaments...</p>
             </div>
           </div>
@@ -476,8 +478,8 @@ export default function TournamentListPage() {
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
             className={`px-3 py-1 rounded-md border ${currentPage === 1
-                ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
-                : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+              ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
+              : 'hover:bg-gray-100 border-gray-300 text-gray-700'
               }`}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -489,8 +491,8 @@ export default function TournamentListPage() {
               <button
                 onClick={() => handlePageChange(1)}
                 className={`px-3 py-1 rounded-md border ${currentPage === 1
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'hover:bg-gray-100 border-gray-300 text-gray-700'
                   }`}
               >
                 1
@@ -509,8 +511,8 @@ export default function TournamentListPage() {
               key={pageNum}
               onClick={() => handlePageChange(pageNum)}
               className={`px-3 py-1 rounded-md border ${currentPage === pageNum
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+                ? 'bg-green-600 text-white border-green-600'
+                : 'hover:bg-gray-100 border-gray-300 text-gray-700'
                 }`}
             >
               {pageNum}
@@ -528,8 +530,8 @@ export default function TournamentListPage() {
               <button
                 onClick={() => handlePageChange(totalPages)}
                 className={`px-3 py-1 rounded-md border ${currentPage === totalPages
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'hover:bg-gray-100 border-gray-300 text-gray-700'
                   }`}
               >
                 {totalPages}
@@ -542,8 +544,8 @@ export default function TournamentListPage() {
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
             className={`px-3 py-1 rounded-md border ${currentPage === totalPages
-                ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
-                : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+              ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200'
+              : 'hover:bg-gray-100 border-gray-300 text-gray-700'
               }`}
           >
             <ChevronRightIcon className="h-4 w-4" />

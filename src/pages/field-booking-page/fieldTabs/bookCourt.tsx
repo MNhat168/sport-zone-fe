@@ -8,6 +8,7 @@ import type { Field, FieldAvailabilityData } from '@/types/field-type';
 import { useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@/store/hook';
 import { checkFieldAvailability } from '@/features/field/fieldThunk';
+import { Loading } from '@/components/ui/loading';
 
 /**
  * Interface for booking form data
@@ -301,11 +302,11 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
         const today = new Date();
         const selected = new Date(selectedDate + 'T00:00:00');
-        
+
         // So sánh ngày (không tính giờ)
         const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const selectedDateOnly = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
-        
+
         // Nếu không phải ngày hôm nay, không disable
         if (selectedDateOnly.getTime() !== todayDateOnly.getTime()) {
             return false;
@@ -315,7 +316,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         const [slotHour, slotMinute] = slotTime.split(':').map(Number);
         const slotTotal = slotHour * 60 + slotMinute;
         const nowTotal = today.getHours() * 60 + today.getMinutes();
-        
+
         // Disable nếu slot đã qua (slot start time < current time)
         return slotTotal < nowTotal;
     };
@@ -805,7 +806,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                                     ) : isLoadingAvailability ? (
                                         <div className="flex items-center justify-center py-8">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                                <Loading size={20} />
                                                 <p className="text-sm text-gray-600">
                                                     Đang tải thông tin khả dụng...
                                                 </p>

@@ -1,5 +1,7 @@
 "use client"
 
+import { Loading } from "../../components/ui/loading"
+
 import { NavbarDarkComponent } from "../../components/header/navbar-dark-component"
 import FieldCard from "./card-list/field-card-props"
 import { useRef, useEffect, useState } from "react"
@@ -1151,7 +1153,7 @@ const FieldBookingPage = () => {
                           >
                             {geolocationLoading || isLoadingNearby ? (
                               <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <Loading size={16} className="mr-2" />
                                 {isLoadingNearby
                                   ? "Đang tìm..."
                                   : "Đang lấy vị trí..."}
@@ -1280,20 +1282,9 @@ const FieldBookingPage = () => {
                   }}
                 >
                   {(loading || isLoadingNearby) && (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((item) => (
-                        <div key={item} className="animate-pulse">
-                          <div className="flex bg-white rounded-lg shadow p-4">
-                            <div className="w-32 h-32 bg-gray-300 rounded-lg"></div>
-                            <div className="ml-4 flex-1">
-                              <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
-                              <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                              <div className="h-4 bg-gray-300 rounded w-full mb-2"></div>
-                              <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <Loading size={100} />
+                      <p className="mt-4 text-gray-500 font-medium">Đang tìm kiếm sân thể thao...</p>
                     </div>
                   )}
 

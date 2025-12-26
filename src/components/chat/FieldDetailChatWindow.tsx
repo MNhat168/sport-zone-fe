@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, X, MessageCircle, Building } from "lucide-react";
+import { Send, X, MessageCircle } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
-import { getChatRoom, markAsRead, startChat } from "@/features/chat/chatThunk";
+import { getChatRoom, startChat } from "@/features/chat/chatThunk";
 import { setCurrentRoom, clearTyping } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,10 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
     const [message, setMessage] = useState("");
     const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [localMessages, setLocalMessages] = useState<Message[]>([]);
-    // Add rooms to dependencies
-    const { rooms, currentRoom, loading } = useAppSelector((state) => state.chat);
+    const { currentRoom, loading } = useAppSelector((state) => state.chat);
     const dispatch = useAppDispatch();
 
+    // Connect/disconnect WebSocket and cleanup
     useEffect(() => {
         if (isOpen) {
             webSocketService.connect();
@@ -44,98 +43,46 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
             } catch { }
             webSocketService.disconnect();
             dispatch(setCurrentRoom(null));
-            setLocalMessages([]);
-            initializedRef.current = false;
         }
-    }, [isOpen]);
+    }, [isOpen, currentRoom?._id, dispatch]);
 
-    useEffect(() => {
-        if (currentRoom?.messages && currentRoom.messages.length > 0) {
-            setLocalMessages([...currentRoom.messages]);
-        } else {
-            setLocalMessages([]);
-        }
-    }, [currentRoom?.messages]);
-
+    // Auto-scroll on new messages
     useEffect(() => {
         scrollToBottom();
-    }, [localMessages]);
+    }, [currentRoom?.messages]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const initializedRef = useRef(false);
+    // Initialize chat room
     useEffect(() => {
         if (!isOpen || !fieldOwnerId) return;
-        if (initializedRef.current) return; // prevent re-init on every Redux change
-        initializedRef.current = true;
 
-        // Ensure WebSocket is connected (no-op if already connected)
-        webSocketService.connect();
-
-        const mapKey = `chat:roomId:${fieldOwnerId}:${fieldId || 'none'}`;
-        const savedRoomId = localStorage.getItem(mapKey);
-
-        const hydrateFromLocalStorage = (roomId: string) => {
+        const initRoom = async () => {
             try {
-                const saved = localStorage.getItem(`chat:messages:${roomId}`);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed?.messages)) {
-                        setLocalMessages(parsed.messages);
-                    }
-                }
-            } catch { }
-        };
+                // Create or get existing room
+                const room = await dispatch(
+                    startChat({ fieldOwnerId, fieldId })
+                ).unwrap();
 
-        const useRoom = async (roomId: string) => {
-            webSocketService.joinChatRoom(roomId);
-            hydrateFromLocalStorage(roomId);
-            await dispatch(getChatRoom(roomId));
-        };
-
-        // Prefer an existing room snapshot from current Redux state (single read)
-        const existingRoom = Array.isArray(rooms)
-            ? rooms.find((room) => {
-                if (!room) return false;
-                const ownerId = (room as any)?.fieldOwner?._id ?? (room as any)?.fieldOwner;
-                const rFieldId = (room as any)?.field?._id ?? (room as any)?.fieldId;
-                return ownerId === fieldOwnerId && (!fieldId || rFieldId === fieldId);
-            })
-            : undefined;
-
-        if (existingRoom) {
-            dispatch(setCurrentRoom(existingRoom));
-            useRoom(existingRoom._id);
-            localStorage.setItem(mapKey, existingRoom._id);
-            return;
-        }
-
-        // If we have a saved mapping, use it
-        if (savedRoomId) {
-            // minimal object to set id so the UI can proceed; full data comes from getChatRoom
-            dispatch(setCurrentRoom({ _id: savedRoomId, messages: [] } as any));
-            useRoom(savedRoomId);
-            return;
-        }
-
-        // Otherwise, create/get the room via API for persistence
-        (async () => {
-            try {
-                const action = await dispatch(startChat({ fieldOwnerId, fieldId })).unwrap();
-                const room = action;
+                // Set as current room
                 dispatch(setCurrentRoom(room));
+
+                // Join socket room for real-time updates
                 webSocketService.joinChatRoom(room._id);
+
+                // Fetch full message history
                 await dispatch(getChatRoom(room._id));
-                localStorage.setItem(mapKey, room._id);
-            } catch (e) {
-                console.error('Failed to initialize chat room:', e);
+
+            } catch (error) {
+                console.error('Failed to initialize chat:', error);
                 dispatch(setCurrentRoom(null));
-                setLocalMessages([]);
             }
-        })();
-    }, [isOpen, fieldOwnerId, fieldId]);
+        };
+
+        initRoom();
+    }, [isOpen, fieldOwnerId, fieldId, dispatch]);
 
     // Ensure we stay joined to the active room for realtime events
     useEffect(() => {
@@ -144,62 +91,39 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
         }
     }, [currentRoom?._id]);
 
-    // Persist messages locally per room for quick rehydrate
-    useEffect(() => {
-        if (currentRoom?._id) {
-            try {
-                localStorage.setItem(
-                    `chat:messages:${currentRoom._id}`,
-                    JSON.stringify({ messages: localMessages, updatedAt: Date.now() })
-                );
-            } catch { }
-        }
-    }, [currentRoom?._id, localMessages]);
-
     const handleSendMessage = async () => {
-        if (!message.trim()) return;
+        console.log('🔵 [FieldDetailChatWindow] handleSendMessage called', {
+            hasMessage: !!message.trim(),
+            hasCurrentRoom: !!currentRoom,
+            currentRoomId: currentRoom?._id,
+        });
 
-        // Get user data from sessionStorage
+        if (!message.trim() || !currentRoom?._id) {
+            console.warn('⚠️ [FieldDetailChatWindow] Cannot send - missing message or room', {
+                message: message.trim(),
+                currentRoomId: currentRoom?._id,
+            });
+            return;
+        }
+
         const userData = sessionStorage.getItem("user");
         if (!userData) {
             alert("Vui lòng đăng nhập để gửi tin nhắn");
             return;
         }
 
-        // Ensure we have a room and joined it; if not yet, start chat now
-        let roomId = currentRoom?._id;
-        if (!roomId) {
-            try {
-                const action = await dispatch(startChat({ fieldOwnerId, fieldId })).unwrap();
-                roomId = action._id;
-                dispatch(setCurrentRoom(action));
-                webSocketService.joinChatRoom(roomId);
-                localStorage.setItem(`chat:roomId:${fieldOwnerId}:${fieldId || 'none'}`, roomId);
-            } catch (e) {
-                console.error('Cannot start chat to send message:', e);
-                return;
-            }
-        }
-
-        // Send message via WebSocket
-        webSocketService.sendMessage({
-            fieldOwnerId,
-            fieldId,
-            content: message.trim(),
-            type: "text",
+        console.log('🚀 [FieldDetailChatWindow] Sending message via WebSocket', {
+            roomId: currentRoom._id,
+            contentLength: message.trim().length,
         });
 
-        // Add message locally for immediate display
-        const user = JSON.parse(userData);
-        const newMessage: Message = {
-            sender: user.id || user._id,
-            type: 'text',
-            content: message.trim(),
-            isRead: false,
-            sentAt: new Date().toISOString(),
-        };
+        // Use room-specific send for persistence
+        webSocketService.sendMessageToRoom(
+            currentRoom._id,
+            message.trim(),
+            'text'
+        );
 
-        setLocalMessages(prev => [...prev, newMessage]);
         setMessage("");
         clearTypingIndicator();
     };
@@ -286,7 +210,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                 <ScrollArea className="flex-1 min-h-0 p-4 overflow-y-auto">
                     {loading ? (
                         <div className="text-center py-8">Đang tải cuộc trò chuyện...</div>
-                    ) : localMessages.length === 0 ? (
+                    ) : !currentRoom?.messages || currentRoom.messages.length === 0 ? (
                         <div className="text-center text-gray-500 mt-10">
                             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                             <h4 className="font-medium mb-2">Bắt đầu cuộc trò chuyện</h4>
@@ -296,7 +220,7 @@ const FieldDetailChatWindow: React.FC<FieldDetailChatWindowProps> = ({
                             </p>
                         </div>
                     ) : (
-                        localMessages.map((msg: Message, index: number) => {
+                        currentRoom.messages.map((msg: Message, index: number) => {
                             const isCurrentUserMessage = isUserMessage(msg.sender);
 
                             return (

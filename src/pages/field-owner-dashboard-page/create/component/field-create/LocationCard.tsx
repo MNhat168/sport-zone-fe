@@ -5,6 +5,7 @@ import { ChevronDown, MapPin, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Loading } from "@/components/ui/loading";
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VIETNAM_CITIES } from '@/utils/constant-value/constant';
@@ -359,7 +360,7 @@ export default function LocationCard({
                 className="px-4"
             >
                 {isSearching ? (
-                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <Loading size={16} />
                 ) : (
                     <Search className="w-4 h-4" />
                 )}

@@ -38,6 +38,8 @@ const hasUserRole = (user: User | null, role: UserRole): boolean => {
   return userRole === targetRole;
 };
 
+import { Loading } from "@/components/ui/loading";
+
 const ProtectedRoute = ({
   children,
   allowedRoles,
@@ -50,7 +52,7 @@ const ProtectedRoute = ({
   if (authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Loading size={60} />
       </div>
     );
   }
@@ -124,7 +126,7 @@ export const AuthenticatedRedirect = ({
     console.log("⏳ Auth loading, showing spinner...");
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Loading size={60} />
       </div>
     );
   }

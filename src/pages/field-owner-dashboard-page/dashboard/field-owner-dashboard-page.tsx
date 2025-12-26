@@ -9,6 +9,7 @@ import { getMyFields, getMyFieldsBookings, ownerAcceptBooking, ownerRejectBookin
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout"
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail"
 import type { FieldOwnerBooking } from "@/types/field-type"
+import { Loading } from "@/components/ui/loading"
 import { useSocket } from "@/hooks/useSocket"
 
 export default function FieldOwnerDashboardPage() {
@@ -626,7 +627,8 @@ export default function FieldOwnerDashboardPage() {
                                 <div className="border-t border-gray-100" />
 
                                 {fieldOwnerBookingsLoading ? (
-                                    <div className="flex justify-center items-center py-8">
+                                    <div className="flex flex-col justify-center items-center py-8 gap-3">
+                                        <Loading size={32} />
                                         <div className="text-muted-foreground">Đang tải dữ liệu đặt sân...</div>
                                     </div>
                                 ) : fieldOwnerBookingsError ? (

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2, AlertCircle, Shield } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Shield } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 /**
  * eKYC Callback Page
@@ -11,7 +12,7 @@ import { CheckCircle, XCircle, Loader2, AlertCircle, Shield } from 'lucide-react
 export default function EkycCallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [error, setError] = useState<string | null>(null);
   const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
@@ -43,10 +44,10 @@ export default function EkycCallbackPage() {
     // Process the verification status
     if (statusParam === 'Approved') {
       console.log('[eKYC Callback] ✅ eKYC verification approved!');
-      
+
       // Immediately show success UI
       setStatus('success');
-      
+
       // Notify parent window (if opened in popup) immediately
       try {
         if (window.opener) {
@@ -60,7 +61,7 @@ export default function EkycCallbackPage() {
       } catch (err) {
         console.warn('[eKYC Callback] Could not notify parent window:', err);
       }
-      
+
       // Close popup after showing success message (3 seconds to let user see it)
       const closeTimer = setTimeout(() => {
         const closePopup = () => {
@@ -77,7 +78,7 @@ export default function EkycCallbackPage() {
             } catch (postErr) {
               console.warn('[eKYC Callback] Could not send close message:', postErr);
             }
-            
+
             try {
               window.close();
               console.log('[eKYC Callback] ✅ Attempted to close popup');
@@ -91,10 +92,10 @@ export default function EkycCallbackPage() {
             // and gives mobile users time to read the success message.
           }
         };
-        
+
         closePopup();
       }, 3000); // Increased to 3 seconds so user can see success message
-      
+
       // Cleanup timer on unmount
       return () => {
         clearTimeout(closeTimer);
@@ -102,7 +103,7 @@ export default function EkycCallbackPage() {
     } else {
       // Verification failed or rejected
       console.log('[eKYC Callback] ❌ eKYC verification failed or rejected');
-      const errorMessage = statusParam 
+      const errorMessage = statusParam
         ? `Xác thực thất bại. Trạng thái: ${statusParam}`
         : 'Xác thực thất bại. Vui lòng thử lại.';
       setError(errorMessage);
@@ -116,7 +117,7 @@ export default function EkycCallbackPage() {
         <CardContent className="pt-6">
           {status === 'processing' && (
             <div className="text-center py-8">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-600 animate-spin" />
+              <Loading size={64} className="mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Đang xử lý kết quả xác thực...
               </h2>
@@ -141,7 +142,7 @@ export default function EkycCallbackPage() {
                   ✅ Xác thực danh tính thành công!
                 </h2>
               </div>
-              
+
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 text-left">
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-green-900">
@@ -160,12 +161,12 @@ export default function EkycCallbackPage() {
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-4">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loading size={16} />
                 <span>Cửa sổ sẽ tự động đóng trong vài giây...</span>
               </div>
-              
+
               <Button
                 onClick={() => {
                   if (window.opener) {
@@ -179,7 +180,7 @@ export default function EkycCallbackPage() {
                     } catch (postErr) {
                       console.warn('[eKYC Callback] Could not send close message:', postErr);
                     }
-                    
+
                     try {
                       window.close();
                     } catch (err) {
@@ -188,16 +189,16 @@ export default function EkycCallbackPage() {
                   } else {
                     // Try to close first
                     window.close();
-                    
+
                     // Check if we are in the popup context
                     const isPopup = window.name === 'didit-ekyc';
-                    
+
                     if (!isPopup) {
                       // Not a popup, navigate to registration page
                       navigate('/become-field-owner', {
-                        state: { 
+                        state: {
                           message: 'Xác thực danh tính thành công!',
-                          sessionId: verificationSessionId 
+                          sessionId: verificationSessionId
                         }
                       });
                     }
@@ -249,9 +250,9 @@ export default function EkycCallbackPage() {
                     } else {
                       // Try to close first
                       window.close();
-                      
+
                       const isPopup = window.name === 'didit-ekyc';
-                      
+
                       if (!isPopup) {
                         navigate('/become-field-owner');
                       }

@@ -19,6 +19,7 @@ import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { UserSyncProvider } from "./components/providers";
+import FloatingChatWidget from "./components/chat/floating-chat-widget";
 import './App.css';
 import { useEffect } from 'react';
 import { webSocketService } from '@/features/chat/websocket.service';
@@ -94,6 +95,7 @@ function App() {
     <Provider store={store}>
       <UserSyncProvider>
         <RouterProvider router={router} />
+        <FloatingChatWidget />
         {/* <ChatbotWidget /> */}
       </UserSyncProvider>
     </Provider>

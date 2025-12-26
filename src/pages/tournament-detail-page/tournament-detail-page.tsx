@@ -44,6 +44,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { CancelTournamentModal } from "@/components/tournamnent/CancelTournamentModal"
 
+import Loading from "@/components/ui/loading"
+
 export default function TournamentDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -243,7 +245,7 @@ export default function TournamentDetailsPage() {
         <div className="min-h-screen bg-gray-50 pt-24 pb-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+              <Loading size={100} />
               <p className="mt-4 text-gray-600">Loading tournament details...</p>
             </div>
           </div>
