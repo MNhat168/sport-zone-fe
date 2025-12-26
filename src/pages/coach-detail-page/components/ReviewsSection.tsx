@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Loading } from "@/components/ui/loading";
 import { Star } from "lucide-react";
 
 interface ReviewsSectionProps {
@@ -15,7 +17,7 @@ interface ReviewsSectionProps {
   reviewsTotalPages: number;
   selectedRatingFilter: number | null;
   onFilterChange: (rating: number | null) => void;
-  onLoadMore: () => void;
+  onLoadMore: (page: number) => void;
   onWriteReview: () => void;
   /**
    * Whether to show the "Viết đánh giá" button. Defaults to true.
@@ -38,12 +40,15 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   onWriteReview,
   showWriteReview = true,
 }) => {
+  const reviewsRef = useRef<HTMLDivElement | null>(null);
+  // Note: do not auto-scroll when page changes; keep user position stable
   const avgRating = coachStats?.averageRating ?? (coachData?.rating ? Number(coachData.rating) : 0);
   const totalReviews = coachStats?.totalReviews ?? (coachData as any)?.numberOfReviews ?? coachReviews.length ?? 0;
   return (
     <Card
       id="reviews"
       className="shadow-md hover:shadow-lg transition-all duration-300 scroll-mt-24"
+      ref={reviewsRef}
     >
       <CardHeader>
         <div className="flex flex-row items-center justify-between">
@@ -145,7 +150,10 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
           </div>
 
           {reviewsLoading ? (
-            <div className="text-center text-muted-foreground">Loading reviews...</div>
+            <div className="flex flex-col items-center justify-center py-6 gap-2">
+              <Loading size={24} className="text-green-600" />
+              <div className="text-gray-500 text-xs">Đang tải đánh giá...</div>
+            </div>
           ) : Array.isArray(coachReviews) && coachReviews.length > 0 ? (
             filteredReviews && filteredReviews.length > 0 ? (
               filteredReviews.map((r: any, idx: number) => {
@@ -213,14 +221,60 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
           )}
         </div>
 
-        <Button
-          variant="outline"
-          className="w-full hover:bg-muted bg-transparent"
-          onClick={onLoadMore}
-          disabled={reviewsLoading || reviewsPage >= reviewsTotalPages}
-        >
-          {reviewsPage >= reviewsTotalPages ? 'Không còn đánh giá' : 'Tải thêm'}
-        </Button>
+        {/* Pagination Controls */}
+        {coachReviews.length > 0 && reviewsTotalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => {
+                if (reviewsLoading || reviewsPage <= 1) return;
+                onLoadMore(reviewsPage - 1);
+              }}
+              disabled={reviewsLoading || reviewsPage <= 1}
+            >
+              <span className="sr-only">Trang trước</span>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            </Button>
+
+            {reviewsLoading ? (
+              <div className="px-3">
+                <Loading size={16} className="text-green-600" />
+              </div>
+            ) : (
+              Array.from({ length: reviewsTotalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={page === reviewsPage ? "default" : "outline"}
+                  size="sm"
+                  className={`h-8 w-8 p-0 ${page === reviewsPage ? "bg-green-600 text-white hover:bg-green-700" : "hover:bg-gray-50"}`}
+                  onClick={() => {
+                    if (reviewsLoading || page === reviewsPage) return;
+                    onLoadMore(page);
+                  }}
+                  disabled={reviewsLoading}
+                >
+                  {page}
+                </Button>
+              ))
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => {
+                if (reviewsLoading || reviewsPage >= reviewsTotalPages) return;
+                onLoadMore(reviewsPage + 1);
+              }}
+              disabled={reviewsLoading || reviewsPage >= reviewsTotalPages}
+            >
+              <span className="sr-only">Trang sau</span>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

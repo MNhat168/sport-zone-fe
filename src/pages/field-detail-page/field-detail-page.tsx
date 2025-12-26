@@ -694,7 +694,7 @@ const FieldDetailPage: React.FC = () => {
                       id="rating"
                       ratingValue={ratingValue}
                       reviewCount={
-                        ((currentField as any)?.reviewCount ?? 0) as number
+                        ((currentField as any)?.totalReviews ?? 0) as number
                       }
                       fieldId={id || ""}
                     />

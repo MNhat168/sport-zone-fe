@@ -104,7 +104,7 @@ export const SimilarCoachesSection: React.FC<SimilarCoachesSectionProps> = ({
                     variant="outline"
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white border-0 font-semibold"
                     onClick={() => {
-                      if (coach.id) navigate(`/coaches/${coach.id}`);
+                      if (coach.id) navigate(`/coach/${coach.id}`);
                     }}
                   >
                     <Eye className="h-4 w-4 mr-2" />
