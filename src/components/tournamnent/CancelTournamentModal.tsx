@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { useAppDispatch } from '@/store/hook';
 import { getCancellationFee, cancelTournamentById } from '@/features/tournament/tournamentThunk';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -94,7 +95,7 @@ export function CancelTournamentModal({ isOpen, onClose, tournamentId }: CancelT
 
                 {loading ? (
                     <div className="py-8 flex justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                        <Loading size={32} />
                     </div>
                 ) : error ? (
                     <Alert variant="destructive">
@@ -153,7 +154,7 @@ export function CancelTournamentModal({ isOpen, onClose, tournamentId }: CancelT
                     >
                         {isSubmitting ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loading size={16} className="mr-2" />
                                 Processing...
                             </>
                         ) : feeData?.fee && feeData.fee > 0 ? (

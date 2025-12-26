@@ -1,9 +1,11 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, Calendar, Heart, Eye } from "lucide-react";
 
 interface SimilarCoach {
+  id?: string;
   name: string;
   sport: string;
   location: string;
@@ -24,12 +26,17 @@ interface SimilarCoachesSectionProps {
 export const SimilarCoachesSection: React.FC<SimilarCoachesSectionProps> = ({
   coaches,
 }) => {
+  const navigate = useNavigate();
   return (
     <div className="bg-muted/30 py-16 mt-16">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold">Huấn luyện viên tương tự</h2>
-          <Button variant="outline" className="hover:bg-white bg-transparent">
+          <Button
+            variant="outline"
+            className="hover:bg-white bg-transparent"
+            onClick={() => navigate('/coach')}
+          >
             Xem tất cả HLV
           </Button>
         </div>
@@ -62,14 +69,14 @@ export const SimilarCoachesSection: React.FC<SimilarCoachesSectionProps> = ({
                     variant="secondary"
                     className="rounded-full bg-white/90 hover:bg-white hover:text-red-500 transition-colors h-9 w-9"
                   >
-                    <Heart className="h-4 w-4" />
+                    {/* <Heart className="h-4 w-4" /> */}
                   </Button>
                 </div>
 
                 {/* Nhãn giá ở dưới */}
                 <div className="absolute bottom-4 left-4">
                   <Badge className="bg-[#1a2332] hover:bg-[#1a2332]/90 text-white border-0 px-3 py-1.5 text-sm font-semibold">
-                    Từ ${coach.price}/giờ
+                    Từ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(coach.price)}/giờ
                   </Badge>
                 </div>
               </div>
@@ -96,14 +103,17 @@ export const SimilarCoachesSection: React.FC<SimilarCoachesSectionProps> = ({
                   <Button
                     variant="outline"
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white border-0 font-semibold"
+                    onClick={() => {
+                      if (coach.id) navigate(`/coaches/${coach.id}`);
+                    }}
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Xem hồ sơ
                   </Button>
-                  <Button className="flex-1 bg-[#1a2332] hover:bg-[#1a2332]/90 text-white font-semibold">
+                  {/* <Button className="flex-1 bg-[#1a2332] hover:bg-[#1a2332]/90 text-white font-semibold">
                     <Calendar className="h-4 w-4 mr-2" />
                     Đặt ngay
-                  </Button>
+                  </Button> */}
                 </div>
               </CardContent>
 
@@ -113,10 +123,10 @@ export const SimilarCoachesSection: React.FC<SimilarCoachesSectionProps> = ({
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <div className="text-xs text-muted-foreground">
-                      Lịch sắp tới
+                      Chuyên môn
                     </div>
                     <div className="text-xs font-semibold">
-                      {coach.availability}
+                      {coach.sport}
                     </div>
                   </div>
                 </div>

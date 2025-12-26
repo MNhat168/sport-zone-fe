@@ -16,6 +16,24 @@ import { reviewReducer } from "@/features/reviews";
 import { userReducer } from "../features/user";
 import { lessonTypesReducer } from "../features/lesson-types";
 
+import { webSocketService } from "@/features/chat/websocket.service";
+import { resetChatState } from "@/features/chat/chatSlice";
+
+const chatMiddleware = (store: any) => (next: any) => (action: any) => {
+    // Check if the action is logout fulfilled
+    if (action.type === 'auth/logout/fulfilled') {
+        console.log('🔄 [ChatMiddleware] Detected logout, resetting chat service...');
+
+        // 1. Reset WebSocket Service (disconnects socket)
+        webSocketService.reset();
+
+        // 2. Dispatch reset action to clear Redux state
+        store.dispatch(resetChatState());
+    }
+
+    return next(action);
+};
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -35,6 +53,8 @@ export const store = configureStore({
         user: userReducer,
         lessonTypes: lessonTypesReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({ serializableCheck: false }).concat(chatMiddleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

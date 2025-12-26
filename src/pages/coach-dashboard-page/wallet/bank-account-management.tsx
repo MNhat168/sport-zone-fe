@@ -26,17 +26,18 @@ import {
 import { CustomSuccessToast, CustomFailedToast } from '@/components/toast/notificiation-toast'
 import { BankAccountForm } from './bank-account-form'
 import { BankAccountVerificationModal } from '@/components/bank-account-verification-modal'
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Plus, 
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  Plus,
   Trash2,
   Building2,
   CreditCard,
   User,
   AlertCircle
 } from 'lucide-react'
+import { Loading } from '@/components/ui/loading'
 
 export function BankAccountManagement() {
   const dispatch = useAppDispatch()
@@ -113,12 +114,12 @@ export function BankAccountManagement() {
       const result = await dispatch(addBankAccount(data)).unwrap()
       CustomSuccessToast('Khai báo tài khoản thành công! Vui lòng thanh toán để xác thực.')
       setIsAddDialogOpen(false)
-      
+
       if (result.verificationUrl || result.verificationQrCode || result.needsVerification) {
         setVerificationAccount(result)
         setShowVerificationModal(true)
       }
-      
+
       dispatch(getMyBankAccounts())
     } catch (error: any) {
       CustomFailedToast(error.message || 'Khai báo thất bại')
@@ -152,7 +153,7 @@ export function BankAccountManagement() {
         <Card>
           <CardContent className="py-12">
             <div className="flex flex-col items-center justify-center space-y-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <Loading size={32} />
               <p className="text-sm text-muted-foreground">Đang tải thông tin...</p>
             </div>
           </CardContent>
@@ -234,7 +235,7 @@ export function BankAccountManagement() {
               {getStatusConfig(primaryAccount.status).badge}
             </div>
           </CardHeader>
-          
+
           <CardContent className="space-y-6">
             {/* Account Info Grid */}
             <div className="grid gap-4">
@@ -337,7 +338,7 @@ export function BankAccountManagement() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa tài khoản</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa tài khoản này? Hành động này không thể hoàn tác. 
+              Bạn có chắc chắn muốn xóa tài khoản này? Hành động này không thể hoàn tác.
               Bạn có thể khai báo lại tài khoản mới sau khi xóa.
             </AlertDialogDescription>
           </AlertDialogHeader>

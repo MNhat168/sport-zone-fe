@@ -11,6 +11,7 @@ import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
+import { Loading } from "@/components/ui/loading"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
 import { getMyBookings, cancelFieldBooking } from "../../features/booking/bookingThunk"
 import type { Booking } from "../../types/booking-type"
@@ -324,7 +325,10 @@ export default function UserBookingsPage() {
                       {loadingBookings ? (
                         <tr>
                           <td colSpan={7} className="py-8 text-center">
-                            <div className="text-gray-500">Đang tải...</div>
+                            <div className="flex flex-col items-center justify-center gap-3">
+                              <Loading size={32} />
+                              <div className="text-gray-500">Đang tải...</div>
+                            </div>
                           </td>
                         </tr>
                       ) : error ? (

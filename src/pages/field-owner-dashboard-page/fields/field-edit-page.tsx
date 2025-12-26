@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
+import { Loading } from "@/components/ui/loading";
 import { getFieldById, updateField } from '@/features/field/fieldThunk';
 import { clearErrors } from '@/features/field/fieldSlice';
 import { getAmenitiesBySportType } from '@/features/amenities';
@@ -479,7 +480,7 @@ export default function FieldEditPage() {
             <FieldOwnerDashboardLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                        <Loading size={48} className="text-green-600 mx-auto mb-4" />
                         <p className="text-gray-600">Đang tải thông tin sân...</p>
                     </div>
                 </div>

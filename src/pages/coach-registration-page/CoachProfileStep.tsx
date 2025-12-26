@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { Loading } from "@/components/ui/loading";
 import {
     Dumbbell,
     MapPin,
@@ -315,8 +316,8 @@ const CoachProfileStep: React.FC<CoachProfileStepProps> = ({ formData, updateFor
                         <label
                             key={key}
                             className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${formData.sports?.includes(key)
-                                    ? "bg-green-50 border-green-500 ring-1 ring-green-500"
-                                    : "hover:bg-gray-50 border-gray-200"
+                                ? "bg-green-50 border-green-500 ring-1 ring-green-500"
+                                : "hover:bg-gray-50 border-gray-200"
                                 }`}
                         >
                             <input
@@ -425,7 +426,7 @@ const CoachProfileStep: React.FC<CoachProfileStepProps> = ({ formData, updateFor
                                 className="h-11 px-4"
                             >
                                 {isSearching ? (
-                                    <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                                    <Loading size={16} />
                                 ) : (
                                     <Search className="h-4 w-4" />
                                 )}

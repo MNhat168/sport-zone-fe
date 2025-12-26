@@ -41,6 +41,7 @@ import {
 import { logout } from "@/features/authentication/authThunk"
 import { clearUserAuth } from "@/lib/cookies"
 import { NotificationBell } from "@/components/header/notification-bell"
+import { Loading } from "@/components/ui/loading"
 
 interface MenuItem {
     title: string
@@ -140,10 +141,16 @@ export function FieldOwnerSidebar() {
     const [activeBookingTab, setActiveBookingTab] = useState<string | null>(null)
     const [activeFieldsTab, setActiveFieldsTab] = useState<string | null>(null)
 
-    const handleLogout = () => {
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        // Small delay to let the animation show
+        await new Promise(resolve => setTimeout(resolve, 800));
         clearUserAuth()
         dispatch(logout())
-        navigate("/")
+        // Force reload to ensure clean state
+        window.location.href = "/"
     }
 
     // Auto-open submenu when on field/create page
@@ -247,97 +254,57 @@ export function FieldOwnerSidebar() {
         : "FO"
 
     return (
-        <Sidebar collapsible="icon" variant="sidebar">
-            <SidebarHeader className="border-b border-sidebar-border">
-                <div className="flex items-center justify-between px-2 py-4">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white font-bold">
-                            <Building2 className="h-5 w-5" />
-                        </div>
-                        <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                            <span className="text-sm font-semibold">SportZone</span>
-                            <span className="text-xs text-muted-foreground">Field Owner</span>
-                        </div>
-                    </div>
-                    <div className="group-data-[collapsible=icon]:hidden">
-                        <NotificationBell
-                            userId={authUser?._id ?? null}
-                            onNotificationReceived={(notification) => {
-                                // Dispatch custom event for dashboard to refresh bookings
-                                window.dispatchEvent(new CustomEvent('new-booking-notification', {
-                                    detail: notification
-                                }));
-                            }}
-                        />
-                    </div>
+        <>
+            {isLoggingOut && (
+                <div className="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-sm flex items-center justify-center transition-all duration-300">
+                    <Loading size={100} />
                 </div>
-            </SidebarHeader>
+            )}
+            <Sidebar collapsible="icon" variant="sidebar">
+                <SidebarHeader className="border-b border-sidebar-border">
+                    <div className="flex items-center justify-between px-2 py-4">
+                        <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-white font-bold">
+                                <Building2 className="h-5 w-5" />
+                            </div>
+                            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+                                <span className="text-sm font-semibold">SportZone</span>
+                                <span className="text-xs text-muted-foreground">Field Owner</span>
+                            </div>
+                        </div>
+                        <div className="group-data-[collapsible=icon]:hidden">
+                            <NotificationBell
+                                userId={authUser?._id ?? null}
+                                onNotificationReceived={(notification) => {
+                                    // Dispatch custom event for dashboard to refresh bookings
+                                    window.dispatchEvent(new CustomEvent('new-booking-notification', {
+                                        detail: notification
+                                    }));
+                                }}
+                            />
+                        </div>
+                    </div>
+                </SidebarHeader>
 
-            <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Menu</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {menuItems.map((item) => {
-                                const Icon = item.icon
-                                const isCreateField = item.url === "/field/create"
-                                const isBookingHistory = item.url === "/field-owner/booking-history"
-                                const isFields = item.url === "/field-owner/fields"
-                                return (
-                                    <SidebarMenuItem key={item.url}>
-                                        {isCreateField ? (
-                                            <SidebarMenuButton
-                                                isActive={isActive(item.url)}
-                                                tooltip={item.title}
-                                                onClick={handleCreateFieldClick}
-                                                className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
-                                            >
-                                                <Icon />
-                                                <span>{item.title}</span>
-                                                {item.badge && (
-                                                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </SidebarMenuButton>
-                                        ) : isBookingHistory ? (
-                                            <SidebarMenuButton
-                                                isActive={isActive(item.url)}
-                                                tooltip={item.title}
-                                                onClick={handleBookingHistoryClick}
-                                                className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
-                                            >
-                                                <Icon />
-                                                <span>{item.title}</span>
-                                                {item.badge && (
-                                                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </SidebarMenuButton>
-                                        ) : isFields ? (
-                                            <SidebarMenuButton
-                                                isActive={isActive(item.url)}
-                                                tooltip={item.title}
-                                                onClick={handleFieldsClick}
-                                                className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
-                                            >
-                                                <Icon />
-                                                <span>{item.title}</span>
-                                                {item.badge && (
-                                                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </SidebarMenuButton>
-                                        ) : (
-                                            <SidebarMenuButton
-                                                asChild
-                                                isActive={isActive(item.url)}
-                                                tooltip={item.title}
-                                                className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
-                                            >
-                                                <Link to={item.url}>
+                <SidebarContent>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Menu</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {menuItems.map((item) => {
+                                    const Icon = item.icon
+                                    const isCreateField = item.url === "/field/create"
+                                    const isBookingHistory = item.url === "/field-owner/booking-history"
+                                    const isFields = item.url === "/field-owner/fields"
+                                    return (
+                                        <SidebarMenuItem key={item.url}>
+                                            {isCreateField ? (
+                                                <SidebarMenuButton
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    onClick={handleCreateFieldClick}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
                                                     <Icon />
                                                     <span>{item.title}</span>
                                                     {item.badge && (
@@ -345,114 +312,161 @@ export function FieldOwnerSidebar() {
                                                             {item.badge}
                                                         </span>
                                                     )}
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        )}
-                                        {isCreateField && isCreateFieldSubmenuOpen && (
-                                            <SidebarMenuSub>
-                                                {fieldCreateTabs.map((tab) => (
-                                                    <SidebarMenuSubItem key={tab.id}>
-                                                        <SidebarMenuSubButton
-                                                            onClick={() => handleTabClick(tab.id)}
-                                                            isActive={activeSubTab === tab.id}
-                                                            className={activeSubTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
-                                                        >
-                                                            <span>{tab.label}</span>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                ))}
-                                            </SidebarMenuSub>
-                                        )}
-                                        {isBookingHistory && isBookingHistorySubmenuOpen && (
-                                            <SidebarMenuSub>
-                                                {bookingHistoryTabs.map((tab) => (
-                                                    <SidebarMenuSubItem key={tab.id}>
-                                                        <SidebarMenuSubButton
-                                                            onClick={() => handleBookingHistoryTabClick(tab.id)}
-                                                            isActive={activeBookingTab === tab.id}
-                                                            className={activeBookingTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
-                                                        >
-                                                            <span>{tab.label}</span>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                ))}
-                                            </SidebarMenuSub>
-                                        )}
-                                        {isFields && isFieldsSubmenuOpen && (
-                                            <SidebarMenuSub>
-                                                {fieldsTabs.map((tab) => {
-                                                    // Only show view and edit tabs if fieldId exists
-                                                    if ((tab.id === 'view' || tab.id === 'edit') && !fieldId) {
-                                                        return null
-                                                    }
-                                                    const TabIcon = tab.icon
-                                                    return (
+                                                </SidebarMenuButton>
+                                            ) : isBookingHistory ? (
+                                                <SidebarMenuButton
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    onClick={handleBookingHistoryClick}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
+                                                    <Icon />
+                                                    <span>{item.title}</span>
+                                                    {item.badge && (
+                                                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </SidebarMenuButton>
+                                            ) : isFields ? (
+                                                <SidebarMenuButton
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    onClick={handleFieldsClick}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
+                                                    <Icon />
+                                                    <span>{item.title}</span>
+                                                    {item.badge && (
+                                                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </SidebarMenuButton>
+                                            ) : (
+                                                <SidebarMenuButton
+                                                    asChild
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
+                                                    <Link to={item.url}>
+                                                        <Icon />
+                                                        <span>{item.title}</span>
+                                                        {item.badge && (
+                                                            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            )}
+                                            {isCreateField && isCreateFieldSubmenuOpen && (
+                                                <SidebarMenuSub>
+                                                    {fieldCreateTabs.map((tab) => (
                                                         <SidebarMenuSubItem key={tab.id}>
                                                             <SidebarMenuSubButton
-                                                                onClick={() => handleFieldsTabClick(tab.id)}
-                                                                isActive={activeFieldsTab === tab.id}
-                                                                className={activeFieldsTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                                onClick={() => handleTabClick(tab.id)}
+                                                                isActive={activeSubTab === tab.id}
+                                                                className={activeSubTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
                                                             >
-                                                                <TabIcon className="h-4 w-4" />
                                                                 <span>{tab.label}</span>
                                                             </SidebarMenuSubButton>
                                                         </SidebarMenuSubItem>
-                                                    )
-                                                })}
-                                            </SidebarMenuSub>
-                                        )}
-                                    </SidebarMenuItem>
-                                )
-                            })}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-            </SidebarContent>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            )}
+                                            {isBookingHistory && isBookingHistorySubmenuOpen && (
+                                                <SidebarMenuSub>
+                                                    {bookingHistoryTabs.map((tab) => (
+                                                        <SidebarMenuSubItem key={tab.id}>
+                                                            <SidebarMenuSubButton
+                                                                onClick={() => handleBookingHistoryTabClick(tab.id)}
+                                                                isActive={activeBookingTab === tab.id}
+                                                                className={activeBookingTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                            >
+                                                                <span>{tab.label}</span>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            )}
+                                            {isFields && isFieldsSubmenuOpen && (
+                                                <SidebarMenuSub>
+                                                    {fieldsTabs.map((tab) => {
+                                                        // Only show view and edit tabs if fieldId exists
+                                                        if ((tab.id === 'view' || tab.id === 'edit') && !fieldId) {
+                                                            return null
+                                                        }
+                                                        const TabIcon = tab.icon
+                                                        return (
+                                                            <SidebarMenuSubItem key={tab.id}>
+                                                                <SidebarMenuSubButton
+                                                                    onClick={() => handleFieldsTabClick(tab.id)}
+                                                                    isActive={activeFieldsTab === tab.id}
+                                                                    className={activeFieldsTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                                >
+                                                                    <TabIcon className="h-4 w-4" />
+                                                                    <span>{tab.label}</span>
+                                                                </SidebarMenuSubButton>
+                                                            </SidebarMenuSubItem>
+                                                        )
+                                                    })}
+                                                </SidebarMenuSub>
+                                            )}
+                                        </SidebarMenuItem>
+                                    )
+                                })}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </SidebarContent>
 
-            <SidebarFooter className="border-t border-sidebar-border">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton
-                                    size="lg"
-                                    className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground w-full"
+                <SidebarFooter className="border-t border-sidebar-border">
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <SidebarMenuButton
+                                        size="lg"
+                                        className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground w-full"
+                                    >
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={authUser?.avatarUrl} alt={authUser?.fullName || "User"} />
+                                            <AvatarFallback className="bg-green-600 text-white">
+                                                {userInitials}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                                            <span className="truncate font-semibold">{authUser?.fullName || "Field Owner"}</span>
+                                            <span className="truncate text-xs text-muted-foreground">{authUser?.email || ""}</span>
+                                        </div>
+                                    </SidebarMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    side="top"
+                                    align="end"
+                                    className="w-56 bg-white shadow-lg border border-gray-200 rounded-md"
                                 >
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={authUser?.avatarUrl} alt={authUser?.fullName || "User"} />
-                                        <AvatarFallback className="bg-green-600 text-white">
-                                            {userInitials}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                                        <span className="truncate font-semibold">{authUser?.fullName || "Field Owner"}</span>
-                                        <span className="truncate text-xs text-muted-foreground">{authUser?.email || ""}</span>
-                                    </div>
-                                </SidebarMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                side="top"
-                                align="end"
-                                className="w-56 bg-white shadow-lg border border-gray-200 rounded-md"
-                            >
-                                <DropdownMenuItem asChild>
-                                    <Link to="/field-owner/profile" className="cursor-pointer">
-                                        <User className="mr-2 h-4 w-4" />
-                                        <span>Hồ sơ</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={handleLogout}
-                                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                                >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Đăng xuất</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
-        </Sidebar>
+                                    <DropdownMenuItem asChild>
+                                        <Link to="/field-owner/profile" className="cursor-pointer">
+                                            <User className="mr-2 h-4 w-4" />
+                                            <span>Hồ sơ</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={handleLogout}
+                                        className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Đăng xuất</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
+            </Sidebar>
+        </>
     )
 }

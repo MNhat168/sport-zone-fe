@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { Loading } from "@/components/ui/loading"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
 import { getFieldById } from "@/features/field/fieldThunk"
@@ -192,7 +193,7 @@ export default function FieldViewPage() {
         setIsTransitioning(true)
         setCurrentIndex((prev) => prev + 1)
     }
-    
+
     const prevSlide = () => {
         if (isTransitioning) return
         setIsTransitioning(true)
@@ -222,7 +223,7 @@ export default function FieldViewPage() {
             <FieldOwnerDashboardLayout>
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                        <Loading size={48} className="mb-4" />
                         <p className="text-gray-600">Đang tải thông tin sân...</p>
                     </div>
                 </div>
@@ -322,7 +323,7 @@ export default function FieldViewPage() {
                             <div className="flex items-center gap-2">
                                 <span className="text-gray-500">Giá:</span>
                                 <span className="font-medium">
-                                    {currentField?.price || 
+                                    {currentField?.price ||
                                         (currentField?.basePrice ? `${currentField.basePrice.toLocaleString()}đ/giờ` : "-")}
                                 </span>
                             </div>
@@ -353,37 +354,37 @@ export default function FieldViewPage() {
                                 />
 
                                 <div className="mt-4 space-y-4">
-                                    <OverviewCard 
-                                        refObj={overviewRef} 
-                                        id="overview" 
-                                        description={currentField?.description || mockDescription} 
+                                    <OverviewCard
+                                        refObj={overviewRef}
+                                        id="overview"
+                                        description={currentField?.description || mockDescription}
                                     />
 
-                                    <RulesCard 
-                                        refObj={rulesRef} 
-                                        id="rules" 
-                                        rules={rules} 
+                                    <RulesCard
+                                        refObj={rulesRef}
+                                        id="rules"
+                                        rules={rules}
                                     />
 
-                                    <AmenitiesCard 
-                                        refObj={amenitiesRef} 
-                                        id="amenities" 
-                                        items={amenitiesDisplay} 
-                                        fallback={mockAmenities} 
+                                    <AmenitiesCard
+                                        refObj={amenitiesRef}
+                                        id="amenities"
+                                        items={amenitiesDisplay}
+                                        fallback={mockAmenities}
                                     />
 
-                                    <GalleryCard 
-                                        refObj={galleryRef} 
-                                        id="gallery" 
-                                        images={(currentField?.images as string[]) || []} 
-                                        fallback={mockImages} 
+                                    <GalleryCard
+                                        refObj={galleryRef}
+                                        id="gallery"
+                                        images={(currentField?.images as string[]) || []}
+                                        fallback={mockImages}
                                     />
 
-                                    <RatingCard 
-                                        refObj={ratingRef} 
-                                        id="rating" 
-                                        ratingValue={ratingValue} 
-                                        reviewCount={((currentField as any)?.reviewCount ?? 0) as number} 
+                                    <RatingCard
+                                        refObj={ratingRef}
+                                        id="rating"
+                                        ratingValue={ratingValue}
+                                        reviewCount={((currentField as any)?.reviewCount ?? 0) as number}
                                         fieldId={String(fieldId || (currentField as any)?.id || "")}
                                     />
 

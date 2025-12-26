@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, Clock, User, FileText, AlertCircle, Loader2, CalendarIcon, Search, MessageCircle } from "lucide-react";
+import { Calendar, Clock, User, FileText, AlertCircle, CalendarIcon, Search, MessageCircle } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { TransactionStatus } from "@/components/enums/ENUMS";
 import { formatCurrency } from "@/utils/format-currency";
 import { format, parseISO } from "date-fns";
@@ -588,7 +589,7 @@ export default function CoachBookingsPage() {
                         {/* Loading State */}
                         {loading ? (
                             <div className="flex items-center justify-center py-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                <Loading size={32} />
                             </div>
                         ) : (
                             <>

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useCallback } from "react";
+import { Loading } from "@/components/ui/loading";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle, XCircle } from "lucide-react";
 import { BASE_URL } from "../../utils/constant-value/constant";
@@ -31,17 +32,17 @@ export default function VerifyTokenPage() {
       CustomSuccessToast("Xác thực email thành công!");
     } catch (error: any) {
       setIsVerify(false);
-      const errorMessage = error?.response?.data?.message || 
-                          (error?.message?.includes('expired') || error?.message?.includes('hết hạn') 
-                            ? "Token đã hết hạn. Vui lòng đăng ký lại." 
-                            : "Token không hợp lệ hoặc đã hết hạn");
+      const errorMessage = error?.response?.data?.message ||
+        (error?.message?.includes('expired') || error?.message?.includes('hết hạn')
+          ? "Token đã hết hạn. Vui lòng đăng ký lại."
+          : "Token không hợp lệ hoặc đã hết hạn");
       setVerifyMessage(errorMessage);
     }
   }, []);
 
   useEffect(() => {
     const path = location.pathname;
-    
+
     // Handle redirect from backend (success/failed pages)
     if (path === '/verify-email/success') {
       setIsVerify(true);
@@ -53,7 +54,7 @@ export default function VerifyTokenPage() {
       setVerifyMessage("Xác thực thất bại. Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng ký lại.");
       return;
     }
-    
+
     // Handle direct token verification (from email link)
     if (token && path === '/verify-email') {
       verifyEmailToken(token, email);
@@ -64,7 +65,7 @@ export default function VerifyTokenPage() {
     <div className="h-screen w-screen flex items-center justify-center bg-primary-700">
       <div className="bg-white rounded-2xl shadow-xl px-10 py-12 flex flex-col items-center max-w-md">
         {isVerify === null && (
-          <div className="w-16 h-16 mb-4 animate-spin border-4 border-green-400 border-t-transparent rounded-full" />
+          <Loading size={48} className="text-green-400 mb-4" />
         )}
         {isVerify === true && (
           <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
@@ -73,28 +74,26 @@ export default function VerifyTokenPage() {
           <XCircle className="w-16 h-16 text-red-500 mb-4" />
         )}
         <h2
-          className={`text-3xl font-bold mb-2 ${
-            isVerify === true
+          className={`text-3xl font-bold mb-2 ${isVerify === true
               ? "text-green-700"
               : isVerify === false
-              ? "text-red-700"
-              : "text-gray-700"
-          }`}
+                ? "text-red-700"
+                : "text-gray-700"
+            }`}
         >
           {isVerify === true
             ? "Xác thực thành công!"
             : isVerify === false
-            ? "Xác thực thất bại"
-            : "Đang xác thực..."}
+              ? "Xác thực thất bại"
+              : "Đang xác thực..."}
         </h2>
         <p
-          className={`${
-            isVerify === true
+          className={`${isVerify === true
               ? "text-green-800"
               : isVerify === false
-              ? "text-red-800"
-              : "text-gray-800"
-          } text-lg mb-6 text-center`}
+                ? "text-red-800"
+                : "text-gray-800"
+            } text-lg mb-6 text-center`}
         >
           {isVerify === null
             ? "Vui lòng chờ trong giây lát..."
@@ -102,11 +101,10 @@ export default function VerifyTokenPage() {
         </p>
         <button
           onClick={() => navigate("/login")}
-          className={`${
-            isVerify === true
+          className={`${isVerify === true
               ? "bg-green-600 hover:bg-green-500"
               : "bg-primary-900 hover:bg-primary-800"
-          } text-white px-6 py-3 rounded-xl font-semibold shadow transition`}
+            } text-white px-6 py-3 rounded-xl font-semibold shadow transition`}
         >
           Đăng nhập ngay
         </button>

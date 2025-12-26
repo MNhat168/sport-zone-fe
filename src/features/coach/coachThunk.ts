@@ -16,6 +16,7 @@ import {
     COACHES_API,
     COACH_BY_ID_API,
     ALL_COACHES_API,
+    COACHES_PUBLIC_API,
     UPLOAD_COACH_GALLERY_API,
     DELETE_COACH_GALLERY_IMAGE_API,
 } from "./coachAPI";
@@ -222,6 +223,47 @@ export const getAllCoaches = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to fetch all coaches",
+            status: error.response?.status?.toString() || "500",
+            errors: error.response?.data?.errors,
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Get public coaches, optional sports filter (array of SportType)
+export const getPublicCoaches = createAsyncThunk<
+    PublicCoachesResponse,
+    { sports?: string[] } | undefined,
+    { rejectValue: ErrorResponse }
+>("coach/getPublicCoaches", async (payload = {}, thunkAPI) => {
+    try {
+        const sports = payload?.sports;
+        const params = new URLSearchParams();
+        if (sports && sports.length > 0) params.append('sports', sports.join(','));
+
+        const url = params.toString() ? `${COACHES_PUBLIC_API}?${params.toString()}` : COACHES_PUBLIC_API;
+        const response = await axiosPublic.get(url);
+
+        const raw = response.data;
+        const apiList = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+
+        // Map to PublicCoach type
+        const mapped = apiList.map((apiCoach: any) => ({
+            id: apiCoach?.id || apiCoach?._id || "",
+            name: apiCoach?.name || apiCoach?.fullName || "",
+            location: apiCoach?.location || "",
+            description: apiCoach?.description || apiCoach?.bio || undefined,
+            rating: Number(apiCoach?.rating ?? 0),
+            totalReviews: Number(apiCoach?.totalReviews ?? 0),
+            price: Number(apiCoach?.price ?? apiCoach?.hourlyRate ?? 0),
+            rank: apiCoach?.rank ?? undefined,
+            sports: Array.isArray(apiCoach?.sports) ? apiCoach.sports : [],
+        }));
+
+        return { success: true, data: mapped, message: raw?.message } as PublicCoachesResponse;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to fetch public coaches",
             status: error.response?.status?.toString() || "500",
             errors: error.response?.data?.errors,
         };

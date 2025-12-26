@@ -4,7 +4,8 @@ import { useAppDispatch } from '@/store/hook';
 import { verifyVNPayPayment } from '@/features/transactions/transactionsThunk';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 /**
  * Payment verification result from backend
@@ -25,7 +26,7 @@ export default function VNPayReturnPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  
+
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [error, setError] = useState<string | null>(null);
 
@@ -43,23 +44,23 @@ export default function VNPayReturnPage() {
         console.log('[VNPay Return] Full URL:', window.location.href);
         console.log('[VNPay Return] Location search:', location.search);
         console.log('[VNPay Return] Current pathname:', location.pathname);
-        
+
         // VNPay redirects flow:
         // 1. VNPay -> Backend endpoint (verifies signature)
         // 2. Backend redirects -> /transactions/vnpay/return (with all VNPay query params)
         // 3. Frontend page verifies payment via API call
-        
+
         // CRITICAL: Get the COMPLETE query string from VNPay redirect
         // VNPay redirects with params like: ?vnp_TxnRef=xxx&vnp_ResponseCode=00&vnp_SecureHash=yyy&...
         // We MUST pass ALL these params to verify endpoint, NOT create new ones
         const rawQueryString = location.search || window.location.search || '';
-        
+
         console.log('[VNPay Return] Raw query string from URL:', rawQueryString);
         console.log('[VNPay Return] Query string length:', rawQueryString.length);
-        
+
         // Parse to check what params we have
         const queryParams = new URLSearchParams(rawQueryString);
-        
+
         // Log all query params to verify we're receiving them from VNPay
         const allParams: Record<string, string> = {};
         const paramKeys: string[] = [];
@@ -67,16 +68,16 @@ export default function VNPayReturnPage() {
           allParams[key] = value;
           paramKeys.push(key);
         });
-        
+
         console.log('[VNPay Return] All param keys received:', paramKeys);
-        
+
         // Extract important params for logging
         const orderId = queryParams.get('vnp_TxnRef');
         const responseCode = queryParams.get('vnp_ResponseCode');
         const secureHash = queryParams.get('vnp_SecureHash');
         const amountParam = queryParams.get('amount'); // This shouldn't be here if from VNPay
         const orderIdParam = queryParams.get('orderId'); // This shouldn't be here if from VNPay
-        
+
         console.log('[VNPay Return] VNPay params:', {
           vnp_TxnRef: orderId,
           vnp_ResponseCode: responseCode,
@@ -115,7 +116,7 @@ export default function VNPayReturnPage() {
         console.log('[VNPay Return] ✅ Sending COMPLETE query string to verify endpoint');
         console.log('[VNPay Return] Query string preview:', queryString.substring(0, 300) + (queryString.length > 300 ? '...' : ''));
         console.log('[VNPay Return] Query string contains vnp_SecureHash:', queryString.includes('vnp_SecureHash'));
-        
+
         const result: PaymentVerificationResult = await dispatch(
           verifyVNPayPayment(queryString)
         ).unwrap();
@@ -146,32 +147,32 @@ export default function VNPayReturnPage() {
           // Payment successful - lấy bookingId và redirect trực tiếp
           // Không cần polling, VNPay đã xác nhận thanh toán thành công
           console.log('[VNPay Return] ✅ VNPay báo thanh toán thành công!');
-          
+
           // Lấy bookingId từ vnp_TxnRef (đây là booking ID từ VNPay)
           const bookingIdFromVNPay = queryParams.get('vnp_TxnRef') || result.bookingId;
           const bookingIdStr = bookingIdFromVNPay ? String(bookingIdFromVNPay).trim() : '';
-          
+
           console.log('[VNPay Return] Booking ID:', bookingIdStr);
-          
+
           // Hiển thị màn hình thành công và redirect sau 2 giây
           setStatus('success');
           setTimeout(() => {
             navigate('/user-booking-history', {
-              state: { 
+              state: {
                 message: 'Thanh toán thành công!',
-                bookingId: bookingIdStr 
+                bookingId: bookingIdStr
               }
             });
           }, 2000);
         } else {
           // Payment failed - VNPay response code không phải '00'
           const errorCode = queryParams.get('vnp_ResponseCode');
-          
+
           console.log('[VNPay Return] ❌ VNPay báo thanh toán thất bại với code:', errorCode);
-          
+
           // Lấy thông báo lỗi từ VNPay hoặc từ backend
           let errorMessage = 'Thanh toán thất bại';
-          
+
           // VNPay error codes mapping
           const vnpayErrors: Record<string, string> = {
             '07': 'Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).',
@@ -186,17 +187,17 @@ export default function VNPayReturnPage() {
             '79': 'Nhập sai mật khẩu thanh toán quá số lần quy định.',
             '99': 'Lỗi không xác định'
           };
-          
+
           if (errorCode && vnpayErrors[errorCode]) {
             errorMessage = vnpayErrors[errorCode];
           } else if (result.reason || result.message) {
             errorMessage = result.reason || result.message || errorMessage;
           }
-          
+
           setError(errorMessage);
           setStatus('error');
         }
-        
+
       } catch (err) {
         console.error('[VNPay Return] ❌ Verification error:', err);
         setError(err instanceof Error ? err.message : 'Failed to verify payment');
@@ -216,7 +217,7 @@ export default function VNPayReturnPage() {
         <Card className="w-full max-w-md">
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center space-y-4">
-              <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+              <Loading size={64} />
               <h2 className="text-2xl font-semibold text-gray-900">
                 Đang xác minh thanh toán
               </h2>

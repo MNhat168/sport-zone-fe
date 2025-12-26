@@ -11,6 +11,7 @@ import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { ChevronLeft, ChevronRight, MapPin, Share2, Star, CalendarDays, AlertCircle, MessageCircle } from "lucide-react"
 import L from "leaflet"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Loading } from "@/components/ui/loading"
 import { QuickNavPills } from "./components/QuickNavPills"
 import { OverviewCard } from "./components/OverviewCard"
 import { RulesCard } from "./components/RulesCard"
@@ -472,6 +473,21 @@ const FieldDetailPage: React.FC = () => {
     }
   }, [currentField, locationText])
 
+  if (loading && !currentField) {
+    return (
+      <>
+        <NavbarDarkComponent />
+        <PageWrapper className="bg-white">
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <Loading size={64} className="text-green-600 mb-4" />
+            <p className="text-gray-600 font-medium animate-pulse">Đang tải thông tin sân...</p>
+          </div>
+        </PageWrapper>
+        <FooterComponent />
+      </>
+    )
+  }
+
   return (
     <>
       <NavbarDarkComponent />
@@ -565,6 +581,7 @@ const FieldDetailPage: React.FC = () => {
                         }`}
                     />
                     <span>
+                      {favLoading && <Loading size={14} className="inline mr-1" />}
                       {favLoading
                         ? "Đang xử lý..."
                         : isFavourite
@@ -792,9 +809,12 @@ const FieldDetailPage: React.FC = () => {
                       </CardHeader>
                       <CardContent className="space-y-2">
                         {loadingReports ? (
-                          <p className="text-xs text-gray-500">
-                            Đang tải lịch sử báo cáo...
-                          </p>
+                          <div className="flex items-center gap-2 py-2">
+                            <Loading size={16} />
+                            <p className="text-xs text-gray-500">
+                              Đang tải lịch sử báo cáo...
+                            </p>
+                          </div>
                         ) : !fieldReports || fieldReports.length === 0 ? (
                           <p className="text-xs text-gray-500">
                             Bạn chưa gửi báo cáo nào cho sân này.

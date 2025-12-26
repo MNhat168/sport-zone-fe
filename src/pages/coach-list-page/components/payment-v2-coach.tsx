@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle, AlertCircle, ImageIcon, X, Loader2, Clock, Wallet, Copy, Check, Upload } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, ImageIcon, X, Clock, Wallet, Copy, Check, Upload } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -516,7 +517,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                     {/* Bank Account Info */}
                     {loadingBankAccount ? (
                         <div className="text-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-green-600" />
+                            <Loading size={32} className="mx-auto mb-2 text-green-600" />
                             <p className="text-muted-foreground">Đang tải thông tin tài khoản...</p>
                         </div>
                     ) : bankAccount ? (
@@ -719,8 +720,8 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                                     <Button
                                         variant="outline"
                                         className={`w-full ${verificationResult?.status === 'rejected'
-                                                ? 'border-red-300 text-red-800 hover:bg-red-100'
-                                                : 'border-amber-300 text-amber-800 hover:bg-amber-100'
+                                            ? 'border-red-300 text-red-800 hover:bg-red-100'
+                                            : 'border-amber-300 text-amber-800 hover:bg-amber-100'
                                             }`}
                                         onClick={() => setPaymentStatus('idle')}
                                     >
@@ -753,7 +754,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                         >
                             {paymentStatus === 'processing' ? (
                                 <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    <Loading size={16} className="mr-2" />
                                     Đang xử lý...
                                 </>
                             ) : (

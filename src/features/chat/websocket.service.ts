@@ -8,12 +8,31 @@ class WebSocketService {
   private isConnecting = false;
 
   connect() {
-    if (this.socket?.connected || this.isConnecting) return;
+    console.log('🔌 [WebSocketService] connect() called', {
+      alreadyConnected: this.socket?.connected,
+      isConnecting: this.isConnecting,
+    });
+
+    if (this.socket?.connected) {
+      console.log('⏭️ [WebSocketService] Already connected, skipping');
+      return;
+    }
+
+    // If stuck in connecting state, reset after checking actual socket state
+    if (this.isConnecting && this.socket && !this.socket.connected) {
+      console.warn('⚠️ [WebSocketService] Was in connecting state but socket not connected, resetting...');
+      this.isConnecting = false;
+    }
+
+    if (this.isConnecting) {
+      console.log('⏭️ [WebSocketService] Already connecting, skipping');
+      return;
+    }
 
     // Get user data from sessionStorage
     const userData = sessionStorage.getItem("user");
     if (!userData) {
-      console.error("No user data found in sessionStorage");
+      console.error("❌ [WebSocketService] No user data found in sessionStorage");
       return;
     }
 
@@ -21,13 +40,23 @@ class WebSocketService {
     const userId = user.id || user._id;
 
     if (!userId) {
-      console.error("No user ID found in sessionStorage");
+      console.error("❌ [WebSocketService] No user ID found in sessionStorage");
       return;
     }
 
+    console.log('🔌 [WebSocketService] Initiating connection...', { userId });
+
     this.isConnecting = true;
 
-    const apiUrl = BASE_URL || "http://localhost:3000";
+    // Safety timeout: reset isConnecting after 10 seconds if still not connected
+    setTimeout(() => {
+      if (this.isConnecting && !this.socket?.connected) {
+        console.warn('⚠️ [WebSocketService] Connection timeout, resetting isConnecting flag');
+        this.isConnecting = false;
+      }
+    }, 10000);
+
+    const apiUrl = BASE_URL;
     this.socket = io(`${apiUrl}/chat`, {
       auth: { userId },
       transports: ["websocket", "polling"],
@@ -37,23 +66,32 @@ class WebSocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("WebSocket connected");
+      console.log("✅ [WebSocketService] Socket connected successfully");
       store.dispatch(setConnected(true));
       this.isConnecting = false;
     });
 
-    this.socket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
+    this.socket.on("disconnect", (reason) => {
+      console.log("🔌 [WebSocketService] Socket disconnected:", reason);
       store.dispatch(setConnected(false));
+      this.isConnecting = false;
     });
 
     this.socket.on("connect_error", (error) => {
-      console.error("WebSocket connection error:", error);
+      console.error("❌ [WebSocketService] Connection error:", error);
       this.isConnecting = false;
     });
 
     // Listen for messages
     this.socket.on("new_message", (data) => {
+      console.log('📨 [WebSocket] Received new_message event:', {
+        chatRoomId: data.chatRoomId,
+        chatRoomObjectId: data.chatRoom?._id,
+        messageContent: data.message?.content?.substring(0, 30),
+        sender: data.message?.sender,
+        hasFieldOwner: !!data.chatRoom?.fieldOwner,
+        hasCoach: !!data.chatRoom?.coach,
+      });
       store.dispatch(addMessage(data));
     });
 
@@ -78,16 +116,38 @@ class WebSocketService {
   }
 
   disconnect() {
+    console.log('🔌 [WebSocketService] Disconnecting socket...');
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      store.dispatch(setConnected(false));
     }
+    this.isConnecting = false;
+    store.dispatch(setConnected(false));
+  }
+
+  // Force reset for logout
+  reset() {
+    console.log('🔄 [WebSocketService] Resetting service on logout');
+    this.disconnect();
+    this.socket = null;
+    this.isConnecting = false;
   }
 
   joinChatRoom(chatRoomId: string) {
     if (this.socket?.connected) {
+      console.log('🔗 [WebSocketService] Joining chat room:', chatRoomId);
       this.socket.emit("join_chat", { chatRoomId });
+    } else {
+      console.warn('⚠️ [WebSocketService] Cannot join room - socket not connected');
+    }
+  }
+
+  leaveChatRoom(chatRoomId: string) {
+    if (this.socket?.connected) {
+      console.log('🚪 [WebSocketService] Leaving chat room:', chatRoomId);
+      this.socket.emit("leave_chat", { chatRoomId });
+    } else {
+      console.warn('⚠️ [WebSocketService] Cannot leave room - socket not connected');
     }
   }
 
@@ -116,8 +176,21 @@ class WebSocketService {
   }
 
   sendMessageToRoom(chatRoomId: string, content: string, type: string = "text", attachments?: string[]) {
+    console.log('📤 [WebSocketService] sendMessageToRoom called', {
+      chatRoomId,
+      contentLength: content?.length,
+      isConnected: this.socket?.connected,
+      hasSocket: !!this.socket,
+    });
+
     if (this.socket?.connected) {
+      console.log('✅ [WebSocketService] Emitting send_message_to_room event');
       this.socket.emit("send_message_to_room", { chatRoomId, content, type, attachments });
+    } else {
+      console.error('❌ [WebSocketService] Socket not connected!', {
+        hasSocket: !!this.socket,
+        connected: this.socket?.connected,
+      });
     }
   }
 

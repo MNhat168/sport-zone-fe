@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useAppDispatch } from "@/store/hook";
 import { updateField } from "@/features/field/fieldThunk";
 import { getMyFields } from "@/features/field/fieldThunk";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 
 interface FieldStatusManagementDialogProps {
     isOpen: boolean;
@@ -49,7 +50,7 @@ export const FieldStatusManagementDialog: React.FC<FieldStatusManagementDialogPr
             ).unwrap();
 
             setUpdateSuccess(true);
-            
+
             // Refresh the fields list
             dispatch(getMyFields({ page: 1, limit: 10 }));
 
@@ -99,11 +100,10 @@ export const FieldStatusManagementDialog: React.FC<FieldStatusManagementDialogPr
                                         Trạng thái hiện tại:
                                     </span>
                                     <span
-                                        className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                                            currentStatus
+                                        className={`text-sm font-semibold px-3 py-1 rounded-full ${currentStatus
                                                 ? "bg-green-100 text-green-800"
                                                 : "bg-red-100 text-red-800"
-                                        }`}
+                                            }`}
                                     >
                                         {currentStatus ? "Đang hoạt động" : "Tạm dừng"}
                                     </span>
@@ -133,7 +133,7 @@ export const FieldStatusManagementDialog: React.FC<FieldStatusManagementDialogPr
                                 >
                                     {isUpdating ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            <Loading size={16} className="mr-2" />
                                             Đang xử lý...
                                         </>
                                     ) : (
@@ -147,7 +147,7 @@ export const FieldStatusManagementDialog: React.FC<FieldStatusManagementDialogPr
                                 >
                                     {isUpdating ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            <Loading size={16} className="mr-2" />
                                             Đang xử lý...
                                         </>
                                     ) : (

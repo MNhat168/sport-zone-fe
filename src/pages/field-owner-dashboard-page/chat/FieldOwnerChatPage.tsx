@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FieldOwnerDashboardLayout } from "@/components/layouts/field-owner-dashboard-layout";
 import { useAppSelector, useAppDispatch } from "@/store/hook";
-import { getChatRooms, getChatRoom, markAsRead, getFieldOwnerChatRooms } from "@/features/chat/chatThunk";
+import { getChatRoom, markAsRead, getFieldOwnerChatRooms } from "@/features/chat/chatThunk";
 import { setCurrentRoom } from "@/features/chat/chatSlice";
 import { webSocketService } from "@/features/chat/websocket.service";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, MessageCircle, User, Calendar, MapPin, Send, X, Building } from "lucide-react";
+import { Search, MessageCircle, User, Calendar, MapPin, Send } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import type { Message } from "@/features/chat/chat-type";
 import axiosPrivate from "@/utils/axios/axiosPrivate";
-import { fetchFieldOwnerProfile } from "@/features/field-owner-profile/ownerProfileThunk";
+import { Loading } from "@/components/ui/loading";
 
 const FieldOwnerChatDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
@@ -22,7 +22,7 @@ const FieldOwnerChatDashboard: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const [fieldOwnerProfile, setFieldOwnerProfile] = useState<any>(null); // Local state
-    const { rooms, currentRoom, loading, unreadCount, typingUsers } = useAppSelector((state) => state.chat);
+    const { rooms, currentRoom, loading, typingUsers } = useAppSelector((state) => state.chat);
     const dispatch = useAppDispatch();
     const fieldOwnerData = sessionStorage.getItem("user");
     const fieldOwner = fieldOwnerData ? JSON.parse(fieldOwnerData) : null;
@@ -63,7 +63,7 @@ const FieldOwnerChatDashboard: React.FC = () => {
         });
     }, [rooms, fieldOwnerProfile, fieldOwnerId]);
 
-    const fetchFieldOwnerProfile = async (userId: string) => {
+    const getFieldOwnerProfile = async () => {
         try {
             // Use axiosPrivate since this requires authentication
             const response = await axiosPrivate.get(`/field-owner/profile/`);
@@ -78,10 +78,10 @@ const FieldOwnerChatDashboard: React.FC = () => {
         const userData = sessionStorage.getItem("user");
         if (!userData) return;
 
-        const user = JSON.parse(userData);
-        const userId = user.id || user._id;
+        // const user = JSON.parse(userData);
+        // const userId = user.id || user._id;
 
-        fetchFieldOwnerProfile(userId).then(profile => {
+        getFieldOwnerProfile().then(profile => {
             if (profile) {
                 // You might want to store this in state or context
                 console.log("Field owner profile:", profile);
@@ -262,7 +262,10 @@ const FieldOwnerChatDashboard: React.FC = () => {
                         {/* Chat list */}
                         <ScrollArea className="h-[600px]">
                             {loading ? (
-                                <div className="p-8 text-center text-gray-500">Đang tải...</div>
+                                <div className="flex flex-col items-center justify-center p-8 gap-3">
+                                    <Loading size={32} className="text-blue-500" />
+                                    <div className="text-gray-500 text-sm">Đang tải...</div>
+                                </div>
                             ) : filteredRooms.length === 0 ? (
                                 <div className="p-8 text-center">
                                     <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />

@@ -10,7 +10,8 @@ import { getFieldById } from "@/features/field/fieldThunk";
 import { createCombinedBooking } from "@/features/booking/bookingThunk";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 
 // Import field booking components
 import { BookCourtTab } from "../field-booking-page/fieldTabs/bookCourt";
@@ -385,7 +386,7 @@ const FieldCoachBookingPage = () => {
                     <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
                         <Card className="border border-gray-200">
                             <CardContent className="p-10 text-center space-y-4">
-                                <Loader2 className="w-16 h-16 text-emerald-600 mx-auto animate-spin" />
+                                <Loading size={64} className="mx-auto" />
                                 <h2 className="text-2xl font-semibold text-gray-700">
                                     Đang gửi đơn đặt...
                                 </h2>

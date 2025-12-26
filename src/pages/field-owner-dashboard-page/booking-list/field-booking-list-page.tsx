@@ -7,7 +7,8 @@ import { BookingTable } from "./components/booking-table";
 import { BookingPagination } from "./components/field-history-booking-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import {
@@ -457,7 +458,7 @@ export default function FieldHistoryBookingPage() {
                         {/* Loading State - only show spinner on initial load to avoid flashing during polling */}
                         {fieldOwnerBookingsLoading && !hasInitialData ? (
                             <div className="flex items-center justify-center py-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                <Loading size={32} />
                             </div>
                         ) : (
                             <>
