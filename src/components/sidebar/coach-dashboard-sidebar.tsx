@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useLocation, Link, useNavigate } from "react-router-dom"
+import { useLocation, Link } from "react-router-dom"
 import {
     Sidebar,
     SidebarContent,
@@ -44,49 +44,49 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
     {
-        title: "Dashboard",
+        title: "Bảng điều khiển",
         url: "/coach/dashboard",
         icon: LayoutDashboard,
     },
     {
-        title: "Schedule",
+        title: "Lịch dạy",
         url: "/coach/schedule",
         icon: Calendar,
     },
     {
-        title: "Lessons",
+        title: "Quản lý khóa học",
         url: "/coach/lessons",
         icon: Book,
     },
     {
-        title: "Bookings",
+        title: "Danh sách đặt chỗ",
         url: "/coach/bookings",
         icon: CheckSquare,
     },
     {
-        title: "Verify Payments",
+        title: "Xác minh thanh toán",
         url: "/coach/verify-payments",
         icon: CheckSquare,
     },
     {
-        title: "Wallet",
+        title: "Ví tiền",
         url: "/coach-wallet",
         icon: Wallet,
     },
     {
-        title: "Chat",
+        title: "Trò chuyện",
         url: "/coach-chat",
         icon: MessageSquare,
     },
     {
         // Trang cài đặt tài khoản coach (user profile / settings)
-        title: "Account Settings",
+        title: "Cài đặt tài khoản",
         url: "/coach/profile",
         icon: User,
     },
     {
         // Trang hồ sơ coach công khai / self detail page
-        title: "My Profile Page",
+        title: "Trang cá nhân",
         url: "/coach/profile/details",
         icon: Eye,
     },
@@ -94,7 +94,6 @@ const menuItems: MenuItem[] = [
 
 export function CoachSidebar() {
     const location = useLocation()
-    const navigate = useNavigate()
     const dispatch = useAppDispatch()
     const authUser = useAppSelector((state) => state.auth.user)
 
@@ -106,7 +105,8 @@ export function CoachSidebar() {
         await new Promise(resolve => setTimeout(resolve, 800));
         clearUserAuth()
         dispatch(logout())
-        navigate("/")
+        // Force reload to ensure clean state - 1 refresh
+        window.location.href = "/"
     }
 
     const isActive = (path: string) => {
@@ -126,7 +126,7 @@ export function CoachSidebar() {
             .map((w) => w[0])
             .join("")
             .toUpperCase()
-        : "CO"
+        : "HLV"
 
     return (
         <>
@@ -143,14 +143,14 @@ export function CoachSidebar() {
                         </div>
                         <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                             <span className="text-sm font-semibold">SportZone</span>
-                            <span className="text-xs text-muted-foreground">Coach Dashboard</span>
+                            <span className="text-xs text-muted-foreground">Quản trị HLV</span>
                         </div>
                     </div>
                 </SidebarHeader>
 
                 <SidebarContent>
                     <SidebarGroup>
-                        <SidebarGroupLabel>Menu</SidebarGroupLabel>
+                        <SidebarGroupLabel>Danh mục</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 {menuItems.map((item) => {
@@ -191,13 +191,13 @@ export function CoachSidebar() {
                                         className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground w-full"
                                     >
                                         <Avatar className="h-8 w-8">
-                                            <AvatarImage src={authUser?.avatarUrl} alt={authUser?.fullName || "User"} />
+                                            <AvatarImage src={authUser?.avatarUrl} alt={authUser?.fullName || "Người dùng"} />
                                             <AvatarFallback className="bg-blue-600 text-white">
                                                 {userInitials}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                                            <span className="truncate font-semibold">{authUser?.fullName || "Coach"}</span>
+                                            <span className="truncate font-semibold">{authUser?.fullName || "Huấn luyện viên"}</span>
                                             <span className="truncate text-xs text-muted-foreground">{authUser?.email || ""}</span>
                                         </div>
                                     </SidebarMenuButton>
@@ -210,7 +210,7 @@ export function CoachSidebar() {
                                     <DropdownMenuItem asChild>
                                         <Link to="/coach/profile" className="cursor-pointer">
                                             <User className="mr-2 h-4 w-4" />
-                                            <span>Profile</span>
+                                            <span>Hồ sơ</span>
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -218,7 +218,7 @@ export function CoachSidebar() {
                                         className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
                                     >
                                         <LogOut className="mr-2 h-4 w-4" />
-                                        <span>Log out</span>
+                                        <span>Đăng xuất</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
