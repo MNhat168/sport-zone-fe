@@ -311,20 +311,25 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     { id: "location", label: "Vị trí" },
   ];
 
-  const galleryImages = [
-    {
-      url: "/badminton-player-training-on-green-court.jpg",
-      alt: "Training session 1",
-    },
-    { url: "/badminton-player-hitting-shuttlecock.jpg", alt: "Court practice" },
-    {
-      url: "/badminton-court-with-net-and-lights.jpg",
-      alt: "Coaching session",
-    },
-    { url: "/badminton-doubles-match.jpg", alt: "Group training" },
-    { url: "/badminton-player-serving.jpg", alt: "Serving practice" },
-    { url: "/badminton-indoor-court.jpg", alt: "Indoor facility" },
-  ];
+  const galleryImages = (() => {
+    const src = (currentCoach as any)?.galleryImages ?? (currentCoach as any)?.gallery ?? (currentCoach as any)?.photos;
+    if (Array.isArray(src) && src.length > 0) {
+      return src.map((item: any, idx: number) => {
+        if (typeof item === 'string') return { url: item, alt: `Gallery image ${idx + 1}` };
+        if (item && typeof item === 'object') return { url: item.url || item.src || String(item), alt: item.alt || item.caption || `Gallery image ${idx + 1}` };
+        return { url: String(item), alt: `Gallery image ${idx + 1}` };
+      });
+    }
+
+    return [
+      { url: "/badminton-player-training-on-green-court.jpg", alt: "Training session 1" },
+      { url: "/badminton-player-hitting-shuttlecock.jpg", alt: "Court practice" },
+      { url: "/badminton-court-with-net-and-lights.jpg", alt: "Coaching session" },
+      { url: "/badminton-doubles-match.jpg", alt: "Group training" },
+      { url: "/badminton-player-serving.jpg", alt: "Serving practice" },
+      { url: "/badminton-indoor-court.jpg", alt: "Indoor facility" },
+    ];
+  })();
 
   //   const reviews = [
   //     {

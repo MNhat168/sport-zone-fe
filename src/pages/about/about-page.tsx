@@ -116,7 +116,7 @@ export default function AboutPage() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl group">
                 <img
-                  src="/team-playing-sports.jpg"
+                  src="/TeamPlayingSport.png"
                   alt="Team playing sports"
                   className="w-full h-[400px] object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -323,19 +323,19 @@ export default function AboutPage() {
             {[
               {
                 name: "Nguyễn Huy Long",
-                role: "Leader",
+                role: "Trưởng Nhóm",
                 image: "/professional-man-portrait.png",
                 delay: "0ms",
               },
               {
                 name: "Phan Đình Trác",
-                role: "Member",
+                role: "Thành Viên",
                 image: "/professional-woman-portrait.png",
                 delay: "100ms",
               },
               {
                 name: "Nguyễn Minh Nhật",
-                role: "Member",
+                role: "Thành Viên",
                 image: "/professional-person-portrait.png",
                 delay: "200ms",
               },
@@ -347,7 +347,7 @@ export default function AboutPage() {
               },
               {
                 name: "Võ Quý Hoàng Long",
-                role: "Member",
+                role: "Thành Viên",
                 image: "/professional-asian-woman-portrait.png",
                 delay: "400ms",
               },
@@ -365,11 +365,9 @@ export default function AboutPage() {
               >
                 <Card className="overflow-hidden group cursor-pointer hover:shadow-2xl transition-all duration-500">
                   <div className="relative overflow-hidden">
-                    <img
-                      src={member.image || "/placeholder.svg"}
-                      alt={member.name}
-                      className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
+                    <div className="w-full h-80 bg-gray-100 flex items-center justify-center">
+                      <Users className="h-20 w-20 text-gray-400" />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-blue-600/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   </div>
                   <div className="p-6 text-center">

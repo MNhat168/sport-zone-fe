@@ -3,6 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Award, Calendar, CheckCircle2, Heart, Mail } from "lucide-react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/store/store";
+import { getCoachStatsThunk } from "@/features/reviews/reviewThunk";
 
 interface CoachInfoCardProps {
   coachData: any;
@@ -21,6 +25,22 @@ export const CoachInfoCard: React.FC<CoachInfoCardProps> = ({
   onToggleFavourite,
   onOpenChat,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Resolve coach id from available shapes
+  const coachId = (coachData && (coachData.id || coachData._id || coachData.user?.id || coachData.user?._id)) || null;
+
+  // Select aggregated stats from redux (may be null if not loaded)
+  const coachStats = useSelector((state: RootState) => (coachId ? state.reviews?.coachStats?.[coachId] ?? null : null));
+
+  useEffect(() => {
+    if (coachId && !coachStats) {
+      dispatch(getCoachStatsThunk(coachId));
+    }
+  }, [dispatch, coachId, coachStats]);
+
+  const totalReviews = coachStats?.totalReviews ?? (Array.isArray(coachReviews) ? coachReviews.length : 0);
+  const avgRating = coachStats?.averageRating ?? (coachData?.rating ? Number(coachData.rating) : null);
   return (
     <Card className="shadow-2xl border-0 animate-fade-in-up bg-white">
       <CardContent className="p-6">
@@ -89,26 +109,20 @@ export const CoachInfoCard: React.FC<CoachInfoCardProps> = ({
               {/* Stats Row */}
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 {/* Only show rating if there are reviews */}
-                {Array.isArray(coachReviews) && coachReviews.length > 0 && coachData?.rating ? (
+                {totalReviews > 0 && avgRating !== null && !Number.isNaN(avgRating) ? (
                   <div className="flex items-center gap-2">
                     <div className="bg-yellow-100 p-1.5 rounded">
                       <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
                     </div>
-                    <span className="font-semibold">
-                      {Number(coachData.rating).toFixed(1)}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {coachReviews.length} đánh giá
-                    </span>
+                    <span className="font-semibold">{Number(avgRating).toFixed(1)}</span>
+                    <span className="text-muted-foreground">{totalReviews} đánh giá</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <div className="bg-yellow-100 p-1.5 rounded">
                       <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
                     </div>
-                    <span className="text-muted-foreground">
-                      Chưa có đánh giá
-                    </span>
+                    <span className="text-muted-foreground">Chưa có đánh giá</span>
                   </div>
                 )}
 

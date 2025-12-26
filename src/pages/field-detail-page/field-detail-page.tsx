@@ -270,9 +270,14 @@ const FieldDetailPage: React.FC = () => {
   }, [currentField])
 
   const reviewCount: number = useMemo(() => {
-    const raw = (currentField as any)?.reviewCount
+    const raw =
+      (currentField as any)?.reviewCount ??
+      (currentField as any)?.totalReviews ??
+      (currentField as any)?.total_reviews ??
+      (currentField as any)?.reviews?.length ??
+      0
     const n = Number(raw)
-    return Number.isFinite(n) && n > 0 ? n : 0
+    return Number.isFinite(n) && n >= 0 ? n : 0
   }, [currentField])
 
   const [currentIndex, setCurrentIndex] = useState(0)

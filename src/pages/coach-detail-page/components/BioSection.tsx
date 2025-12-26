@@ -21,17 +21,17 @@ export const BioSection: React.FC<BioSectionProps> = ({ coachData }) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3 text-muted-foreground leading-relaxed">
-          <p className="font-semibold text-foreground text-left">
-            Họ và tên: {coachData?.name ?? "-"}
+          <p className="text-left">
+            <span className="font-semibold">Họ và tên:</span> {coachData?.name ?? "-"}
           </p>
           <p className="text-left">
-            Kinh nghiệm: {coachData?.coachingDetails?.experience ?? "-"}
+            <span className="font-semibold">Kinh nghiệm:</span> {coachData?.coachingDetails?.experience ?? "-"}
           </p>
           <p className="text-left">
-            Chứng chỉ: {coachData?.coachingDetails?.certification ?? "-"}
+            <span className="font-semibold">Chứng chỉ:</span> {coachData?.coachingDetails?.certification ?? "-"}
           </p>
           <p className="text-left">
-            Chuyên môn: {sportsList && sportsList.length > 0 ? (
+            <span className="font-semibold">Chuyên môn:</span> {sportsList && sportsList.length > 0 ? (
               <span className="inline-flex flex-wrap gap-2">
                 {sportsList.map((s) => (
                   <span key={s} className="px-2 py-1 bg-muted rounded-full text-sm">
