@@ -100,17 +100,17 @@ export default function TournamentListPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'Confirmed'
-      case 'pending': return 'Registration Open'
-      case 'ongoing': return 'Live'
-      case 'completed': return 'Completed'
-      case 'cancelled': return 'Cancelled'
+      case 'confirmed': return 'Đã xác nhận'
+      case 'pending': return 'Đang mở đăng ký'
+      case 'ongoing': return 'Đang diễn ra'
+      case 'completed': return 'Đã hoàn thành'
+      case 'cancelled': return 'Đã hủy'
       default: return status
     }
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString('vi-VN', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -162,9 +162,9 @@ export default function TournamentListPage() {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <Label className="text-sm font-semibold">Entry Fee Range</Label>
+          <Label className="text-sm font-semibold">Khoảng phí đăng ký</Label>
           <span className="text-sm text-gray-600">
-            {minFee === 0 && maxFee === 1000000 ? 'Any' : `Up to ${formatCurrency(maxFee)}`}
+            {minFee === 0 && maxFee === 1000000 ? 'Bất kỳ' : `Lên đến ${formatCurrency(maxFee)}`}
           </span>
         </div>
 
@@ -241,7 +241,7 @@ export default function TournamentListPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center py-12">
               <Loading size={100} />
-              <p className="mt-4 text-gray-600">Loading tournaments...</p>
+              <p className="mt-4 text-gray-600">Đang tải giải đấu...</p>
             </div>
           </div>
         </div>
@@ -258,9 +258,9 @@ export default function TournamentListPage() {
       <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-24 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-3">Tournaments</h1>
+            <h1 className="text-3xl font-bold text-white mb-3">Giải đấu</h1>
             <p className="text-gray-300 max-w-2xl mx-auto">
-              Discover and join exciting sports tournaments in your area
+              Khám phá và tham gia các giải đấu thể thao thú vị trong khu vực của bạn
             </p>
           </div>
 
@@ -269,7 +269,7 @@ export default function TournamentListPage() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <Input
-                placeholder="Search tournaments by name, location, or sport..."
+                placeholder="Tìm kiếm giải đấu theo tên, địa điểm hoặc môn thể thao..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value)
@@ -291,7 +291,7 @@ export default function TournamentListPage() {
               <Card className="shadow-sm border border-gray-200 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
                 <CardContent className="p-6 space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900">Filters</h3>
+                    <h3 className="font-semibold text-gray-900">Bộ lọc</h3>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -306,18 +306,18 @@ export default function TournamentListPage() {
                       }}
                       className="text-green-600 hover:text-green-700 hover:bg-green-50 text-sm"
                     >
-                      Reset all
+                      Đặt lại tất cả
                     </Button>
                   </div>
 
                   {/* Location */}
                   <div className="space-y-3">
-                    <Label htmlFor="location" className="text-sm font-semibold">Location</Label>
+                    <Label htmlFor="location" className="text-sm font-semibold">Địa điểm</Label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
                         id="location"
-                        placeholder="Enter location..."
+                        placeholder="Nhập địa điểm..."
                         value={locationFilter}
                         onChange={(e) => {
                           setLocationFilter(e.target.value)
@@ -330,7 +330,7 @@ export default function TournamentListPage() {
 
                   {/* Sport Types */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold">Sport Types</Label>
+                    <Label className="text-sm font-semibold">Loại thể thao</Label>
                     <div className="space-y-3 max-h-60 overflow-y-auto">
                       {allSports.map((sport) => (
                         <div key={sport} className="flex items-center space-x-3">
@@ -357,7 +357,7 @@ export default function TournamentListPage() {
                   {/* Categories */}
                   {getAvailableCategories().length > 0 && (
                     <div className="space-y-3">
-                      <Label className="text-sm font-semibold">Categories</Label>
+                      <Label className="text-sm font-semibold">Danh mục</Label>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
                         {getAvailableCategories().map((category) => (
                           <div key={category} className="flex items-center space-x-2">
@@ -390,14 +390,14 @@ export default function TournamentListPage() {
               {/* Results Count */}
               <div className="flex items-center gap-2 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Tournaments
+                  Giải đấu
                 </h2>
                 <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
-                  {filteredTournaments.length} found
+                  {filteredTournaments.length} tìm thấy
                 </span>
                 {filteredTournaments.length > 0 && (
                   <span className="text-sm text-gray-600">
-                    (Page {currentPage} of {totalPages})
+                    (Trang {currentPage} / {totalPages})
                   </span>
                 )}
               </div>
@@ -406,7 +406,7 @@ export default function TournamentListPage() {
               {error && (
                 <Card className="mb-6 border-red-200 bg-red-50">
                   <CardContent className="p-6">
-                    <p className="text-red-700">Error loading tournaments: {error}</p>
+                    <p className="text-red-700">Lỗi khi tải giải đấu: {error}</p>
                   </CardContent>
                 </Card>
               )}
@@ -415,16 +415,16 @@ export default function TournamentListPage() {
                 <Card>
                   <CardContent className="p-12 text-center">
                     <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No tournaments found</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy giải đấu</h3>
                     <p className="text-gray-600 mb-4">
                       {searchTerm || selectedSports.length > 0 || locationFilter || minFee > 0 || maxFee < 1000000
-                        ? "Try adjusting your search filters to find more tournaments."
-                        : "Be the first to create a tournament in your area!"
+                        ? "Thử điều chỉnh bộ lọc tìm kiếm để tìm thêm giải đấu."
+                        : "Hãy là người đầu tiên tạo giải đấu trong khu vực của bạn!"
                       }
                     </p>
                     <Link to="/tournaments/create">
                       <Button className="bg-green-600 hover:bg-green-700">
-                        Create Tournament
+                        Tạo giải đấu
                       </Button>
                     </Link>
                   </CardContent>
@@ -463,7 +463,7 @@ export default function TournamentListPage() {
 
     const maxVisiblePages = 5
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
 
     // Adjust if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages) {
@@ -552,7 +552,7 @@ export default function TournamentListPage() {
           </button>
         </div>
         <p className="text-sm text-gray-600">
-          Showing {startIndex + 1} - {Math.min(endIndex, totalItems)} of {totalItems} tournaments
+          Hiển thị {startIndex + 1} - {Math.min(endIndex, totalItems)} trong tổng số {totalItems} giải đấu
         </p>
       </div>
     )
@@ -593,7 +593,7 @@ function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate,
                   {isLive && (
                     <div className="flex items-center gap-1 bg-red-600 px-2 py-1 rounded-full">
                       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                      <span className="text-xs font-semibold text-white">LIVE</span>
+                      <span className="text-xs font-semibold text-white">TRỰC TIẾP</span>
                     </div>
                   )}
                 </div>
@@ -632,7 +632,7 @@ function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate,
                     <Users className="h-4 w-4" />
                     <span>
                       <span className="font-semibold">{tournament.participants?.length || 0}</span>
-                      <span className="text-gray-500">/{tournament.maxParticipants} participants</span>
+                      <span className="text-gray-500">/{tournament.maxParticipants} người tham gia</span>
                     </span>
                   </div>
                 </div>
@@ -641,7 +641,7 @@ function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate,
                 {isRegistrationOpen && (
                   <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
                     <Clock className="h-4 w-4" />
-                    <span>Registration ends: {formatDate(tournament.registrationEnd)}</span>
+                    <span>Đăng ký kết thúc: {formatDate(tournament.registrationEnd)}</span>
                   </div>
                 )}
               </div>
@@ -655,11 +655,11 @@ function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate,
               <div className="text-2xl font-bold text-green-600">
                 {tournament.registrationFee > 0
                   ? formatCurrency(tournament.registrationFee)
-                  : 'Free'
+                  : 'Miễn phí'
                 }
               </div>
               <Badge variant="outline" className="text-gray-600 mt-1">
-                Entry Fee
+                Phí đăng ký
               </Badge>
             </div>
 
@@ -674,10 +674,10 @@ function TournamentCard({ tournament, getStatusColor, getStatusText, formatDate,
                   }`}
                 disabled={tournament.status === 'cancelled'}
               >
-                {isCompleted ? 'View Results' :
-                  isLive ? 'Watch Live' :
-                    tournament.status === 'cancelled' ? 'Cancelled' :
-                      'View Details'}
+                {isCompleted ? 'Xem kết quả' :
+                  isLive ? 'Xem trực tiếp' :
+                    tournament.status === 'cancelled' ? 'Đã hủy' :
+                      'Xem chi tiết'}
                 <ChevronRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
               </Button>
             </Link>

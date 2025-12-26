@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { NavbarComponent } from "@/components/header/navbar-component"
+import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
+import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { FooterComponent } from "@/components/footer/footer-component"
 import CreateTournamentStep1 from "./CreateTournamentStep1"
 import CreateTournamentStep2 from "./CreateTournamentStep2"
@@ -58,6 +59,7 @@ export default function CreateTournamentPage() {
     fieldsNeeded: 2,
     selectedFieldIds: [],
     totalFieldCost: 0,
+    fields: [], // Initialize empty fields array
     rules: "",
     images: [],
   })
@@ -107,8 +109,8 @@ export default function CreateTournamentPage() {
 
   return (
     <>
-      <NavbarComponent />
-      <div className="min-h-screen bg-white py-12 pb-32 overflow-x-hidden">
+      <NavbarDarkComponent />
+      <PageWrapper>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-black text-green-700 mb-3">Tạo Giải Đấu Mới</h1>
@@ -262,7 +264,7 @@ export default function CreateTournamentPage() {
             </div>
           </div>
         )}
-      </div>
+      </PageWrapper>
       <FooterComponent />
     </>
   );

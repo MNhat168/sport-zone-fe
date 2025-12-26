@@ -10,7 +10,7 @@ const UserDropdownMenuItems = () => {
         <>
             <DropdownMenuItem asChild className="text-black hover:text-primary-800 cursor-pointer flex-col items-start p-3">
                 <Link to={`/user-profile`} className="flex flex-col">
-                    <span className="text-base text-gray-500 ml-6">Go to Profile</span>
+                    <span className="text-base text-gray-500 ml-6">Cài đặt tài khoản</span>
                 </Link>
             </DropdownMenuItem>
 
@@ -19,7 +19,7 @@ const UserDropdownMenuItems = () => {
             <DropdownMenuItem asChild className="text-black hover:text-primary-800 cursor-pointer">
                 <Link to="/user-dashboard" className="flex items-center">
                     <Settings className="mr-2 h-5 w-5" />
-                    <span className="text-base">Settings</span>
+                    <span className="text-base">Dashboard</span>
                 </Link>
             </DropdownMenuItem>
 

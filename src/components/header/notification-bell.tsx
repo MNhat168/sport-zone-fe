@@ -50,16 +50,9 @@ export function NotificationBell({
     return null;
   }
 
-  console.log("📱 NotificationBell props:", { userId, variant });
-  console.log("📱 Socket instance:", socket);
-  //Fetch all notifications on mount
+  // Fetch all notifications on mount
   useEffect(() => {
-    if (!userId) {
-      console.log("📱 No userId provided, skipping notification fetch");
-      return;
-    }
-
-    console.log("📱 Fetching notifications for user:", userId);
+    if (!userId) return;
 
     const fetchNotifications = async () => {
       try {
@@ -68,13 +61,10 @@ export function NotificationBell({
           axiosInstance.get(`/notifications/user/${userId}/unread-count`)
         ]);
 
-        console.log("📱 Notification response:", notificationResponse.data);
-        // The controller returns the array directly now, but let's handle both cases just to be safe
         const rawData = Array.isArray(notificationResponse.data)
           ? notificationResponse.data
           : notificationResponse.data.data || [];
 
-        // Normalize notification data - backend may return `createdAt` instead of `created_at`
         const notificationData: Notification[] = rawData.map((item: any) => ({
           id: item.id || item._id,
           content: item.message || item.title || item.content || "Thông báo mới",
@@ -85,12 +75,11 @@ export function NotificationBell({
 
         setNotifications(notificationData);
 
-        // Handle unread count - API may return number directly or wrapped in { data: number }
         const unreadData = unreadResponse.data;
         const unreadCountValue = typeof unreadData === 'number'
           ? unreadData
           : (unreadData?.data ?? unreadData?.count ?? 0);
-        console.log("📱 Unread count response:", unreadResponse.data, "-> parsed:", unreadCountValue);
+
         setUnreadCount(unreadCountValue);
       } catch (error) {
         console.error("Error fetching notifications:", error);
@@ -98,13 +87,9 @@ export function NotificationBell({
     };
     fetchNotifications();
   }, [userId]);
-  useEffect(() => {
-    if (!socket) {
-      console.log("📱 No socket available");
-      return;
-    }
 
-    console.log("📱 Setting up notification listener for user:", userId);
+  useEffect(() => {
+    if (!socket) return;
 
     interface IncomingNotification {
       id?: string;
@@ -117,9 +102,6 @@ export function NotificationBell({
     }
 
     const handleNotification = (data: IncomingNotification) => {
-      console.log("📩 WebSocket Notification received:", data);
-      console.log("📩 Data structure:", JSON.stringify(data, null, 2));
-
       const notificationId = data?.id || data?._id;
       if (!notificationId) {
         console.warn("Notification received without an id, skipping:", data);
@@ -135,19 +117,9 @@ export function NotificationBell({
           new Date().toISOString(),
         url: data?.url || "/notifications",
       };
-      console.log("📩 Processed notification:", newNotification);
 
-      setNotifications((prev) => {
-        const updated = [newNotification, ...prev];
-        console.log("📩 Updated notifications:", updated);
-        return updated;
-      });
-
-      setUnreadCount((prev) => {
-        const newCount = prev + 1;
-        console.log("📩 New unread count:", newCount);
-        return newCount;
-      });
+      setNotifications((prev) => [newNotification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
 
       // Show toast notification with styling
       toast.success(data?.message || data?.title || "Bạn có thông báo mới!", {
@@ -170,7 +142,7 @@ export function NotificationBell({
     return () => {
       socket.off("notification", handleNotification);
     };
-  }, [socket, userId]);
+  }, [socket, userId, onNotificationReceived]);
 
   // Listen for in-app notifications broadcasted via localStorage (from chat websocket)
   useEffect(() => {
@@ -290,8 +262,6 @@ export function NotificationBell({
     }
   };
 
-  console.log("Current Notifications:", notifications);
-
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -305,8 +275,7 @@ export function NotificationBell({
           title="Thông báo"
         >
           <Bell
-            className={iconClassName || `h-5 w-5 ${variant === "sidebar" ? "text-primary-200" : ""
-              }`}
+            className={iconClassName || `h-5 w-5 ${variant === "sidebar" ? "text-primary-200" : ""}`}
           />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">

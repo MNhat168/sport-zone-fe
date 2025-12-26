@@ -5,17 +5,31 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
-import { changePassword } from "@/features/authentication/authThunk"
+import { changePassword, deactivateAccount } from "@/features/authentication/authThunk"
 import { clearSuccessStates } from "@/features/authentication/authSlice"
 import { toast } from "sonner"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useNavigate } from "react-router-dom"
 
 export default function ChangePassword() {
     const dispatch = useAppDispatch()
     const {
         changePasswordLoading,
         changePasswordSuccess,
-        changePasswordError
+        changePasswordError,
+        deactivateLoading
     } = useAppSelector((state) => state.auth)
+    const navigate = useNavigate()
 
     const [formData, setFormData] = useState({
         oldPassword: "",
@@ -133,9 +147,14 @@ export default function ChangePassword() {
     }
 
     // Handle deactivate account
-    const handleDeactivateAccount = () => {
-        // TODO: Implement deactivate account logic
-        toast.error("Chức năng vô hiệu hóa tài khoản chưa được triển khai")
+    const handleDeactivateAccount = async () => {
+        try {
+            await dispatch(deactivateAccount()).unwrap()
+            toast.success("Tài khoản của bạn đã được vô hiệu hóa")
+            navigate("/")
+        } catch (error: any) {
+            toast.error(error.message || "Vô hiệu hóa tài khoản thất bại")
+        }
     }
     return (
         <Card className="w-full bg-white rounded-[10px] shadow-[0px_4px_44px_0px_rgba(211,211,211,0.25)] border-0">
@@ -200,14 +219,36 @@ export default function ChangePassword() {
                         <Label className="text-base font-normal text-start">
                             Vô hiệu hóa tài khoản
                         </Label>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={handleDeactivateAccount}
-                            className="w-full h-14 bg-red-500 hover:bg-red-600 text-white rounded-[10px] text-base font-medium"
-                        >
-                            Vô hiệu hóa tài khoản
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={deactivateLoading}
+                                    className="w-full h-14 bg-red-500 hover:bg-red-600 text-white rounded-[10px] text-base font-medium"
+                                >
+                                    {deactivateLoading ? <Loading size={16} className="mr-2" /> : null}
+                                    Vô hiệu hóa tài khoản
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Bạn có chắc chắn muốn vô hiệu hóa tài khoản?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Hành động này sẽ vô hiệu hóa tài khoản của bạn. Bạn sẽ không thể đăng nhập cho đến khi tài khoản được kích hoạt lại bởi quản trị viên.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleDeactivateAccount}
+                                        className="bg-red-500 hover:bg-red-600 focus:ring-red-500"
+                                    >
+                                        Vô hiệu hóa
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                         <p className="text-sm font-normal text-[#6B7385]">
                             Nhấn nút để vô hiệu hóa tài khoản
                         </p>

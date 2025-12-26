@@ -9,6 +9,7 @@ import {
     forgotPassword,
     resetPassword,
     changePassword,
+    deactivateAccount,
 } from "./authThunk";
 import {
     getUserProfile,
@@ -55,6 +56,7 @@ interface AuthState {
     changePasswordLoading: boolean;
     changePasswordSuccess: boolean;
     changePasswordError: ErrorResponse | null;
+    deactivateLoading: boolean;
 }
 
 const readUserFromCookie = (): any | null => {
@@ -108,6 +110,7 @@ const initialState: AuthState = {
     changePasswordLoading: false,
     changePasswordSuccess: false,
     changePasswordError: null,
+    deactivateLoading: false,
 };
 
 const authSlice = createSlice({
@@ -225,6 +228,25 @@ const authSlice = createSlice({
                     // Clean up chat state and WebSocket
                     console.log('🧹 [authSlice] Cleaning up chat on logout');
                 } catch { }
+            })
+
+            .addCase(deactivateAccount.pending, (state) => {
+                state.deactivateLoading = true;
+                state.error = null;
+            })
+            .addCase(deactivateAccount.fulfilled, (state) => {
+                state.deactivateLoading = false;
+                state.user = null;
+                state.token = null;
+                clearUserAuth();
+                try {
+                    sessionStorage.removeItem("user");
+                    localStorage.removeItem("user");
+                } catch { }
+            })
+            .addCase(deactivateAccount.rejected, (state, action) => {
+                state.deactivateLoading = false;
+                state.error = action.payload || { message: "Failed to deactivate account", status: "500" };
             })
 
             // Validate session

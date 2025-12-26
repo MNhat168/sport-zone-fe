@@ -9,6 +9,17 @@ import { useLocation } from "react-router-dom";
 import type { Field } from "@/types/field-type";
 import { clearError } from "@/features/booking/bookingSlice";
 import type { BookingFormData } from "./personalInfo";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 // Helper function for formatting VND
 const formatVND = (value: number): string => {
     try {
@@ -65,6 +76,8 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     const [bankAccount, setBankAccount] = useState<any>(null);
     const [loadingBankAccount, setLoadingBankAccount] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     // Use booking data from props or fallback to sessionStorage
     const formData: BookingFormData = useMemo(() => {
@@ -227,6 +240,68 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     // Booking hold is now created in PersonalInfo step, so we skip this useEffect
     // PaymentV2 only reads the existing hold from sessionStorage (see useEffect above)
 
+    // Handle cancel booking hold
+    const handleCancelBooking = useCallback(async () => {
+        if (!heldBookingId) {
+            // No booking to cancel, just go back
+            onBack?.();
+            return;
+        }
+
+        setIsCancelling(true);
+        try {
+            const headers: HeadersInit = {
+                'Content-Type': 'application/json',
+            };
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/cancel-hold`, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify({
+                    cancellationReason: 'Người dùng hủy đặt sân'
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: 'Có lỗi xảy ra' }));
+                console.error('[PaymentV2] Error cancelling booking:', errorData);
+                toast.error('Không thể hủy đặt sân. Vui lòng thử lại.');
+            } else {
+                console.log('[PaymentV2] ✅ Booking hold cancelled successfully');
+                toast.success('Đã hủy đặt sân thành công');
+            }
+        } catch (error) {
+            console.error('[PaymentV2] Error cancelling booking:', error);
+            toast.error('Có lỗi xảy ra khi hủy đặt sân');
+        } finally {
+            setIsCancelling(false);
+            // Clear all sessionStorage
+            clearBookingLocal();
+            sessionStorage.removeItem('heldBookingId');
+            sessionStorage.removeItem('heldBookingCountdown');
+            sessionStorage.removeItem('heldBookingTime');
+
+            // Reset state
+            setHeldBookingId(null);
+            setCountdown(0);
+            setShowCancelDialog(false);
+
+            // Go back to previous step
+            onBack?.();
+        }
+    }, [heldBookingId, onBack]);
+
+    // Handle back button click - show confirmation dialog
+    const handleBackClick = useCallback(() => {
+        if (heldBookingId) {
+            // Show confirmation dialog if there's a held booking
+            setShowCancelDialog(true);
+        } else {
+            // No booking to cancel, just go back
+            onBack?.();
+        }
+    }, [heldBookingId, onBack]);
+
     // Handle countdown expired - release slot and reset to step 1
     const handleCountdownExpired = useCallback(async () => {
         if (!heldBookingId) return;
@@ -237,7 +312,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                 'Content-Type': 'application/json',
             };
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL} /bookings/${heldBookingId}/cancel-hold`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/cancel-hold`, {
                 method: 'PATCH',
                 headers,
                 body: JSON.stringify({
@@ -913,12 +988,34 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             {/* Back Button */}
             {paymentStatus !== 'success' && (
                 <div className="flex justify-start">
-                    <Button variant="outline" onClick={onBack}>
+                    <Button variant="outline" onClick={handleBackClick} disabled={isCancelling}>
                         <ArrowLeft className="w-4 h-4 mr-2" />
-                        Quay lại
+                        {isCancelling ? 'Đang hủy...' : 'Quay lại'}
                     </Button>
                 </div>
             )}
+
+            {/* Cancel Booking Confirmation Dialog */}
+            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận hủy đặt sân</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Bạn có chắc chắn muốn quay lại? Nếu bạn quay lại, đặt sân của bạn sẽ tự động bị hủy.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isCancelling}>Không</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleCancelBooking}
+                            disabled={isCancelling}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {isCancelling ? 'Đang hủy...' : 'Có, hủy đặt sân'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

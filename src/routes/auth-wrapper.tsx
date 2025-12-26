@@ -19,19 +19,17 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    console.log('AuthWrapper - Current path:', location.pathname);
-    console.log('AuthWrapper - User:', user);
-    console.log('AuthWrapper - isAuthenticated:', isAuthenticated);
+
 
     // Note: Redirect logic chính được xử lý trong authentication-page.tsx với window.location.href
     // Không cần redirect ở đây nữa để tránh double redirect
     // Chỉ giữ logic này cho các trường hợp edge case (nếu user đã authenticated nhưng vẫn ở /auth)
     // Nhưng không redirect tự động để tránh conflict với login redirect
-    
+
     // KHÔNG redirect nếu đang ở public routes
     // Sử dụng utility function từ routes-config.tsx để tránh duplicate code
     if (isPublicRoute(location.pathname)) {
-      console.log('AuthWrapper - On public route, no redirect needed');
+
       return; // Không redirect
     }
 

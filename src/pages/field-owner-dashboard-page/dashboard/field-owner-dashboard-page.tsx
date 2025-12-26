@@ -685,10 +685,9 @@ export default function FieldOwnerDashboardPage() {
                                                                                 : "text-gray-500"
                                                                     }`}
                                                             >
-                                                                {request.status === 'pending' ? 'Đang chờ' :
-                                                                    request.status === 'cancelled' ? 'Đã hủy' :
-                                                                        request.status === 'confirmed' ? 'Đã xác nhận' :
-                                                                            request.status === 'completed' ? 'Hoàn thành' : 'Không xác định'}
+                                                                {request.status === 'cancelled' ? 'Đã hủy' :
+                                                                    request.status === 'confirmed' ? 'Đã xác nhận' :
+                                                                        request.status === 'completed' ? 'Hoàn thành' : 'Đang chờ'}
                                                             </p>
                                                         </div>
 
@@ -697,7 +696,7 @@ export default function FieldOwnerDashboardPage() {
                                                                 {request.totalPrice?.toLocaleString('vi-VN')} ₫
                                                             </p>
                                                             {/* Hiển thị nút action dựa trên status */}
-                                                            {request.status === "pending" || (request as any).approvalStatus === "pending" ? (
+                                                            {request.status === "pending" && (request as any).approvalStatus === "pending" && request.transactionStatus !== 'succeeded' ? (
                                                                 <div className="flex space-x-2">
                                                                     <Button
                                                                         size="sm"
@@ -717,23 +716,12 @@ export default function FieldOwnerDashboardPage() {
                                                                         Từ chối
                                                                     </Button>
                                                                 </div>
-                                                            ) : request.status === "confirmed" || (request as any).approvalStatus === "approved" ? (
+                                                            ) : request.status === "confirmed" || request.status === "completed" || request.transactionStatus === 'succeeded' ? (
                                                                 <div className="flex space-x-2">
                                                                     <Button
                                                                         size="sm"
                                                                         variant="outline"
                                                                         className="border-blue-500 text-blue-500 hover:bg-blue-50"
-                                                                        onClick={() => handleViewDetails(request.bookingId)}
-                                                                    >
-                                                                        Xem chi tiết
-                                                                    </Button>
-                                                                </div>
-                                                            ) : request.status === "completed" ? (
-                                                                <div className="flex space-x-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="border-gray-500 text-gray-500 hover:bg-gray-50"
                                                                         onClick={() => handleViewDetails(request.bookingId)}
                                                                     >
                                                                         Xem chi tiết

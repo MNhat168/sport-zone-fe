@@ -32,8 +32,8 @@ export default function UserDashboardPage() {
     const dispatch = useAppDispatch()
     const bookingState = useAppSelector((state) => state?.booking)
     const authUser = useAppSelector((state) => state.auth.user)
-    const favouriteFields = useAppSelector((state) => (state as any)?.user?.favouriteFields)
-    const favouriteCoaches = useAppSelector((state) => (state as any)?.user?.favouriteCoaches)
+    const favouriteFields = useAppSelector((state) => state.user.favouriteFields)
+    const favouriteCoaches = useAppSelector((state) => (state as any).user.favouriteCoaches)
     const bookings = bookingState?.bookings || []
     const pagination = bookingState?.pagination || null
     const loadingBookings = bookingState?.loadingBookings || false
@@ -100,13 +100,19 @@ export default function UserDashboardPage() {
     }, [dispatch])
 
     // Fetch favourites when favourite tab changes (separate from bookings tab)
+    // Only fetch if user has role 'user' to avoid permission errors
     useEffect(() => {
+        if (authUser?.role !== 'user') {
+            // Skip fetching favourites for non-user roles (field_owner, coach, etc.)
+            return
+        }
+
         if (favouriteTab === 'court') {
             dispatch(getFavouriteFields())
         } else {
             dispatch(getFavouriteCoaches())
         }
-    }, [dispatch, favouriteTab])
+    }, [dispatch, favouriteTab, authUser?.role])
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -604,62 +610,65 @@ export default function UserDashboardPage() {
                                 </CardContent>
                             </Card> */}
 
-                            {/* My Favourites */}
-                            <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <div className="flex flex-col space-y-2">
-                                        <CardTitle className="text-start">Yêu thích của tôi</CardTitle>
-                                        <p className="text-sm text-muted-foreground text-start">{favouriteTab === 'court' ? 'Danh sách sân yêu thích của tôi' : 'Danh sách huấn luyện viên yêu thích của tôi'}</p>
-                                    </div>
-                                    <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
-                                        <Badge
-                                            variant={favouriteTab === 'court' ? 'default' : 'outline'}
-                                            className={`px-4 py-2 text-sm font-medium ${favouriteTab === 'court' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white'}`}
-                                            onClick={() => setFavouriteTab('court')}
-                                        >
-                                            Court
-                                        </Badge>
-                                        <Badge
-                                            variant={favouriteTab === 'coaching' ? 'default' : 'outline'}
-                                            className={`px-4 py-2 text-sm font-medium ${favouriteTab === 'coaching' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white'}`}
-                                            onClick={() => setFavouriteTab('coaching')}
-                                        >
-                                            Coaching
-                                        </Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="border-t border-gray-100 pt-4">
-                                        {(
-                                            favouriteTab === 'court'
-                                                ? (Array.isArray(favouriteFields) && favouriteFields.length > 0 ? favouriteFields : mockFavorites)
-                                                : (Array.isArray(favouriteCoaches) && favouriteCoaches.length > 0 ? favouriteCoaches : mockFavorites)
-                                        ).map((favorite: any, index: number) => (
-                                            <div key={favorite.id || `favorite-${index}`}>
-                                                <div className="flex items-center gap-3 p-3 rounded-lg">
-                                                    {favorite.avatar ? (
-                                                        <img src={favorite.avatar} alt={favorite.name} className="w-8 h-8 rounded-lg object-cover" />
-                                                    ) : (
-                                                        <div className={`w-8 h-8 bg-linear-to-br ${favorite.color || 'from-gray-500 to-gray-600'} rounded-lg flex items-center justify-center`}>
-                                                            <span className="text-white font-semibold text-xs">
-                                                                {(favorite.name || '').split(" ").map((w: string) => w[0]).join("")}
-                                                            </span>
+
+                            {/* My Favourites - Only show for users with role 'user' */}
+                            {authUser?.role === 'user' && (
+                                <Card className="bg-white rounded-xl p-6 shadow-lg border-0">
+                                    <CardHeader className="flex flex-row items-center justify-between">
+                                        <div className="flex flex-col space-y-2">
+                                            <CardTitle className="text-start">Yêu thích của tôi</CardTitle>
+                                            <p className="text-sm text-muted-foreground text-start">{favouriteTab === 'court' ? 'Danh sách sân yêu thích của tôi' : 'Danh sách huấn luyện viên yêu thích của tôi'}</p>
+                                        </div>
+                                        <div className="flex gap-2 bg-gray-100 rounded-lg p-2">
+                                            <Badge
+                                                variant={favouriteTab === 'court' ? 'default' : 'outline'}
+                                                className={`px-4 py-2 text-sm font-medium ${favouriteTab === 'court' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white'}`}
+                                                onClick={() => setFavouriteTab('court')}
+                                            >
+                                                Court
+                                            </Badge>
+                                            <Badge
+                                                variant={favouriteTab === 'coaching' ? 'default' : 'outline'}
+                                                className={`px-4 py-2 text-sm font-medium ${favouriteTab === 'coaching' ? 'bg-green-600' : 'border-0 bg-transparent hover:bg-black hover:text-white'}`}
+                                                onClick={() => setFavouriteTab('coaching')}
+                                            >
+                                                Coaching
+                                            </Badge>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="border-t border-gray-100 pt-4">
+                                            {(
+                                                favouriteTab === 'court'
+                                                    ? (Array.isArray(favouriteFields) && favouriteFields.length > 0 ? favouriteFields : mockFavorites)
+                                                    : (Array.isArray(favouriteCoaches) && favouriteCoaches.length > 0 ? favouriteCoaches : mockFavorites)
+                                            ).map((favorite: any, index: number) => (
+                                                <div key={favorite.id || `favorite-${index}`}>
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg">
+                                                        {favorite.avatar ? (
+                                                            <img src={favorite.avatar} alt={favorite.name} className="w-8 h-8 rounded-lg object-cover" />
+                                                        ) : (
+                                                            <div className={`w-8 h-8 bg-linear-to-br ${favorite.color || 'from-gray-500 to-gray-600'} rounded-lg flex items-center justify-center`}>
+                                                                <span className="text-white font-semibold text-xs">
+                                                                    {(favorite.name || '').split(" ").map((w: string) => w[0]).join("")}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 text-start">
+                                                            <p className="font-medium text-sm">{favorite.name}</p>
+                                                            <p className="text-xs text-muted-foreground">{favorite.totalBookings !== undefined ? `${favorite.totalBookings} bookings` : favorite.bookings}</p>
                                                         </div>
-                                                    )}
-                                                    <div className="flex-1 text-start">
-                                                        <p className="font-medium text-sm">{favorite.name}</p>
-                                                        <p className="text-xs text-muted-foreground">{favorite.totalBookings !== undefined ? `${favorite.totalBookings} bookings` : favorite.bookings}</p>
+                                                        <button onClick={() => navigate(favouriteTab === 'court' ? `/fields/${favorite.id || favorite._id}` : `/coach/${favorite.id || favorite._id}`)}>
+                                                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                                        </button>
                                                     </div>
-                                                    <button onClick={() => navigate(favouriteTab === 'court' ? `/fields/${favorite.id || favorite._id}` : `/coach/${favorite.id || favorite._id}`)}>
-                                                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                                                    </button>
+                                                    {index < 2 && <div className="border-t border-gray-100 mx-3" />}
                                                 </div>
-                                                {index < 2 && <div className="border-t border-gray-100 mx-3" />}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                     </div>
 

@@ -60,7 +60,9 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
     const coachTotal = coachData.pricePerHour * coachHours;
 
     // Grand total
-    const grandTotal = fieldTotal + coachTotal;
+    const subTotal = fieldTotal + coachTotal;
+    const systemFee = Math.round(subTotal * 0.05);
+    const grandTotal = subTotal + systemFee;
 
     return (
         <div className="flex flex-col items-center justify-center w-full max-w-5xl mx-auto py-8 px-4">
@@ -287,7 +289,7 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                                 {formatVND(grandTotal)}
                             </p>
                         </div>
-                        <div className="flex gap-8 text-right">
+                        <div className="flex gap-8 text-right flex-wrap justify-end">
                             <div className="space-y-1">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase">Sân</p>
                                 <p className="text-lg font-bold text-foreground">{formatVND(fieldTotal)}</p>
@@ -295,6 +297,10 @@ export const CombinedConfirmation = ({ fieldData, coachData, onContinue, onBack 
                             <div className="space-y-1">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase">HLV</p>
                                 <p className="text-lg font-bold text-foreground">{formatVND(coachTotal)}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase">Phí dịch vụ (5%)</p>
+                                <p className="text-lg font-bold text-primary">{formatVND(systemFee)}</p>
                             </div>
                         </div>
                     </div>

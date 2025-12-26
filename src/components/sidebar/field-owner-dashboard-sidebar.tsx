@@ -19,7 +19,6 @@ import {
     LayoutDashboard,
     Plus,
     List,
-    MessageSquare,
     FileText,
     Wallet,
     User,
@@ -77,11 +76,6 @@ const menuItems: MenuItem[] = [
         icon: Trophy,
     },
     {
-        title: "Chat",
-        url: "/field-owner/chat",
-        icon: MessageSquare,
-    },
-    {
         title: "Doanh thu",
         url: "/field-owner/revenue",
         icon: FileText,
@@ -112,9 +106,7 @@ const fieldCreateTabs = [
 
 const bookingHistoryTabs = [
     { id: 'pending', label: 'Đang Chờ' },
-    { id: 'processing', label: 'Đang Xử Lý' },
     { id: 'succeeded', label: 'Thành Công' },
-    { id: 'failed', label: 'Thất Bại' },
     { id: 'cancelled', label: 'Đã Hủy' },
     { id: 'refunded', label: 'Đã Hoàn Tiền' }
 ]

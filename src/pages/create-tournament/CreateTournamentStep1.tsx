@@ -62,7 +62,6 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext, next
         formData.tournamentDate ? new Date(formData.tournamentDate) : undefined
     )
     const [showTimeDialog, setShowTimeDialog] = useState<boolean>(false)
-    const [selectedTimeType, setSelectedTimeType] = useState<"start" | "end">("start")
     const [startTime, setStartTime] = useState<Time>({ hours: 8, minutes: 0 })
     const [endTime, setEndTime] = useState<Time>({ hours: 17, minutes: 0 })
 
@@ -170,7 +169,6 @@ export default function CreateTournamentStep1({ formData, onUpdate, onNext, next
 
         setStartTime({ hours: startHours, minutes: startMinutes })
         setEndTime({ hours: endHours, minutes: endMinutes })
-        setSelectedTimeType("start")
         setShowTimeDialog(true)
     }
 

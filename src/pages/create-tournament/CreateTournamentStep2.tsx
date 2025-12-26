@@ -13,9 +13,10 @@ import {
     Search,
     Filter,
     ChevronRight,
-    ChevronLeft,
     Star,
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Loading } from "@/components/ui/loading";
 import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { fetchAvailableCourts } from '@/features/tournament/tournamentThunk';
@@ -23,6 +24,7 @@ import { SPORT_RULES_MAP, SportType } from '../../../src/components/enums/ENUMS'
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { VIETNAM_CITIES, RATING_OPTIONS } from '@/utils/constant-value/constant';
 
 interface Step2Props {
     formData: any;
@@ -41,6 +43,7 @@ interface Court {
     field: {
         _id: string;
         name: string;
+        sportType: string;
         location: {
             address: string;
             district?: string;
@@ -61,12 +64,9 @@ interface Court {
             close: string;
         };
     };
-    pricingOverride?: {
-        basePrice?: number;
-    };
     isActive?: boolean;
-    basePrice?: number;
     status?: 'available' | 'reserved' | 'maintenance';
+    basePrice?: number;
 }
 
 export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBack, nextTrigger, backTrigger }: Step2Props) {
@@ -78,9 +78,12 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
 
     const [selectedCourts, setSelectedCourts] = useState<string[]>(formData.selectedCourtIds || []);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    // UI State for animations
     const [searchLocation, setSearchLocation] = useState<string>(formData.location || '');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
+    const [selectedCity, setSelectedCity] = useState<string>('all');
+    const [minRating, setMinRating] = useState<string>('0');
     const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
     const [subStep, setSubStep] = useState<number>(0); // 0: Search Fields, 1: Pick Courts
     const [direction, setDirection] = useState<number>(1);
@@ -192,16 +195,46 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
         return acc;
     }, {} as Record<string, { field: any; courts: Court[] }>);
 
+    // Helper function to extract city from address string
+    const extractCityFromAddress = (address: string): string | null => {
+        if (!address) return null;
+        const parts = address.split(',').map(s => s.trim());
+
+        // Find which part matches with VIETNAM_CITIES
+        for (const part of parts) {
+            const matchedCity = VIETNAM_CITIES.find(city =>
+                part.includes(city) || city.includes(part)
+            );
+            if (matchedCity) return matchedCity;
+        }
+        return null;
+    };
+
     // Filter fields based on search and price range
-    const filteredFields = Object.entries(courtsByField).filter(([_, { field }]) => {
+    const handlePriceRangeChange = (min: number, max: number) => {
+        setPriceRange([min, max]);
+    };
+
+    const filteredFields = Object.entries(courtsByField).filter(([, { field }]) => {
+        // Search query filter
         const matchesSearch = !searchQuery ||
             field.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             field.location.address.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const basePrice = field.basePrice || 100000;
+        // Price range filter
+        // We use field base price since pricingOverride is removed
+        const basePrice = field.basePrice || 0;
         const matchesPrice = basePrice >= priceRange[0] && basePrice <= priceRange[1];
 
-        return matchesSearch && matchesPrice;
+        // City filter - extract city from address string and match
+        const fieldCity = extractCityFromAddress(field.location.address || '');
+        const matchesCity = selectedCity === 'all' || fieldCity === selectedCity;
+
+        // Rating filter
+        const matchesRating = minRating === '0' ||
+            (field.rating && field.rating >= Number(minRating));
+
+        return matchesSearch && matchesPrice && matchesCity && matchesRating;
     });
 
     const selectedField = selectedFieldId ? courtsByField[selectedFieldId] : null;
@@ -234,7 +267,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
         const selected = safeAvailableCourts.filter(c => selectedCourts.includes(c._id));
         const hours = calculateHours(formData.startTime, formData.endTime);
         return selected.reduce((sum, court) => {
-            const basePrice = court.pricingOverride?.basePrice || court.basePrice || court.field?.basePrice || 0;
+            const basePrice = court.field?.basePrice || 0;
             return sum + (basePrice * hours);
         }, 0);
     };
@@ -271,6 +304,8 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
         return Object.keys(newErrors).length === 0;
     };
 
+
+
     const handleNext = () => {
         if (validate()) {
             onUpdate({
@@ -288,9 +323,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
         }
     };
 
-    const handlePriceRangeChange = (min: number, max: number) => {
-        setPriceRange([min, max]);
-    };
+
 
     const hours = calculateHours(formData.startTime, formData.endTime);
 
@@ -392,6 +425,37 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                                         </Badge>
                                                     ))}
                                                 </div>
+                                            </div>
+
+                                            {/* City/Province Filter */}
+                                            <div className="space-y-2">
+                                                <Label className="text-sm">Tỉnh/Thành phố</Label>
+                                                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                                                    <SelectTrigger className="bg-gray-50">
+                                                        <SelectValue placeholder="Chọn tỉnh thành" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="max-h-64">
+                                                        <SelectItem value="all">Tất cả tỉnh thành</SelectItem>
+                                                        {VIETNAM_CITIES.map(city => (
+                                                            <SelectItem key={city} value={city}>{city}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {/* Rating Filter */}
+                                            <div className="space-y-2">
+                                                <Label className="text-sm">Đánh giá tối thiểu</Label>
+                                                <Select value={minRating} onValueChange={setMinRating}>
+                                                    <SelectTrigger className="bg-gray-50">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {RATING_OPTIONS.map(opt => (
+                                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -563,7 +627,7 @@ export default function CreateTournamentStep2({ formData, onUpdate, onNext, onBa
                                     <div className="lg:w-2/3 space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {selectedField.courts.map((court) => {
-                                                const basePrice = court.pricingOverride?.basePrice || court.basePrice || court.field?.basePrice || 0;
+                                                const basePrice = court.field?.basePrice || 0;
                                                 const courtTotal = basePrice * hours;
                                                 const isSelected = selectedCourts.includes(court._id);
 

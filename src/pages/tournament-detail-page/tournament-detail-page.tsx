@@ -1096,7 +1096,7 @@ export default function TournamentDetailsPage() {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {tournament.participants.map((participant, index) => (
                                   <motion.div
-                                    key={participant._id || index}
+                                    key={(participant as any)._id || index}
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: index * 0.05 }}
@@ -1125,7 +1125,7 @@ export default function TournamentDetailsPage() {
                                                 Solo Player
                                               </Badge>
                                               <span className="text-[10px] text-gray-400 font-medium">
-                                                Joined {new Date(participant.registrationDate).toLocaleDateString()}
+                                                Joined {formatDate((participant as any).registrationDate)}
                                               </span>
                                             </div>
                                           </div>

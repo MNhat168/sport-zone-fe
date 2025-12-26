@@ -38,6 +38,7 @@ const BookingPage = () => {
             totalReviews: coach.totalReviews || 0,
             price: coach.hourlyRate ? `${coach.hourlyRate.toLocaleString('vi-VN')}đ/giờ` : '0đ/giờ',
             nextAvailability: null, // Not available in current API
+            avatarUrl: coach.avatarUrl,
         }))
     }, [coachesData])
 
@@ -360,6 +361,7 @@ const BookingPage = () => {
                                                 reviews={coach.totalReviews}
                                                 price={coach.price}
                                                 nextAvailability={coach.nextAvailability ?? ''}
+                                                avatarUrl={coach.avatarUrl}
                                             />
 
                                         </div>

@@ -172,12 +172,23 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
                                 >
                                     <CardContent className="p-6">
                                         <div className="flex gap-4">
-                                            {coach.avatarUrl && (
+                                            {coach.avatarUrl ? (
                                                 <img
                                                     src={coach.avatarUrl}
                                                     alt={coach.fullName}
                                                     className="w-16 h-16 rounded-full object-cover border-2 border-emerald-100"
+                                                    onError={(e) => {
+                                                        const target = e.target as HTMLImageElement;
+                                                        target.onerror = null; // Prevent infinite loop
+                                                        target.src = "https://github.com/shadcn.png"; // Fallback image
+                                                    }}
                                                 />
+                                            ) : (
+                                                <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center border-2 border-emerald-100">
+                                                    <span className="text-xl font-bold text-slate-500">
+                                                        {coach.fullName.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
                                             )}
                                             <div className="flex-1">
                                                 <h3 className="text-lg font-semibold text-[#1a1a1a] mb-1 group-hover:text-emerald-600 transition-colors">

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
+import { useAuth } from "@/routes/auth-wrapper";
 
 // Import field booking components
 import { BookCourtTab } from "../field-booking-page/fieldTabs/bookCourt";
@@ -67,6 +68,7 @@ const FieldCoachBookingPage = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const currentField = useAppSelector((state) => state.field.currentField);
+    const { isAuthenticated } = useAuth();
 
     const [currentStep, setCurrentStep] = useState<CombinedBookingStep>(CombinedBookingStep.FIELD_LIST);
     const [courts, setCourts] = useState<Array<{ id: string; name: string; courtNumber?: number }>>([]);
@@ -362,7 +364,13 @@ const FieldCoachBookingPage = () => {
                                         Về trang chủ
                                     </button>
                                     <button
-                                        onClick={() => navigate('/user/bookings')}
+                                        onClick={() => {
+                                            if (!isAuthenticated) {
+                                                toast.error('Vui lòng đăng nhập để xem lịch sử đặt sân');
+                                                return;
+                                            }
+                                            navigate('/user-booking-history');
+                                        }}
                                         className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
                                     >
                                         Xem lịch sử đặt sân

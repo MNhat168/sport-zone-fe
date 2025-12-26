@@ -11,3 +11,4 @@ export const VALIDATE_SESSION_API = `${BASE_URL}/auth/validate`;
 export const FORGOT_PASSWORD_API = `${BASE_URL}/auth/forgot-password`;
 export const RESET_PASSWORD_API = `${BASE_URL}/auth/reset-password`;
 export const CHANGE_PASSWORD_API = `${BASE_URL}/users/change-password`;
+export const DEACTIVATE_ACCOUNT_API = `${BASE_URL}/users/deactivate`;

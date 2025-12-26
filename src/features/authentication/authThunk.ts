@@ -155,7 +155,7 @@ export const refreshToken = createAsyncThunk<
 });
 
 import type { ForgotPasswordPayload, ResetPasswordPayload, ChangePasswordPayload } from "../../types/user-type";
-import { FORGOT_PASSWORD_API, RESET_PASSWORD_API, CHANGE_PASSWORD_API } from "./authAPI";
+import { FORGOT_PASSWORD_API, RESET_PASSWORD_API, CHANGE_PASSWORD_API, DEACTIVATE_ACCOUNT_API } from "./authAPI";
 
 // Forgot password
 export const forgotPassword = createAsyncThunk<
@@ -205,6 +205,24 @@ export const changePassword = createAsyncThunk<
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
             message: error.response?.data?.message || error.message || "Failed to change password",
+            status: error.response?.status || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+// Deactivate account
+export const deactivateAccount = createAsyncThunk<
+    { message: string },
+    void,
+    { rejectValue: ErrorResponse }
+>("auth/deactivateAccount", async (_, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.patch(DEACTIVATE_ACCOUNT_API);
+        return response.data;
+    } catch (error: any) {
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to deactivate account",
             status: error.response?.status || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

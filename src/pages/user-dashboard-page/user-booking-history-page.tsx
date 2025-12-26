@@ -6,12 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MoreHorizontal } from "lucide-react"
+import { Search } from "lucide-react"
 import { UserDashboardTabs } from "@/components/tabs/user-dashboard-tabs"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { UserDashboardHeader } from "@/components/header/user-dashboard-header"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import { Loading } from "@/components/ui/loading"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useAppSelector, useAppDispatch } from "../../store/hook"
 import { getMyBookings, cancelFieldBooking } from "../../features/booking/bookingThunk"
 import type { Booking } from "../../types/booking-type"
@@ -35,6 +45,11 @@ export default function UserBookingsPage() {
   const [pageSize, setPageSize] = useState(10)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [confirmState, setConfirmState] = useState<{ open: boolean; action: 'cancel' | null; bookingId: string | null }>({
+    open: false,
+    action: null,
+    bookingId: null
+  })
 
   // Load bookings when component mounts and when filters change
   useEffect(() => {
@@ -145,26 +160,38 @@ export default function UserBookingsPage() {
     return typeof court === 'string' ? court : court?._id
   }
 
-  const handleCancelBooking = async (bookingId: string) => {
-    try {
-      const booking = bookings.find((b) => b._id === bookingId)
-      const courtId = getCourtIdFromBooking(booking)
+  const handleCancelBooking = (bookingId: string) => {
+    setConfirmState({ open: true, action: 'cancel', bookingId })
+  }
 
-      await dispatch(
-        cancelFieldBooking({
-          id: bookingId,
-          payload: courtId ? { courtId } : undefined,
-        })
-      ).unwrap()
-      // Refresh bookings after cancellation
-      dispatch(getMyBookings({
-        page: currentPage,
-        limit: pageSize,
-        status: activeTab,
-        type: viewType === "courts" ? "field" : "coach"
-      }))
+  const handleConfirmAction = async () => {
+    const { action, bookingId } = confirmState
+    if (!bookingId || !action) return
+
+    try {
+      if (action === 'cancel') {
+        const booking = bookings.find((b) => b._id === bookingId)
+        const courtId = getCourtIdFromBooking(booking)
+
+        await dispatch(
+          cancelFieldBooking({
+            id: bookingId,
+            payload: courtId ? { courtId } : undefined,
+          })
+        ).unwrap()
+
+        // Refresh bookings after cancellation
+        dispatch(getMyBookings({
+          page: currentPage,
+          limit: pageSize,
+          status: activeTab,
+          type: viewType === "courts" ? "field" : "coach"
+        }))
+      }
     } catch (error) {
-      console.error('Failed to cancel booking:', error)
+      console.error('Failed to perform action:', error)
+    } finally {
+      setConfirmState({ open: false, action: null, bookingId: null })
     }
   }
 
@@ -317,14 +344,14 @@ export default function UserBookingsPage() {
                         <th className="text-left py-4 px-2 font-medium text-gray-700">Thanh toán</th>
                         <th className="text-left py-4 px-2 font-medium text-gray-700">Trạng thái</th>
                         <th className="text-left py-4 px-2 font-medium text-gray-700">Chi tiết</th>
-                        <th className="text-left py-4 px-2 font-medium text-gray-700">Chat</th>
-                        <th className="text-left py-4 px-2 font-medium text-gray-700">Thêm</th>
+
+                        <th className="text-left py-4 px-2 font-medium text-gray-700">Hành động</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loadingBookings ? (
                         <tr>
-                          <td colSpan={7} className="py-8 text-center">
+                          <td colSpan={6} className="py-8 text-center">
                             <div className="flex flex-col items-center justify-center gap-3">
                               <Loading size={32} />
                               <div className="text-gray-500">Đang tải...</div>
@@ -333,13 +360,13 @@ export default function UserBookingsPage() {
                         </tr>
                       ) : error ? (
                         <tr>
-                          <td colSpan={7} className="py-8 text-center">
+                          <td colSpan={6} className="py-8 text-center">
                             <div className="text-red-600">Lỗi: {error.message}</div>
                           </td>
                         </tr>
                       ) : bookings.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="py-8 text-center">
+                          <td colSpan={6} className="py-8 text-center">
                             <div className="text-gray-500">Không có booking nào</div>
                           </td>
                         </tr>
@@ -387,24 +414,18 @@ export default function UserBookingsPage() {
                                   👁 Xem chi tiết
                                 </Button>
                               </td>
+
                               <td className="py-4 px-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="hover:bg-blue-500 hover:text-white transition-all duration-200 text-blue-500"
-                                >
-                                  💬 Trò chuyện
-                                </Button>
-                              </td>
-                              <td className="py-4 px-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="hover:bg-gray-100 transition-colors"
-                                  onClick={() => handleCancelBooking(booking._id)}
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
+                                {['pending', 'confirmed'].includes(booking.status.toLowerCase()) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="hover:bg-red-50 hover:text-red-600 transition-colors text-red-500"
+                                    onClick={() => handleCancelBooking(booking._id)}
+                                  >
+                                    Hủy
+                                  </Button>
+                                )}
                               </td>
                             </tr>
                           )
@@ -469,6 +490,26 @@ export default function UserBookingsPage() {
         onClose={handleCloseDetailModal}
         booking={selectedBooking}
       />
+
+      <AlertDialog open={confirmState.open} onOpenChange={(open) => !open && setConfirmState(prev => ({ ...prev, open: false }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận hủy đặt sân</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Bạn có chắc chắn muốn hủy đặt sân này không? Hành động này không thể hoàn tác.</p>
+              <p className="text-sm text-yellow-600 font-medium bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                Lưu ý: Bạn chỉ được hoàn tiền từ chủ sân / huấn luyện viên khi hủy đặt trước 12h tính từ thời điểm bắt đầu slot bạn đặt.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Đóng</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAction} className="bg-red-600 hover:bg-red-700 text-white">
+              Xác nhận hủy
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

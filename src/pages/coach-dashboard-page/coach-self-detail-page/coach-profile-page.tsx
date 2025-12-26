@@ -95,7 +95,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
 
   for (const candidate of candidates) {
     try {
-      const url = `${NOMINATIM_BASE_URL}?format=jsonv2&limit=5&addressdetails=1&countrycodes=vn&q=${encodeURIComponent(candidate)}`;
+      const url = `${NOMINATIM_BASE_URL}?format=jsonv2&limit=5&addressdetails=1&countrycodes=vn&accept-language=vi&q=${encodeURIComponent(candidate)}`;
       const response = await fetch(url, {
         headers: { 'Accept': 'application/json' }
       });
@@ -125,7 +125,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
 
 const reverseGeocode = async (lat: number, lon: number): Promise<string | null> => {
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=vi`;
     const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) return null;
     const data = await res.json();

@@ -13,38 +13,34 @@ export function UserDashboardHeader() {
         switch (pathname) {
             case "/user-dashboard":
                 return {
-                    title: "User Dashboard",
-                    breadcrumb: ["Home", "User Dashboard"]
+                    title: "Bảng điều khiển",
+                    breadcrumb: ["Trang chủ", "Bảng điều khiển"]
                 }
             case "/user-booking-history":
                 return {
-                    title: "My Bookings",
-                    breadcrumb: ["Home", "User Dashboard", "My Bookings"]
+                    title: "Lịch sử đặt sân",
+                    breadcrumb: ["Trang chủ", "Bảng điều khiển", "Lịch sử đặt sân"]
                 }
             case "/user-invoices":
                 return {
-                    title: "Invoices",
-                    breadcrumb: ["Home", "User Dashboard", "Invoices"]
+                    title: "Hóa đơn",
+                    breadcrumb: ["Trang chủ", "Bảng điều khiển", "Hóa đơn"]
                 }
             case "/user-tournaments":
                 return {
-                    title: "Tournaments",
-                    breadcrumb: ["Home", "User Dashboard", "Tournaments"]
+                    title: "Giải đấu",
+                    breadcrumb: ["Trang chủ", "Bảng điều khiển", "Giải đấu"]
                 }
-            case "/user-wallet":
-                return {
-                    title: "Wallet",
-                    breadcrumb: ["Home", "User Dashboard", "Wallet"]
-                }
+
             case "/user-profile":
                 return {
-                    title: "Profile Settings",
-                    breadcrumb: ["Home", "User Dashboard", "Profile Settings"]
+                    title: "Cài đặt tài khoản",
+                    breadcrumb: ["Trang chủ", "Bảng điều khiển", "Cài đặt tài khoản"]
                 }
             default:
                 return {
-                    title: "User Dashboard",
-                    breadcrumb: ["Home", "User Dashboard"]
+                    title: "Bảng điều khiển",
+                    breadcrumb: ["Trang chủ", "Bảng điều khiển"]
                 }
         }
     }

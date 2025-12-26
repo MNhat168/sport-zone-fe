@@ -27,14 +27,14 @@ export const UserSyncProvider = ({ children }: { children: React.ReactNode }) =>
             );
 
             if (hasStoredUser) {
-                console.log("🔐 Validating session on app init...");
+
                 try {
                     await dispatch(validateSession()).unwrap();
-                    console.log("✅ Session is valid");
+
                     // Fetch full profile to ensure fields like favouriteSports are populated
                     try {
                         await dispatch(getUserProfile() as any).unwrap();
-                        console.log("✅ Fetched full user profile");
+
                     } catch (err) {
                         console.warn("⚠️ Failed to fetch full user profile after session validation", err);
                     }

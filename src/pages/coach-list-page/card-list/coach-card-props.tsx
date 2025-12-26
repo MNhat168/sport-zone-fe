@@ -26,6 +26,7 @@ interface CoachCardProps {
     reviews: number;
     price: string;
     nextAvailability: string;
+    avatarUrl?: string;
 }
 
 const CoachCard: React.FC<CoachCardProps> = ({
@@ -37,6 +38,7 @@ const CoachCard: React.FC<CoachCardProps> = ({
     reviews,
     price,
     nextAvailability,
+    avatarUrl,
 }) => {
     const navigate = useNavigate();
 
@@ -54,15 +56,25 @@ const CoachCard: React.FC<CoachCardProps> = ({
         >
             <div className="flex">
                 {/* Avatar section */}
-                <div className="relative w-32 h-32 flex-shrink-0">
-                    <img
-                        src="/placeholder-avatar.jpg"
-                        alt={`${name}'s avatar`}
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                        Professional
-                    </div>
+                <div className="relative w-32 h-36 flex-shrink-0 rounded-lg overflow-hidden">
+                    {avatarUrl ? (
+                        <img
+                            src={avatarUrl}
+                            alt={`${name}'s avatar`}
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null;
+                                target.src = "https://github.com/shadcn.png";
+                            }}
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-slate-200 flex items-center justify-center rounded-lg">
+                            <span className="text-3xl font-bold text-slate-500">
+                                {name.charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                    )}
                 </div>
                 {/* Content section */}
                 <CardContent className="p-4 flex-1">
@@ -71,8 +83,7 @@ const CoachCard: React.FC<CoachCardProps> = ({
                             <h3 className="text-xl font-bold mb-1">{name}</h3>
                             <p className="text-gray-600 text-sm mb-1">{location}</p>
                         </div>
-                        <div className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
-                            From {price}
+                        <div className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">{price}
                         </div>
                     </div>
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2 text-left">{description}</p>

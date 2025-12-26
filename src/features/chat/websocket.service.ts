@@ -8,13 +8,10 @@ class WebSocketService {
   private isConnecting = false;
 
   connect() {
-    console.log('🔌 [WebSocketService] connect() called', {
-      alreadyConnected: this.socket?.connected,
-      isConnecting: this.isConnecting,
-    });
+
 
     if (this.socket?.connected) {
-      console.log('⏭️ [WebSocketService] Already connected, skipping');
+
       return;
     }
 
@@ -25,7 +22,7 @@ class WebSocketService {
     }
 
     if (this.isConnecting) {
-      console.log('⏭️ [WebSocketService] Already connecting, skipping');
+
       return;
     }
 
@@ -44,7 +41,7 @@ class WebSocketService {
       return;
     }
 
-    console.log('🔌 [WebSocketService] Initiating connection...', { userId });
+
 
     this.isConnecting = true;
 
@@ -66,13 +63,13 @@ class WebSocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("✅ [WebSocketService] Socket connected successfully");
+
       store.dispatch(setConnected(true));
       this.isConnecting = false;
     });
 
-    this.socket.on("disconnect", (reason) => {
-      console.log("🔌 [WebSocketService] Socket disconnected:", reason);
+    this.socket.on("disconnect", () => {
+
       store.dispatch(setConnected(false));
       this.isConnecting = false;
     });
@@ -84,14 +81,7 @@ class WebSocketService {
 
     // Listen for messages
     this.socket.on("new_message", (data) => {
-      console.log('📨 [WebSocket] Received new_message event:', {
-        chatRoomId: data.chatRoomId,
-        chatRoomObjectId: data.chatRoom?._id,
-        messageContent: data.message?.content?.substring(0, 30),
-        sender: data.message?.sender,
-        hasFieldOwner: !!data.chatRoom?.fieldOwner,
-        hasCoach: !!data.chatRoom?.coach,
-      });
+
       store.dispatch(addMessage(data));
     });
 
@@ -99,9 +89,9 @@ class WebSocketService {
       store.dispatch(setTyping(data));
     });
 
-    this.socket.on("messages_read", (data) => {
+    this.socket.on("messages_read", () => {
       // Handle read receipt
-      console.log("Messages read by:", data.userId);
+
     });
 
     this.socket.on("message_notification", (data) => {
@@ -116,7 +106,7 @@ class WebSocketService {
   }
 
   disconnect() {
-    console.log('🔌 [WebSocketService] Disconnecting socket...');
+
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
@@ -127,7 +117,7 @@ class WebSocketService {
 
   // Force reset for logout
   reset() {
-    console.log('🔄 [WebSocketService] Resetting service on logout');
+
     this.disconnect();
     this.socket = null;
     this.isConnecting = false;
@@ -135,7 +125,7 @@ class WebSocketService {
 
   joinChatRoom(chatRoomId: string) {
     if (this.socket?.connected) {
-      console.log('🔗 [WebSocketService] Joining chat room:', chatRoomId);
+
       this.socket.emit("join_chat", { chatRoomId });
     } else {
       console.warn('⚠️ [WebSocketService] Cannot join room - socket not connected');
@@ -144,7 +134,7 @@ class WebSocketService {
 
   leaveChatRoom(chatRoomId: string) {
     if (this.socket?.connected) {
-      console.log('🚪 [WebSocketService] Leaving chat room:', chatRoomId);
+
       this.socket.emit("leave_chat", { chatRoomId });
     } else {
       console.warn('⚠️ [WebSocketService] Cannot leave room - socket not connected');
@@ -176,15 +166,10 @@ class WebSocketService {
   }
 
   sendMessageToRoom(chatRoomId: string, content: string, type: string = "text", attachments?: string[]) {
-    console.log('📤 [WebSocketService] sendMessageToRoom called', {
-      chatRoomId,
-      contentLength: content?.length,
-      isConnected: this.socket?.connected,
-      hasSocket: !!this.socket,
-    });
+
 
     if (this.socket?.connected) {
-      console.log('✅ [WebSocketService] Emitting send_message_to_room event');
+
       this.socket.emit("send_message_to_room", { chatRoomId, content, type, attachments });
     } else {
       console.error('❌ [WebSocketService] Socket not connected!', {

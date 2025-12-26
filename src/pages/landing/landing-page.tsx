@@ -21,6 +21,7 @@ const Link = ({ href, children, ...props }: any) => (
 );
 import { NavbarComponent } from "@/components/header/navbar-component";
 import { FooterComponent } from "@/components/footer/footer-component";
+import { SPORT_TYPE_OPTIONS } from "@/utils/constant-value/constant";
 
 export default function LandingPage() {
   const [selectedSport, setSelectedSport] = useState("");
@@ -35,6 +36,22 @@ export default function LandingPage() {
     "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757855604/badminton-banner-with-rackets-shuttlecock-blue-background-with-copy-space_l9libr.jpg",
     "https://res.cloudinary.com/dvcpy4kmm/image/upload/v1757855542/93333608_10047006_jgl1tk.jpg",
   ];
+
+  const [gridImages, setGridImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    const images = [
+      "/landing.img/field_banner.jpeg",
+      "/landing.img/login_banner.jpeg",
+      "/landing.img/login_banner_1.jpg",
+      "/landing.img/login_banner_2.jpg",
+      "/landing.img/sport_banner.jpeg",
+      "/landing.img/sport_banner_2.jpg",
+    ];
+    // Generate 10 random images
+    const randomPicks = Array.from({ length: 10 }, () => images[Math.floor(Math.random() * images.length)]);
+    setGridImages(randomPicks);
+  }, []);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -95,11 +112,10 @@ export default function LandingPage() {
           {slideImages.map((image, index) => (
             <div
               key={index}
-              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ${
-                index === currentSlide
-                  ? "opacity-100 scale-100"
-                  : "opacity-0 scale-110"
-              }`}
+              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ${index === currentSlide
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-110"
+                }`}
               style={{
                 backgroundImage: `url(${image})`,
               }}
@@ -137,11 +153,10 @@ export default function LandingPage() {
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                index === currentSlide
-                  ? "bg-white scale-125 w-8"
-                  : "bg-white/50 hover:bg-white/75 hover:scale-110"
-              }`}
+              className={`w-3 h-3 rounded-full transition-all duration-500 ${index === currentSlide
+                ? "bg-white scale-125 w-8"
+                : "bg-white/50 hover:bg-white/75 hover:scale-110"
+                }`}
             />
           ))}
         </div>
@@ -152,11 +167,10 @@ export default function LandingPage() {
           <div
             id="search-header"
             data-animate
-            className={`text-center mb-6 transition-all duration-700 ${
-              isVisible["search-header"]
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-10"
-            }`}
+            className={`text-center mb-6 transition-all duration-700 ${isVisible["search-header"]
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-10"
+              }`}
           >
             <h2 className="text-3xl font-bold text-gray-900 mb-2 animate-text-shimmer">
               Tìm Sân Của Bạn
@@ -169,11 +183,10 @@ export default function LandingPage() {
           <div
             id="search-card"
             data-animate
-            className={`bg-white rounded-lg shadow-lg p-6 hover:shadow-2xl transition-all duration-500 ${
-              isVisible["search-card"]
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-95"
-            }`}
+            className={`bg-white rounded-lg shadow-lg p-6 hover:shadow-2xl transition-all duration-500 ${isVisible["search-card"]
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95"
+              }`}
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
               <div className="flex flex-col items-center md:col-span-1 transform hover:scale-105 transition-transform">
@@ -201,11 +214,11 @@ export default function LandingPage() {
                       <SelectValue placeholder="Chọn môn" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Tất cả</SelectItem>
-                      <SelectItem value="football">Bóng đá</SelectItem>
-                      <SelectItem value="tennis">Quần vợt</SelectItem>
-                      <SelectItem value="badminton">Cầu lông</SelectItem>
-                      <SelectItem value="basketball">Bóng rổ</SelectItem>
+                      {SPORT_TYPE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -250,16 +263,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-br from-green-50 via-blue-50 to-teal-50">
+      <section className="py-16 bg-gradient-to-br from-green-50 via-white to-green-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             id="tournament-header"
             data-animate
-            className={`text-center mb-12 transition-all duration-700 ${
-              isVisible["tournament-header"]
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-10"
-            }`}
+            className={`text-center mb-12 transition-all duration-700 ${isVisible["tournament-header"]
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-10"
+              }`}
           >
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Tổ Chức Giải Đấu Của Riêng Bạn
@@ -273,11 +285,10 @@ export default function LandingPage() {
             <div
               id="tournament-left"
               data-animate
-              className={`transition-all duration-700 ${
-                isVisible["tournament-left"]
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-10"
-              }`}
+              className={`transition-all duration-700 ${isVisible["tournament-left"]
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 -translate-x-10"
+                }`}
             >
               <h3 className="text-3xl font-bold text-gray-900 mb-6">
                 Tạo Giải Đấu Chuyên Nghiệp
@@ -303,25 +314,24 @@ export default function LandingPage() {
               </ul>
 
               <Link href="/tournaments/create">
-                <Button className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-4 text-lg font-semibold transform group-hover:scale-110 transition-all duration-500 shadow-2xl">
+                <Button className="bg-green-600 text-white hover:bg-green-700 px-8 py-4 text-lg font-semibold transform group-hover:scale-110 transition-all duration-500 shadow-2xl">
                   <Trophy className="mr-2 h-5 w-5 animate-bounce-subtle" />
                   Tạo Giải Đấu Ngay
                 </Button>
               </Link>
 
               {/* Decorative elements */}
-              <div className="absolute top-10 right-10 w-32 h-32 border-4 border-white/20 rounded-full animate-pulse-subtle"></div>
-              <div className="absolute bottom-10 left-10 w-24 h-24 border-4 border-white/20 rounded-full animate-pulse-subtle animation-delay-400"></div>
+              <div className="absolute top-10 right-10 w-32 h-32 border-4 border-green-200/50 rounded-full animate-pulse-subtle"></div>
+              <div className="absolute bottom-10 left-10 w-24 h-24 border-4 border-green-200/50 rounded-full animate-pulse-subtle animation-delay-400"></div>
             </div>
 
             <div
               id="tournament-right"
               data-animate
-              className={`relative transition-all duration-700 ${
-                isVisible["tournament-right"]
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 translate-x-10"
-              }`}
+              className={`relative transition-all duration-700 ${isVisible["tournament-right"]
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 translate-x-10"
+                }`}
             >
               <Card className="p-6 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
                 <CardContent className="p-6">
@@ -377,44 +387,34 @@ export default function LandingPage() {
       <section className="py-16 overflow-hidden">
         <div className="max-w-full">
           <div className="grid grid-cols-5 h-64">
-            {[...Array(5)].map((_, i) => (
+            {gridImages.slice(0, 5).map((img, i) => (
               <div
                 key={`top-${i}`}
-                className={`${
-                  i % 2 === 0
-                    ? "bg-gray-200 text-gray-700"
-                    : "bg-gray-400 text-white"
-                } 
-                  flex items-center justify-center font-semibold hover:scale-105 transition-transform duration-500
-                  hover:z-10 cursor-pointer relative overflow-hidden group`}
+                className="relative flex items-center justify-center font-semibold hover:scale-105 transition-transform duration-500
+                  hover:z-10 cursor-pointer overflow-hidden group text-white h-full"
               >
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                  style={{ backgroundImage: `url('${img}')` }}
+                />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-500" />
                 <div className="absolute inset-0 bg-green-600 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-                <span className="relative z-10">
-                  {i % 2 === 0
-                    ? "Sân Bóng Đá Cao Cấp"
-                    : "Hình Ảnh Sân Cầu Lông"}
-                </span>
               </div>
             ))}
           </div>
           <div className="grid grid-cols-5 h-64">
-            {[...Array(5)].map((_, i) => (
+            {gridImages.slice(5, 10).map((img, i) => (
               <div
                 key={`bottom-${i}`}
-                className={`${
-                  i % 2 === 1
-                    ? "bg-gray-200 text-gray-700"
-                    : "bg-gray-400 text-white"
-                } 
-                  flex items-center justify-center font-semibold hover:scale-105 transition-transform duration-500
-                  hover:z-10 cursor-pointer relative overflow-hidden group`}
+                className="relative flex items-center justify-center font-semibold hover:scale-105 transition-transform duration-500
+                  hover:z-10 cursor-pointer overflow-hidden group text-white h-full"
               >
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                  style={{ backgroundImage: `url('${img}')` }}
+                />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-500" />
                 <div className="absolute inset-0 bg-green-600 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-                <span className="relative z-10">
-                  {i % 2 === 1
-                    ? "Sân Bóng Đá Cao Cấp"
-                    : "Hình Ảnh Sân Cầu Lông"}
-                </span>
               </div>
             ))}
           </div>
@@ -422,7 +422,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-20 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-[600px]">
           {/* Become a Coach Section */}
           <div className="relative group overflow-hidden cursor-pointer">
             <div
@@ -510,11 +510,10 @@ export default function LandingPage() {
           <div
             id="why-choose-header"
             data-animate
-            className={`text-center mb-12 transition-all duration-700 ${
-              isVisible["why-choose-header"]
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-10"
-            }`}
+            className={`text-center mb-12 transition-all duration-700 ${isVisible["why-choose-header"]
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-10"
+              }`}
           >
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Tại Sao Chọn SportZone?
@@ -554,11 +553,10 @@ export default function LandingPage() {
                   key={index}
                   id={`feature-${index}`}
                   data-animate
-                  className={`text-center group transition-all duration-700 ${
-                    isVisible[`feature-${index}`]
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-10"
-                  }`}
+                  className={`text-center group transition-all duration-700 ${isVisible[`feature-${index}`]
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-10"
+                    }`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <div

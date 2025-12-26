@@ -370,7 +370,7 @@ const FieldDetailPage: React.FC = () => {
 
   const geocodeAddress = async (query: string): Promise<{ lat: number; lon: number } | null> => {
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&countrycodes=vn&q=${encodeURIComponent(query)}`
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&countrycodes=vn&accept-language=vi&q=${encodeURIComponent(query)}`
       const res = await fetch(url, { headers: { Accept: "application/json" } })
       if (!res.ok) return null
       const data: Array<{ lat: string; lon: string }> = await res.json()

@@ -183,6 +183,19 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
         return calculateCageTotal() + calculateAmenitiesTotal()
     }
 
+    const calculateSystemFee = (): number => {
+        if (!venue || !formData.startTime || !formData.endTime) return 0
+
+        const baseAmount = calculateSubtotal()
+        const systemFeeRate = 0.05 // 5% system fee
+        const systemFee = Math.round(baseAmount * systemFeeRate)
+        return systemFee > 0 ? systemFee : 0
+    }
+
+    const calculateTotal = (): number => {
+        return calculateSubtotal() + calculateSystemFee()
+    }
+
     const formatVND = (value: number): string => {
         try {
             return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value)
@@ -315,9 +328,15 @@ export const ConfirmCourtTab: React.FC<ConfirmCourtTabProps> = ({
                                         })()}
                                     </p>
                                 </div>
+                                {calculateSystemFee() > 0 && (
+                                    <div className="border-t border-gray-100 pt-3">
+                                        <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">Phí dịch vụ (5%)</h4>
+                                        <p className="text-sm font-medium text-gray-900">{formatVND(calculateSystemFee())}</p>
+                                    </div>
+                                )}
                                 <div className="border-t border-gray-100 pt-3 bg-emerald-50 -mx-4 -mb-4 px-4 py-3 rounded-b">
                                     <h4 className="text-xs font-medium text-gray-500 uppercase mb-1">Tổng tiền</h4>
-                                    <p className="text-lg font-bold text-emerald-600">{formatVND(calculateSubtotal())}</p>
+                                    <p className="text-lg font-bold text-emerald-600">{formatVND(calculateTotal())}</p>
                                 </div>
                             </CardContent>
                         </Card>

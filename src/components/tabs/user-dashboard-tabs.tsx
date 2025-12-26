@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import {
     LayoutDashboard,
     Calendar,
-    Trophy,
+
     Wallet,
     User,
 } from "lucide-react"
@@ -35,7 +35,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-dashboard")}
                         >
                             <LayoutDashboard className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Dashboard</div>
+                            <div className="text-center text-base font-medium">Tổng quan</div>
                         </Button>
 
                         <Button
@@ -44,16 +44,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-booking-history")}
                         >
                             <Calendar className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">My Bookings</div>
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            className={baseTabClasses(isActive("/user-chat"))}
-                            onClick={() => handleNavigation("/user-chat")}
-                        >
-                            <Trophy className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">My Tournaments</div>
+                            <div className="text-center text-base font-medium">Lịch sử đặt sân</div>
                         </Button>
 
                         {/* <Button
@@ -71,16 +62,7 @@ export function UserDashboardTabs() {
                             onClick={() => handleNavigation("/user-tournaments")}
                         >
                             <Wallet className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Tournaments</div>
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            className={baseTabClasses(isActive("/user-wallet"))}
-                            onClick={() => handleNavigation("/user-wallet")}
-                        >
-                            <Wallet className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Wallet</div>
+                            <div className="text-center text-base font-medium">Giải đấu</div>
                         </Button>
 
                         <Button
@@ -88,9 +70,9 @@ export function UserDashboardTabs() {
                             className={baseTabClasses(isActive("/user-profile"))}
                             onClick={() => handleNavigation("/user-profile")}
                         >
-                            <User className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Profile Setting</div>
-                        </Button>
+                                <User className="w-6 h-6" />
+                                <div className="text-center text-base font-medium">Cài đặt tài khoản</div>
+                            </Button>
                     </div>
                 </div>
             </div>

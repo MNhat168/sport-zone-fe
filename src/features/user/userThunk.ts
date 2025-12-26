@@ -87,9 +87,7 @@ export const getUserProfile = createAsyncThunk<
 >("user/getUserProfile", async (_, thunkAPI) => {
     try {
         const response = await axiosPrivate.get(GET_PROFILE_API);
-        console.log("-----------------------------------------------------");
-        console.log("Dữ liệu profile trả về:", response.data);
-        console.log("-----------------------------------------------------");
+
         return response.data.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {
@@ -129,9 +127,7 @@ export const updateUserProfile = createAsyncThunk<
             }
         );
 
-        console.log("-----------------------------------------------------");
-        console.log("Dữ liệu update profile trả về:", response.data);
-        console.log("-----------------------------------------------------");
+
 
         return response.data;
     } catch (error: any) {
@@ -203,7 +199,7 @@ export const setFavouriteFields = createAsyncThunk<
 >("user/setFavouriteFields", async (payload, thunkAPI) => {
     try {
         const response = await axiosPrivate.post(SET_FAVOURITE_FIELDS_API, payload);
-        console.log("setFavouriteFields API response:", response.data);
+
         // Handle different response structures
         return response.data.data || response.data;
     } catch (error: any) {
@@ -228,7 +224,7 @@ export const removeFavouriteFields = createAsyncThunk<
 >("user/removeFavouriteFields", async (payload, thunkAPI) => {
     try {
         const response = await axiosPrivate.delete(REMOVE_FAVOURITE_FIELDS_API, { data: payload });
-        console.log("removeFavouriteFields API response:", response.data);
+
         // Handle different response structures
         return response.data.data || response.data;
     } catch (error: any) {

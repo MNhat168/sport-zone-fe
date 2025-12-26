@@ -120,11 +120,11 @@ const FieldCard: React.FC<FieldCardProps> = ({
         <Card className="w-full overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow">
             <div className="flex">
                 {/* Image section */}
-                <div className="relative w-32 h-40 flex-shrink-0">
+                <div className="relative w-32 h-40 flex-shrink-0 rounded-lg overflow-hidden">
                     <img
                         src={imageUrl}
                         alt={`${name} field`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-lg"
                         onError={(e) => {
                             // Fallback image nếu không load được
                             (e.target as HTMLImageElement).src = "/images/1.1.png";

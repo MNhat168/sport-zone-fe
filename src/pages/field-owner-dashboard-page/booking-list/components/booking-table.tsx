@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -19,7 +18,7 @@ interface Booking {
     date: string;
     time: string;
     payment: string;
-    status: "awaiting" | "accepted" | "rejected";
+    status: "awaiting" | "accepted" | "rejected" | "completed";
     statusText: string;
     transactionStatus?: string;
     approvalStatus?: string;
@@ -28,7 +27,6 @@ interface Booking {
 interface BookingTableProps {
     bookings: Booking[];
     onViewDetails: (bookingId: string) => void;
-    onChat: (bookingId: string) => void;
     onAccept?: (bookingId: string) => void;
     onDeny?: (bookingId: string) => void;
     onCancel?: (bookingId: string) => void;
@@ -39,6 +37,7 @@ const getStatusBadgeStyles = (status: Booking["status"]) => {
         case "awaiting":
             return "bg-violet-100 text-violet-600 hover:bg-violet-200";
         case "accepted":
+        case "completed":
             return "bg-green-100 text-green-600 hover:bg-green-200";
         case "rejected":
             return "bg-red-100 text-red-600 hover:bg-red-200";
@@ -76,7 +75,6 @@ const convertTo24Hour = (time12h: string): string => {
 export function BookingTable({
     bookings,
     onViewDetails,
-    onChat,
     onAccept,
     onDeny,
     onCancel,
@@ -104,9 +102,6 @@ export function BookingTable({
                             </TableHead>
                             <TableHead className="w-36 font-semibold text-gray-900 text-left py-4">
                                 Chi Tiết
-                            </TableHead>
-                            <TableHead className="w-24 font-semibold text-gray-900 text-left py-4">
-                                Chat
                             </TableHead>
                             <TableHead className="w-48 py-4">Hành Động</TableHead>
                         </TableRow>
@@ -161,20 +156,10 @@ export function BookingTable({
                                         Xem Chi Tiết
                                     </Button>
                                 </TableCell>
-                                <TableCell className="py-6 text-left">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal gap-2"
-                                        onClick={() => onChat(booking.id)}
-                                    >
-                                        <MessageCircle className="h-3.5 w-3.5" />
-                                        Chat
-                                    </Button>
-                                </TableCell>
+
                                 <TableCell className="py-5 text-left">
                                     {/* Show Accept/Reject for pending approval OR pending/processing transactions */}
-                                    {(booking.approvalStatus === 'pending' || booking.transactionStatus === 'pending' || booking.transactionStatus === 'processing') ? (
+                                    {booking.status === "awaiting" ? (
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 type="button"
@@ -193,7 +178,7 @@ export function BookingTable({
                                                 Từ Chối
                                             </Button>
                                         </div>
-                                    ) : booking.transactionStatus === 'succeeded' ? (
+                                    ) : (booking.status === "accepted") ? (
                                         <Button
                                             type="button"
                                             variant="destructive"

@@ -7,6 +7,16 @@ import { BookingTable } from "./components/booking-table";
 import { BookingPagination } from "./components/field-history-booking-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AlertCircle } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
@@ -52,37 +62,18 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
     const startTime12h = formatTime(booking.startTime);
     const endTime12h = formatTime(booking.endTime);
 
-    // Ưu tiên trạng thái duyệt của chủ sân: nếu approvalStatus đang pending
-    // thì luôn coi là "Đang chờ" để hiển thị nút hành động chấp nhận / từ chối
-    if (booking.approvalStatus === 'pending') {
-        return {
-            id: booking.bookingId,
-            academyName: booking.fieldName,
-            courtName: booking.courtName || (booking.courtNumber ? `Court ${booking.courtNumber}` : booking.fieldName),
-            courtNumber: booking.courtNumber,
-            academyImage: "/images/academies/default.jpg",
-            date: formatDate(booking.date),
-            time: `${startTime12h} - ${endTime12h}`,
-            payment: formatCurrency(booking.totalPrice, "VND"),
-            status: "awaiting" as const,
-            statusText: "Đang Chờ Duyệt",
-            originalBooking: booking,
-        };
-    }
+
 
     // Nếu không có approvalStatus pending thì map theo transactionStatus / status
     const transactionStatus = booking.transactionStatus || booking.status;
-    let status: "awaiting" | "accepted" | "rejected" = "awaiting";
+    let status: "awaiting" | "accepted" | "rejected" | "completed" = "awaiting";
     let statusText = "Chờ Xác Nhận";
 
     switch (transactionStatus) {
         case TransactionStatus.PENDING:
-            status = "awaiting";
-            statusText = "Đang Chờ";
-            break;
         case TransactionStatus.PROCESSING:
             status = "awaiting";
-            statusText = "Đang Xử Lý";
+            statusText = "Đang Chờ";
             break;
         case TransactionStatus.SUCCEEDED:
             status = "accepted";
@@ -116,7 +107,7 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
                     statusText = "Đã Hủy";
                     break;
                 case "completed":
-                    status = "accepted";
+                    status = "completed";
                     statusText = "Đã Hoàn Thành";
                     break;
             }
@@ -211,6 +202,11 @@ export default function FieldHistoryBookingPage() {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<any>();
+    const [confirmState, setConfirmState] = useState<{
+        open: boolean;
+        action: 'accept' | 'cancel' | null;
+        bookingId: string | null;
+    }>({ open: false, action: null, bookingId: null });
     const [activeTab, setActiveTab] = useState<TransactionStatus>(TransactionStatus.PENDING);
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
@@ -339,9 +335,25 @@ export default function FieldHistoryBookingPage() {
         setIsDetailsOpen(true);
     };
 
-    const handleAccept = async (bookingId: string) => {
+    const handleAccept = (bookingId: string) => {
+        setConfirmState({ open: true, action: 'accept', bookingId });
+    };
+
+    const handleCancel = (bookingId: string) => {
+        setConfirmState({ open: true, action: 'cancel', bookingId });
+    };
+
+    const handleConfirmAction = async () => {
+        const { action, bookingId } = confirmState;
+        if (!bookingId || !action) return;
+
         try {
-            await dispatch(ownerAcceptBooking(bookingId)).unwrap();
+            if (action === 'accept') {
+                await dispatch(ownerAcceptBooking(bookingId)).unwrap();
+            } else {
+                await dispatch(ownerRejectBooking({ bookingId })).unwrap();
+            }
+
             // Hide the acted booking immediately and refresh in background
             setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
             const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
@@ -356,35 +368,13 @@ export default function FieldHistoryBookingPage() {
                 })
             );
         } catch (e) {
-            console.error("Accept booking failed", e);
+            console.error(`${action} booking failed`, e);
+        } finally {
+            setConfirmState({ open: false, action: null, bookingId: null });
         }
     };
 
-    const handleCancel = async (bookingId: string) => {
-        try {
-            await dispatch(ownerRejectBooking({ bookingId })).unwrap();
-            // Hide the acted booking immediately and refresh in background
-            setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
-            const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
-            dispatch(
-                getMyFieldsBookings({
-                    fieldName: searchQuery || undefined,
-                    transactionStatus: activeTab,
-                    startDate,
-                    endDate,
-                    page: currentPage,
-                    limit: itemsPerPage,
-                })
-            );
-        } catch (e) {
-            console.error("Reject booking failed", e);
-        }
-    };
 
-    const handleChat = (bookingId: string) => {
-        // Handle chat functionality
-        console.log("Open chat for booking:", bookingId);
-    };
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -476,7 +466,6 @@ export default function FieldHistoryBookingPage() {
                                     <BookingTable
                                         bookings={mappedBookings}
                                         onViewDetails={handleViewDetails}
-                                        onChat={handleChat}
                                         onAccept={handleAccept}
                                         onDeny={handleCancel}
                                         onCancel={handleCancel}
@@ -505,6 +494,27 @@ export default function FieldHistoryBookingPage() {
                 onClose={() => setIsDetailsOpen(false)}
                 bookingData={selectedBooking}
             />
+
+            <AlertDialog open={confirmState.open} onOpenChange={(open) => !open && setConfirmState(prev => ({ ...prev, open: false }))}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {confirmState.action === 'accept' ? 'Xác nhận chấp nhận' : 'Xác nhận hành động'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {confirmState.action === 'accept'
+                                ? 'Bạn có chắc chắn muốn chấp nhận yêu cầu đặt chỗ này không?'
+                                : 'Bạn có chắc chắn muốn thực hiện hành động này không? Hành động này không thể hoàn tác.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Hủy</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmAction}>
+                            {confirmState.action === 'accept' ? 'Chấp nhận' : 'Xác nhận'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </FieldOwnerDashboardLayout>
     );
 }
