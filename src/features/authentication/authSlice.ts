@@ -1,5 +1,4 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import logger from "@/utils/logger";
 import {
     signInWithEmailAndPassword,
     signUpWithEmailAndPassword,
@@ -89,7 +88,7 @@ const getStoredUser = () => {
 const storedUser = getStoredUser();
 
 // Debug current auth state
-logger.debug("Auth initialState - User:", storedUser?.fullName);
+console.log("🔑 Auth initialState - User:", storedUser?.fullName);
 
 const initialState: AuthState = {
     _id: storedUser?._id || null,
@@ -152,7 +151,7 @@ const authSlice = createSlice({
                     const parsedUser = JSON.parse(sessionUser);
                     state.user = parsedUser;
                 } catch (error) {
-                    logger.error("Error parsing user from localStorage:", error);
+                    console.error("Error parsing user from localStorage:", error);
                 }
                 return;
             }
@@ -162,7 +161,7 @@ const authSlice = createSlice({
                     const parsedUser = JSON.parse(localUser);
                     state.user = parsedUser;
                 } catch (error) {
-                    logger.error("Error parsing user from localStorage:", error);
+                    console.error("Error parsing user from localStorage:", error);
                 }
             }
         },
@@ -227,7 +226,7 @@ const authSlice = createSlice({
                     localStorage.removeItem("user");
 
                     // Clean up chat state and WebSocket
-                    logger.debug('Cleaning up chat on logout');
+                    console.log('🧹 [authSlice] Cleaning up chat on logout');
                 } catch { }
             })
 

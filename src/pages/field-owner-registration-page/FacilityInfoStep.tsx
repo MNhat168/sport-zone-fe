@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import logger from "@/utils/logger"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { Input } from "@/components/ui/input"
@@ -106,7 +105,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
         }
       }
     } catch (error) {
-      logger.warn(`Failed to search for: ${candidate}`, error)
+      console.warn(`Failed to search for: ${candidate}`, error)
       continue
     }
   }
@@ -273,7 +272,7 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
         alert("Không tìm thấy địa điểm phù hợp")
       }
     } catch (error) {
-      logger.error("Geocoding error", error)
+      console.error("Geocoding error:", error)
       alert("Có lỗi xảy ra khi tìm kiếm địa điểm")
     } finally {
       setIsSearching(false)

@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Building, UserCircle, Search, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import logger from '@/utils/logger';
 
 const ConversationList: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,7 +26,7 @@ const ConversationList: React.FC = () => {
     const transformedRooms = rooms.map((room) => {
         const isCoachRoom = !!room.coach;
 
-        logger.debug('[ConversationList] Transforming room:', {
+        console.log('🔄 [ConversationList] Transforming room:', {
             roomId: room._id,
             hasCoach: !!room.coach,
             hasFieldOwner: !!room.fieldOwner,
@@ -118,7 +117,7 @@ const ConversationList: React.FC = () => {
             dispatch(setCurrentRoom(latestRoom));
             dispatch(setWidgetView('chat'));
         } catch (error) {
-            logger.error('Failed to load chat room:', error);
+            console.error('Failed to load chat room:', error);
             // Fallback: at least open with existing data if API fails
             dispatch(setCurrentRoom(room));
             dispatch(setWidgetView('chat'));

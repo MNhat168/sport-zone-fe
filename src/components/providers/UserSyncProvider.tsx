@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { useAppDispatch } from "../../store/hook";
 import { validateSession } from "../../features/authentication/authThunk";
 import { getUserProfile } from "../../features/user/userThunk";
-import logger from "../../utils/logger";
 
 /**
  * Component để validate session khi app load
@@ -37,10 +36,10 @@ export const UserSyncProvider = ({ children }: { children: React.ReactNode }) =>
                         await dispatch(getUserProfile() as any).unwrap();
 
                     } catch (err) {
-                        logger.warn("Failed to fetch full user profile after session validation", err);
+                        console.warn("⚠️ Failed to fetch full user profile after session validation", err);
                     }
                 } catch (error) {
-                    logger.log("Session validation failed, user will be logged out");
+                    console.log("❌ Session validation failed, user will be logged out");
                 }
             }
         };

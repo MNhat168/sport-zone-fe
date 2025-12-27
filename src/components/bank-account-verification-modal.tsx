@@ -15,7 +15,6 @@ import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
 import { Loading } from '@/components/ui/loading'
 import { CustomSuccessToast, CustomFailedToast } from '@/components/toast/notificiation-toast'
-import logger from '@/utils/logger'
 
 // QR Code Display component removed as requested
 
@@ -93,7 +92,7 @@ export function BankAccountVerificationModal({
           }
         }
       } catch (error: any) {
-        logger.error('Error polling verification status:', error)
+        console.error('Error polling verification status:', error)
         if (attempts >= maxPollingAttempts) {
           stopPolling()
         }

@@ -10,7 +10,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import type { Message } from "@/features/chat/chat-type";
 import { getCoachIdByUserId } from "@/features/coach";
-import logger from "@/utils/logger";
 
 interface CoachDetailChatWindowProps {
     onClose: () => void;
@@ -117,7 +116,7 @@ const CoachDetailChatWindow: React.FC<CoachDetailChatWindowProps> = ({
                 await dispatch(getChatRoom(room._id));
                 localStorage.setItem(mapKey, room._id);
             } catch (e) {
-                logger.error('Failed to initialize coach chat room:', e);
+                console.error('Failed to initialize coach chat room:', e);
                 dispatch(setCurrentRoom(null));
                 setLocalMessages([]);
             }
@@ -152,7 +151,7 @@ const CoachDetailChatWindow: React.FC<CoachDetailChatWindowProps> = ({
                 webSocketService.joinChatRoom(roomId);
                 localStorage.setItem(`chat:coach:roomId:${targetCoachId}:${fieldId || 'none'}`, roomId);
             } catch (e) {
-                logger.error('Cannot start coach chat to send message:', e);
+                console.error('Cannot start coach chat to send message:', e);
                 return;
             }
         }

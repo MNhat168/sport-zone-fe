@@ -23,7 +23,6 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { NotificationBell } from "./notification-bell";
-import logger from "@/utils/logger";
 export const NavbarComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
@@ -31,7 +30,7 @@ export const NavbarComponent = () => {
     const auth = useAppSelector((state: RootState) => state.auth);
 
     // Debug log to verify user data
-    logger.debug("Navbar - User:", auth.user?.fullName, "Role:", auth.user?.role);
+    console.log("🔍 Navbar - User:", auth.user?.fullName, "Role:", auth.user?.role);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);

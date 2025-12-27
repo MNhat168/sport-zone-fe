@@ -15,7 +15,6 @@ import type { Booking } from "@/types/booking-type"
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
-import logger from "@/utils/logger"
 
 export default function CoachSchedulePage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -50,7 +49,7 @@ export default function CoachSchedulePage() {
           setBookings(accepted)
         }
       } catch (err) {
-        logger.error("[loadUserAndFetchData] Failed to fetch coach data:", err)
+        console.error("[loadUserAndFetchData] Failed to fetch coach data:", err)
       }
     }
 

@@ -1,7 +1,6 @@
 // hooks/useSocket.ts
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import logger from '@/utils/logger';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,15 +26,15 @@ export const useSocket = (userId: string, kind: SocketKind = 'notifications') =>
     });
 
     socketRef.current.on('connect', () => {
-      logger.debug(`Connected to ${kind} socket as user`, userId);
+      console.log(`✅ Connected to ${kind} socket as user`, userId);
     });
 
     socketRef.current.on('disconnect', () => {
-      logger.debug(`Disconnected from ${kind} socket`);
+      console.log(`❌ Disconnected from ${kind} socket`);
     });
 
     socketRef.current.on('connect_error', (error) => {
-      logger.error(`${kind} socket connect_error:`, error);
+      console.error(`🚨 ${kind} socket connect_error:`, error);
     });
 
     return () => {

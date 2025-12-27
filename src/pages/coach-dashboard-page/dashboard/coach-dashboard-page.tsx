@@ -31,7 +31,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
-import logger from "@/utils/logger"
 
 export default function CoachDashboardPage() {
   const dispatch = useDispatch<AppDispatch>()
@@ -94,7 +93,7 @@ export default function CoachDashboardPage() {
         )
       }
     } catch (err) {
-      logger.error(err)
+      console.error(err)
     } finally {
       setTodayAction(null)
     }
@@ -180,7 +179,7 @@ export default function CoachDashboardPage() {
 
       setStats(res.data.data)
     } catch (err) {
-      logger.error("Failed to load statistics", err)
+      console.error("Failed to load statistics", err)
     } finally {
       setStatsLoading(false)
     }
@@ -224,7 +223,7 @@ export default function CoachDashboardPage() {
         )
       }
     } catch (err) {
-      logger.error(err)
+      console.error(err)
     }
   }
 

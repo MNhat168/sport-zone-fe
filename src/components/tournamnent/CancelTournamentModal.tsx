@@ -8,7 +8,6 @@ import { Loading } from "@/components/ui/loading";
 import { useAppDispatch } from '@/store/hook';
 import { cancelTournamentById } from '@/features/tournament/tournamentThunk';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import logger from '@/utils/logger';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -40,7 +39,7 @@ export function CancelTournamentModal({ isOpen, onClose, tournamentId, onCancell
             const response = await dispatch(cancelTournamentById({ id: tournamentId, reason })).unwrap();
             const result = response.data || response;
 
-            logger.debug('Cancellation response:', result);
+            console.log('Cancellation response:', result);
 
             if (result.success) {
                 setSuccess(true);
@@ -53,7 +52,7 @@ export function CancelTournamentModal({ isOpen, onClose, tournamentId, onCancell
                 setError(result.message || "Hủy giải đấu thất bại");
             }
         } catch (err: any) {
-            logger.error('Cancellation error:', err);
+            console.error('Cancellation error:', err);
             setError(err.message || "Hủy giải đấu thất bại");
         } finally {
             setIsSubmitting(false);

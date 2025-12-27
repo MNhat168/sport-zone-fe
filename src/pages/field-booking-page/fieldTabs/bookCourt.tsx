@@ -9,7 +9,6 @@ import { useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@/store/hook';
 import { checkFieldAvailability } from '@/features/field/fieldThunk';
 import { Loading } from '@/components/ui/loading';
-import logger from '@/utils/logger';
 
 /**
  * Interface for booking form data
@@ -86,7 +85,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     };
 
     // Log field data usage in BookCourt tab
-    logger.debug('[BOOK COURT TAB] Field data loaded:', {
+    console.log('🏟️ [BOOK COURT TAB] Field data loaded:', {
         hasVenueProp: !!venueProp,
         hasCurrentField: !!currentField,
         hasLocationState: !!(location.state as any)?.venue,
@@ -152,7 +151,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (date < today) {
-            logger.debug('[CALENDAR] Date disabled - past date:', date.toDateString());
+            console.log('📅 [CALENDAR] Date disabled - past date:', date.toDateString());
             return true;
         }
 
@@ -163,7 +162,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         const isOperatingDay = operatingDays.includes(dayName);
 
         if (!isOperatingDay) {
-            logger.debug('[CALENDAR] Date disabled - not operating day:', {
+            console.log('📅 [CALENDAR] Date disabled - not operating day:', {
                 date: date.toDateString(),
                 dayName,
                 operatingDays
@@ -182,7 +181,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
 
     const getAvailableTimeSlots = (selectedDate: Date): string[] => {
         if (!selectedDate || !venue?.operatingHours) {
-            logger.debug('[TIME SLOTS] No date or operating hours, returning empty');
+            console.log('⏰ [TIME SLOTS] No date or operating hours, returning empty');
             return [];
         }
 
@@ -191,7 +190,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         const operatingHour = getOperatingHoursForDay(dayName);
 
         if (!operatingHour) {
-            logger.debug('[TIME SLOTS] No operating hours for day:', dayName);
+            console.log('⏰ [TIME SLOTS] No operating hours for day:', dayName);
             return [];
         }
 
@@ -217,7 +216,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             slots.push(startTime);
         }
 
-        logger.debug('[TIME SLOTS] Available slots for', dayName, ':', {
+        console.log('⏰ [TIME SLOTS] Available slots for', dayName, ':', {
             operatingHour,
             slotDuration,
             startMinutes,
@@ -232,7 +231,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     // === Function để fetch availability data ===
     const fetchAvailabilityData = useCallback(async (selectedDate: string, courtId?: string) => {
         if (!venue?.id || !selectedDate || !courtId) {
-            logger.debug('[AVAILABILITY] Missing venue, date, or courtId');
+            console.log('🚫 [AVAILABILITY] Missing venue, date, or courtId');
             return;
         }
 
@@ -240,7 +239,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
         setAvailabilityError(null);
 
         try {
-            logger.debug('[AVAILABILITY] Fetching availability for:', {
+            console.log('🔄 [AVAILABILITY] Fetching availability for:', {
                 fieldId: venue.id,
                 date: selectedDate,
                 courtId
@@ -253,14 +252,14 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                 courtId,
             })).unwrap();
 
-            logger.debug('[AVAILABILITY] Data received:', result);
+            console.log('✅ [AVAILABILITY] Data received:', result);
 
             if (result.success && result.data && result.data.length > 0) {
                 // Tìm data cho ngày được chọn
                 const dayData = result.data.find(item => item.date === selectedDate);
                 setAvailabilityData(dayData || null);
 
-                logger.debug('[AVAILABILITY] Day data set:', {
+                console.log('📅 [AVAILABILITY] Day data set:', {
                     selectedDate,
                     dayData: dayData ? {
                         date: dayData.date,
@@ -271,10 +270,10 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
                 });
             } else {
                 setAvailabilityData(null);
-                logger.debug('[AVAILABILITY] No data received for date:', selectedDate);
+                console.log('⚠️ [AVAILABILITY] No data received for date:', selectedDate);
             }
         } catch (error: any) {
-            logger.error('[AVAILABILITY] Error fetching availability:', error);
+            console.error('❌ [AVAILABILITY] Error fetching availability:', error);
             setAvailabilityError(error.message || 'Không thể tải thông tin khả dụng');
             setAvailabilityData(null);
         } finally {
@@ -449,7 +448,7 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
             }
         } catch {
             // Ignore malformed storage
-            logger.warn('Failed to parse bookingFormData from sessionStorage');
+            console.warn('Failed to parse bookingFormData from sessionStorage');
         }
     }, [venue?.id, courts, fetchAvailabilityData]); // Add dependencies
 
@@ -527,8 +526,8 @@ export const BookCourtTab: React.FC<BookCourtTabProps> = ({
     };
 
     const handleSubmit = () => {
-        logger.debug('Form data:', formData);
-        logger.debug('Subtotal:', calculateSubtotal());
+        console.log('Form data:', formData);
+        console.log('Subtotal:', calculateSubtotal());
 
         // Validate required fields
         if (!formData.date || !formData.startTime || !formData.endTime) {

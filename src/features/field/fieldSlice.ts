@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import logger from "@/utils/logger";
 import type { Field, ErrorResponse } from "../../types/field-type";
 import {
     getAllFields,
@@ -175,21 +174,27 @@ const fieldSlice = createSlice({
 
             // Get field by ID
             .addCase(getFieldById.pending, (state) => {
-                logger.debug("getFieldById pending");
+                console.log("⏳ [FIELD SLICE] getFieldById pending - setting loading to true");
                 state.loading = true;
                 state.error = null;
             })
             .addCase(getFieldById.fulfilled, (state, action) => {
-                logger.debug("getFieldById fulfilled", {
+                console.log("✅ [FIELD SLICE] getFieldById fulfilled - updating currentField:", {
                     fieldId: action.payload.data.id,
                     fieldName: action.payload.data.name,
+                    fieldLocation: action.payload.data.location,
+                    fieldBasePrice: action.payload.data.basePrice,
+                    timestamp: new Date().toISOString()
                 });
                 state.loading = false;
                 state.currentField = action.payload.data;
                 state.error = null;
             })
             .addCase(getFieldById.rejected, (state, action) => {
-                logger.error("getFieldById rejected:", action.payload);
+                console.error("❌ [FIELD SLICE] getFieldById rejected:", {
+                    error: action.payload,
+                    timestamp: new Date().toISOString()
+                });
                 state.loading = false;
                 state.error = action.payload || { message: "Unknown error", status: "500" };
             })

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Gift, Star, Shield, Clock } from 'lucide-react';
-import logger from '@/utils/logger';
 
 interface LoginBenefitsBannerProps {
   onClose?: () => void;
@@ -21,7 +20,7 @@ export const LoginBenefitsBanner: React.FC<LoginBenefitsBannerProps> = ({
     try {
       localStorage.setItem('bookingRedirectUrl', redirectUrl);
     } catch (error) {
-      logger.warn('Failed to save redirect URL to localStorage:', error);
+      console.warn('Failed to save redirect URL to localStorage:', error);
     }
     navigate('/auth', { state: { mode: 'login', redirectUrl } });
   };

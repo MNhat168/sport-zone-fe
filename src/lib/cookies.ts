@@ -2,7 +2,6 @@
  * Cookie utility functions using manual document.cookie approach
  * Replaces js-cookie dependency for better consistency
  */
-import logger from '@/utils/logger';
 
 const DEFAULT_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
@@ -54,6 +53,6 @@ export function clearUserAuth(): void {
     // Clear cookie
     document.cookie = "user=; path=/; max-age=0";
   } catch (error) {
-    logger.warn("Failed to clear user authentication data:", error);
+    console.warn("Failed to clear user authentication data:", error);
   }
 }

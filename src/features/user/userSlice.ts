@@ -12,7 +12,6 @@ import {
     forgotPassword,
 } from "./userThunk";
 import type { User, ErrorResponse } from "../../types/user-type";
-import logger from "../../utils/logger";
 
 interface UserState {
     user: User | null;
@@ -111,7 +110,7 @@ const userSlice = createSlice({
                 state.favouriteFields = action.payload;
             })
             .addCase(getFavouriteFields.rejected, (_state, action) => {
-                logger.error('getFavouriteFields failed', action.payload);
+                console.error('getFavouriteFields failed', action.payload);
             });
 
         // Get favourite coaches
@@ -127,7 +126,7 @@ const userSlice = createSlice({
                 (state as any).favouriteCoaches = action.payload;
             })
             .addCase(getFavouriteCoaches.rejected, (_state, action) => {
-                logger.error('getFavouriteCoaches failed', action.payload);
+                console.error('getFavouriteCoaches failed', action.payload);
             });
 
         // Forgot password

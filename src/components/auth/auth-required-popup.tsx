@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { LogIn, UserPlus } from 'lucide-react';
-import logger from '@/utils/logger';
 
 interface AuthRequiredPopupProps {
   isOpen: boolean;
@@ -35,7 +34,7 @@ export const AuthRequiredPopup: React.FC<AuthRequiredPopupProps> = ({
     try {
       localStorage.setItem('bookingRedirectUrl', redirectUrl);
     } catch (error) {
-      logger.warn('Failed to save redirect URL to localStorage:', error);
+      console.warn('Failed to save redirect URL to localStorage:', error);
     }
     
     onClose();
@@ -48,7 +47,7 @@ export const AuthRequiredPopup: React.FC<AuthRequiredPopupProps> = ({
     try {
       localStorage.setItem('bookingRedirectUrl', redirectUrl);
     } catch (error) {
-      logger.warn('Failed to save redirect URL to localStorage:', error);
+      console.warn('Failed to save redirect URL to localStorage:', error);
     }
     
     onClose();

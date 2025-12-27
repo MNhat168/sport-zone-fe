@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import logger from "@/utils/logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +37,7 @@ export default function NotificationsContent() {
                 const res = await axiosPublic.get(`/notifications/user/${userId}`);
                 setNotifications(res.data?.data || []);
             } catch (err) {
-                logger.error("Error fetching notifications", err);
+                console.error("Error fetching notifications:", err);
             } finally {
                 setLoading(false);
             }
@@ -65,7 +64,7 @@ export default function NotificationsContent() {
                 prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
             );
         } catch (err) {
-            logger.error("Error marking notification as read", err);
+            console.error("Error marking notification as read:", err);
         }
     };
 
@@ -79,7 +78,7 @@ export default function NotificationsContent() {
             );
             setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
         } catch (err) {
-            logger.error("Error marking all as read", err);
+            console.error("Error marking all as read:", err);
         } finally {
             setMarkingAll(false);
         }

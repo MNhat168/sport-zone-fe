@@ -1,7 +1,6 @@
 "use client"
 
 import { Loading } from "../../components/ui/loading"
-import logger from "@/utils/logger"
 
 import { NavbarDarkComponent } from "../../components/header/navbar-dark-component"
 import FieldCard from "./card-list/field-card-props"
@@ -201,7 +200,7 @@ const FieldBookingPage = () => {
     try {
       navigate(location.pathname, { replace: true });
     } catch (error: any) {
-      logger.error("Error navigating", error);
+      console.error("Error navigating:", error);
     }
   };
 
@@ -233,7 +232,7 @@ const FieldBookingPage = () => {
         );
       }
     } catch (error) {
-      logger.error("Error getting location", error);
+      console.error("Error getting location:", error);
     }
   };
 
@@ -447,7 +446,7 @@ const FieldBookingPage = () => {
       setTimeFilter(qWeekday || "any");
       setLocationFilter(qLocation);
     } catch (error: any) {
-      logger.error("Error reading query params", error);
+      console.error("Error reading query params:", error);
     }
   }, [location.search]);
 
@@ -842,7 +841,7 @@ const FieldBookingPage = () => {
           }).addTo(mapRef.current);
         }
       } catch (error: any) {
-        logger.error("Failed to initialize map", error);
+        console.error("Failed to initialize map", error);
       }
     })();
   }, []);

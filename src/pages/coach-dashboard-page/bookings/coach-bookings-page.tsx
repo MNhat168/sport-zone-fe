@@ -31,7 +31,6 @@ import { formatCurrency } from "@/utils/format-currency";
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import axiosPrivate from "@/utils/axios/axiosPrivate";
-import logger from "@/utils/logger";
 
 // Helper function to format date from YYYY-MM-DD to Vietnamese format
 const formatDate = (dateStr: string): string => {
@@ -284,7 +283,7 @@ export default function CoachBookingsPage() {
             .then((res) => {
                 setCoachId(res.data?.data?.id);
             })
-            .catch((err) => logger.error("Error fetching coach ID:", err));
+            .catch(console.error);
     }, []);
 
     useEffect(() => {
@@ -298,7 +297,7 @@ export default function CoachBookingsPage() {
                 setBookings(Array.isArray(bookingsData) ? bookingsData : []);
                 setError(null);
             } catch (err: any) {
-                logger.error("Error fetching bookings:", err);
+                console.error("Error fetching bookings:", err);
                 const errorMessage = err.response?.data?.message || err.message || "Không thể tải danh sách đặt lịch";
                 setError(errorMessage);
             } finally {
@@ -327,7 +326,7 @@ export default function CoachBookingsPage() {
                 )
             );
         } catch (err) {
-            logger.error("Complete booking failed", err);
+            console.error("Complete booking failed", err);
         }
     };
 
@@ -349,7 +348,7 @@ export default function CoachBookingsPage() {
                 )
             );
         } catch (err) {
-            logger.error("Accept booking failed", err);
+            console.error("Accept booking failed", err);
         }
     };
 
@@ -371,7 +370,7 @@ export default function CoachBookingsPage() {
                 )
             );
         } catch (err) {
-            logger.error("Decline booking failed", err);
+            console.error("Decline booking failed", err);
         }
     };
 
@@ -392,12 +391,12 @@ export default function CoachBookingsPage() {
                 )
             );
         } catch (err) {
-            logger.error("Cancel booking failed", err);
+            console.error("Cancel booking failed", err);
         }
     };
 
     const handleChat = (bookingId: string) => {
-        logger.debug("Open chat for booking:", bookingId);
+        console.log("Open chat for booking:", bookingId);
     };
 
     const handleSearch = (value: string) => {
@@ -411,7 +410,7 @@ export default function CoachBookingsPage() {
     };
 
     const handleSortChange = (value: string) => {
-        logger.debug("Sort:", value);
+        console.log("Sort:", value);
     };
 
     const handleTabChangeFromFilter = (value: string) => {

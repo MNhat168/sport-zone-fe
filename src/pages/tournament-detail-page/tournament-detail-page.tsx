@@ -47,7 +47,6 @@ import { CancelTournamentModal } from "@/components/tournamnent/CancelTournament
 
 import Loading from "@/components/ui/loading"
 import LocationCard from "@/pages/field-detail-page/components/LocationCard"
-import logger from "@/utils/logger"
 
 export default function TournamentDetailsPage() {
   const { id } = useParams<{ id: string }>()
@@ -112,7 +111,7 @@ export default function TournamentDetailsPage() {
         paymentMethod
       })).unwrap();
 
-      logger.debug('Registration response:', registrationResponse);
+      console.log('Full registration response:', registrationResponse);
 
       // ✅ Check different possible response structures
       let paymentUrl = null;
@@ -136,7 +135,7 @@ export default function TournamentDetailsPage() {
         transactionId = registrationResponse.result.transaction?._id;
       }
 
-      logger.debug('Extracted payment info:', { paymentUrl, orderCode, transactionId });
+      console.log('Extracted payment info:', { paymentUrl, orderCode, transactionId });
 
       // Handle PayOS payment
       if (paymentMethod === 'payos' && paymentUrl) {
@@ -153,8 +152,8 @@ export default function TournamentDetailsPage() {
 
         // Short delay to ensure dialog closes
         setTimeout(() => {
-          logger.debug('Redirecting to PayOS:', paymentUrl);
-          window.location.href = paymentUrl!;
+          console.log('Redirecting to PayOS:', paymentUrl);
+          window.location.href = paymentUrl;
         }, 100);
 
         return;
@@ -172,7 +171,7 @@ export default function TournamentDetailsPage() {
         throw new Error('No payment URL received from server');
       }
     } catch (error: any) {
-      logger.error('Registration failed:', error);
+      console.error('Registration failed:', error);
       alert(`Registration failed: ${error.message || 'Unknown error'}`);
     } finally {
       setIsRegistering(false);
@@ -203,7 +202,7 @@ export default function TournamentDetailsPage() {
         } else if (paymentStatus === 'failed' || paymentStatus === 'cancelled') {
           // Show error toast/notification
           const reason = params.get('reason');
-          logger.error('Payment failed:', { paymentStatus, reason });
+          console.error('Payment failed:', { paymentStatus, reason });
           // You might want to show a toast notification here
         }
       }
@@ -293,6 +292,15 @@ export default function TournamentDetailsPage() {
   const daysUntilTournament = tournament ? Math.ceil((new Date(tournament.tournamentDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
   const isSolo = tournament?.teamSize === 1
 
+  console.log('Tournament object:', {
+    participants: tournament.participants,
+    participantsLength: tournament.participants?.length,
+    maxParticipants: tournament.maxParticipants,
+    numberOfTeams: tournament.numberOfTeams,
+    teamSize: tournament.teamSize,
+    calculatedMax: tournament.numberOfTeams * tournament.teamSize,
+    isFullCalculation: (tournament.participants?.length || 0) >= (tournament.maxParticipants || tournament.numberOfTeams * tournament.teamSize || 0)
+  });
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return 'N/A';
@@ -308,7 +316,7 @@ export default function TournamentDetailsPage() {
         day: 'numeric'
       });
     } catch (error) {
-      logger.error('Error formatting date:', error);
+      console.error('Error formatting date:', error);
       return 'Invalid Date';
     }
   };
@@ -338,6 +346,15 @@ export default function TournamentDetailsPage() {
     participantsByTeam[teamNumber].push(participant)
   })
 
+  console.log('Tournament data debug:', {
+    maxParticipants: tournament.maxParticipants,
+
+    participantsCount: tournament.participants?.length || 0,
+    participants: tournament.participants,
+    numberOfTeams: tournament.numberOfTeams,
+    teamSize: tournament.teamSize,
+    calculatedMax: tournament.numberOfTeams * tournament.teamSize
+  });
 
   return (
     <>

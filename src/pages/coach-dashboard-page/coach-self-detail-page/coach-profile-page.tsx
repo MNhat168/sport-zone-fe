@@ -48,7 +48,6 @@ import { ReviewsSection } from "../../coach-detail-page/components/ReviewsSectio
 import { ReviewModal } from "../../coach-detail-page/components/ReviewModal";
 import { getReviewsForCoachAPI } from "@/features/reviews/reviewAPI";
 import { createCoachReviewThunk } from "@/features/reviews/reviewThunk";
-import logger from "@/utils/logger";
 
 
 // Constants for map
@@ -116,7 +115,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
         }
       }
     } catch (error) {
-      logger.warn(`Failed to search for: ${candidate}`, error);
+      console.warn(`Failed to search for: ${candidate}`, error);
       continue;
     }
   }
@@ -243,7 +242,7 @@ export default function CoachSelfDetailPage() {
         setReviewsPage(pageFromResp ?? page);
         setReviewsTotalPages(totalPagesFromResp ?? 1);
       } catch (err) {
-        logger.error('Failed to load coach reviews', err);
+        console.error('Failed to load coach reviews', err);
       } finally {
         setReviewsLoading(false);
       }
@@ -272,7 +271,7 @@ export default function CoachSelfDetailPage() {
     try {
       await fetchReviews(targetPage, false);
     } catch (err) {
-      logger.error('Failed to load reviews page', err);
+      console.error('Failed to load reviews page', err);
     }
   };
 
@@ -301,7 +300,7 @@ export default function CoachSelfDetailPage() {
         CustomFailedToast(String(action?.payload || 'Gửi đánh giá thất bại'));
       }
     } catch (err) {
-      logger.error('Submit review failed', err);
+      console.error('Submit review failed', err);
       CustomFailedToast('Gửi đánh giá thất bại');
     } finally {
       setIsSubmittingReview(false);
@@ -463,7 +462,7 @@ export default function CoachSelfDetailPage() {
 
       // If container not yet available or has no size, retry shortly
       if (!mapContainerRef.current || !checkContainerSize()) {
-        logger.warn('[Leaflet] Container not ready, retrying initialization...');
+        console.warn('[Leaflet] Container not ready, retrying initialization...');
         const retry = setTimeout(() => {
           if (mapRef.current) return;
           if (mapContainerRef.current && checkContainerSize()) {
@@ -484,7 +483,7 @@ export default function CoachSelfDetailPage() {
     const initializeMap = () => {
       if (!mapContainerRef.current || mapRef.current) return;
 
-      logger.debug('[Leaflet] Initializing map...');
+      console.log('[Leaflet] Initializing map...');
       const map = L.map(mapContainerRef.current, {
         center: DEFAULT_CENTER,
         zoom: MAP_CONFIG.zoom,
@@ -506,7 +505,7 @@ export default function CoachSelfDetailPage() {
 
       // Add error event listener
       tileLayer.on('tileerror', (error) => {
-        logger.error('[Leaflet] Tile loading error:', error);
+        console.error('[Leaflet] Tile loading error:', error);
       });
 
       // Create default icon for marker (fix for missing default icons)
@@ -540,7 +539,7 @@ export default function CoachSelfDetailPage() {
         map.invalidateSize();
       }, 500);
 
-      logger.debug('[Leaflet] Map initialized successfully');
+      console.log('[Leaflet] Map initialized successfully');
     };
 
     return () => {
@@ -639,7 +638,7 @@ export default function CoachSelfDetailPage() {
           });
         }
       } catch (error) {
-        logger.warn('Auto-search location failed:', error);
+        console.warn('Auto-search location failed:', error);
       }
     }, 1000);
 
@@ -694,7 +693,7 @@ export default function CoachSelfDetailPage() {
         CustomSuccessToast("Không tìm thấy địa điểm phù hợp");
       }
     } catch (error) {
-      logger.error('Geocoding error:', error);
+      console.error('Geocoding error:', error);
       CustomSuccessToast("Có lỗi xảy ra khi tìm kiếm địa điểm");
     } finally {
       setIsSearching(false);
@@ -714,12 +713,12 @@ export default function CoachSelfDetailPage() {
       if (result) {
         updateMapPosition(result.lat, result.lon, result.display_name);
         setEditableLocation(result.display_name);
-        logger.debug('Selected city:', { city: value, address: result.display_name, lat: result.lat, lng: result.lon });
+        console.log('Selected city:', { city: value, address: result.display_name, lat: result.lat, lng: result.lon });
       } else {
         CustomSuccessToast('Không tìm thấy thành phố này trên bản đồ');
       }
     } catch (error) {
-      logger.error('City geocoding error:', error);
+      console.error('City geocoding error:', error);
       CustomSuccessToast('Có lỗi xảy ra khi tìm kiếm thành phố');
     } finally {
       setIsSearching(false);
@@ -1040,7 +1039,7 @@ export default function CoachSelfDetailPage() {
 
                                     finalGalleryImages = [...existingUrls, ...uploadedUrls];
                                   } catch (err) {
-                                    logger.error('Gallery upload failed', err);
+                                    console.error('Gallery upload failed', err);
                                     return CustomFailedToast('Lỗi khi tải ảnh. Vui lòng thử lại.');
                                   }
 
@@ -1081,7 +1080,7 @@ export default function CoachSelfDetailPage() {
                                       CustomFailedToast(String(action?.payload?.message || 'Lưu thất bại'));
                                     }
                                   } catch (err) {
-                                    logger.error('Update coach failed', err);
+                                    console.error('Update coach failed', err);
                                     CustomFailedToast('Lưu thất bại');
                                   }
                                 }}

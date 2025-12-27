@@ -9,7 +9,6 @@ import type {
 import axiosPublic from "../../utils/axios/axiosPublic";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
 import { LOGIN_API, REGISTER_API, GOOGLE_LOGIN_API, LOGOUT_API, VALIDATE_SESSION_API, REFRESH_TOKEN_API } from "./authAPI";
-import logger from "@/utils/logger";
 
 export const signInWithEmailAndPassword = createAsyncThunk<
     Pick<AuthResponse, "user">,
@@ -19,7 +18,9 @@ export const signInWithEmailAndPassword = createAsyncThunk<
     try {
         const response = await axiosPublic.post(LOGIN_API, payload);
 
-        logger.debug("Login response data:", response.data);
+        console.log("-----------------------------------------------------")
+        console.log("Dữ liệu login trả về:", response.data);
+        console.log("-----------------------------------------------------")
 
         const raw = response?.data?.data ?? response?.data;
         const user = raw?.user ?? raw?.data?.user ?? raw?.result?.user ?? null;
@@ -44,7 +45,9 @@ export const signUpWithEmailAndPassword = createAsyncThunk<
 >("auth/register", async (payload, thunkAPI) => {
     try {
         const response = await axiosPublic.post(REGISTER_API, payload);
-        logger.debug("Register response data:", response.data);
+        console.log("-----------------------------------------------------")
+        console.log("Dữ liệu đăng ký trả về:", response.data);
+        console.log("-----------------------------------------------------")
         return response.data;
     } catch (error: any) {
         const errorResponse: ErrorResponse = {

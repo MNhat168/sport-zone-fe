@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import logger from '@/utils/logger';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAppDispatch, useAppSelector } from '@/store/hook';
@@ -287,7 +286,7 @@ export default function FieldCreatePage() {
             };
 
             // Debug: log payload prior to submit
-            logger.debug('CreateField submitData', submitData);
+            console.log('[CreateField] submitData (JSON):', submitData);
 
             if (avatarFile || galleryFiles.length > 0) {
                 // Prepare files with suffixes for backend identification
@@ -303,22 +302,37 @@ export default function FieldCreatePage() {
                 if (avatarFile) filesToUpload.push(renameWithSuffix(avatarFile, '__avatar'));
                 galleryFiles.forEach(f => filesToUpload.push(renameWithSuffix(f, '__gallery')));
 
+                // Debug: log which API will be called and files list
+                console.log('[CreateField] Using multipart upload (CREATE_FIELD_WITH_IMAGES_API). Files:', filesToUpload.map(f => f.name));
+                console.log('[CreateField] Location data:', locationData);
+                // Extra debug: confirm files being sent (count, name, size, type)
+                console.log('[CreateField] Total files to send:', filesToUpload.length);
+                try {
+                    console.table(filesToUpload.map(f => ({ name: f.name, size: f.size, type: f.type })));
+                } catch {
+                    // Fallback if console.table not available
+                    filesToUpload.forEach((f, idx) => console.log(`[CreateField] File[${idx}]`, { name: f.name, size: f.size, type: f.type }));
+                }
+
                 const resWithImages = await dispatch(createFieldWithImages({
                     payload: submitData,
                     images: filesToUpload,
                     locationData: locationData
                 })).unwrap();
-                logger.debug('CreateField API response (with images):', resWithImages);
+                console.log('[CreateField] API response (with images):', resWithImages);
                 CustomSuccessToast('Tạo sân thành công với hình ảnh!');
                 setTimeout(() => navigate('/field-owner/fields'), 1500);
             } else {
+                // Debug: log which API will be called
+                console.log('[CreateField] Using JSON API (CREATE_FIELD_API)');
+                console.log('[CreateField] Location data:', locationData);
                 // Create field without images - need to update submitData with location object
                 const payloadWithLocation = {
                     ...submitData,
                     location: locationData
                 };
                 const resNoImages = await dispatch(createField(payloadWithLocation)).unwrap();
-                logger.debug('CreateField API response (no images):', resNoImages);
+                console.log('[CreateField] API response (no images):', resNoImages);
                 CustomSuccessToast('Tạo sân thành công!');
                 setTimeout(() => navigate('/field-owner/fields'), 1500);
             }
@@ -349,7 +363,7 @@ export default function FieldCreatePage() {
             setRules([]);
 
         } catch (error) {
-            logger.error('Error creating field:', error);
+            console.error('Error creating field:', error);
             CustomFailedToast('Gửi yêu cầu tạo sân thất bại. Vui lòng thử lại.');
         }
     };

@@ -18,12 +18,11 @@ import { lessonTypesReducer } from "../features/lesson-types";
 
 import { webSocketService } from "@/features/chat/websocket.service";
 import { resetChatState } from "@/features/chat/chatSlice";
-import logger from "@/utils/logger";
 
 const chatMiddleware = (store: any) => (next: any) => (action: any) => {
     // Check if the action is logout fulfilled
     if (action.type === 'auth/logout/fulfilled') {
-        logger.debug('[ChatMiddleware] Detected logout, resetting chat service...');
+        console.log('🔄 [ChatMiddleware] Detected logout, resetting chat service...');
 
         // 1. Reset WebSocket Service (disconnects socket)
         webSocketService.reset();

@@ -16,7 +16,6 @@ import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { getCoachById } from "../../features/coach/coachThunk";
 import { PaymentV2Coach } from "./components/payment-v2-coach";
 import { PersonalInfoCoach } from "./components/personal-info-coach";
-import logger from "@/utils/logger";
 
 interface BookingFormData {
     date: string;
@@ -95,7 +94,7 @@ const CoachBookingPage = () => {
 
             setAvailabilityData({ slots: availabilitySlots });
         } catch (error) {
-            logger.error('Failed to fetch available slots', error);
+            console.error('Failed to fetch available slots', error);
             setAvailabilityError('Không thể tải thông tin khả dụng');
             setAvailabilityData(null);
         } finally {

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VIETNAM_CITIES } from '@/utils/constant-value/constant';
 import type { CreateFieldPayload } from '@/types/field-type';
-import logger from '@/utils/logger';
 
 // Types
 interface LocationCardProps {
@@ -97,7 +96,7 @@ const searchLocation = async (query: string): Promise<GeocodingResult | null> =>
                 }
             }
         } catch (error) {
-            logger.warn(`Failed to search for: ${candidate}`, error);
+            console.warn(`Failed to search for: ${candidate}`, error);
             continue;
         }
     }
@@ -196,7 +195,7 @@ export default function LocationCard({
                     geo: { type: 'Point', coordinates: [pos.lng, pos.lat] },
                 });
 
-                logger.debug('Selected location (drag):', { address, lat: pos.lat, lng: pos.lng });
+                console.log('Selected location (drag):', { address, lat: pos.lat, lng: pos.lng });
             })();
         });
 
@@ -235,7 +234,7 @@ export default function LocationCard({
             geo: { type: 'Point', coordinates: [lng, lat] },
         });
 
-        logger.debug('Selected location (map click):', { address, lat, lng });
+        console.log('Selected location (map click):', { address, lat, lng });
     }, [onCoordinatesChange, onLocationChange, onInputChange]);
 
     // Attach click handler
@@ -295,12 +294,12 @@ export default function LocationCard({
 
             if (result) {
                 updateMapPosition(result.lat, result.lon, result.display_name);
-                logger.debug('Selected location (search):', { address: result.display_name, lat: result.lat, lng: result.lon });
+                console.log('Selected location (search):', { address: result.display_name, lat: result.lat, lng: result.lon });
             } else {
                 alert('Không tìm thấy địa điểm phù hợp');
             }
         } catch (error) {
-            logger.error('Geocoding error:', error);
+            console.error('Geocoding error:', error);
             alert('Có lỗi xảy ra khi tìm kiếm địa điểm');
         } finally {
             setIsSearching(false);
@@ -335,12 +334,12 @@ export default function LocationCard({
 
             if (result) {
                 updateMapPosition(result.lat, result.lon, result.display_name);
-                logger.debug('Selected city:', { city: value, address: result.display_name, lat: result.lat, lng: result.lon });
+                console.log('Selected city:', { city: value, address: result.display_name, lat: result.lat, lng: result.lon });
             } else {
                 alert('Không tìm thấy thành phố này trên bản đồ');
             }
         } catch (error) {
-            logger.error('City geocoding error:', error);
+            console.error('City geocoding error:', error);
             alert('Có lỗi xảy ra khi tìm kiếm thành phố');
         } finally {
             setIsSearching(false);

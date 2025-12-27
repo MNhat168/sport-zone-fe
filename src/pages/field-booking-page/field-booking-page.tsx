@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import logger from "@/utils/logger";
 import PageHeader from "@/components/header-banner/page-header";
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component";
 import { BookingFieldTabs } from "./component/booking-field-tabs";
@@ -60,8 +59,24 @@ const FieldBookingPage = () => {
         const storedFieldId = sessionStorage.getItem('selectedFieldId');
         const fieldId = urlFieldId || stateFieldId || storedFieldId;
 
+        console.log('🔍 [FIELD BOOKING] Checking for field ID:', {
+            urlFieldId,
+            stateFieldId,
+            storedFieldId,
+            finalFieldId: fieldId,
+            hasCurrentField: !!currentField,
+            currentFieldId: currentField?.id
+        });
+
         if (!currentField && fieldId) {
+            console.log('📡 [FIELD BOOKING] Dispatching getFieldById for field:', fieldId);
             dispatch(getFieldById(fieldId));
+        } else if (currentField) {
+            console.log('✅ [FIELD BOOKING] Field already loaded:', {
+                fieldId: currentField.id,
+                fieldName: currentField.name,
+                fieldLocation: currentField.location
+            });
         }
     }, [location.search, location.state, currentField, dispatch]);
 
@@ -70,9 +85,13 @@ const FieldBookingPage = () => {
     // Persist currently selected field id for refresh
     useEffect(() => {
         if (currentField?.id) {
+            console.log('💾 [FIELD BOOKING] Persisting field ID to sessionStorage:', {
+                fieldId: currentField.id,
+                fieldName: currentField.name
+            });
             try { sessionStorage.setItem('selectedFieldId', currentField.id); } catch {
                 // Ignore sessionStorage errors (e.g., in private browsing mode)
-                logger.warn('Failed to save field ID to sessionStorage');
+                console.warn('⚠️ [FIELD BOOKING] Failed to save field ID to sessionStorage');
             }
         }
     }, [currentField?.id, currentField?.name]);
@@ -104,7 +123,7 @@ const FieldBookingPage = () => {
                     }
                 }
             } catch (error) {
-                logger.warn('Failed to restore booking data from sessionStorage', error);
+                console.warn('Failed to restore booking data from sessionStorage:', error);
             }
         }
     }, [authUser]);
@@ -141,7 +160,7 @@ const FieldBookingPage = () => {
                     }));
                 }
             } catch (error: any) {
-                logger.error('Failed to fetch courts', error);
+                console.error('Failed to fetch courts:', error);
                 setCourtsError('Không thể tải danh sách sân con. Vui lòng thử lại.');
             }
         };
@@ -150,6 +169,7 @@ const FieldBookingPage = () => {
     }, [currentField?.id]);
 
     const handleBookCourtSubmit = (formData: BookingFormData) => {
+        console.log('BookCourt submitted:', formData);
 
         // Cho phép tiếp tục đặt sân mà không cần đăng nhập
         setBookingData(formData);
@@ -168,6 +188,7 @@ const FieldBookingPage = () => {
 
 
     const handlePersonalInfoSubmit = (formData: BookingFormData) => {
+        console.log('PersonalInfo submitted:', formData);
 
         setBookingData(formData);
         setCurrentStep(BookingStep.PAYMENT);
@@ -183,7 +204,8 @@ const FieldBookingPage = () => {
         setCurrentStep(BookingStep.ORDER_CONFIRMATION);
     };
 
-    const handlePaymentComplete = () => {
+    const handlePaymentComplete = (formData: BookingFormData) => {
+        console.log('Payment completed:', formData);
 
         // TODO: Implement API call to create booking
         // Booking and payment completed successfully

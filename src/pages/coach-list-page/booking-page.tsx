@@ -1,7 +1,6 @@
 "use client"
 
 import { NavbarDarkComponent } from "../../components/header/navbar-dark-component"
-import logger from "@/utils/logger"
 import PageHeader from "../../components/header-banner/page-header"
 import CoachCard from "./card-list/coach-card-props"
 import { useRef, useEffect, useState, useMemo } from "react"
@@ -139,7 +138,7 @@ const BookingPage = () => {
                     }).addTo(mapRef.current)
                 }
             } catch (e) {
-                logger.error('Failed to initialize map', e)
+                console.error('Failed to initialize map', e)
             }
         })()
     }, [])

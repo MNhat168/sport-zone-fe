@@ -28,7 +28,6 @@ import { CombinedConfirmation } from "./components/combined-confirmation";
 
 import axiosPublic from "@/utils/axios/axiosPublic";
 import { FIELD_COURTS_API } from "@/features/field/fieldAPI";
-import logger from "@/utils/logger";
 
 interface CombinedBookingData {
     field: {
@@ -176,7 +175,7 @@ const FieldCoachBookingPage = () => {
                     }));
                 }
             } catch (error: any) {
-                logger.error('Failed to fetch courts:', error);
+                console.error('Failed to fetch courts:', error);
                 setCourtsError('Không thể tải danh sách sân con. Vui lòng thử lại.');
             }
         };

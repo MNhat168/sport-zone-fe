@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "@/hooks/useSocket";
 import axiosInstance from "../../utils/axios/axiosPrivate";
-import logger from "../../utils/logger";
 
 interface Notification {
   id: string;
@@ -83,7 +82,7 @@ export function NotificationBell({
 
         setUnreadCount(unreadCountValue);
       } catch (error) {
-        logger.error("Error fetching notifications:", error);
+        console.error("Error fetching notifications:", error);
       }
     };
     fetchNotifications();
@@ -105,7 +104,7 @@ export function NotificationBell({
     const handleNotification = (data: IncomingNotification) => {
       const notificationId = data?.id || data?._id;
       if (!notificationId) {
-        logger.warn("Notification received without an id, skipping:", data);
+        console.warn("Notification received without an id, skipping:", data);
         return;
       }
 
@@ -166,7 +165,7 @@ export function NotificationBell({
         setUnreadCount(prev => prev + 1);
         toast(notification.content);
       } catch (err) {
-        logger.error('Failed to parse inapp notification', err);
+        console.error('Failed to parse inapp notification', err);
       }
     };
     window.addEventListener('storage', onStorage);
@@ -192,7 +191,7 @@ export function NotificationBell({
         setUnreadCount(prev => prev + 1);
         toast(notification.content);
       } catch (err) {
-        logger.error('Failed to handle custom inapp:notification', err);
+        console.error('Failed to handle custom inapp:notification', err);
       }
     };
     window.addEventListener('inapp:notification', onCustom as EventListener);
@@ -212,7 +211,7 @@ export function NotificationBell({
       );
       setUnreadCount(0);
     } catch (error) {
-      logger.error("Error marking all as read:", error);
+      console.error("Error marking all as read:", error);
     }
   };
 
@@ -234,7 +233,7 @@ export function NotificationBell({
         // Decrease unread count
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (error) {
-        logger.error("Error marking notification as read:", error);
+        console.error("Error marking notification as read:", error);
       }
     }
 

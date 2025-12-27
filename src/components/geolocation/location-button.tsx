@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { locationAPIService } from '@/utils/geolocation';
 import { Loading } from '@/components/ui/loading';
-import logger from '@/utils/logger';
 
 interface LocationButtonProps {
   onLocationObtained?: (lat: number, lng: number) => void;
@@ -38,13 +37,13 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
 
   const handleGetLocation = async () => {
     try {
-      logger.debug('[LOCATION BUTTON] Getting user location...');
+      console.log('📍 [LOCATION BUTTON] Getting user location...');
       const coordinates = await getCoordinates();
 
       if (coordinates && coordinates.lat !== undefined && coordinates.lng !== undefined) {
         const location = { lat: coordinates.lat, lng: coordinates.lng };
         setUserLocation(location);
-        logger.debug('[LOCATION BUTTON] Location obtained:', location);
+        console.log('✅ [LOCATION BUTTON] Location obtained:', location);
 
         // Call callback if provided
         onLocationObtained?.(location.lat, location.lng);
@@ -54,11 +53,11 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
           await sendLocationToBackend(location.lat, location.lng);
         }
       } else {
-        logger.debug('[LOCATION BUTTON] Failed to get coordinates');
+        console.log('❌ [LOCATION BUTTON] Failed to get coordinates');
         onLocationSent?.(false);
       }
     } catch (error) {
-      logger.error('[LOCATION BUTTON] Error getting location:', error);
+      console.error('❌ [LOCATION BUTTON] Error getting location:', error);
       onLocationSent?.(false);
     }
   };
@@ -66,7 +65,7 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
   const sendLocationToBackend = async (lat: number, lng: number) => {
     setIsSendingLocation(true);
     try {
-      logger.debug('[LOCATION BUTTON] Sending location to backend:', { lat, lng });
+      console.log('📡 [LOCATION BUTTON] Sending location to backend:', { lat, lng });
 
       const result = await locationAPIService.sendLocation({
         latitude: lat,
@@ -76,14 +75,14 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
       });
 
       if (result.success) {
-        logger.debug('[LOCATION BUTTON] Location sent successfully:', result);
+        console.log('✅ [LOCATION BUTTON] Location sent successfully:', result);
         onLocationSent?.(true);
       } else {
-        logger.error('[LOCATION BUTTON] Failed to send location:', result.error);
+        console.error('❌ [LOCATION BUTTON] Failed to send location:', result.error);
         onLocationSent?.(false);
       }
     } catch (error) {
-      logger.error('[LOCATION BUTTON] Error sending location:', error);
+      console.error('❌ [LOCATION BUTTON] Error sending location:', error);
       onLocationSent?.(false);
     } finally {
       setIsSendingLocation(false);

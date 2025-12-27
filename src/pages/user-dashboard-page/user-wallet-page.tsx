@@ -23,7 +23,6 @@ import {
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { getUserWallet, withdrawRefund } from "@/features/wallet"
 import { formatCurrency } from "@/utils/format-currency"
-import logger from "@/utils/logger"
 
 const MIN_WITHDRAW_AMOUNT = 1000
 
@@ -122,7 +121,7 @@ export default function UserWalletPage() {
       }
     } catch (err: any) {
       // Error is handled by Redux and shown via useEffect
-      logger.error("Withdraw error:", err)
+      console.error("Withdraw error:", err)
     }
   }
 
