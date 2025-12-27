@@ -9,15 +9,15 @@ import {
     DropdownMenuShortcut,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { type CoachProfile } from '../data/schema'
-import { useCoaches } from './coaches-provider'
+import { type Field } from '../data/schema'
+import { useFields } from './fields-provider'
 
 type DataTableRowActionsProps = {
-    row: Row<CoachProfile>
+    row: Row<Field>
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
-    const { setOpen, setCurrentRow } = useCoaches()
+    const { setOpen, setCurrentRow } = useFields()
 
     const handleView = () => {
         setCurrentRow(row.original)

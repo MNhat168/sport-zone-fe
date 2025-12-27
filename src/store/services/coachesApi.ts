@@ -1,6 +1,20 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import {
+    coachProfileListResponseSchema,
+    type CoachProfileListResponse,
+} from '@/features/coaches/data/schema'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+
+export interface CoachProfileListParams {
+    page?: number
+    limit?: number
+    search?: string
+    isVerified?: boolean
+    sports?: string[]
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+}
 
 export interface CoachRegistrationRequestListParams {
     page?: number
@@ -52,8 +66,37 @@ export const coachesApi = createApi({
             return headers
         },
     }),
-    tagTypes: ['CoachRegistrationRequest'],
+    tagTypes: ['Coach', 'CoachRegistrationRequest'],
     endpoints: (builder) => ({
+        // Get coach profiles (approved coaches)
+        getCoachProfiles: builder.query<CoachProfileListResponse, CoachProfileListParams>({
+            query: (params) => {
+                const searchParams = new URLSearchParams()
+                if (params.page) searchParams.set('page', params.page.toString())
+                if (params.limit) searchParams.set('limit', params.limit.toString())
+                if (params.search) searchParams.set('search', params.search)
+                if (params.isVerified !== undefined) searchParams.set('isVerified', params.isVerified.toString())
+                if (params.sports && params.sports.length > 0) {
+                    params.sports.forEach(sport => searchParams.append('sports', sport))
+                }
+                if (params.sortBy) searchParams.set('sortBy', params.sortBy)
+                if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder)
+
+                return `/coaches/admin/profiles?${searchParams.toString()}`
+            },
+            transformResponse: (response: unknown) => {
+                const raw = response as { success?: boolean; data?: unknown }
+                let parsed
+                if (raw?.success && raw?.data) {
+                    parsed = coachProfileListResponseSchema.parse(raw.data)
+                } else {
+                    parsed = coachProfileListResponseSchema.parse(response)
+                }
+                return transformDatesToStrings(parsed)
+            },
+            providesTags: ['Coach'],
+        }),
+
         // Get coach registration requests
         getCoachRegistrationRequests: builder.query<any, CoachRegistrationRequestListParams>({
             query: (params) => {
@@ -82,7 +125,7 @@ export const coachesApi = createApi({
                 method: 'PATCH',
                 body: data,
             }),
-            invalidatesTags: ['CoachRegistrationRequest'],
+            invalidatesTags: ['CoachRegistrationRequest', 'Coach'],
         }),
 
         // Reject coach registration request
@@ -98,6 +141,7 @@ export const coachesApi = createApi({
 })
 
 export const {
+    useGetCoachProfilesQuery,
     useGetCoachRegistrationRequestsQuery,
     useGetCoachRegistrationRequestQuery,
     useApproveCoachRegistrationMutation,
