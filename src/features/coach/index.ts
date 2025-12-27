@@ -36,6 +36,7 @@ export type {
     CoachDetailResponse,
     ErrorResponse,
     TimeSlot,
+    LessonType,
     SportType,
 } from '../../types/coach-type';
 export type { PublicCoach, PublicCoachesResponse } from '../../types/coach-type';

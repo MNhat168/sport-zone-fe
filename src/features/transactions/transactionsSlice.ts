@@ -1,8 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PaymentState } from "../../types/payment-type";
 import {
+    createVNPayUrl,
     getTransactionByBooking,
     updateTransactionStatus,
+    verifyVNPayPayment,
     createPayOSPayment,
     verifyPayOSPayment,
     queryPayOSTransaction,
@@ -32,6 +34,19 @@ const transactionsSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
+        // Create VNPay URL
+        builder.addCase(createVNPayUrl.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(createVNPayUrl.fulfilled, (state) => {
+            state.loading = false;
+        });
+        builder.addCase(createVNPayUrl.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || { message: "Failed to create VNPay URL", status: "500" };
+        });
+
         // Get transaction by booking
         builder.addCase(getTransactionByBooking.pending, (state) => {
             state.loading = true;
@@ -60,10 +75,23 @@ const transactionsSlice = createSlice({
             state.error = action.payload || { message: "Failed to update transaction status", status: "500" };
         });
 
+        // Verify VNPay Payment (NEW)
+        builder.addCase(verifyVNPayPayment.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(verifyVNPayPayment.fulfilled, (state) => {
+            state.loading = false;
+        });
+        builder.addCase(verifyVNPayPayment.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || { message: "Verification failed", status: "500" };
+        });
+
         // ============================================
         // PayOS Thunks
         // ============================================
-
+        
         // Create PayOS Payment
         builder.addCase(createPayOSPayment.pending, (state) => {
             state.loading = true;

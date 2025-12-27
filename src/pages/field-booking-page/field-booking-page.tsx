@@ -9,7 +9,7 @@ import { AmenitiesTab } from "./fieldTabs/amenities";
 import { PersonalInfoTab } from "./fieldTabs/personalInfo";
 import type { BookingFormData } from "./fieldTabs/personalInfo";
 import { ConfirmCourtTab } from "./fieldTabs/confirmCourt";
-import { PaymentV2 } from "./fieldTabs/payment";
+import { PaymentV2 } from "./fieldTabs/payment-v2";
 import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { getFieldById } from "@/features/field/fieldThunk";
@@ -29,21 +29,7 @@ const FieldBookingPage = () => {
     const { isAuthenticated } = useAuth();
 
     // State để quản lý step hiện tại và booking data
-    // Restore step from sessionStorage if available (for page refresh with held booking)
-    const [currentStep, setCurrentStep] = useState<BookingStep>(() => {
-        try {
-            const savedStep = sessionStorage.getItem('bookingCurrentStep');
-            if (savedStep) {
-                const stepNum = parseInt(savedStep, 10);
-                if (!isNaN(stepNum) && (Object.values(BookingStep) as number[]).includes(stepNum)) {
-                    return stepNum as BookingStep;
-                }
-            }
-        } catch (error) {
-            logger.warn('Failed to restore step from sessionStorage', error);
-        }
-        return BookingStep.BOOK_COURT;
-    });
+    const [currentStep, setCurrentStep] = useState<BookingStep>(BookingStep.BOOK_COURT);
     const [bookingData, setBookingData] = useState<BookingFormData>({
         date: '',
         startTime: '',
@@ -185,12 +171,6 @@ const FieldBookingPage = () => {
 
         setBookingData(formData);
         setCurrentStep(BookingStep.PAYMENT);
-        // Persist step for page refresh
-        try {
-            sessionStorage.setItem('bookingCurrentStep', String(BookingStep.PAYMENT));
-        } catch (error) {
-            logger.warn('Failed to save step to sessionStorage', error);
-        }
     };
 
     const handleBackToConfirm = () => {
@@ -298,12 +278,6 @@ const FieldBookingPage = () => {
                                 phone: '',
                             });
                             setSelectedAmenityIds([]);
-                            // Clear persisted step
-                            try {
-                                sessionStorage.removeItem('bookingCurrentStep');
-                            } catch (error) {
-                                logger.warn('Failed to clear step from sessionStorage', error);
-                            }
                         }}
                     />
                 )}

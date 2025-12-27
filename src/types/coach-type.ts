@@ -87,6 +87,7 @@ export interface CoachDetail {
     createdAt: string;
     memberSince?: string;
     availableSlots: TimeSlot[];
+    lessonTypes: LessonType[];
     price: number;
     sports?: SportType[];
     coachingDetails: {
@@ -100,7 +101,15 @@ export interface TimeSlot {
     endTime: string;
 }
 
-
+export interface LessonType {
+    _id: string;
+    user: string;
+    type: string;
+    name: string;
+    description: string;
+    createdAt: string;
+    updatedAt: string;
+}
 
 // Filter interfaces for coach queries
 export interface CoachFilters {

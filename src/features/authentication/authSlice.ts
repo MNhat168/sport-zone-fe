@@ -22,7 +22,7 @@ import {
     removeFavouriteFields,
 } from "../user/userThunk";
 import type { AuthResponse, ErrorResponse } from "../../types/authentication-type";
-import { clearUserAuth, setCookie } from "../../lib/cookies";
+import { clearUserAuth } from "../../lib/cookies";
 
 // Extend the User type from AuthResponse to include new fields
 // This assumes AuthResponse['user'] is the User interface we want to modify.
@@ -129,8 +129,6 @@ const authSlice = createSlice({
             const isSessionActive = !!sessionStorage.getItem("user");
             const target = isSessionActive ? sessionStorage : localStorage;
             target.setItem("user", JSON.stringify(action.payload));
-            // Sync to cookie
-            setCookie("user", JSON.stringify(action.payload));
         },
         // Thêm action để force refresh avatar
         refreshAvatar: (state) => {
@@ -139,8 +137,6 @@ const authSlice = createSlice({
                 const isSessionActive = !!sessionStorage.getItem("user");
                 const target = isSessionActive ? sessionStorage : localStorage;
                 target.setItem("user", JSON.stringify(state.user));
-                // Sync to cookie
-                setCookie("user", JSON.stringify(state.user));
             }
         },
         // Đồng bộ lại user từ cookie trước, rồi mới đến localStorage
@@ -198,8 +194,6 @@ const authSlice = createSlice({
                     const rememberMe = Boolean((action as any).meta?.arg?.rememberMe);
                     const target = rememberMe ? localStorage : sessionStorage;
                     target.setItem("user", JSON.stringify(user));
-                    // Sync to cookie
-                    setCookie("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in login response", status: "500" } as any;
                 }
@@ -214,8 +208,6 @@ const authSlice = createSlice({
                     const rememberMe = Boolean((action as any).meta?.arg?.rememberMe);
                     const target = rememberMe ? localStorage : sessionStorage;
                     target.setItem("user", JSON.stringify(user));
-                    // Sync to cookie
-                    setCookie("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in google login response", status: "500" } as any;
                 }
@@ -236,9 +228,6 @@ const authSlice = createSlice({
 
                     // Clean up chat state and WebSocket
                     logger.debug('Cleaning up chat on logout');
-
-                    // Clear all sessionStorage (including booking data)
-                    sessionStorage.clear();
                 } catch { }
             })
 
@@ -272,8 +261,6 @@ const authSlice = createSlice({
                     const isSessionActive = !!sessionStorage.getItem("user");
                     const target = isSessionActive ? sessionStorage : localStorage;
                     target.setItem("user", JSON.stringify(user));
-                    // Sync to cookie
-                    setCookie("user", JSON.stringify(user));
                 }
             })
             .addCase(validateSession.rejected, (state) => {
@@ -298,8 +285,6 @@ const authSlice = createSlice({
                     const isSessionActive = !!sessionStorage.getItem("user");
                     const target = isSessionActive ? sessionStorage : localStorage;
                     target.setItem("user", JSON.stringify(user));
-                    // Sync to cookie
-                    setCookie("user", JSON.stringify(user));
                 }
             })
             .addCase(refreshToken.rejected, (state) => {
@@ -324,11 +309,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.user = action.payload; // Sync profile data to auth user
                 state.error = null;
-                // Update storage & cookie
-                const isSessionActive = !!sessionStorage.getItem("user");
-                const target = isSessionActive ? sessionStorage : localStorage;
-                target.setItem("user", JSON.stringify(action.payload));
-                setCookie("user", JSON.stringify(action.payload));
             })
             .addCase(getUserProfile.rejected, (state, action) => {
                 state.loading = false;
@@ -344,11 +324,6 @@ const authSlice = createSlice({
                 state.updateLoading = false;
                 state.user = action.payload;
                 state.updateError = null;
-                // Update storage & cookie
-                const isSessionActive = !!sessionStorage.getItem("user");
-                const target = isSessionActive ? sessionStorage : localStorage;
-                target.setItem("user", JSON.stringify(action.payload));
-                setCookie("user", JSON.stringify(action.payload));
             })
             .addCase(updateUserProfile.rejected, (state, action) => {
                 state.updateLoading = false;
@@ -358,27 +333,22 @@ const authSlice = createSlice({
             // Set favourite sports
             .addCase(setFavouriteSports.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
             })
             // Set favourite coaches
             .addCase(setFavouriteCoaches.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
             })
             // Remove favourite coaches
             .addCase(removeFavouriteCoaches.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
             })
             // Set favourite fields
             .addCase(setFavouriteFields.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
             })
             // Remove favourite fields
             .addCase(removeFavouriteFields.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
             })
 
             // Forgot password

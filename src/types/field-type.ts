@@ -28,7 +28,7 @@ export interface Field {
     name: string;
     sportType: SportType | string; // Support both enum and string for flexibility
     description: string;
-    location: string | FieldLocation; // Support both string and object types from backend
+    location: string;
     images: string[];
     operatingHours: OperatingHours[];
     slotDuration: number; // in minutes (minimum 30, maximum 180)

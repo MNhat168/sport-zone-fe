@@ -20,15 +20,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import logger from "@/utils/logger";
-import { createPayOSPayment } from "@/features/booking/bookingThunk";
-import { useSocket } from "@/hooks/useSocket";
-
 // Helper function for formatting VND
 const formatVND = (value: number): string => {
     try {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
     } catch {
-        return `${value.toLocaleString('vi-VN')} ₫`;
+        return `${value.toLocaleString('vi-VN')} â‚«`;
     }
 };
 
@@ -61,21 +58,13 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     const currentField = useAppSelector((state) => state.field.currentField);
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
 
-    // Get payment state from Redux
-    const { loadingPayment, paymentError: reduxPaymentError } = useAppSelector((state) => state.booking);
-
+    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [paymentError, setPaymentError] = useState<string | null>(null);
     const [heldBookingId, setHeldBookingId] = useState<string | null>(null);
     const [countdown, setCountdown] = useState<number>(300); // 5 minutes in seconds
     const [holdError, setHoldError] = useState<string | null>(null);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
-    const [paymentSuccess, setPaymentSuccess] = useState(false);
-    const [payosWindow, setPayosWindow] = useState<Window | null>(null);
-    const [pollAttempts, setPollAttempts] = useState(0);
-
-    // WebSocket connection for real-time notifications (reads userId from cookie internally)
-    const socket = useSocket('notifications');
 
     // Use booking data from props or fallback to sessionStorage
     const formData: BookingFormData = useMemo(() => {
@@ -187,11 +176,10 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                 storedHoldTime
             });
 
-            // ✅ FIX F5 ERROR: Better validation for missing/invalid session data
+            // Validate stored booking ID
             if (!storedBookingId || storedBookingId.trim() === '' || storedBookingId === 'undefined' || storedBookingId === 'null') {
-                logger.warn('[PAYMENT V2] Page refreshed or session data lost:', storedBookingId);
-                setHoldError('Phiên làm việc đã hết. Vui lòng quay lại và đặt lại.');
-                // Prevent any operations when session is lost
+                logger.warn('[PAYMENT V2] Invalid or missing heldBookingId in sessionStorage:', storedBookingId);
+                setHoldError('Chưa có booking được giữ chỗ. Vui lòng quay lại bước trước.');
                 return;
             }
 
@@ -272,6 +260,9 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             setIsCancelling(false);
             // Clear all sessionStorage
             clearBookingLocal();
+            sessionStorage.removeItem('heldBookingId');
+            sessionStorage.removeItem('heldBookingCountdown');
+            sessionStorage.removeItem('heldBookingTime');
 
             // Reset state
             setHeldBookingId(null);
@@ -325,6 +316,9 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
 
         // Clear all sessionStorage (always run, even if API call fails)
         clearBookingLocal();
+        sessionStorage.removeItem('heldBookingId');
+        sessionStorage.removeItem('heldBookingCountdown');
+        sessionStorage.removeItem('heldBookingTime');
 
         // Reset state
         setHeldBookingId(null);
@@ -337,10 +331,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
 
     // Countdown timer effect
     useEffect(() => {
-        // ✅ Stop countdown if payment is successful or no booking ID
-        if (!heldBookingId || countdown <= 0 || paymentSuccess) {
-            return;
-        }
+        if (!heldBookingId || countdown <= 0) return;
 
         const timer = setInterval(() => {
             setCountdown((prev) => {
@@ -358,154 +349,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [heldBookingId, countdown, paymentSuccess, handleCountdownExpired]);
-
-    // ✅ WebSocket listener for real-time payment success notifications
-    useEffect(() => {
-        if (!socket || !heldBookingId || paymentSuccess) return;
-
-        const handleNotification = (notification: any) => {
-            logger.debug('[PAYMENT V2] Received WebSocket notification:', notification);
-
-            // Access bookingId from metadata (standard structure for backend notifications)
-            const notificationBookingId = notification.metadata?.bookingId || notification.bookingId;
-            const notificationType = notification.type;
-
-            // Check if this is a payment success or booking confirmation notification for our booking
-            const isMatch = (notificationType === 'PAYMENT_SUCCESS' || notificationType === 'BOOKING_CONFIRMED')
-                && notificationBookingId === heldBookingId;
-
-            if (isMatch) {
-                logger.log('[PAYMENT V2] ✅ Success notification received via WebSocket!');
-
-                // Close PayOS window
-                if (payosWindow && !payosWindow.closed) {
-                    payosWindow.close();
-                }
-
-                // Update state
-                setPayosWindow(null);
-                setPaymentSuccess(true);
-                setPollAttempts(0);
-
-                // Clear session storage
-                clearBookingLocal();
-
-                logger.debug('[PAYMENT V2] Session cleared, showing success message');
-            }
-        };
-
-        socket.on('notification', handleNotification);
-
-        return () => {
-            socket.off('notification', handleNotification);
-        };
-    }, [socket, heldBookingId, payosWindow, paymentSuccess]);
-
-    // Poll payment status when PayOS window is open
-    useEffect(() => {
-        if (!payosWindow || !heldBookingId) return;
-
-        const MAX_POLL_ATTEMPTS = 150; // 150 attempts * 2 seconds = 5 minutes max
-        let pollInterval: NodeJS.Timeout;
-
-        pollInterval = setInterval(async () => {
-            // Check if window is still open
-            if (payosWindow.closed) {
-                clearInterval(pollInterval);
-                setPayosWindow(null);
-                setPollAttempts(0); // Reset attempts counter
-
-                // Clear booking sessionStorage when window is closed (failed/cancelled payment)
-                if (!paymentSuccess) {
-                    logger.debug('[PaymentV2] PayOS window closed without payment');
-                }
-                return;
-            }
-
-            // ✅ Check if max polling attempts reached
-            if (pollAttempts >= MAX_POLL_ATTEMPTS) {
-                logger.warn('[PaymentV2] Max polling attempts reached (5 minutes)');
-                clearInterval(pollInterval);
-                setPayosWindow(null);
-                setPollAttempts(0);
-                setPaymentError('Timeout chờ thanh toán. Vui lòng kiểm tra lịch sử booking của bạn.');
-                return;
-            }
-
-            setPollAttempts(prev => prev + 1);
-
-            try {
-                // Poll payment status
-                const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}`,
-                    {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                    }
-                );
-
-                if (response.ok || response.status === 304) {
-                    const rawData = await response.json();
-                    // Handle both { success: true, data: { ... } } and direct booking object
-                    const data = rawData.data || rawData;
-
-                    // Debug: log booking status
-                    logger.debug('[PaymentV2] Polling booking status:', {
-                        bookingId: heldBookingId,
-                        status: data.status,
-                        paymentStatus: data.paymentStatus,
-                        paymentMethod: data.paymentMethod,
-                        attempt: pollAttempts + 1
-                    });
-
-                    // Check if payment is successful
-                    // Booking status: 'pending', 'confirmed', 'cancelled'
-                    // Payment status: 'unpaid', 'paid', 'refunded'
-                    const isPaymentComplete =
-                        data.status === 'confirmed' ||
-                        data.paymentStatus === 'paid' ||
-                        (data.paymentMethod === 'payos' && data.status === 'confirmed');
-
-                    if (isPaymentComplete) {
-                        clearInterval(pollInterval);
-
-                        logger.log('[PaymentV2] ✅ Payment successful! Closing PayOS window...');
-
-                        // Close PayOS window
-                        if (!payosWindow.closed) {
-                            payosWindow.close();
-                        }
-
-                        setPayosWindow(null);
-                        setPaymentSuccess(true);
-                        setPollAttempts(0);
-
-                        // Clear session storage
-                        clearBookingLocal();
-
-                        logger.debug('[PaymentV2] Session cleared, showing success message');
-                    }
-                } else if (response.status === 404) {
-                    // Booking not found - might be deleted/expired
-                    logger.warn('[PaymentV2] Booking not found (404), stopping poll');
-                    clearInterval(pollInterval);
-                    setPayosWindow(null);
-                    setPollAttempts(0);
-                    setPaymentError('Booking không tồn tại. Vui lòng thử lại.');
-                }
-            } catch (error) {
-                logger.error('[PaymentV2] Error polling payment status:', error);
-                // Continue polling on error (don't stop)
-            }
-        }, 2000); // Poll every 2 seconds
-
-        return () => {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-            }
-        };
-    }, [payosWindow, heldBookingId, paymentSuccess, pollAttempts]);
+    }, [heldBookingId, countdown, handleCountdownExpired]);
 
     // Handle PayOS payment initiation
     const handlePayWithPayOS = async () => {
@@ -514,31 +358,35 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
             return;
         }
 
+        setPaymentStatus('processing');
         dispatch(clearError());
 
         try {
-            // Dispatch Redux action to create PayOS payment link
-            const result = await dispatch(createPayOSPayment(heldBookingId)).unwrap();
+            const token = sessionStorage.getItem('token');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
 
-            // Open PayOS checkout URL in new window
-            if (result.checkoutUrl) {
-                const paymentWindow = window.open(
-                    result.checkoutUrl,
-                    'PayOS Payment',
-                    'width=800,height=900,left=200,top=100'
-                );
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/payment/payos`, {
+                method: 'POST',
+                headers,
+            });
 
-                if (paymentWindow) {
-                    setPayosWindow(paymentWindow);
-                } else {
-                    throw new Error('Không thể mở cửa sổ thanh toán. Vui lòng kiểm tra popup blocker.');
-                }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể tạo link thanh toán');
+            }
+
+            const data = await response.json();
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
             } else {
                 throw new Error('Link thanh toán không tồn tại');
             }
+
         } catch (error: any) {
             logger.error('PayOS Error:', error);
             setPaymentError(error.message || 'Lỗi khi khởi tạo thanh toán PayOS');
+            setPaymentStatus('error');
         }
     };
 
@@ -575,20 +423,12 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
     // Clear persisted booking-related local storage
     const clearBookingLocal = () => {
         try {
-            // Only remove booking-related session data
-            // DO NOT use sessionStorage.clear() as it wipes 'user' data and breaks Socket/Notifications
-            const itemsToRemove = [
-                'bookingFormData',
-                'selectedFieldId',
-                'amenitiesNote',
-                'heldBookingId',
-                'heldBookingCountdown',
-                'heldBookingTime',
-                'bookingCurrentStep'
-            ];
-            itemsToRemove.forEach(item => sessionStorage.removeItem(item));
-
-            logger.debug('[PaymentV2] Booking session data cleared selectively');
+            sessionStorage.removeItem('bookingFormData');
+            sessionStorage.removeItem('selectedFieldId');
+            sessionStorage.removeItem('amenitiesNote');
+            sessionStorage.removeItem('heldBookingId');
+            sessionStorage.removeItem('heldBookingCountdown');
+            sessionStorage.removeItem('heldBookingTime');
         } catch (error) {
             logger.error('Error clearing booking local storage:', error);
         }
@@ -610,69 +450,6 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                         <div className="pt-4">
                             <Button variant="outline" onClick={onBack}>Quay lại</Button>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-
-    // Show success confirmation
-    if (paymentSuccess) {
-        return (
-            <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
-                <Card className="border border-gray-200">
-                    <CardContent className="p-8 text-center">
-                        <div className="mb-6">
-                            <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                                <svg
-                                    className="w-12 h-12 text-green-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
-                            </div>
-                        </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-3">
-                            Thanh toán thành công!
-                        </h2>
-                        <p className="text-lg text-gray-600 mb-6">
-                            Đặt sân của bạn đã được xác nhận. Chúng tôi đã gửi email xác nhận đến {formData.email}.
-                        </p>
-                        <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left max-w-md mx-auto">
-                            <h3 className="font-semibold text-gray-900 mb-4">Thông tin đặt sân</h3>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Sân:</span>
-                                    <span className="font-medium">{venue.name}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Ngày:</span>
-                                    <span className="font-medium">{formatDate(formData.date)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Giờ:</span>
-                                    <span className="font-medium">
-                                        {formatTime(formData.startTime)} - {formatTime(formData.endTime)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between pt-3 border-t">
-                                    <span className="font-semibold text-gray-900">Tổng:</span>
-                                    <span className="font-semibold text-green-600">
-                                        {formatVND(calculateTotal())}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <p className="text-sm text-gray-500">
-                            Bạn có thể đóng trang này hoặc kiểm tra lịch sử đặt sân trong tài khoản của bạn.
-                        </p>
                     </CardContent>
                 </Card>
             </div>
@@ -753,10 +530,10 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                 </p>
                             </div>
 
-                            {(paymentError || reduxPaymentError) && (
+                            {paymentError && (
                                 <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm border border-red-200">
                                     <AlertCircle className="w-4 h-4 inline mr-2" />
-                                    {paymentError || reduxPaymentError?.message}
+                                    {paymentError}
                                 </div>
                             )}
 
@@ -764,9 +541,9 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                 <Button
                                     className="w-full h-12 text-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 font-semibold"
                                     onClick={handlePayWithPayOS}
-                                    disabled={loadingPayment || !heldBookingId || countdown <= 0}
+                                    disabled={paymentStatus === 'processing' || !heldBookingId || countdown <= 0}
                                 >
-                                    {loadingPayment ? (
+                                    {paymentStatus === 'processing' ? (
                                         <>
                                             <Loading className="mr-2 h-5 w-5 text-white" />
                                             Đang xử lý...
@@ -780,7 +557,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                                     variant="outline"
                                     className="w-full h-12 text-gray-600 border-gray-300 hover:bg-gray-50"
                                     onClick={handleBackClick}
-                                    disabled={loadingPayment}
+                                    disabled={paymentStatus === 'processing'}
                                 >
                                     Quay lại
                                 </Button>
@@ -804,11 +581,7 @@ export const PaymentV2: React.FC<PaymentV2Props> = ({
                         <CardContent className="p-6 space-y-4">
                             <div>
                                 <h3 className="font-medium text-gray-900">{venue.name}</h3>
-                                <p className="text-sm text-gray-500">
-                                    {typeof venue.location === 'string'
-                                        ? venue.location
-                                        : venue.location?.address || 'Địa chỉ đang cập nhật'}
-                                </p>
+                                <p className="text-sm text-gray-500">{venue.location}</p>
                             </div>
                             <div className="space-y-3 pt-2 text-sm">
                                 <div className="flex justify-between">

@@ -24,7 +24,6 @@ import './App.css';
 import { useEffect, Suspense } from 'react';
 import { webSocketService } from '@/features/chat/websocket.service';
 import { Loading } from '@/components/ui/loading';
-import { Toaster } from "@/components/ui/sonner";
 // const RequireAuth = ({ children }: { children: ReactElement }) => {
 //   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 //   if (!token) {
@@ -85,7 +84,7 @@ function App() {
   // Connect chat socket globally when user is logged in
   useEffect(() => {
     try {
-      const userData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      const userData = sessionStorage.getItem('user');
       if (userData) {
         webSocketService.connect();
       }
@@ -100,7 +99,6 @@ function App() {
           <RouterProvider router={router} />
         </Suspense>
         <FloatingChatWidget />
-        <Toaster />
         {/* <ChatbotWidget /> */}
       </UserSyncProvider>
     </Provider>

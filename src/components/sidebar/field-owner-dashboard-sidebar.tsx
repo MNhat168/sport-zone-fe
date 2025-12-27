@@ -139,19 +139,10 @@ export function FieldOwnerSidebar() {
         setIsLoggingOut(true);
         // Small delay to let the animation show
         await new Promise(resolve => setTimeout(resolve, 800));
-
-        // Ensure all local state is wiped before moving away
-        clearUserAuth();
-        sessionStorage.clear(); // Explicitly clear for non-cookie auth fallback
-
-        try {
-            await dispatch(logout()).unwrap();
-        } catch (error) {
-            console.error("Server-side logout failed:", error);
-        } finally {
-            // Force reload to ensure clean state
-            window.location.href = "/";
-        }
+        clearUserAuth()
+        dispatch(logout())
+        // Force reload to ensure clean state
+        window.location.href = "/"
     }
 
     // Auto-open submenu when on field/create page

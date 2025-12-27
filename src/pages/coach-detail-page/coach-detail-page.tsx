@@ -244,6 +244,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
     const handleScroll = () => {
       const sections = [
         "bio",
+        "coaching",
         "gallery",
         "reviews",
         "location",
@@ -297,7 +298,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
 
   const tabs = [
     { id: "bio", label: "Giới thiệu" },
-
+    { id: "coaching", label: "Huấn luyện" },
     { id: "gallery", label: "Thư viện ảnh" },
     { id: "reviews", label: "Đánh giá" },
     { id: "location", label: "Vị trí" },
@@ -514,7 +515,7 @@ export default function CoachDetailPage({ coachId }: CoachDetailPageProps) {
               <div className="space-y-6">
                 <BioSection coachData={coachData} />
 
-
+                {/* <CoachingSection /> */}
 
                 <GallerySection
                   images={galleryImages}
