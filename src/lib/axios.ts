@@ -1,9 +1,10 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 60000, // 60 seconds timeout - quan trọng cho production
   withCredentials: true, // Important: để gửi cookies trong mỗi request
   headers: {
     'Content-Type': 'application/json',
@@ -32,6 +33,13 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config
+
+    // Xử lý network errors (timeout, connection refused, etc.)
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || !error.response) {
+      console.error('🚨 Network error:', error.message)
+      // Có thể thêm retry logic hoặc hiển thị thông báo cho user
+      return Promise.reject(error)
+    }
 
     // Nếu lỗi 401 và chưa retry, thử refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {

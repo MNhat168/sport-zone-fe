@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { fieldListResponseSchema, type FieldListResponse, type Field } from '@/features/fields/data/schema'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // Helper function to recursively transform Date objects to ISO strings
 // This ensures Redux state is serializable
@@ -21,7 +21,7 @@ function transformDatesToStrings<T>(obj: T): T {
     if (typeof obj === 'object' && obj.constructor === Object) {
         const transformed = {} as T
         for (const [key, value] of Object.entries(obj)) {
-            ;(transformed as any)[key] = transformDatesToStrings(value)
+            ; (transformed as any)[key] = transformDatesToStrings(value)
         }
         return transformed
     }
@@ -44,11 +44,9 @@ export const fieldsApi = createApi({
     reducerPath: 'fieldsApi',
     baseQuery: fetchBaseQuery({
         baseUrl: API_BASE_URL,
+        credentials: 'include',
         prepareHeaders: (headers) => {
-            const token = localStorage.getItem('accessToken')
-            if (token) {
-                headers.set('Authorization', `Bearer ${token}`)
-            }
+            headers.set('Content-Type', 'application/json')
             headers.set('X-Client-Type', 'admin')
             return headers
         },
@@ -66,7 +64,7 @@ export const fieldsApi = createApi({
                     // or direct format: { fields: [...], pagination: {...} }
                     const raw = response as { success?: boolean; data?: unknown }
                     let dataToParse: unknown
-                    
+
                     if (raw?.success && raw?.data) {
                         // If API wraps response in { success: true, data: {...} }
                         dataToParse = raw.data

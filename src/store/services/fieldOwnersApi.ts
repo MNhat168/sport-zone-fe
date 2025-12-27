@@ -4,8 +4,7 @@ import {
   type FieldOwnerProfileListResponse,
 } from '@/features/field-owners/data/schema'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 export interface FieldOwnerProfileListParams {
   page?: number
   limit?: number
