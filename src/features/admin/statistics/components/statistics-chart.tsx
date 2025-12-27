@@ -34,12 +34,15 @@ interface StatisticsChartProps {
     data: any
     activeTab: string
     chartType?: 'bar' | 'line' | 'pie' | 'revenue'
+    timeRange: string
+    onTimeRangeChange: (value: string) => void
 }
 
 // statistics-chart.tsx - Updated unpackData function
-export function StatisticsChart({ data, activeTab, chartType = 'bar' }: StatisticsChartProps) {
+export function StatisticsChart({ data, activeTab, chartType = 'bar', timeRange, onTimeRangeChange }: StatisticsChartProps) {
     const [selectedChart, setSelectedChart] = useState(chartType)
-    const [timeRange, setTimeRange] = useState('6months')
+
+    // Function to unpackData... (no changes needed here as it uses passed data)
 
     // Function to unpack data based on structure
     const unpackData = () => {
@@ -49,14 +52,14 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
             if (activeTab === 'field-owners' && data.length > 0) {
                 // Try to aggregate monthly bookings across all field owners
                 const monthlyDataMap = new Map()
-                
+
                 data.forEach(owner => {
                     if (owner.monthlyBookings && Array.isArray(owner.monthlyBookings)) {
                         owner.monthlyBookings.forEach((month: { month: any; count: any; revenue: any; }) => {
                             if (month.month) {
-                                const existing = monthlyDataMap.get(month.month) || { 
-                                    month: month.month, 
-                                    count: 0, 
+                                const existing = monthlyDataMap.get(month.month) || {
+                                    month: month.month,
+                                    count: 0,
                                     revenue: 0,
                                     bookings: 0
                                 }
@@ -68,29 +71,29 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         })
                     }
                 })
-                
-                return Array.from(monthlyDataMap.values()).sort((a, b) => 
+
+                return Array.from(monthlyDataMap.values()).sort((a, b) =>
                     a.month.localeCompare(b.month)
                 )
             }
             return data
         }
-        
+
         // If data is an object with monthlyRevenue (revenueAnalysis case)
         if (data && data.monthlyRevenue && Array.isArray(data.monthlyRevenue)) {
             return data.monthlyRevenue
         }
-        
+
         // If data is an object with sportsDistribution
         if (data && data.sportsDistribution && Array.isArray(data.sportsDistribution)) {
             return data.sportsDistribution
         }
-        
+
         // If data is an object with revenueAnalysis that has monthlyRevenue
         if (data && data.revenueAnalysis && data.revenueAnalysis.monthlyRevenue && Array.isArray(data.revenueAnalysis.monthlyRevenue)) {
             return data.revenueAnalysis.monthlyRevenue
         }
-        
+
         // For field owners object data (if not in array)
         if (data && activeTab === 'field-owners') {
             if (data.monthlyBookings && Array.isArray(data.monthlyBookings)) {
@@ -100,7 +103,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                 return data.sportsDistribution
             }
         }
-        
+
         // Default empty array
         return []
     }
@@ -108,9 +111,9 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
     const unpackedData = unpackData()
 
     // Debug log to see what data we're getting
-    console.log('Chart debug:', { 
-        activeTab, 
-        dataType: typeof data, 
+    console.log('Chart debug:', {
+        activeTab,
+        dataType: typeof data,
         isArray: Array.isArray(data),
         unpackedDataLength: unpackedData.length,
         firstItem: unpackedData[0]
@@ -122,9 +125,9 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                 <CardHeader>
                     <CardTitle>Phân tích hiệu suất</CardTitle>
                     <CardDescription>
-                        {activeTab === 'field-owners' ? 'Hiệu suất chủ sân' : 
-                         activeTab === 'coaches' ? 'Hiệu suất huấn luyện viên' : 
-                         activeTab === 'overview' ? 'Hiệu suất nền tảng' : 'Phân tích'}
+                        {activeTab === 'field-owners' ? 'Hiệu suất chủ sân' :
+                            activeTab === 'coaches' ? 'Hiệu suất huấn luyện viên' :
+                                activeTab === 'overview' ? 'Hiệu suất nền tảng' : 'Phân tích'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className='h-[400px] flex items-center justify-center'>
@@ -148,7 +151,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                     growth: item.growth || 0,
                     bookings: item.bookings || item.count || 0,
                 }))
-            
+
             case 'pie':
                 // For field owners, use sportsDistribution
                 if (activeTab === 'field-owners' && data[0]?.sportsDistribution) {
@@ -156,10 +159,10 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                     data.forEach((owner: { sportsDistribution: any[]; }) => {
                         if (owner.sportsDistribution) {
                             owner.sportsDistribution.forEach((sport: { sport: any; count: any; }) => {
-                                const existing = sportMap.get(sport.sport) || { 
-                                    name: sport.sport, 
+                                const existing = sportMap.get(sport.sport) || {
+                                    name: sport.sport,
                                     value: 0,
-                                    count: 0 
+                                    count: 0
                                 }
                                 existing.value += sport.count || 0
                                 existing.count += sport.count || 0
@@ -173,13 +176,13 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         color: COLORS[index % COLORS.length],
                     }))
                 }
-                
+
                 return unpackedData.map((item: any, index: number) => ({
                     name: item.sport || item.name || item.label || `Item ${index}`,
                     value: item.count || item.percentage || item.value || item.bookings || 0,
                     color: COLORS[index % COLORS.length],
                 }))
-            
+
             default:
                 // For bar/line charts
                 if (activeTab === 'field-owners') {
@@ -193,7 +196,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         ...item
                     }))
                 }
-                
+
                 return unpackedData.slice(0, 8).map((item: any) => ({
                     name: item.name || item.fieldOwnerName || item.coachName || item.month || `Item ${item.id || ''}`,
                     bookings: item.totalBookings || item.bookings || item.count || 0,
@@ -225,7 +228,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         )}
                     </LineChart>
                 )
-            
+
             case 'pie':
                 return (
                     <PieChart>
@@ -247,7 +250,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         <Legend />
                     </PieChart>
                 )
-            
+
             case 'revenue':
                 return (
                     <BarChart data={chartData}>
@@ -255,7 +258,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         <XAxis dataKey="name" />
                         <YAxis yAxisId="left" />
                         <YAxis yAxisId="right" orientation="right" />
-                        <Tooltip 
+                        <Tooltip
                             formatter={(value, name) => {
                                 if (name === 'revenue') return [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value)), 'Doanh thu']
                                 if (name === 'growth') return [`${value}%`, 'Tăng trưởng']
@@ -269,14 +272,14 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                         )}
                     </BarChart>
                 )
-            
+
             default:
                 return (
                     <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
-                        <Tooltip 
+                        <Tooltip
                             formatter={(value, name) => {
                                 if (name === 'revenue') return [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value)), 'Doanh thu']
                                 if (name === 'bookings') return [value, 'Lượt đặt']
@@ -284,16 +287,16 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                             }}
                         />
                         <Legend />
-                        <Bar 
-                            dataKey="bookings" 
-                            fill="#8884d8" 
+                        <Bar
+                            dataKey="bookings"
+                            fill="#8884d8"
                             name="Tổng lượt đặt"
                             radius={[4, 4, 0, 0]}
                         />
                         {chartData[0]?.revenue !== undefined && chartData[0]?.revenue > 0 && (
-                            <Bar 
-                                dataKey="revenue" 
-                                fill="#82ca9d" 
+                            <Bar
+                                dataKey="revenue"
+                                fill="#82ca9d"
                                 name="Doanh thu (VND)"
                                 radius={[4, 4, 0, 0]}
                             />
@@ -308,20 +311,20 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
             <CardHeader className='flex flex-row items-center justify-between'>
                 <div>
                     <CardTitle>
-                        {selectedChart === 'revenue' ? 'Phân tích doanh thu' : 
-                         selectedChart === 'pie' ? 'Phân tích phân bổ' : 
-                         activeTab === 'field-owners' ? 'Hiệu suất chủ sân' :
-                         activeTab === 'coaches' ? 'Hiệu suất huấn luyện viên' : 'Phân tích hiệu suất'}
+                        {selectedChart === 'revenue' ? 'Phân tích doanh thu' :
+                            selectedChart === 'pie' ? 'Phân tích phân bổ' :
+                                activeTab === 'field-owners' ? 'Hiệu suất chủ sân' :
+                                    activeTab === 'coaches' ? 'Hiệu suất huấn luyện viên' : 'Phân tích hiệu suất'}
                     </CardTitle>
                     <CardDescription>
                         {selectedChart === 'pie' && activeTab === 'field-owners' ? 'Phân bổ thể thao theo chủ sân' :
-                         activeTab === 'field-owners' ? 'Chủ sân hoạt động tốt nhất theo lượt đặt' : 
-                         activeTab === 'coaches' ? 'Chỉ số hiệu suất huấn luyện viên' : 
-                         activeTab === 'overview' ? 'Hiệu suất nền tảng' : 'Phân tích'}
+                            activeTab === 'field-owners' ? 'Chủ sân hoạt động tốt nhất theo lượt đặt' :
+                                activeTab === 'coaches' ? 'Chỉ số hiệu suất huấn luyện viên' :
+                                    activeTab === 'overview' ? 'Hiệu suất nền tảng' : 'Phân tích'}
                     </CardDescription>
                 </div>
                 <div className='flex gap-2'>
-                    <Select value={timeRange} onValueChange={setTimeRange}>
+                    <Select value={timeRange} onValueChange={onTimeRangeChange}>
                         <SelectTrigger className="w-[130px]">
                             <SelectValue placeholder="Khoảng thời gian" />
                         </SelectTrigger>
@@ -332,7 +335,7 @@ export function StatisticsChart({ data, activeTab, chartType = 'bar' }: Statisti
                             <SelectItem value="all">Tất cả</SelectItem>
                         </SelectContent>
                     </Select>
-                    
+
                     <Select value={selectedChart} onValueChange={(value) => setSelectedChart(value as 'bar' | 'line' | 'pie' | 'revenue')}>
                         <SelectTrigger className="w-[130px]">
                             <SelectValue placeholder="Loại biểu đồ" />

@@ -14,11 +14,16 @@ export default function Statistics() {
     const [analyticsData, setAnalyticsData] = useState<any>({})
     const [fieldOwnerData, setFieldOwnerData] = useState<any[]>([])
     const [coachData, setCoachData] = useState<any[]>([])
+    const [timeRange, setTimeRange] = useState('year')
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [aiThinking, setAiThinking] = useState(false)
     const [aiGenerated, setAiGenerated] = useState(false)
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+    useEffect(() => {
+        refreshData()
+    }, [timeRange])
 
     // In index.tsx, update fetchRawData function:
     const fetchRawData = async () => {
@@ -28,9 +33,9 @@ export default function Statistics() {
                 fieldOwnersRes,
                 coachesRes
             ] = await Promise.all([
-                axios.get('/admin/statistics/platform-analytics?ai=false'),
-                axios.get('/admin/statistics/field-owners?ai=false'),
-                axios.get('/admin/statistics/coaches?ai=false')
+                axios.get(`/admin/statistics/platform-analytics?ai=false&timeRange=${timeRange}`),
+                axios.get(`/admin/statistics/field-owners?ai=false&timeRange=${timeRange}`),
+                axios.get(`/admin/statistics/coaches?ai=false&timeRange=${timeRange}`)
             ])
 
             return {
@@ -54,9 +59,9 @@ export default function Statistics() {
                 aiFieldOwnersRes,
                 aiCoachesRes
             ] = await Promise.all([
-                axios.get('/admin/statistics/platform-analytics?ai=true'),
-                axios.get('/admin/statistics/field-owners?ai=true'),
-                axios.get('/admin/statistics/coaches?ai=true')
+                axios.get(`/admin/statistics/platform-analytics?ai=true&timeRange=${timeRange}`),
+                axios.get(`/admin/statistics/field-owners?ai=true&timeRange=${timeRange}`),
+                axios.get(`/admin/statistics/coaches?ai=true&timeRange=${timeRange}`)
             ])
 
             // Update data with AI insights
@@ -98,7 +103,7 @@ export default function Statistics() {
         } finally {
             setLoading(false)
         }
-    }, [aiGenerated])
+    }, [aiGenerated, timeRange])
 
     // Setup polling for data
     useEffect(() => {
@@ -221,7 +226,7 @@ export default function Statistics() {
                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(analyticsData.summary.totalRevenue || 0)}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {analyticsData.summary.growthRate}% so với năm trước
+                                {Number(analyticsData.summary.growthRate).toFixed(1)}% so với năm trước
                                 {aiGenerated && <span className="ml-2 text-green-600">✓ Cải thiện bởi AI</span>}
                             </p>
                         </CardContent>
@@ -291,6 +296,8 @@ export default function Statistics() {
                             data={analyticsData.revenueAnalysis}
                             activeTab="overview"
                             chartType="revenue"
+                            timeRange={timeRange}
+                            onTimeRangeChange={setTimeRange}
                         />
                     )}
 
@@ -309,7 +316,12 @@ export default function Statistics() {
                             </span>
                         )}
                     </div>
-                    <StatisticsChart data={fieldOwnerData} activeTab="field-owners" />
+                    <StatisticsChart
+                        data={fieldOwnerData}
+                        activeTab="field-owners"
+                        timeRange={timeRange}
+                        onTimeRangeChange={setTimeRange}
+                    />
                     <StatisticsList data={fieldOwnerData} loading={false} activeTab="field-owners" aiGenerated={aiGenerated} />
                 </TabsContent>
 
@@ -322,7 +334,12 @@ export default function Statistics() {
                             </span>
                         )}
                     </div>
-                    <StatisticsChart data={coachData} activeTab="coaches" />
+                    <StatisticsChart
+                        data={coachData}
+                        activeTab="coaches"
+                        timeRange={timeRange}
+                        onTimeRangeChange={setTimeRange}
+                    />
                     <StatisticsList data={coachData} loading={false} activeTab="coaches" aiGenerated={aiGenerated} />
                 </TabsContent>
 
