@@ -9,11 +9,11 @@ import {
     DropdownMenuShortcut,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { type CoachProfile } from '../data/schema'
+import { type CoachRegistrationRequest, type CoachProfile } from '../data/schema'
 import { useCoaches } from './coaches-provider'
 
 type DataTableRowActionsProps = {
-    row: Row<CoachProfile>
+    row: Row<CoachProfile | CoachRegistrationRequest>
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
