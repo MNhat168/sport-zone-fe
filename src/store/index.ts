@@ -19,6 +19,7 @@ import { usersApi } from './services/usersApi'
 import { transactionsApi } from './services/transactionsApi'
 import { reportsApi } from './services/reportsApi'
 import { bookingsApi } from './services/bookingsApi'
+import { fieldsApi } from './services/fieldsApi'
 import authReducer from './slices/authSlice'
 import { billingReducer } from '../features/billing'
 
@@ -42,6 +43,7 @@ const rootReducer = combineReducers({
   [transactionsApi.reducerPath]: transactionsApi.reducer,
   [reportsApi.reducerPath]: reportsApi.reducer,
   [bookingsApi.reducerPath]: bookingsApi.reducer,
+  [fieldsApi.reducerPath]: fieldsApi.reducer,
 })
 
 // Persisted reducer
@@ -64,6 +66,7 @@ export const store = configureStore({
       transactionsApi.middleware,
       reportsApi.middleware,
       bookingsApi.middleware,
+      fieldsApi.middleware,
     ),
 })
 

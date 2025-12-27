@@ -10,6 +10,8 @@ import {
   Calendar,
   CreditCard,
   FileSpreadsheet,
+  Dumbbell,
+  MapPin,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -90,9 +92,29 @@ export const sidebarData: SidebarData = {
           ],
         },
         {
+          title: 'Quản lý sân',
+          url: '/fields',
+          icon: MapPin,
+        },
+        {
+          title: 'Huấn luyện viên',
+          icon: Dumbbell,
+          items: [
+            {
+              title: 'Tất cả HLV',
+              url: '/coaches',
+            },
+            {
+              title: 'Yêu cầu đăng ký',
+              url: '/coaches/requests',
+              icon: FileCheck,
+            },
+          ],
+        },
+        {
           title: 'Thống kê',
           url: '/admin/statistics',
-          icon: AudioWaveform, // Reusing an icon or import a new one like BarChart
+          icon: AudioWaveform,
         },
       ],
     },

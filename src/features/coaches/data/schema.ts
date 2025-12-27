@@ -40,6 +40,39 @@ export const coachRegistrationRequestSchema = z.object({
 
 export type CoachRegistrationRequest = z.infer<typeof coachRegistrationRequestSchema>
 
+// Coach Profile schema (approved coaches from GET /coaches/admin/profiles)
+export const coachProfileSchema = z.object({
+    id: z.string(),
+    userId: z.string(),
+    fullName: z.string(),
+    email: z.string(),
+    phone: z.string().optional(),
+    avatarUrl: z.string().optional(),
+    sports: z.array(z.string()),
+    certification: z.string().optional(),
+    hourlyRate: z.number(),
+    bio: z.string().optional(),
+    experience: z.string().optional(),
+    location: z.union([
+        z.string(),
+        z.object({
+            address: z.string(),
+            geo: z.object({
+                type: z.literal('Point'),
+                coordinates: z.array(z.number()),
+            }).optional(),
+        })
+    ]).optional(),
+    rating: z.number(),
+    totalReviews: z.number(),
+    completedSessions: z.number(),
+    rank: z.string().optional(),
+    bankVerified: z.boolean(),
+    createdAt: z.coerce.date().optional(),
+})
+
+export type CoachProfile = z.infer<typeof coachProfileSchema>
+
 // Approval/Rejection request schemas
 export const approveRequestSchema = z.object({
     notes: z.string().optional(),
@@ -54,6 +87,7 @@ export type RejectRequest = z.infer<typeof rejectRequestSchema>
 
 // List response schemas
 export const coachRegistrationRequestListSchema = z.array(coachRegistrationRequestSchema)
+export const coachProfileListSchema = z.array(coachProfileSchema)
 
 // Pagination schema
 export const paginationSchema = z.object({
@@ -66,3 +100,11 @@ export const paginationSchema = z.object({
 })
 
 export type Pagination = z.infer<typeof paginationSchema>
+
+// Coach Profile List Response schema
+export const coachProfileListResponseSchema = z.object({
+    data: z.array(coachProfileSchema),
+    pagination: paginationSchema.optional(),
+})
+
+export type CoachProfileListResponse = z.infer<typeof coachProfileListResponseSchema>

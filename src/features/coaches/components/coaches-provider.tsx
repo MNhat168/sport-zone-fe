@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
-import { type CoachRegistrationRequest } from '../data/schema'
+import { type CoachRegistrationRequest, type CoachProfile } from '../data/schema'
 
 type CoachesDialogType = 'view' | 'approve' | 'reject'
 
 type CoachesContextType = {
     open: CoachesDialogType | null
     setOpen: (str: CoachesDialogType | null) => void
-    currentRow: CoachRegistrationRequest | null
+    currentRow: CoachRegistrationRequest | CoachProfile | null
     setCurrentRow: React.Dispatch<
-        React.SetStateAction<CoachRegistrationRequest | null>
+        React.SetStateAction<CoachRegistrationRequest | CoachProfile | null>
     >
 }
 
@@ -24,7 +24,7 @@ export function CoachesProvider({
 }) {
     const [open, setOpen] = useDialogState<CoachesDialogType>(null)
     const [currentRow, setCurrentRow] = useState<
-        CoachRegistrationRequest | null
+        CoachRegistrationRequest | CoachProfile | null
     >(null)
 
     return (
