@@ -319,16 +319,11 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
           Họ tên đầy đủ
         </Label>
         <Input
-          className="h-11"
+          className="h-11 bg-gray-50"
           value={formData.personalInfo?.fullName || ""}
-          onChange={(e) =>
-            onFormDataChange({
-              ...formData,
-              personalInfo: { ...formData.personalInfo!, fullName: e.target.value },
-            })
-          }
-          placeholder="Nguyễn Văn A"
-          disabled={isEkycVerified}
+          readOnly
+          placeholder="Vui lòng xác thực eKYC để hiển thị thông tin"
+          disabled={true}
         />
       </div>
       <div className="space-y-2">
@@ -336,16 +331,11 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
           Số CMND/CCCD
         </Label>
         <Input
-          className="h-11"
+          className="h-11 bg-gray-50"
           value={formData.personalInfo?.idNumber || ""}
-          onChange={(e) =>
-            onFormDataChange({
-              ...formData,
-              personalInfo: { ...formData.personalInfo!, idNumber: e.target.value },
-            })
-          }
-          placeholder="001234567890"
-          disabled={isEkycVerified}
+          readOnly
+          placeholder="Vui lòng xác thực eKYC để hiển thị thông tin"
+          disabled={true}
         />
       </div>
       <div className="space-y-2">
@@ -353,16 +343,11 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
           Địa chỉ thường trú
         </Label>
         <Textarea
-          className="min-h-[100px] resize-none"
+          className="min-h-[100px] resize-none bg-gray-50"
           value={formData.personalInfo?.address || ""}
-          onChange={(e) =>
-            onFormDataChange({
-              ...formData,
-              personalInfo: { ...formData.personalInfo!, address: e.target.value },
-            })
-          }
-          placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-          disabled={isEkycVerified}
+          readOnly
+          placeholder="Vui lòng xác thực eKYC để hiển thị thông tin"
+          disabled={true}
         />
       </div>
     </div>
