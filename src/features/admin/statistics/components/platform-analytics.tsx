@@ -32,13 +32,13 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
               <TabsTrigger value="type">Theo loại</TabsTrigger>
               <TabsTrigger value="periods">Giờ cao điểm</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="sports" className="space-y-4">
               {data.revenueAnalysis?.revenueBySport?.map((item: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-semibold">{item.percentage}%</span>
+                      <span className="text-sm font-semibold">{Number(item.percentage).toFixed(1)}%</span>
                     </div>
                     <div>
                       <p className="font-medium">{item.sport}</p>
@@ -53,13 +53,13 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
                 </div>
               ))}
             </TabsContent>
-            
+
             <TabsContent value="type" className="space-y-4">
               {data.revenueAnalysis?.revenueByType?.map((item: any, idx: number) => (
                 <div key={idx} className="p-4 border rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium">{item.type}</span>
-                    <Badge>{item.percentage}%</Badge>
+                    <Badge>{Number(item.percentage).toFixed(1)}%</Badge>
                   </div>
                   <div className="text-2xl font-bold">
                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.revenue || 0)}
@@ -90,10 +90,10 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
               <div key={idx} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50">
                 <div className="flex items-center gap-4">
                   <div className={`h-12 w-12 rounded-lg flex items-center justify-center 
-                    ${idx === 0 ? 'bg-yellow-100 text-yellow-800' : 
-                      idx === 1 ? 'bg-gray-100 text-gray-800' : 
-                      idx === 2 ? 'bg-amber-100 text-amber-800' : 
-                      'bg-blue-50 text-blue-800'}`}>
+                    ${idx === 0 ? 'bg-yellow-100 text-yellow-800' :
+                      idx === 1 ? 'bg-gray-100 text-gray-800' :
+                        idx === 2 ? 'bg-amber-100 text-amber-800' :
+                          'bg-blue-50 text-blue-800'}`}>
                     <span className="text-xl font-bold">#{idx + 1}</span>
                   </div>
                   <div>
@@ -106,7 +106,7 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold">{sport.score}/100</div>
+                  <div className="text-2xl font-bold">{Number(sport.score).toFixed(1)}/100</div>
                   <div className="text-sm text-muted-foreground">Điểm phổ biến</div>
                 </div>
               </div>
@@ -154,26 +154,26 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h4 className="font-semibold">Chỉ số giữ chân</h4>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Tỷ lệ đặt lại</span>
                     <span className="font-medium text-green-600">
-                      {data.userBehavior.retentionMetrics.repeatBookingRate}%
+                      {Number(data.userBehavior.retentionMetrics.repeatBookingRate).toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Chuyển đổi yêu thích</span>
                     <span className="font-medium text-blue-600">
-                      {data.userBehavior.retentionMetrics.favoriteToBookingConversion}%
+                      {Number(data.userBehavior.retentionMetrics.favoriteToBookingConversion).toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Điểm hài lòng</span>
                     <span className="font-medium text-purple-600">
-                      {data.userBehavior.retentionMetrics.userSatisfactionScore}/5
+                      {Number(data.userBehavior.retentionMetrics.userSatisfactionScore).toFixed(1)}/5
                     </span>
                   </div>
                 </div>
