@@ -30,7 +30,7 @@ export default function NotificationBell() {
     if (!userId) return;
     setLoading(true);
     try {
-      const res = await axiosPublic.get(`/notifications/user/${userId}`);
+      const res = await axiosInstance.get(`/notifications/user/${userId}`);
       setItems(res.data || []);
     } finally {
       setLoading(false);
