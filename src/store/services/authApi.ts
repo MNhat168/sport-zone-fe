@@ -37,19 +37,25 @@ export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
-    credentials: 'include', // Quan trọng: gửi cookies trong mỗi request
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json')
       headers.set('X-Client-Type', 'admin') // Phân biệt FE admin với FE user
+      
+      // Add Bearer token if available
+      const token = sessionStorage.getItem('auth_access_token')
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+      
       return headers
     },
   }),
   tagTypes: ['Auth'],
   endpoints: (builder) => ({
-    // Login mutation
-    login: builder.mutation<LoginResponse, LoginRequest>({
+    // Login mutation - use fallback endpoint for Bearer token
+    login: builder.mutation<LoginResponse & { accessToken: string; refreshToken: string }, LoginRequest>({
       query: (credentials) => ({
-        url: '/auth/login',
+        url: '/auth/login-fallback',
         method: 'POST',
         body: credentials,
       }),
@@ -71,12 +77,18 @@ export const authApi = createApi({
       invalidatesTags: ['Auth'],
     }),
 
-    // Refresh token mutation
-    refreshToken: builder.mutation<{ message: string }, void>({
-      query: () => ({
-        url: '/auth/refresh',
-        method: 'POST',
-      }),
+    // Refresh token mutation - returns tokens in response body
+    refreshToken: builder.mutation<{ message: string; accessToken?: string; refreshToken?: string }, void>({
+      query: () => {
+        const refreshToken = sessionStorage.getItem('auth_refresh_token')
+        return {
+          url: '/auth/refresh',
+          method: 'POST',
+          headers: refreshToken ? {
+            'Authorization': `Bearer ${refreshToken}`,
+          } : {},
+        }
+      },
     }),
 
     // Register mutation
@@ -106,12 +118,15 @@ export const authApi = createApi({
       }),
     }),
 
-    // Google login mutation
-    loginWithGoogle: builder.mutation<LoginResponse, { sign_in_token: string; rememberMe?: boolean }>({
+    // Google login mutation - use fallback endpoint for Bearer token
+    loginWithGoogle: builder.mutation<LoginResponse & { accessToken: string; refreshToken: string }, { sign_in_token: string; rememberMe?: boolean }>({
       query: (data) => ({
-        url: '/auth/google',
+        url: '/auth/google-fallback',
         method: 'POST',
-        body: data,
+        body: {
+          token: data.sign_in_token,
+          rememberMe: data.rememberMe,
+        },
       }),
       invalidatesTags: ['Auth'],
     }),

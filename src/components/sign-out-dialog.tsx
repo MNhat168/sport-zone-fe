@@ -17,8 +17,15 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
 
   const handleSignOut = async () => {
     try {
-      // Call API to logout (clear cookies)
+      // Call API to logout
       await logout().unwrap()
+    } catch (_error) {
+      // Ignore API errors, still clear local state
+    } finally {
+      // Clear sessionStorage (Bearer tokens)
+      sessionStorage.removeItem('auth_access_token')
+      sessionStorage.removeItem('auth_refresh_token')
+      sessionStorage.removeItem('user')
       
       // Clear Redux state
       dispatch(clearAuth())
@@ -26,13 +33,6 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
       toast.success('Signed out successfully')
       
       // Navigate to sign-in page
-      navigate({
-        to: '/sign-in',
-        replace: true,
-      })
-    } catch (_error) {
-      // Even if API fails, still clear local state
-      dispatch(clearAuth())
       navigate({
         to: '/sign-in',
         replace: true,

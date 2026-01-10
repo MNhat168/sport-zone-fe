@@ -60,6 +60,19 @@ export function UserAuthForm({
         rememberMe: data.rememberMe,
       }).unwrap()
 
+      // Store tokens in sessionStorage (Bearer token authentication)
+      if (response.accessToken) {
+        sessionStorage.setItem('auth_access_token', response.accessToken)
+      }
+      if (response.refreshToken) {
+        sessionStorage.setItem('auth_refresh_token', response.refreshToken)
+      }
+      
+      // Store user info in sessionStorage
+      if (response.user) {
+        sessionStorage.setItem('user', JSON.stringify(response.user))
+      }
+
       // Set user info in Redux store
       dispatch(setUser(response.user))
 
