@@ -28,6 +28,11 @@ import {
     Eye,
     Edit,
     Trophy,
+    CalendarDays,
+    Repeat,
+    Calendar,
+    Users,
+    QrCode,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -66,19 +71,29 @@ const menuItems: MenuItem[] = [
         icon: List,
     },
     {
-        title: "Quản lý Đặt Sân",
-        url: "/field-owner/booking-history",
-        icon: History,
+        title: "Đặt sân đơn lẻ",
+        url: "/field-owner/single-bookings",
+        icon: CalendarDays,
     },
     {
-        title: "Yêu cầu giải đấu",
-        url: "/field-owner/tournament-requests",
-        icon: Trophy,
+        title: "Đặt sân nhiều ngày liên tiếp",
+        url: "/field-owner/consecutive-bookings",
+        icon: Calendar,
     },
     {
-        title: "Doanh thu",
-        url: "/field-owner/revenue",
-        icon: FileText,
+        title: "Đặt sân định kỳ hàng tuần",
+        url: "/field-owner/recurring-bookings",
+        icon: Repeat,
+    },
+    {
+        title: "Đặt sân kèm HLV",
+        url: "/field-owner/field-coach-bookings",
+        icon: Users,
+    },
+    {
+        title: "Quét QR Check-in",
+        url: "/field-owner/check-in",
+        icon: QrCode,
     },
     {
         title: "Ví",
@@ -111,6 +126,13 @@ const bookingHistoryTabs = [
     { id: 'refunded', label: 'Đã Hoàn Tiền' }
 ]
 
+// Single booking tabs - filter by booking status (no pending)
+const singleBookingTabs = [
+    { id: 'confirmed', label: 'Đã Xác Nhận' },
+    { id: 'cancelled', label: 'Đã Hủy' },
+    { id: 'completed', label: 'Hoàn Thành' }
+]
+
 const fieldsTabs = [
     { id: 'list', label: 'Danh sách sân', icon: List, url: '/field-owner/fields' },
     { id: 'view', label: 'Xem chi tiết', icon: Eye, url: null }, // Will be set dynamically
@@ -125,16 +147,25 @@ export function FieldOwnerSidebar() {
     const authUser = useAppSelector((state) => state.auth.user)
     const isFieldCreatePage = location.pathname === "/field/create"
     const isFieldBookingPage = location.pathname === "/field-owner/field-bookings"
-    const isFieldCoachBookingPage = location.pathname === "/field-owner/field-coach-bookings"
     const isFieldsPage = location.pathname.startsWith("/field-owner/fields")
+    const isSingleBookingsPage = location.pathname.startsWith("/field-owner/single-bookings")
+    const isConsecutiveBookingsPage = location.pathname.startsWith("/field-owner/consecutive-bookings")
+    const isRecurringBookingsPage = location.pathname.startsWith("/field-owner/recurring-bookings")
+    const isFieldCoachBookingsPage = location.pathname.startsWith("/field-owner/field-coach-bookings")
     const [isCreateFieldSubmenuOpen, setIsCreateFieldSubmenuOpen] = useState(isFieldCreatePage)
     const [isFieldBookingSubmenuOpen, setIsFieldBookingSubmenuOpen] = useState(isFieldBookingPage)
-    const [isFieldCoachBookingSubmenuOpen, setIsFieldCoachBookingSubmenuOpen] = useState(isFieldCoachBookingPage)
     const [isFieldsSubmenuOpen, setIsFieldsSubmenuOpen] = useState(isFieldsPage)
+    const [isSingleBookingsSubmenuOpen, setIsSingleBookingsSubmenuOpen] = useState(isSingleBookingsPage)
+    const [isConsecutiveBookingsSubmenuOpen, setIsConsecutiveBookingsSubmenuOpen] = useState(isConsecutiveBookingsPage)
+    const [isRecurringBookingsSubmenuOpen, setIsRecurringBookingsSubmenuOpen] = useState(isRecurringBookingsPage)
+    const [isFieldCoachBookingsSubmenuOpen, setIsFieldCoachBookingsSubmenuOpen] = useState(isFieldCoachBookingsPage)
     const [activeSubTab, setActiveSubTab] = useState<string | null>(null)
     const [activeFieldBookingTab, setActiveFieldBookingTab] = useState<string | null>(null)
-    const [activeFieldCoachBookingTab, setActiveFieldCoachBookingTab] = useState<string | null>(null)
     const [activeFieldsTab, setActiveFieldsTab] = useState<string | null>(null)
+    const [activeSingleBookingTab, setActiveSingleBookingTab] = useState<string | null>(null)
+    const [activeConsecutiveBookingTab, setActiveConsecutiveBookingTab] = useState<string | null>(null)
+    const [activeRecurringBookingTab, setActiveRecurringBookingTab] = useState<string | null>(null)
+    const [activeFieldCoachBookingTab, setActiveFieldCoachBookingTab] = useState<string | null>(null)
 
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -179,10 +210,10 @@ export function FieldOwnerSidebar() {
         setIsFieldBookingSubmenuOpen(isFieldBookingPage)
     }, [isFieldBookingPage])
 
-    // Auto-open submenu when on field-coach-booking page
+    // Auto-open submenu when on field coach bookings page
     useEffect(() => {
-        setIsFieldCoachBookingSubmenuOpen(isFieldCoachBookingPage)
-    }, [isFieldCoachBookingPage])
+        setIsFieldCoachBookingsSubmenuOpen(isFieldCoachBookingsPage)
+    }, [isFieldCoachBookingsPage])
 
     // Auto-open submenu when on fields page
     useEffect(() => {
@@ -197,6 +228,26 @@ export function FieldOwnerSidebar() {
             }
         }
     }, [isFieldsPage, fieldId, location.pathname])
+
+    // Auto-open submenu when on single bookings page
+    useEffect(() => {
+        setIsSingleBookingsSubmenuOpen(isSingleBookingsPage)
+    }, [isSingleBookingsPage])
+
+    // Auto-open submenu when on consecutive bookings page
+    useEffect(() => {
+        setIsConsecutiveBookingsSubmenuOpen(isConsecutiveBookingsPage)
+    }, [isConsecutiveBookingsPage])
+
+    // Auto-open submenu when on recurring bookings page
+    useEffect(() => {
+        setIsRecurringBookingsSubmenuOpen(isRecurringBookingsPage)
+    }, [isRecurringBookingsPage])
+
+    // Auto-open submenu when on field coach bookings page
+    useEffect(() => {
+        setIsFieldCoachBookingsSubmenuOpen(isFieldCoachBookingsPage)
+    }, [isFieldCoachBookingsPage])
 
     const isActive = (path: string) => {
         if (path === "/field-owner-dashboard") {
@@ -215,12 +266,6 @@ export function FieldOwnerSidebar() {
 
     const handleFieldBookingTabClick = (tabId: string) => {
         setActiveFieldBookingTab(tabId)
-        // Dispatch custom event to notify the page about tab change
-        window.dispatchEvent(new CustomEvent('booking-history-tab-change', { detail: { tab: tabId } }))
-    }
-
-    const handleFieldCoachBookingTabClick = (tabId: string) => {
-        setActiveFieldCoachBookingTab(tabId)
         // Dispatch custom event to notify the page about tab change
         window.dispatchEvent(new CustomEvent('booking-history-tab-change', { detail: { tab: tabId } }))
     }
@@ -249,18 +294,6 @@ export function FieldOwnerSidebar() {
         }
     }
 
-    const handleFieldCoachBookingClick = (e: React.MouseEvent) => {
-        e.preventDefault()
-        if (isFieldCoachBookingPage) {
-            // If already on the page, just toggle submenu
-            setIsFieldCoachBookingSubmenuOpen(!isFieldCoachBookingSubmenuOpen)
-        } else {
-            // If not on the page, navigate and open submenu
-            setIsFieldCoachBookingSubmenuOpen(true)
-            navigate("/field-owner/field-coach-bookings")
-        }
-    }
-
     const handleFieldsClick = (e: React.MouseEvent) => {
         e.preventDefault()
         if (isFieldsPage) {
@@ -282,6 +315,66 @@ export function FieldOwnerSidebar() {
         } else if (tabId === 'edit' && fieldId) {
             navigate(`/field-owner/fields/${fieldId}/edit`)
         }
+    }
+
+    const handleSingleBookingsClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        if (isSingleBookingsPage) {
+            setIsSingleBookingsSubmenuOpen(!isSingleBookingsSubmenuOpen)
+        } else {
+            setIsSingleBookingsSubmenuOpen(true)
+            navigate("/field-owner/single-bookings")
+        }
+    }
+
+    const handleConsecutiveBookingsClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        if (isConsecutiveBookingsPage) {
+            setIsConsecutiveBookingsSubmenuOpen(!isConsecutiveBookingsSubmenuOpen)
+        } else {
+            setIsConsecutiveBookingsSubmenuOpen(true)
+            navigate("/field-owner/consecutive-bookings")
+        }
+    }
+
+    const handleRecurringBookingsClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        if (isRecurringBookingsPage) {
+            setIsRecurringBookingsSubmenuOpen(!isRecurringBookingsSubmenuOpen)
+        } else {
+            setIsRecurringBookingsSubmenuOpen(true)
+            navigate("/field-owner/recurring-bookings")
+        }
+    }
+
+    const handleSingleBookingTabClick = (tabId: string) => {
+        setActiveSingleBookingTab(tabId)
+        window.dispatchEvent(new CustomEvent('single-booking-tab-change', { detail: { tab: tabId } }))
+    }
+
+    const handleConsecutiveBookingTabClick = (tabId: string) => {
+        setActiveConsecutiveBookingTab(tabId)
+        window.dispatchEvent(new CustomEvent('consecutive-booking-tab-change', { detail: { tab: tabId } }))
+    }
+
+    const handleRecurringBookingTabClick = (tabId: string) => {
+        setActiveRecurringBookingTab(tabId)
+        window.dispatchEvent(new CustomEvent('recurring-booking-tab-change', { detail: { tab: tabId } }))
+    }
+
+    const handleFieldCoachBookingsClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        if (isFieldCoachBookingsPage) {
+            setIsFieldCoachBookingsSubmenuOpen(!isFieldCoachBookingsSubmenuOpen)
+        } else {
+            setIsFieldCoachBookingsSubmenuOpen(true)
+            navigate("/field-owner/field-coach-bookings")
+        }
+    }
+
+    const handleFieldCoachBookingTabClick = (tabId: string) => {
+        setActiveFieldCoachBookingTab(tabId)
+        window.dispatchEvent(new CustomEvent('field-coach-booking-tab-change', { detail: { tab: tabId } }))
     }
 
     const userInitials = authUser?.fullName
@@ -336,6 +429,9 @@ export function FieldOwnerSidebar() {
                                     const isFieldBooking = item.url === "/field-owner/field-bookings"
                                     const isFieldCoachBooking = item.url === "/field-owner/field-coach-bookings"
                                     const isFields = item.url === "/field-owner/fields"
+                                    const isSingleBookings = item.url === "/field-owner/single-bookings"
+                                    const isConsecutiveBookings = item.url === "/field-owner/consecutive-bookings"
+                                    const isRecurringBookings = item.url === "/field-owner/recurring-bookings"
                                     return (
                                         <SidebarMenuItem key={item.url}>
                                             {isCreateField ? (
@@ -372,7 +468,7 @@ export function FieldOwnerSidebar() {
                                                 <SidebarMenuButton
                                                     isActive={isActive(item.url)}
                                                     tooltip={item.title}
-                                                    onClick={handleFieldCoachBookingClick}
+                                                    onClick={handleFieldCoachBookingsClick}
                                                     className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
                                                 >
                                                     <Icon />
@@ -383,11 +479,56 @@ export function FieldOwnerSidebar() {
                                                         </span>
                                                     )}
                                                 </SidebarMenuButton>
-                                             ) : isFields ? (
+                                            ) : isFields ? (
                                                 <SidebarMenuButton
                                                     isActive={isActive(item.url)}
                                                     tooltip={item.title}
                                                     onClick={handleFieldsClick}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
+                                                    <Icon />
+                                                    <span>{item.title}</span>
+                                                    {item.badge && (
+                                                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </SidebarMenuButton>
+                                            ) : isSingleBookings ? (
+                                                <SidebarMenuButton
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    onClick={handleSingleBookingsClick}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
+                                                    <Icon />
+                                                    <span>{item.title}</span>
+                                                    {item.badge && (
+                                                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </SidebarMenuButton>
+                                            ) : isConsecutiveBookings ? (
+                                                <SidebarMenuButton
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    onClick={handleConsecutiveBookingsClick}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
+                                                    <Icon />
+                                                    <span>{item.title}</span>
+                                                    {item.badge && (
+                                                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </SidebarMenuButton>
+                                            ) : isRecurringBookings ? (
+                                                <SidebarMenuButton
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    onClick={handleRecurringBookingsClick}
                                                     className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
                                                 >
                                                     <Icon />
@@ -446,7 +587,7 @@ export function FieldOwnerSidebar() {
                                                     ))}
                                                 </SidebarMenuSub>
                                             )}
-                                            {isFieldCoachBooking && isFieldCoachBookingSubmenuOpen && (
+                                            {isFieldCoachBooking && isFieldCoachBookingsSubmenuOpen && (
                                                 <SidebarMenuSub>
                                                     {bookingHistoryTabs.map((tab) => (
                                                         <SidebarMenuSubItem key={tab.id}>
@@ -484,7 +625,55 @@ export function FieldOwnerSidebar() {
                                                     })}
                                                 </SidebarMenuSub>
                                             )}
+                                            {isSingleBookings && isSingleBookingsSubmenuOpen && (
+                                                <SidebarMenuSub>
+                                                    {singleBookingTabs.map((tab) => (
+                                                        <SidebarMenuSubItem key={tab.id}>
+                                                            <SidebarMenuSubButton
+                                                                onClick={() => handleSingleBookingTabClick(tab.id)}
+                                                                isActive={activeSingleBookingTab === tab.id}
+                                                                className={activeSingleBookingTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                            >
+                                                                <span>{tab.label}</span>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            )}
+
+                                            {isConsecutiveBookings && isConsecutiveBookingsSubmenuOpen && (
+                                                <SidebarMenuSub>
+                                                    {singleBookingTabs.map((tab) => (
+                                                        <SidebarMenuSubItem key={tab.id}>
+                                                            <SidebarMenuSubButton
+                                                                onClick={() => handleConsecutiveBookingTabClick(tab.id)}
+                                                                isActive={activeConsecutiveBookingTab === tab.id}
+                                                                className={activeConsecutiveBookingTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                            >
+                                                                <span>{tab.label}</span>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            )}
+
+                                            {isRecurringBookings && isRecurringBookingsSubmenuOpen && (
+                                                <SidebarMenuSub>
+                                                    {singleBookingTabs.map((tab) => (
+                                                        <SidebarMenuSubItem key={tab.id}>
+                                                            <SidebarMenuSubButton
+                                                                onClick={() => handleRecurringBookingTabClick(tab.id)}
+                                                                isActive={activeRecurringBookingTab === tab.id}
+                                                                className={activeRecurringBookingTab === tab.id ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                            >
+                                                                <span>{tab.label}</span>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            )}
                                         </SidebarMenuItem>
+
                                     )
                                 })}
                             </SidebarMenu>

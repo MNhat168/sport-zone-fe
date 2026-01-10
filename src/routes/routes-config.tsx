@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy } from "react";
-import { type RouteObject } from "react-router-dom";
+import { type RouteObject, Navigate } from "react-router-dom";
 import ProtectedRoute, { UnauthorizedPage, UserRole } from "./protected-routes-config";
 
 // ===== PAGE IMPORTS =====
@@ -14,12 +14,17 @@ import AboutPage from "../pages/about/about-page";
 
 // ===== LAZY-LOADED PAGES =====
 // User Pages
-const UserDashboardPage = lazy(() => import("../pages/user-dashboard-page/user-dashboard-page"));
-const UserBookingHistoryPage = lazy(() => import("../pages/user-dashboard-page/user-booking-history-page"));
-const UserInvoicesPage = lazy(() => import("../pages/user-dashboard-page/user-invoices-page"));
-const MyTournaments = lazy(() => import("../pages/user-dashboard-page/user-tournamets.tsx"));
-const UserWalletPage = lazy(() => import("../pages/user-dashboard-page/user-wallet-page"));
-const UserProfilePage = lazy(() => import("../pages/user-dashboard-page/user-profile-page"));
+const UserDashboardPage = lazy(() => import("../pages/user-dashboard-page/dashboard/user-dashboard-page"));
+const UserBookingHistoryPage = lazy(() => import("../pages/user-dashboard-page/booking-history/user-booking-history-page"));
+const UserSingleBookingsPage = lazy(() => import("../pages/user-dashboard-page/booking-history/single-bookings-page"));
+const UserRecurringBookingsPage = lazy(() => import("../pages/user-dashboard-page/booking-history/recurring-bookings-page"));
+const UserBatchBookingsPage = lazy(() => import("../pages/user-dashboard-page/booking-history/batch-bookings-page"));
+const UserCombinedBookingsPage = lazy(() => import("../pages/user-dashboard-page/booking-history/combined-bookings-page"));
+const UserCoachBookingsPage = lazy(() => import("../pages/user-dashboard-page/booking-history/coach-bookings-page"));
+const UserInvoicesPage = lazy(() => import("../pages/user-dashboard-page/invoices/user-invoices-page"));
+const MyTournaments = lazy(() => import("../pages/user-dashboard-page/tournaments/user-tournaments-page"));
+const UserWalletPage = lazy(() => import("../pages/user-dashboard-page/wallet/user-wallet-page"));
+const UserProfilePage = lazy(() => import("../pages/user-dashboard-page/profile/user-profile-page"));
 
 // Coach Pages
 const CoachDashboardPage = lazy(() => import("../pages/coach-dashboard-page/dashboard/coach-dashboard-page.tsx"));
@@ -40,7 +45,7 @@ const CoachDetailPage = lazy(() => import("../pages/coach-detail-page/coach-deta
 // Field Pages
 const FieldBookingPage = lazy(() => import("../pages/field-list-page/list-page"));
 const FieldBookingFlowPage = lazy(() => import("../pages/field-booking-page/field-booking-page"));
-const FieldBookingAiPage = lazy(() => import("../pages/field-booking-ai-page/field-booking-ai-page"));
+const FieldBookingBatchPage = lazy(() => import("../pages/field-booking-batch-page/field-booking-batch-page"));
 const FieldCoachBookingPage = lazy(() => import("../pages/field-coach-booking-page/field-coach-booking-page"));
 const FieldCreatePage = lazy(() => import("../pages/field-owner-dashboard-page/create/field-create-page"));
 const FieldDetailPage = lazy(() => import("../pages/field-detail-page/field-detail-page"));
@@ -53,14 +58,17 @@ const PayOSCancelPage = lazy(() => import("../pages/transactions/payos-cancel-pa
 const OwnerFieldListPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/owner-field-list-page"));
 const FieldOwnerDashboardPage = lazy(() => import("../pages/field-owner-dashboard-page/dashboard/field-owner-dashboard-page"));
 const FieldOwnerWalletPage = lazy(() => import("../pages/field-owner-dashboard-page/wallet/field-owner-wallet-page"));
-const FieldBookingListPage = lazy(() => import("../pages/field-owner-dashboard-page/field-booking-list/field-booking-list-page.tsx"));
-const FieldCoachBookingListPage = lazy(() => import("../pages/field-owner-dashboard-page/field-coach-booking-list/field-coach-booking-list-page.tsx"));
+const ConsecutiveBookingsPage = lazy(() => import("../pages/field-owner-dashboard-page/consecutive-bookings/consecutive-bookings-page"));
+const RecurringBookingsPage = lazy(() => import("../pages/field-owner-dashboard-page/recurring-bookings/recurring-bookings-page"));
+const FieldCoachBookingListPage = lazy(() => import("../pages/field-owner-dashboard-page/field-coach-bookings/field-coach-bookings-page"));
 const FieldOwnerAnalyticsPage = lazy(() => import("../pages/field-owner-dashboard-page/analytics/field-owner-analytics-page"));
 const FieldOwnerProfilePage = lazy(() => import("../pages/field-owner-dashboard-page/profile/field-owner-profile-page"));
 const FieldEditPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/field-edit-page"));
 const FieldViewPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/field-view-page"));
-const TournamentRequestsPage = lazy(() => import("../pages/field-owner-dashboard-page/tournament-requests/tournament-requests-page"));
+
 const FieldOwnerChatDashboard = lazy(() => import("@/pages/field-owner-dashboard-page/chat/FieldOwnerChatPage.tsx"));
+const SingleBookingsPage = lazy(() => import("../pages/field-owner-dashboard-page/single-bookings/single-bookings-page"));
+const FieldCoachBookingsPage = lazy(() => import("../pages/field-owner-dashboard-page/field-coach-bookings/field-coach-bookings-page"));
 
 // Field Owner Registration Pages
 const FieldOwnerRegistrationPage = lazy(() => import("../pages/field-owner-registration-page/field-owner-registration-page"));
@@ -80,6 +88,9 @@ const MyReportsPage = lazy(() => import("../pages/my-reports-page/my-reports-pag
 
 // Test Pages
 const NotificationTestPage = lazy(() => import("../pages/test/notification-test-page"));
+
+// Check-in Pages
+const FieldOwnerCheckInPage = lazy(() => import("../pages/field-owner-dashboard-page/check-in/field-owner-check-in-page"));
 
 // Error Pages
 import GeneralError from "../pages/error/general-error";
@@ -137,7 +148,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/fields", element: <FieldBookingPage /> },
   { path: "/fields/:id", element: <FieldDetailPage /> },
   { path: "/field-booking", element: <FieldBookingFlowPage /> },
-  { path: "/field-booking-ai", element: <FieldBookingAiPage /> },
+  { path: "/field-booking-batch", element: <FieldBookingBatchPage /> },
   { path: "/field-coach", element: <FieldCoachBookingPage /> },
 
   // Coach Discovery (Public)
@@ -193,12 +204,48 @@ export const userRoutes: RouteObject[] = [
 
   // User Booking Management
   {
-    path: "/user-booking-history",
+    path: "/user/single-bookings",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <UserBookingHistoryPage />
+        <UserSingleBookingsPage />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/user/recurring-bookings",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <UserRecurringBookingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user/batch-bookings",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <UserBatchBookingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user/combined-bookings",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <UserCombinedBookingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user/coach-bookings",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <UserCoachBookingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user-booking-history",
+    element: <Navigate to="/user/single-bookings" replace />,
   },
   {
     path: "/user-invoices",
@@ -604,7 +651,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner/field-bookings",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <FieldBookingListPage />
+        <ConsecutiveBookingsPage />
       </ProtectedRoute>
     ),
   },
@@ -612,7 +659,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner/field-coach-bookings",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <FieldCoachBookingListPage />
+        <FieldCoachBookingsPage />
       </ProtectedRoute>
     ),
   },
@@ -620,18 +667,36 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner/booking-history",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <FieldBookingListPage />
+        <ConsecutiveBookingsPage />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/field-owner/tournament-requests",
+    path: "/field-owner/single-bookings",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <TournamentRequestsPage />
+        <SingleBookingsPage />
       </ProtectedRoute>
     ),
   },
+  {
+    path: "/field-owner/consecutive-bookings",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <ConsecutiveBookingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/recurring-bookings",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <RecurringBookingsPage />
+      </ProtectedRoute>
+    ),
+  },
+
+
   {
     path: "/field-owner/schedule",
     element: (
@@ -642,6 +707,14 @@ export const fieldOwnerRoutes: RouteObject[] = [
   },
 
   // Customer Management
+  {
+    path: "/field-owner/check-in",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <FieldOwnerCheckInPage />
+      </ProtectedRoute>
+    ),
+  },
   {
     path: "/field-owner/wallet",
     element: (

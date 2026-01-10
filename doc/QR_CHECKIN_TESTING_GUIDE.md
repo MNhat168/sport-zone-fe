@@ -28,7 +28,7 @@ npm install
 ### 2. Cấu hình Backend URL
 Đảm bảo file `.env` đã cấu hình đúng API URL:
 ```env
-VITE_API_URL=http://192.168.x.x:3000/api
+VITE_API_URL=http://192.168.1.1:3000/api
 ```
 
 > **Lưu ý:** Thay `192.168.x.x` bằng IP của máy tính đang chạy Backend. 

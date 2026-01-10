@@ -39,7 +39,7 @@ interface AuthState {
     _id: string | null;
     user: User | null; // Use the extended User type here
     token: string | null; // kept for backward-compatibility but unused with cookie auth
-    authMethod: 'cookie' | 'bearer' | null; // NEW: Track authentication method
+    authMethod: 'bearer' | null; // Always use Bearer token authentication
     securityWarning: string | null; // NEW: Security warning for fallback mode
     loading: boolean;
     error: ErrorResponse | null;
@@ -92,11 +92,8 @@ const storedUser = getStoredUser();
 // Debug current auth state
 logger.debug("Auth initialState - User:", storedUser?.fullName);
 
-// Validate authMethod from sessionStorage
-const storedAuthMethod = sessionStorage.getItem('auth_method');
-const validAuthMethod = (storedAuthMethod === 'cookie' || storedAuthMethod === 'bearer')
-    ? storedAuthMethod
-    : null;
+// Always use Bearer token authentication
+const validAuthMethod: 'bearer' | null = 'bearer';
 
 const initialState: AuthState = {
     _id: storedUser?._id || null,
@@ -200,19 +197,19 @@ const authSlice = createSlice({
             // Xử lý các action từ authThunk
             .addCase(signInWithEmailAndPassword.fulfilled, (state, action) => {
                 state.loading = false;
-                const { user, authMethod, securityWarning } = action.payload;
+                const { user, authMethod } = action.payload;
 
                 if (user) {
                     state.user = user;
                     state.token = null; // deprecated field
-                    state.authMethod = authMethod;
-                    state.securityWarning = securityWarning || null;
+                    state.authMethod = authMethod; // Always 'bearer'
+                    state.securityWarning = null; // No longer needed
 
                     // Store ONLY in sessionStorage (not localStorage for security)
                     sessionStorage.setItem("user", JSON.stringify(user));
                     sessionStorage.setItem("auth_method", authMethod);
 
-                    // Also sync to cookie for compatibility
+                    // Also sync to cookie for compatibility (user data only, not auth tokens)
                     setCookie("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in login response", status: "500" } as any;
@@ -221,19 +218,19 @@ const authSlice = createSlice({
 
             .addCase(signInWithGoogle.fulfilled, (state, action) => {
                 state.loading = false;
-                const { user, authMethod, securityWarning } = action.payload;
+                const { user, authMethod } = action.payload;
 
                 if (user) {
                     state.user = user;
                     state.token = null;
-                    state.authMethod = authMethod;
-                    state.securityWarning = securityWarning || null;
+                    state.authMethod = authMethod; // Always 'bearer'
+                    state.securityWarning = null; // No longer needed
 
                     // Store ONLY in sessionStorage (not localStorage for security)
                     sessionStorage.setItem("user", JSON.stringify(user));
                     sessionStorage.setItem("auth_method", authMethod);
 
-                    // Also sync to cookie for compatibility
+                    // Also sync to cookie for compatibility (user data only, not auth tokens)
                     setCookie("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in google login response", status: "500" } as any;

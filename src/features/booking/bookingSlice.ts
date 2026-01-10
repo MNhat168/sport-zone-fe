@@ -57,6 +57,12 @@ const bookingSlice = createSlice({
         clearCurrentBooking: (state) => {
             state.currentBooking = null;
         },
+
+        // Clear bookings list (to avoid showing stale data when switching pages)
+        clearBookings: (state) => {
+            state.bookings = [];
+            state.pagination = null;
+        },
     },
     extraReducers: (builder) => {
         // Create Consecutive Days Booking (Turn 1)
@@ -269,6 +275,7 @@ export const {
     resetBookingState,
     setCurrentBooking,
     clearCurrentBooking,
+    clearBookings,
 } = bookingSlice.actions;
 
 export default bookingSlice.reducer;

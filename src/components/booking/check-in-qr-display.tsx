@@ -24,17 +24,39 @@ export function CheckInQRDisplay({
     const [error, setError] = useState<string | null>(null)
     const [canGenerate, setCanGenerate] = useState(false)
     const [windowStartTime, setWindowStartTime] = useState<Date | null>(null)
+    const [lateWindowEndTime, setLateWindowEndTime] = useState<Date | null>(null)
 
-    // Calculate window start time (15 minutes before match)
+    // Calculate window start time (15 minutes before match) and late window (60 minutes after)
     useEffect(() => {
-        const matchTime = new Date(startTime)
-        const windowStart = new Date(matchTime.getTime() - 15 * 60 * 1000)
-        setWindowStartTime(windowStart)
+        try {
+            const matchTime = new Date(startTime)
+            
+            // Validate matchTime
+            if (isNaN(matchTime.getTime())) {
+                console.error('Invalid startTime in CheckInQRDisplay:', startTime)
+                setWindowStartTime(null)
+                setLateWindowEndTime(null)
+                setCanGenerate(false)
+                return
+            }
+            
+            const windowStart = new Date(matchTime.getTime() - 15 * 60 * 1000)
+            const lateWindowEnd = new Date(matchTime.getTime() + 60 * 60 * 1000) // 60 minutes after start
+            setWindowStartTime(windowStart)
+            setLateWindowEndTime(lateWindowEnd)
 
-        // Check if we're already in the window
-        const now = new Date()
-        if (now >= windowStart && now < matchTime) {
-            setCanGenerate(true)
+            // Check if we're within the allowed window (15 min before -> 60 min after start)
+            const now = new Date()
+            if (now >= windowStart && now <= lateWindowEnd) {
+                setCanGenerate(true)
+            } else {
+                setCanGenerate(false)
+            }
+        } catch (error) {
+            console.error('Error calculating check-in window:', error, { startTime })
+            setWindowStartTime(null)
+            setLateWindowEndTime(null)
+            setCanGenerate(false)
         }
     }, [startTime])
 
@@ -44,9 +66,18 @@ export function CheckInQRDisplay({
             setError(null)
 
             const result = await onGenerateQR()
+            
+            if (!result || !result.token) {
+                console.error('Invalid QR result:', result)
+                throw new Error('Không nhận được mã QR từ server')
+            }
+            
+            console.log('QR generated successfully:', { token: result.token.substring(0, 20) + '...', expiresAt: result.expiresAt })
+            
             setQrToken(result.token)
             setExpiresAt(new Date(result.expiresAt))
         } catch (err: any) {
+            console.error('Error in handleGenerateQR:', err)
             setError(err.message || 'Không thể tạo mã QR')
             setQrToken(null)
             setExpiresAt(null)
@@ -60,74 +91,7 @@ export function CheckInQRDisplay({
         return new Date() > expiresAt
     }
 
-    // Before window opens
-    if (!canGenerate && windowStartTime) {
-        return (
-            <Card className={className}>
-                <CardContent className="p-6">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
-                            <Clock className="w-8 h-8 text-orange-600" />
-                        </div>
-                        <div className="text-center">
-                            <h3 className="font-semibold text-lg mb-2">Chưa đến giờ nhận sân</h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Bạn có thể tạo mã QR check-in từ 15 phút trước giờ đá
-                            </p>
-                        </div>
-                        <CheckInCountdown
-                            targetTime={windowStartTime}
-                            onCountdownComplete={() => setCanGenerate(true)}
-                            className="w-full"
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    // In window but no QR generated yet
-    if (canGenerate && !qrToken) {
-        return (
-            <Card className={className}>
-                <CardContent className="p-6">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                            <CheckCircle2 className="w-8 h-8 text-green-600" />
-                        </div>
-                        <div className="text-center">
-                            <h3 className="font-semibold text-lg mb-2">Đã đến giờ nhận sân!</h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Nhấn nút bên dưới để tạo mã QR check-in
-                            </p>
-                        </div>
-                        {error && (
-                            <div className="w-full bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-red-700">{error}</p>
-                            </div>
-                        )}
-                        <Button
-                            onClick={handleGenerateQR}
-                            disabled={isGenerating}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold"
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                                    Đang tạo mã...
-                                </>
-                            ) : (
-                                '🎫 Tạo mã nhận sân'
-                            )}
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    // QR generated and displayed
+    // QR generated and displayed - show this first if QR exists
     if (qrToken && expiresAt) {
         const expired = isExpired()
 
@@ -214,6 +178,94 @@ export function CheckInQRDisplay({
                                 ⚠️ <strong>Lưu ý:</strong> Không chia sẻ mã QR này với người khác. Mã chỉ được sử dụng một lần và hết hạn sau 10 phút.
                             </p>
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    // Before window opens
+    if (!canGenerate && windowStartTime) {
+        return (
+            <Card className={className}>
+                <CardContent className="p-6">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
+                            <Clock className="w-8 h-8 text-orange-600" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="font-semibold text-lg mb-2">Chưa đến giờ nhận sân</h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Bạn có thể tạo mã QR check-in từ 15 phút trước giờ đá
+                            </p>
+                        </div>
+                        <CheckInCountdown
+                            targetTime={windowStartTime}
+                            onCountdownComplete={() => setCanGenerate(true)}
+                            className="w-full"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    // Too late - after late window
+    if (!canGenerate && lateWindowEndTime && new Date() > lateWindowEndTime) {
+        return (
+            <Card className={className}>
+                <CardContent className="p-6">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                            <AlertCircle className="w-8 h-8 text-red-600" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="font-semibold text-lg mb-2">Đã quá thời gian check-in</h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Thời gian check-in đã kết thúc. Vui lòng liên hệ với chủ sân nếu cần hỗ trợ.
+                            </p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    // In window but no QR generated yet
+    if (canGenerate && !qrToken) {
+        return (
+            <Card className={className}>
+                <CardContent className="p-6">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                            <CheckCircle2 className="w-8 h-8 text-green-600" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="font-semibold text-lg mb-2">Đã đến giờ nhận sân!</h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Nhấn nút bên dưới để tạo mã QR check-in
+                            </p>
+                        </div>
+                        {error && (
+                            <div className="w-full bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-red-700">{error}</p>
+                            </div>
+                        )}
+                        <Button
+                            onClick={handleGenerateQR}
+                            disabled={isGenerating}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                                    Đang tạo mã...
+                                </>
+                            ) : (
+                                '🎫 Tạo mã nhận sân'
+                            )}
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

@@ -45,6 +45,63 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
         day: '2-digit'
     });
 
+    // Helper function to combine date and startTime for check-in
+    const getStartDateTime = (): Date | null => {
+        try {
+            // Validate booking exists
+            if (!booking) {
+                console.error('No booking provided');
+                return null;
+            }
+            
+            // Validate date
+            let dateObj: Date;
+            if (booking.date instanceof Date) {
+                dateObj = booking.date;
+            } else if (typeof booking.date === 'string') {
+                dateObj = new Date(booking.date);
+            } else {
+                console.error('Invalid booking date:', booking.date);
+                return null;
+            }
+            
+            if (isNaN(dateObj.getTime())) {
+                console.error('Invalid booking date:', booking.date);
+                return null;
+            }
+            
+            // Validate startTime
+            if (!booking.startTime || typeof booking.startTime !== 'string') {
+                console.error('Invalid startTime:', booking.startTime);
+                return null;
+            }
+            
+            if (!/^\d{2}:\d{2}$/.test(booking.startTime)) {
+                console.error('Invalid startTime format:', booking.startTime);
+                return null;
+            }
+            
+            // Combine date and startTime
+            const [year, month, day] = [
+                dateObj.getFullYear(),
+                String(dateObj.getMonth() + 1).padStart(2, '0'),
+                String(dateObj.getDate()).padStart(2, '0')
+            ];
+            const dateTimeStr = `${year}-${month}-${day}T${booking.startTime}:00`;
+            const dateTime = new Date(dateTimeStr);
+            
+            if (isNaN(dateTime.getTime())) {
+                console.error('Invalid combined date/time:', { dateStr: `${year}-${month}-${day}`, startTime: booking.startTime });
+                return null;
+            }
+            
+            return dateTime;
+        } catch (error) {
+            console.error('Error parsing date/time:', error, { date: booking.date, startTime: booking.startTime });
+            return null;
+        }
+    };
+
     // Calculate total price
     const totalPrice = booking.totalPrice ||
         ((booking.bookingAmount || 0) + (booking.platformFee || 0));
@@ -377,16 +434,28 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                         </div>
                     )}
 
-                    {/* QR Check-in Section - Only for confirmed bookings */}
-                    {booking.status.toLowerCase() === 'confirmed' && typeof booking.payment === 'object' && booking.payment?.status === 'succeeded' && (
-                        <div className="lg:col-span-2">
-                            <BookingCheckInSection
-                                bookingId={booking._id}
-                                startTime={new Date(booking.date + 'T' + booking.startTime)}
-                                status={booking.status}
-                            />
-                        </div>
-                    )}
+                    {/* QR Check-in Section - Only for confirmed and paid bookings */}
+                    {(() => {
+                        // Check if booking is confirmed
+                        const isConfirmed = booking.status?.toLowerCase() === 'confirmed';
+                        
+                        // Check payment status - support both paymentStatus field and payment.status
+                        const isPaid = booking.paymentStatus === 'paid' || 
+                                      (typeof booking.payment === 'object' && booking.payment?.status === 'succeeded');
+                        
+                        // Get start date time and validate it's valid
+                        const startDateTime = getStartDateTime();
+                        
+                        return isConfirmed && isPaid && startDateTime ? (
+                            <div className="lg:col-span-2">
+                                <BookingCheckInSection
+                                    bookingId={booking._id}
+                                    startTime={startDateTime}
+                                    status={booking.status}
+                                />
+                            </div>
+                        ) : null;
+                    })()}
 
                     {/* Booking Metadata */}
                     <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-200 lg:col-span-2">
