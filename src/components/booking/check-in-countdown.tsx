@@ -15,6 +15,15 @@ export function CheckInCountdown({ targetTime, onCountdownComplete, className = 
         const calculateTimeRemaining = () => {
             const now = new Date().getTime()
             const target = new Date(targetTime).getTime()
+            
+            // Validate that target time is valid
+            if (isNaN(target)) {
+                console.error('Invalid targetTime in CheckInCountdown:', targetTime)
+                setIsComplete(false)
+                setTimeRemaining(0)
+                return 0
+            }
+            
             const difference = target - now
 
             if (difference <= 0) {
@@ -56,6 +65,16 @@ export function CheckInCountdown({ targetTime, onCountdownComplete, className = 
             <div className={`flex items-center gap-2 text-green-600 ${className}`}>
                 <Clock className="w-5 h-5" />
                 <span className="font-semibold">Đã đến giờ nhận sân!</span>
+            </div>
+        )
+    }
+
+    // Validate timeRemaining before formatting
+    if (isNaN(timeRemaining) || timeRemaining <= 0) {
+        return (
+            <div className={`flex items-center gap-2 text-gray-500 ${className}`}>
+                <Clock className="w-4 h-4" />
+                <span className="text-sm">Đang tính toán thời gian...</span>
             </div>
         )
     }

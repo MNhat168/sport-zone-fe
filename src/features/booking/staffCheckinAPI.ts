@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axiosPrivate from '../../utils/axios/axiosPrivate'
 import { BASE_URL } from '../../utils/constant-value/constant'
 
 /**
@@ -11,15 +11,9 @@ export const staffCheckinAPI = {
      * Requires staff/admin/fieldOwner role
      */
     confirmCheckIn: async (bookingId: string, token: string) => {
-        const accessToken = localStorage.getItem('accessToken')
-        const response = await axios.post(
+        const response = await axiosPrivate.post(
             `${BASE_URL}/bookings/${bookingId}/check-in`,
-            { token },
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }
+            { token }
         )
         return response.data
     },
@@ -28,14 +22,8 @@ export const staffCheckinAPI = {
      * Get booking details by ID (for preview before check-in)
      */
     getBookingDetails: async (bookingId: string) => {
-        const accessToken = localStorage.getItem('accessToken')
-        const response = await axios.get(
-            `${BASE_URL}/bookings/${bookingId}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }
+        const response = await axiosPrivate.get(
+            `${BASE_URL}/bookings/${bookingId}`
         )
         return response.data
     },

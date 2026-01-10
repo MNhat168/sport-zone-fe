@@ -8,6 +8,7 @@ import {
     MessageSquare,
     Wallet,
     History,
+    QrCode,
 } from "lucide-react"
 
 export function FieldOwnerDashboardTabs() {
@@ -82,6 +83,15 @@ export function FieldOwnerDashboardTabs() {
                     >
                         <MessageSquare className="w-5 h-5" />
                         <div className="text-center text-sm font-medium">Chat</div>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        className={baseTabClasses(isActive("/field-owner/check-in"))}
+                        onClick={() => handleNavigation("/field-owner/check-in")}
+                    >
+                        <QrCode className="w-5 h-5" />
+                        <div className="text-center text-sm font-medium">QR Check-in</div>
                     </Button>
 
                     <Button

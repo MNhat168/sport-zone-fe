@@ -102,6 +102,8 @@ export interface Booking {
     type: 'field' | 'coach' | 'field_coach';
     coachStatus?: CoachStatus;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    // Payment status from booking entity (matches backend)
+    paymentStatus?: 'unpaid' | 'paid' | 'refunded';
     // New price structure
     bookingAmount?: number; // Court fee + amenities (base amount before platform fee)
     platformFee?: number; // System/platform fee (5% of bookingAmount)
@@ -115,6 +117,8 @@ export interface Booking {
         appliedMultiplier?: number;
         priceBreakdown?: string;
     };
+    recurringGroupId?: string; // ID of the recurring group if part of one
+    recurringType?: 'CONSECUTIVE' | 'WEEKLY'; // Type of recurring booking: CONSECUTIVE (batch) or WEEKLY (fixed weekly)
     cancellationReason?: string;
     createdAt?: string;
     updatedAt?: string;
@@ -145,8 +149,12 @@ export interface GetCoachScheduleParams {
 export interface GetMyBookingsParams {
     status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     type?: 'field' | 'coach' | 'field_coach';
+    recurringFilter?: 'none' | 'only' | 'all'; // Filter by recurring status
     page?: number;
     limit?: number;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
 }
 
 export interface PaginationInfo {

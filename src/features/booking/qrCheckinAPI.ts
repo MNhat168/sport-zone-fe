@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axiosPrivate from '../../utils/axios/axiosPrivate'
 import { BASE_URL } from '../../utils/constant-value/constant'
 
 // QR Check-in API endpoints
@@ -8,14 +8,8 @@ export const qrCheckinAPI = {
      * Only available within time window (default: 15 minutes before match)
      */
     generateQR: async (bookingId: string) => {
-        const token = localStorage.getItem('accessToken')
-        const response = await axios.get(
-            `${BASE_URL}/bookings/${bookingId}/check-in-qr`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
+        const response = await axiosPrivate.get(
+            `${BASE_URL}/bookings/${bookingId}/check-in-qr`
         )
         return response.data
     },
@@ -25,14 +19,8 @@ export const qrCheckinAPI = {
      * Returns when QR generation becomes available
      */
     getCheckInWindow: async (bookingId: string) => {
-        const token = localStorage.getItem('accessToken')
-        const response = await axios.get(
-            `${BASE_URL}/bookings/${bookingId}/check-in-window`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
+        const response = await axiosPrivate.get(
+            `${BASE_URL}/bookings/${bookingId}/check-in-window`
         )
         return response.data
     },
