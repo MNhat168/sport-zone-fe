@@ -16,6 +16,7 @@ export interface FieldOwner {
 // Court interface for multi-court fields
 export interface Court {
     _id: string;
+    id?: string; // Alias for _id for compatibility
     name: string;
     courtNumber?: number;
     isActive?: boolean;
@@ -25,6 +26,7 @@ export interface Court {
 // Main Field interface
 export interface Field {
     _id: string;
+    id?: string; // Alias for _id for compatibility
     name: string;
     sportType: SportType | string; // Support both enum and string for flexibility
     description: string;

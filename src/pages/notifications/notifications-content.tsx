@@ -44,7 +44,7 @@ export default function NotificationsContent() {
 
             try {
                 setLoading(true);
-                const res = await axiosPublic.get(
+                const res = await axiosInstance.get(
                     `/notifications/user/${userId}?type=${filter}`
                 );
                 const raw = Array.isArray(res.data)
