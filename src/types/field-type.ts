@@ -375,7 +375,10 @@ export interface FieldOwnerBookingsParams {
     endDate?: string; // YYYY-MM-DD format
     page?: number;
     limit?: number;
-    type?: string; // Add type filter for field or field_coach
+    type?: 'field' | 'coach' | 'field_coach'; // Booking type filter
+    recurringFilter?: 'none' | 'only' | 'all'; // Filter by recurring status: none (single only), only (recurring only), all (default)
+    sortBy?: 'createdAt' | 'date' | 'totalPrice'; // Field to sort by
+    sortOrder?: 'asc' | 'desc'; // Sort direction
 }
 
 export interface FieldOwnerBookingsResponse {

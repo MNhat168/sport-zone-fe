@@ -22,19 +22,35 @@ export function BookingCheckInSection({
     const handleGenerateQR = async () => {
         try {
             const response = await qrCheckinAPI.generateQR(bookingId)
+            
+            // Handle response wrapper: {success: true, data: {...}}
+            const data = response.data || response
+            
+            if (!data.token || !data.expiresAt) {
+                console.error('Invalid QR response:', response)
+                throw new Error('Phản hồi từ server không hợp lệ')
+            }
+            
             return {
-                token: response.token,
-                expiresAt: response.expiresAt,
+                token: data.token,
+                expiresAt: data.expiresAt,
             }
         } catch (error: any) {
+            console.error('Error generating QR:', error)
             // Handle different error types
             if (error.response?.status === 403) {
+                // Time window error or business logic error - don't redirect, just show message
                 throw new Error(error.response?.data?.message || 'Chưa đến giờ nhận sân')
             }
             if (error.response?.status === 400) {
+                // Validation error - don't redirect
                 throw new Error(error.response?.data?.message || 'Booking không hợp lệ')
             }
-            throw new Error('Không thể tạo mã QR. Vui lòng thử lại.')
+            if (error.response?.status === 401) {
+                // Auth error - let axiosPrivate handle redirect
+                throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+            }
+            throw new Error(error.message || 'Không thể tạo mã QR. Vui lòng thử lại.')
         }
     }
 

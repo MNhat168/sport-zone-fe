@@ -755,7 +755,7 @@ const FieldDetailPage: React.FC = () => {
                       </CardContent>
                     </Card>
 
-                    {/* AI Booking card */}
+                    {/* Batch Booking card */}
                     <Card className="shadow-lg border-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 border-l-4 border-indigo-500 overflow-hidden relative group transition-all hover:shadow-xl">
                       <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Sparkles className="h-24 w-24 text-indigo-600" />
@@ -763,16 +763,16 @@ const FieldDetailPage: React.FC = () => {
                       <CardHeader className="pb-2 relative z-10">
                         <CardTitle className="text-sm font-bold text-indigo-700 flex items-center gap-2">
                           <Bot className="h-4 w-4" />
-                          TIẾT KIỆM THỜI GIAN VỚI AI
+                          ĐẶT SÂN HÀNG LOẠT
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3 relative z-10">
                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                          Sử dụng trí tuệ nhân tạo để đặt nhiều khung giờ, nhiều ngày liên tục hoặc định kỳ chỉ bằng một câu lệnh tự nhiên.
+                          Đặt nhiều khung giờ, nhiều ngày liên tục hoặc định kỳ hàng tuần một cách nhanh chóng và tiện lợi.
                         </p>
                         <Button
                           onClick={() =>
-                            navigate("/field-booking-ai", {
+                            navigate("/field-booking-batch", {
                               state: { fieldId: currentField.id },
                             })
                           }

@@ -22,7 +22,12 @@ export function UserDashboardTabs() {
         navigate(path)
     }
 
-    const isActive = (path: string) => location.pathname === path
+    const isActive = (path: string) => {
+        if (path === "/user-dashboard") {
+            return location.pathname === path;
+        }
+        return location.pathname.startsWith(path);
+    }
 
     return (
         <div className="w-full pl-[530.63px] pr-[530.62px] pt-6 pb-2 bg-gray-100 flex justify-start items-start overflow-hidden">
@@ -40,21 +45,39 @@ export function UserDashboardTabs() {
 
                         <Button
                             variant="ghost"
-                            className={baseTabClasses(isActive("/user-booking-history"))}
-                            onClick={() => handleNavigation("/user-booking-history")}
+                            className={baseTabClasses(isActive("/user/single-bookings"))}
+                            onClick={() => handleNavigation("/user/single-bookings")}
                         >
                             <Calendar className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Lịch sử đặt sân</div>
+                            <div className="text-center text-base font-medium">Đơn lẻ</div>
                         </Button>
 
-                        {/* <Button
+                        <Button
                             variant="ghost"
-                            className={baseTabClasses(isActive("/user-invoices"))}
-                            onClick={() => handleNavigation("/user-invoices")}
+                            className={baseTabClasses(isActive("/user/batch-bookings"))}
+                            onClick={() => handleNavigation("/user/batch-bookings")}
                         >
-                            <FileText className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Invoices</div>
-                        </Button> */}
+                            <Calendar className="w-6 h-6" />
+                            <div className="text-center text-base font-medium">Hàng loạt</div>
+                        </Button>
+
+                        <Button
+                            variant="ghost"
+                            className={baseTabClasses(isActive("/user/recurring-bookings"))}
+                            onClick={() => handleNavigation("/user/recurring-bookings")}
+                        >
+                            <Calendar className="w-6 h-6" />
+                            <div className="text-center text-base font-medium">Cố định</div>
+                        </Button>
+
+                        <Button
+                            variant="ghost"
+                            className={baseTabClasses(isActive("/user/combined-bookings"))}
+                            onClick={() => handleNavigation("/user/combined-bookings")}
+                        >
+                            <User className="w-6 h-6" />
+                            <div className="text-center text-base font-medium">Combo Sân + HLV</div>
+                        </Button>
 
                         <Button
                             variant="ghost"
@@ -70,9 +93,9 @@ export function UserDashboardTabs() {
                             className={baseTabClasses(isActive("/user-profile"))}
                             onClick={() => handleNavigation("/user-profile")}
                         >
-                                <User className="w-6 h-6" />
-                                <div className="text-center text-base font-medium">Cài đặt tài khoản</div>
-                            </Button>
+                            <User className="w-6 h-6" />
+                            <div className="text-center text-base font-medium">Cài đặt tài khoản</div>
+                        </Button>
                     </div>
                 </div>
             </div>

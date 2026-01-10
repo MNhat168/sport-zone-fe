@@ -319,8 +319,12 @@ export const getMyBookings = createAsyncThunk<
         const queryParams = new URLSearchParams();
         if (params.status) queryParams.append('status', params.status);
         if (params.type) queryParams.append('type', params.type);
+        if (params.recurringFilter) queryParams.append('recurringFilter', params.recurringFilter);
         if (params.page) queryParams.append('page', params.page.toString());
         if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.startDate) queryParams.append('startDate', params.startDate);
+        if (params.endDate) queryParams.append('endDate', params.endDate);
+        if (params.search) queryParams.append('search', params.search);
 
         const url = queryParams.toString()
             ? `${GET_MY_BOOKINGS_API}?${queryParams.toString()}`

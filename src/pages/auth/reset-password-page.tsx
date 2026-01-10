@@ -23,11 +23,9 @@ export default function ResetPasswordPage() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
-    const { forgotPasswordLoading } = useAppSelector(
+    const { resetPasswordLoading, resetPasswordSuccess } = useAppSelector(
         (state) => state.auth
     );
-
-    const [isSuccess, setIsSuccess] = useState(false);
 
     //Login banner images - reusing
     const loginBanners = [
@@ -52,6 +50,16 @@ export default function ResetPasswordPage() {
             navigate("/auth");
         }
     }, [token, navigate]);
+
+    // Handle success navigation
+    useEffect(() => {
+        if (resetPasswordSuccess) {
+            const timer = setTimeout(() => {
+                navigate("/auth");
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [resetPasswordSuccess, navigate]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -84,12 +92,8 @@ export default function ResetPasswordPage() {
                 confirmPassword: formData.confirmPassword
             })).unwrap();
 
-            setIsSuccess(true);
             CustomSuccessToast("Đặt lại mật khẩu thành công!");
-
-            setTimeout(() => {
-                navigate("/auth");
-            }, 3000);
+            // Navigation will be handled by useEffect when resetPasswordSuccess becomes true
 
         } catch (error: any) {
             let errorMessage = "Có lỗi xảy ra";
@@ -149,7 +153,7 @@ export default function ResetPasswordPage() {
                         </p>
                     </div>
 
-                    {!isSuccess ? (
+                    {!resetPasswordSuccess ? (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* New Password */}
                             <div className="space-y-2 text-left">
@@ -213,10 +217,10 @@ export default function ResetPasswordPage() {
 
                             <button
                                 type="submit"
-                                disabled={forgotPasswordLoading}
+                                disabled={resetPasswordLoading}
                                 className="w-full bg-green-700 hover:bg-green-600 text-white py-4 px-6 rounded-xl text-base font-medium focus:ring-4 focus:ring-green-200 transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {forgotPasswordLoading ? (
+                                {resetPasswordLoading ? (
                                     <Loading size={20} className="border-white" />
                                 ) : (
                                     <>
