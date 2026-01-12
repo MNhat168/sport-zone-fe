@@ -40,13 +40,13 @@ export const authApi = createApi({
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json')
       headers.set('X-Client-Type', 'admin') // Phân biệt FE admin với FE user
-      
+
       // Add Bearer token if available
       const token = sessionStorage.getItem('auth_access_token')
       if (token) {
         headers.set('Authorization', `Bearer ${token}`)
       }
-      
+
       return headers
     },
   }),
@@ -59,12 +59,14 @@ export const authApi = createApi({
         method: 'POST',
         body: credentials,
       }),
+      transformResponse: (response: { data: LoginResponse & { accessToken: string; refreshToken: string } }) => response.data,
       invalidatesTags: ['Auth'],
     }),
 
     // Validate session query
     validateSession: builder.query<ValidateSessionResponse, void>({
       query: () => '/auth/validate',
+      transformResponse: (response: { data: ValidateSessionResponse }) => response.data,
       providesTags: ['Auth'],
     }),
 
@@ -74,6 +76,7 @@ export const authApi = createApi({
         url: '/auth/logout',
         method: 'POST',
       }),
+      transformResponse: (response: { data: { message: string } }) => response.data,
       invalidatesTags: ['Auth'],
     }),
 
@@ -89,6 +92,7 @@ export const authApi = createApi({
           } : {},
         }
       },
+      transformResponse: (response: { data: { message: string; accessToken?: string; refreshToken?: string } }) => response.data,
     }),
 
     // Register mutation
@@ -98,6 +102,7 @@ export const authApi = createApi({
         method: 'POST',
         body: data,
       }),
+      transformResponse: (response: { data: { message: string } }) => response.data,
     }),
 
     // Forgot password mutation
@@ -107,6 +112,7 @@ export const authApi = createApi({
         method: 'POST',
         body: data,
       }),
+      transformResponse: (response: { data: { message: string } }) => response.data,
     }),
 
     // Reset password mutation
@@ -116,6 +122,7 @@ export const authApi = createApi({
         method: 'POST',
         body: data,
       }),
+      transformResponse: (response: { data: { message: string } }) => response.data,
     }),
 
     // Google login mutation - use fallback endpoint for Bearer token
@@ -128,6 +135,7 @@ export const authApi = createApi({
           rememberMe: data.rememberMe,
         },
       }),
+      transformResponse: (response: { data: LoginResponse & { accessToken: string; refreshToken: string } }) => response.data,
       invalidatesTags: ['Auth'],
     }),
   }),

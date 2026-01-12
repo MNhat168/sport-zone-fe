@@ -4,6 +4,7 @@ import { useAppDispatch } from '@/store/hooks'
 import { clearAuth } from '@/store/slices/authSlice'
 import { useLogoutMutation } from '@/store/services/authApi'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { removeCookie } from '@/lib/cookies'
 
 interface SignOutDialogProps {
   open: boolean
@@ -26,12 +27,16 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
       sessionStorage.removeItem('auth_access_token')
       sessionStorage.removeItem('auth_refresh_token')
       sessionStorage.removeItem('user')
-      
+
+      // Clear cookies (to avoid conflicts with backend cookie strategy)
+      removeCookie('access_token')
+      removeCookie('access_token_admin')
+
       // Clear Redux state
       dispatch(clearAuth())
-      
+
       toast.success('Signed out successfully')
-      
+
       // Navigate to sign-in page
       navigate({
         to: '/sign-in',

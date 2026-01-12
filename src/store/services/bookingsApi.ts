@@ -24,10 +24,16 @@ export const bookingsApi = createApi({
   reducerPath: 'bookingsApi',
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
-    credentials: 'include',
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json')
       headers.set('X-Client-Type', 'admin') // Phân biệt FE admin với FE user
+
+      // Add Bearer token if available
+      const token = sessionStorage.getItem('auth_access_token')
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+
       return headers
     },
   }),

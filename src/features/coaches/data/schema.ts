@@ -48,7 +48,10 @@ export const coachProfileSchema = z.object({
     email: z.string(),
     phone: z.string().optional(),
     avatarUrl: z.string().optional(),
-    sports: z.array(z.string()),
+    sports: z.union([
+        z.array(z.string()),
+        z.string().transform((val) => val.split(',').map(s => s.trim()).filter(Boolean))
+    ]),
     certification: z.string().optional(),
     hourlyRate: z.number(),
     bio: z.string().optional(),

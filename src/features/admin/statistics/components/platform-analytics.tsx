@@ -100,7 +100,7 @@ export function PlatformAnalytics({ data, aiGenerated = false }: PlatformAnalyti
                     <p className="font-bold text-lg">{sport.sport}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>{sport.bookings} lượt đặt</span>
-                      <span>{sport.tournaments} giải đấu</span>
+
                       <span>{sport.favorites} yêu thích</span>
                     </div>
                   </div>

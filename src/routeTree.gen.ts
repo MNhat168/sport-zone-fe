@@ -36,7 +36,6 @@ import { Route as AuthenticatedFieldsIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedFieldOwnersIndexRouteImport } from './routes/_authenticated/field-owners/index'
 import { Route as AuthenticatedCoachesIndexRouteImport } from './routes/_authenticated/coaches/index'
 import { Route as AuthenticatedBookingsIndexRouteImport } from './routes/_authenticated/bookings/index'
-import { Route as AuthenticatedBillingIndexRouteImport } from './routes/_authenticated/billing/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as ClerkAuthenticatedUserManagementRouteImport } from './routes/clerk/_authenticated/user-management'
 import { Route as ClerkauthSignUpRouteImport } from './routes/clerk/(auth)/sign-up'
@@ -195,12 +194,6 @@ const AuthenticatedBookingsIndexRoute =
     path: '/bookings/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedBillingIndexRoute =
-  AuthenticatedBillingIndexRouteImport.update({
-    id: '/billing/',
-    path: '/billing/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
   id: '/apps/',
   path: '/apps/',
@@ -317,7 +310,6 @@ export interface FileRoutesByFullPath {
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
-  '/billing': typeof AuthenticatedBillingIndexRoute
   '/bookings': typeof AuthenticatedBookingsIndexRoute
   '/coaches': typeof AuthenticatedCoachesIndexRoute
   '/field-owners': typeof AuthenticatedFieldOwnersIndexRoute
@@ -358,7 +350,6 @@ export interface FileRoutesByTo {
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
-  '/billing': typeof AuthenticatedBillingIndexRoute
   '/bookings': typeof AuthenticatedBookingsIndexRoute
   '/coaches': typeof AuthenticatedCoachesIndexRoute
   '/field-owners': typeof AuthenticatedFieldOwnersIndexRoute
@@ -404,7 +395,6 @@ export interface FileRoutesById {
   '/clerk/(auth)/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/_authenticated/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
-  '/_authenticated/billing/': typeof AuthenticatedBillingIndexRoute
   '/_authenticated/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/_authenticated/coaches/': typeof AuthenticatedCoachesIndexRoute
   '/_authenticated/field-owners/': typeof AuthenticatedFieldOwnersIndexRoute
@@ -449,7 +439,6 @@ export interface FileRouteTypes {
     | '/clerk/sign-up'
     | '/clerk/user-management'
     | '/apps'
-    | '/billing'
     | '/bookings'
     | '/coaches'
     | '/field-owners'
@@ -490,7 +479,6 @@ export interface FileRouteTypes {
     | '/clerk/sign-up'
     | '/clerk/user-management'
     | '/apps'
-    | '/billing'
     | '/bookings'
     | '/coaches'
     | '/field-owners'
@@ -535,7 +523,6 @@ export interface FileRouteTypes {
     | '/clerk/(auth)/sign-up'
     | '/clerk/_authenticated/user-management'
     | '/_authenticated/apps/'
-    | '/_authenticated/billing/'
     | '/_authenticated/bookings/'
     | '/_authenticated/coaches/'
     | '/_authenticated/field-owners/'
@@ -757,13 +744,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBookingsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/billing/': {
-      id: '/_authenticated/billing/'
-      path: '/billing'
-      fullPath: '/billing'
-      preLoaderRoute: typeof AuthenticatedBillingIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/apps/': {
       id: '/_authenticated/apps/'
       path: '/apps'
@@ -918,7 +898,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFieldOwnersRequestsRoute: typeof AuthenticatedFieldOwnersRequestsRoute
   AuthenticatedReportsReportIdRoute: typeof AuthenticatedReportsReportIdRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
-  AuthenticatedBillingIndexRoute: typeof AuthenticatedBillingIndexRoute
   AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
   AuthenticatedCoachesIndexRoute: typeof AuthenticatedCoachesIndexRoute
   AuthenticatedFieldOwnersIndexRoute: typeof AuthenticatedFieldOwnersIndexRoute
@@ -942,7 +921,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFieldOwnersRequestsRoute: AuthenticatedFieldOwnersRequestsRoute,
   AuthenticatedReportsReportIdRoute: AuthenticatedReportsReportIdRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
-  AuthenticatedBillingIndexRoute: AuthenticatedBillingIndexRoute,
   AuthenticatedBookingsIndexRoute: AuthenticatedBookingsIndexRoute,
   AuthenticatedCoachesIndexRoute: AuthenticatedCoachesIndexRoute,
   AuthenticatedFieldOwnersIndexRoute: AuthenticatedFieldOwnersIndexRoute,

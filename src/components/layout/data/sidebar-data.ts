@@ -8,7 +8,6 @@ import {
   FileCheck,
   Flag,
   Calendar,
-  CreditCard,
   FileSpreadsheet,
   Dumbbell,
   MapPin,
@@ -66,11 +65,7 @@ export const sidebarData: SidebarData = {
           url: '/reports',
           icon: Flag,
         },
-        {
-          title: 'Billing',
-          url: '/billing',
-          icon: CreditCard,
-        },
+
         {
           title: 'Quản lý hoàn tiền',
           url: '/refund-management',

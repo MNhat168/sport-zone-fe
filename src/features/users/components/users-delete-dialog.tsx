@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { Lock, Unlock } from 'lucide-react'
+import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { type User } from '../data/schema'
+import axiosInstance from '@/lib/axios'
+import { useQueryClient } from '@tanstack/react-query'
 
 type UserDeleteDialogProps = {
   open: boolean
@@ -21,61 +23,91 @@ export function UsersDeleteDialog({
   currentRow,
 }: UserDeleteDialogProps) {
   const [value, setValue] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const queryClient = useQueryClient()
 
-  const handleDelete = () => {
-    if (value.trim() !== currentRow.email) return
+  const isActive = currentRow.status === 'active'
+  const actionText = isActive ? 'Khóa' : 'Mở khóa'
+  const ActionIcon = isActive ? Lock : Unlock
+  const confirmKey = 'toi_chap_nhan'
 
-    onOpenChange(false)
-    showSubmittedData(currentRow, 'Người dùng sau đã bị xóa:')
+  const handleStatusChange = async () => {
+    if (isActive && value.trim() !== confirmKey) return
+
+    try {
+      setIsLoading(true)
+      await axiosInstance.patch(`/admin/manage/user/${currentRow._id}/is-active`, {
+        isActive: !isActive,
+      })
+
+      toast.success(`Đã ${actionText.toLowerCase()} tài khoản thành công.`)
+
+      // Invalidate queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      onOpenChange(false)
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật trạng thái.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      handleConfirm={handleDelete}
-      disabled={value.trim() !== currentRow.email}
+      handleConfirm={handleStatusChange}
+      disabled={isActive && value.trim() !== confirmKey}
+      isLoading={isLoading}
       title={
-        <span className='text-destructive'>
-          <AlertTriangle
-            className='stroke-destructive me-1 inline-block'
+        <span className={isActive ? 'text-destructive' : 'text-emerald-600'}>
+          <ActionIcon
+            className={`me-1 inline-block ${isActive ? 'stroke-destructive' : 'stroke-emerald-600'}`}
             size={18}
           />{' '}
-          Xóa người dùng
+          {actionText} tài khoản
         </span>
       }
       desc={
         <div className='space-y-4'>
           <p className='mb-2'>
-            Bạn có chắc muốn xóa{' '}
+            Bạn có chắc muốn <span className='font-bold lowercase'>{actionText}</span> tài khoản{' '}
             <span className='font-bold'>{currentRow.fullName}</span>?
             <br />
-            Thao tác này sẽ xóa vĩnh viễn người dùng có vai trò{' '}
-            <span className='font-bold'>
-              {currentRow.role.toUpperCase()}
-            </span>{' '}
-            khỏi hệ thống. Thao tác này không thể hoàn tác.
+            {isActive ? (
+              <>
+                Tài khoản này sẽ không thể đăng nhập vào hệ thống nữa.
+              </>
+            ) : (
+              <>
+                Tài khoản này sẽ được phép đăng nhập lại vào hệ thống.
+              </>
+            )}
           </p>
 
-          <Label className='my-2'>
-            Email:
-            <Input
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder='Nhập email để xác nhận xóa.'
-            />
-          </Label>
+          {isActive && (
+            <Label className='my-2'>
+              Nhập <span className='font-bold text-destructive'>{confirmKey}</span> để xác nhận:
+              <Input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder={`Nhập '${confirmKey}' để xác nhận.`}
+              />
+            </Label>
+          )}
 
-          <Alert variant='destructive'>
-            <AlertTitle>Cảnh báo!</AlertTitle>
-            <AlertDescription>
-              Hãy cẩn thận, thao tác này không thể hoàn tác.
-            </AlertDescription>
-          </Alert>
+          {isActive && (
+            <Alert variant='destructive'>
+              <AlertTitle>Cảnh báo!</AlertTitle>
+              <AlertDescription>
+                Hành động này sẽ ngăn người dùng truy cập ngay lập tức.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       }
-      confirmText='Xóa'
-      destructive
+      confirmText={actionText}
+      destructive={isActive}
     />
   )
 }

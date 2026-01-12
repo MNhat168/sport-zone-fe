@@ -9,7 +9,9 @@ export const registrationStatuses = [
   { label: 'Pending', value: 'pending' as const },
   { label: 'Approved', value: 'approved' as const },
   { label: 'Rejected', value: 'rejected' as const },
+  { label: 'Clarification Requested', value: 'clarification_requested' as const },
 ]
+
 
 export const bankAccountStatuses = [
   { label: 'Pending', value: 'pending' as const },

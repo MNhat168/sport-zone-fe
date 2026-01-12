@@ -49,7 +49,7 @@ function transformDatesToStrings<T>(obj: T): T {
   if (typeof obj === 'object' && obj.constructor === Object) {
     const transformed = {} as T
     for (const [key, value] of Object.entries(obj)) {
-      ;(transformed as any)[key] = transformDatesToStrings(value)
+      ; (transformed as any)[key] = transformDatesToStrings(value)
     }
     return transformed
   }
@@ -61,10 +61,16 @@ export const fieldOwnersApi = createApi({
   reducerPath: 'fieldOwnersApi',
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
-    credentials: 'include',
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json')
       headers.set('X-Client-Type', 'admin') // Phân biệt FE admin với FE user
+
+      // Add Bearer token if available
+      const token = sessionStorage.getItem('auth_access_token')
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+
       return headers
     },
   }),
@@ -127,6 +133,18 @@ export const fieldOwnersApi = createApi({
       invalidatesTags: ['RegistrationRequest', 'FieldOwner'],
     }),
 
+    requestAdditionalInfo: builder.mutation<
+      void,
+      { id: string; message: string }
+    >({
+      query: ({ id, message }) => ({
+        url: `/field-owner/admin/registration-requests/${id}/request-info`,
+        method: 'POST',
+        body: { message },
+      }),
+      invalidatesTags: ['RegistrationRequest'],
+    }),
+
     // Reject registration request
     rejectFieldOwnerRegistration: builder.mutation<any, { id: string; data: RejectRegistrationRequestPayload }>({
       query: ({ id, data }) => ({
@@ -164,6 +182,7 @@ export const {
   useGetRegistrationRequestsQuery,
   useGetRegistrationRequestQuery,
   useApproveFieldOwnerRegistrationMutation,
+  useRequestAdditionalInfoMutation,
   useRejectFieldOwnerRegistrationMutation,
   useVerifyBankAccountMutation,
   useRejectBankAccountMutation,

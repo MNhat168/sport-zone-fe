@@ -49,11 +49,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               setCurrentRow(row.original)
               setOpen('delete')
             }}
-            className='text-red-500!'
+            className={row.original.status === 'active' ? 'text-red-500' : 'text-emerald-500'}
           >
-            Delete
+            {row.original.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
             <DropdownMenuShortcut>
-              <Trash2 size={16} />
+              {row.original.status === 'active' ? <Trash2 size={16} /> : <UserPen size={16} />}
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>

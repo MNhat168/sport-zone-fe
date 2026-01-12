@@ -1,6 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
-import { Eye, CheckCircle, XCircle } from 'lucide-react'
+import { Eye, CheckCircle, XCircle, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -99,6 +99,15 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               Từ chối
               <DropdownMenuShortcut>
                 <XCircle size={16} />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              setCurrentRow(row.original)
+              setOpen('request-info')
+            }} className='text-orange-600'>
+              Yêu cầu bổ sung
+              <DropdownMenuShortcut>
+                <HelpCircle size={16} />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
           </>

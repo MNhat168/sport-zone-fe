@@ -21,7 +21,6 @@ import { reportsApi } from './services/reportsApi'
 import { bookingsApi } from './services/bookingsApi'
 import { fieldsApi } from './services/fieldsApi'
 import authReducer from './slices/authSlice'
-import { billingReducer } from '../features/billing'
 
 // Persist config
 const persistConfig = {
@@ -34,7 +33,6 @@ const persistConfig = {
 // Combine reducers
 const rootReducer = combineReducers({
   auth: authReducer,
-  billing: billingReducer,
   [authApi.reducerPath]: authApi.reducer,
   [dashboardApi.reducerPath]: dashboardApi.reducer,
   [fieldOwnersApi.reducerPath]: fieldOwnersApi.reducer,

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
 import { type FieldOwnerRequest, type FieldOwnerProfile, type FieldOwnerProfileApi } from '../data/schema'
 
-type FieldOwnersDialogType = 'view' | 'approve' | 'reject' | 'verify-bank'
+type FieldOwnersDialogType = 'view' | 'approve' | 'reject' | 'verify-bank' | 'request-info' | 'request-detail' | 'profile-detail'
 
 type FieldOwnersContextType = {
   open: FieldOwnersDialogType | null
