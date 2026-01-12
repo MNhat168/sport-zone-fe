@@ -6,7 +6,7 @@ import coachReducer from "../features/coach/coachSlice";
 import transactionsReducer from "../features/transactions/transactionsSlice";
 import { amenitiesReducer } from "../features/amenities";
 import { ownerProfileReducer } from "../features/field-owner-profile";
-import { tournamentReducer } from "../features/tournament";
+
 import { walletReducer } from "../features/wallet";
 import { registrationReducer } from "../features/field-owner-registration";
 import { coachRegistrationReducer } from "../features/coach-registration";
@@ -44,7 +44,7 @@ export const store = configureStore({
         transactions: transactionsReducer,
         amenities: amenitiesReducer,
         ownerProfile: ownerProfileReducer,
-        tournament: tournamentReducer,
+
         wallet: walletReducer,
         registration: registrationReducer,
         coachRegistration: coachRegistrationReducer,

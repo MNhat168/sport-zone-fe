@@ -28,11 +28,8 @@ import { clearUserAuth, setCookie } from "../../lib/cookies";
 // If AuthResponse['user'] is a simple type, this might need adjustment.
 // For now, we'll define a local type that includes the new fields.
 type User = AuthResponse["user"] & {
-    tournaments?: any[];
     // Abuse prevention fields
-    activeTournamentsCount?: number;
-    weeklyTournamentCreationCount?: number;
-    tournamentTier?: 'FREE' | 'PREMIUM';
+    activeBookingsCount?: number; // Example replacement or just empty if not needed
 }
 
 interface AuthState {

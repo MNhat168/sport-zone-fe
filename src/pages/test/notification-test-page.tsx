@@ -16,7 +16,7 @@ const NotificationTestPage: React.FC = () => {
     { type: NotificationType.BOOKING_CANCELLED, label: "Đặt sân bị hủy" },
     { type: NotificationType.PAYMENT_SUCCESS, label: "Thanh toán thành công" },
     { type: NotificationType.PAYMENT_FAILED, label: "Thanh toán thất bại" },
-    { type: NotificationType.NEW_TOURNAMENT, label: "Giải đấu mới" },
+
     { type: NotificationType.NEW_REVIEW, label: "Đánh giá mới" },
     { type: NotificationType.COACH_REQUEST, label: "Yêu cầu HLV" },
     { type: NotificationType.FIELD_APPROVAL, label: "Sân được duyệt" },
@@ -38,7 +38,7 @@ const NotificationTestPage: React.FC = () => {
     const types = [
       NotificationType.BOOKING_CONFIRMED,
       NotificationType.PAYMENT_SUCCESS,
-      NotificationType.NEW_TOURNAMENT,
+
     ];
 
     types.forEach((type, index) => {

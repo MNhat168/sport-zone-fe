@@ -79,10 +79,7 @@ export const NotificationBannerProvider: React.FC<NotificationBannerProviderProp
         title: "Thanh toán thất bại",
         message: "Giao dịch thanh toán không thành công. Vui lòng thử lại",
       },
-      [NotificationType.NEW_TOURNAMENT]: {
-        title: "Giải đấu mới",
-        message: "Có giải đấu mới đang được tổ chức",
-      },
+
       [NotificationType.NEW_REVIEW]: {
         title: "Đánh giá mới",
         message: "Bạn có đánh giá mới từ khách hàng",
