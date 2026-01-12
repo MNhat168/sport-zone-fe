@@ -22,7 +22,7 @@ const UserBatchBookingsPage = lazy(() => import("../pages/user-dashboard-page/bo
 const UserCombinedBookingsPage = lazy(() => import("../pages/user-dashboard-page/booking-history/combined-bookings-page"));
 const UserCoachBookingsPage = lazy(() => import("../pages/user-dashboard-page/booking-history/coach-bookings-page"));
 const UserInvoicesPage = lazy(() => import("../pages/user-dashboard-page/invoices/user-invoices-page"));
-const MyTournaments = lazy(() => import("../pages/user-dashboard-page/tournaments/user-tournaments-page"));
+
 const UserWalletPage = lazy(() => import("../pages/user-dashboard-page/wallet/user-wallet-page"));
 const UserProfilePage = lazy(() => import("../pages/user-dashboard-page/profile/user-profile-page"));
 
@@ -81,9 +81,7 @@ const CoachRegistrationStatusPage = lazy(() => import("../pages/coach-registrati
 
 // Other Pages
 const NotificationsPage = lazy(() => import("../pages/notifications/page"));
-const TournamentListPage = lazy(() => import("@/pages/list-tournament/TournamentListPage.tsx"));
-const CreateTournamentPage = lazy(() => import("@/pages/create-tournament/CreateTournamentPage.tsx"));
-const TournamentDetailPage = lazy(() => import("@/pages/tournament-detail-page/tournament-detail-page.tsx"));
+
 const MyReportsPage = lazy(() => import("../pages/my-reports-page/my-reports-page"));
 
 // Test Pages
@@ -162,9 +160,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/contact", element: <Placeholder title="Liên hệ" /> },
   { path: "/services", element: <Placeholder title="Dịch vụ" /> },
 
-  // Tournament Discovery (Public)
-  { path: "/tournaments", element: <TournamentListPage /> },
-  { path: "/tournaments/:id", element: <TournamentDetailPage /> },
+
 
   //test
   { path: "/field-owner-dashboard", element: <FieldOwnerDashboardPage /> },
@@ -266,14 +262,7 @@ export const userRoutes: RouteObject[] = [
 
   // User Communication & Finance
   {
-    path: "/user-tournaments",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.user]}>
-        <MyTournaments />
-      </ProtectedRoute>
-    ),
-  },
-  {
+
     path: "/user-wallet",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
@@ -346,14 +335,7 @@ export const userRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  {
-    path: "/tournaments/create",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.user, UserRole.coach, UserRole.FIELD_OWNER]}>
-        <CreateTournamentPage />
-      </ProtectedRoute>
-    ),
-  },
+
 ];
 
 /**

@@ -45,11 +45,7 @@ export const getNotificationIcon = (type: NotificationType | string): Notificati
       color: "text-red-600",
       bgColor: "bg-red-100",
     },
-    [NotificationType.NEW_TOURNAMENT]: {
-      icon: Trophy,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
-    },
+
     [NotificationType.NEW_REVIEW]: {
       icon: Star,
       color: "text-amber-600",

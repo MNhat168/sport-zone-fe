@@ -79,14 +79,7 @@ export function UserDashboardTabs() {
                             <div className="text-center text-base font-medium">Combo Sân + HLV</div>
                         </Button>
 
-                        <Button
-                            variant="ghost"
-                            className={baseTabClasses(isActive("/user-tournaments"))}
-                            onClick={() => handleNavigation("/user-tournaments")}
-                        >
-                            <Wallet className="w-6 h-6" />
-                            <div className="text-center text-base font-medium">Giải đấu</div>
-                        </Button>
+
 
                         <Button
                             variant="ghost"

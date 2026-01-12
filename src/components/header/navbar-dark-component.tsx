@@ -103,13 +103,7 @@ export const NavbarDarkComponent = () => {
             >
                 Đặt Sân + HLV
             </Link>
-            <Link
-                to="/tournaments"
-                className={mobile ? mobileLinkClass : linkClass}
-                onClick={() => mobile && setIsMobileMenuOpen(false)}
-            >
-                Giải đấu
-            </Link>
+
             <Link
                 to="/about"
                 className={mobile ? mobileLinkClass : linkClass}
