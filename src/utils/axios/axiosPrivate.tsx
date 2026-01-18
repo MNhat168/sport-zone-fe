@@ -1,6 +1,12 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 
+// Type for error response data
+interface ErrorResponseData {
+  message?: string;
+  [key: string]: any;
+}
+
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 60000, // Tăng từ 10s lên 60s để phù hợp với AI processing
@@ -68,7 +74,7 @@ axiosInstance.interceptors.response.use(
         // Always use Bearer token refresh
         const BASE_URL = import.meta.env.VITE_API_URL;
         const refreshToken = sessionStorage.getItem('auth_refresh_token');
-        
+
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
@@ -127,14 +133,14 @@ axiosInstance.interceptors.response.use(
 
     // For 403 or other errors, check if it's an auth error
     if (error.response?.status === 403) {
-      const errorMessage = error.response?.data?.message || '';
-      const isAuthError = errorMessage.includes('token') || 
-                          errorMessage.includes('xác thực') ||
-                          errorMessage.includes('quyền') ||
-                          errorMessage.includes('authorized') ||
-                          errorMessage.includes('permission') ||
-                          errorMessage.includes('forbidden');
-      
+      const errorMessage = (error.response?.data as ErrorResponseData)?.message || '';
+      const isAuthError = errorMessage.includes('token') ||
+        errorMessage.includes('xác thực') ||
+        errorMessage.includes('quyền') ||
+        errorMessage.includes('authorized') ||
+        errorMessage.includes('permission') ||
+        errorMessage.includes('forbidden');
+
       // Only redirect if it's an auth error, not business logic error
       if (isAuthError) {
         // Only redirect to auth if there was actually a stored user session
