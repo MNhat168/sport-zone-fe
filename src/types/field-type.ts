@@ -4,6 +4,7 @@ import { SportType } from '@/components/enums/ENUMS';
 // Owner interface matching API response structure
 export interface FieldOwner {
     _id: string;
+    id: string;
     businessName?: string;
     name?: string;
     contact?: string; // For backward compatibility
@@ -16,6 +17,7 @@ export interface FieldOwner {
 // Court interface for multi-court fields
 export interface Court {
     _id: string;
+    id: string;
     name: string;
     courtNumber?: number;
     isActive?: boolean;
@@ -25,6 +27,7 @@ export interface Court {
 // Main Field interface
 export interface Field {
     _id: string;
+    id: string;
     name: string;
     sportType: SportType | string; // Support both enum and string for flexibility
     description: string;

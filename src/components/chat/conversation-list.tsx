@@ -6,14 +6,19 @@ import type { ChatRoom } from '@/features/chat/chat-type';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Building, UserCircle, Search, MessageCircle } from 'lucide-react';
+import { Building, UserCircle, Search, MessageCircle, Users } from 'lucide-react';
 import { format } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import logger from '@/utils/logger';
 
-const ConversationList: React.FC = () => {
+interface ConversationListProps {
+    onSelect?: (room: ChatRoom) => void;
+}
+
+const ConversationList: React.FC<ConversationListProps> = ({ onSelect }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const dispatch = useAppDispatch();
-    const { rooms, loading } = useAppSelector((state) => state.chat);
+    const { rooms, loading, currentRoom } = useAppSelector((state) => state.chat);
 
     // Get current user ID from session storage
     const getCurrentUserId = () => {
@@ -26,23 +31,48 @@ const ConversationList: React.FC = () => {
     // Transform rooms to add actor information
     const transformedRooms = rooms.map((room) => {
         const isCoachRoom = !!room.coach;
+        const isFieldRoom = !!room.fieldOwner;
+        const currentUserId = getCurrentUserId();
 
-        logger.debug('[ConversationList] Transforming room:', {
-            roomId: room._id,
-            hasCoach: !!room.coach,
-            hasFieldOwner: !!room.fieldOwner,
-            coachData: room.coach,
-            fieldOwnerData: room.fieldOwner,
-            detectedType: isCoachRoom ? 'coach' : 'field',
-        });
+        let actorType: 'field' | 'coach' | 'match' = 'field';
+        let actorName = 'Người dùng';
+        let actorId = '';
+        let actorAvatar = '';
+
+        if (isCoachRoom) {
+            actorType = 'coach';
+            actorName = room.coach?.displayName || 'Huấn luyện viên';
+            actorId = room.coach?._id || '';
+        } else if (isFieldRoom) {
+            actorType = 'field';
+            actorName = room.fieldOwner?.facilityName || 'Chủ sân';
+            actorId = room.fieldOwner?._id || '';
+        } else {
+            // Likely a match or group session room
+            actorType = 'match';
+            // Find the other user from participants
+            const otherUser = room.participants?.find((p: any) => {
+                const pId = p?._id || p;
+                return pId !== currentUserId;
+            });
+
+            if (otherUser && typeof otherUser === 'object') {
+                actorName = otherUser.fullName || 'Đồng đội';
+                actorId = otherUser._id?.toString() || '';
+                actorAvatar = otherUser.avatarUrl || otherUser.avatar || '';
+            } else if (room.user && room.user._id !== currentUserId) {
+                actorName = room.user.fullName || 'Đồng đội';
+                actorId = room.user._id?.toString() || '';
+                actorAvatar = room.user.avatarUrl || '';
+            }
+        }
 
         return {
             ...room,
-            actorType: (isCoachRoom ? 'coach' : 'field') as 'field' | 'coach',
-            actorName: isCoachRoom
-                ? room.coach?.displayName || 'Coach'
-                : room.fieldOwner?.facilityName || 'Field Owner',
-            actorId: isCoachRoom ? room.coach?._id : room.fieldOwner?._id,
+            actorType,
+            actorName,
+            actorId,
+            actorAvatar
         };
     });
 
@@ -111,6 +141,11 @@ const ConversationList: React.FC = () => {
 
     // Handle room selection
     const handleSelectRoom = async (room: ChatRoom) => {
+        if (onSelect) {
+            onSelect(room);
+            return;
+        }
+
         try {
             // Fetch latest history from API
             const latestRoom = await dispatch(getChatRoom(room._id)).unwrap();
@@ -168,29 +203,37 @@ const ConversationList: React.FC = () => {
                     <div className="divide-y">
                         {sortedRooms.map((room) => {
                             const unreadCount = getRoomUnreadCount(room);
-                            const isField = room.actorType === 'field';
+                            const isSelected = currentRoom?._id === room._id;
                             const lastMessageMine = isLastMessageMine(room);
 
                             return (
                                 <button
                                     key={room._id}
                                     onClick={() => handleSelectRoom(room)}
-                                    className="w-full p-4 hover:bg-accent/50 transition-colors duration-200 text-left group"
+                                    className={`w-full p-4 transition-colors duration-200 text-left group ${isSelected ? 'bg-accent/80' : 'hover:bg-accent/50'
+                                        }`}
                                 >
                                     <div className="flex items-start gap-3">
                                         {/* Avatar */}
-                                        <div
-                                            className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${isField
-                                                ? 'bg-primary/10 text-primary'
-                                                : 'bg-secondary/10 text-secondary'
-                                                }`}
-                                        >
-                                            {isField ? (
-                                                <Building className="w-6 h-6" />
-                                            ) : (
-                                                <UserCircle className="w-6 h-6" />
-                                            )}
-                                        </div>
+                                        <Avatar className="w-12 h-12 flex-shrink-0 border">
+                                            <AvatarImage src={room.actorAvatar} />
+                                            <AvatarFallback
+                                                className={room.actorType === 'field'
+                                                    ? 'bg-primary/10 text-primary'
+                                                    : room.actorType === 'coach'
+                                                        ? 'bg-secondary/10 text-secondary'
+                                                        : 'bg-green-100 text-green-700'
+                                                }
+                                            >
+                                                {room.actorType === 'field' ? (
+                                                    <Building className="w-6 h-6" />
+                                                ) : room.actorType === 'coach' ? (
+                                                    <UserCircle className="w-6 h-6" />
+                                                ) : (
+                                                    <Users className="w-6 h-6" />
+                                                )}
+                                            </AvatarFallback>
+                                        </Avatar>
 
                                         {/* Content */}
                                         <div className="flex-1 min-w-0">
@@ -202,12 +245,14 @@ const ConversationList: React.FC = () => {
                                                 </h3>
                                                 <Badge
                                                     variant="outline"
-                                                    className={`text-xs px-1.5 py-0 ${isField
+                                                    className={`text-[10px] px-1.5 py-0 leading-tight ${room.actorType === 'field'
                                                         ? 'border-primary/30 text-primary bg-primary/5'
-                                                        : 'border-secondary/30 text-secondary bg-secondary/5'
+                                                        : room.actorType === 'coach'
+                                                            ? 'border-secondary/30 text-secondary bg-secondary/5'
+                                                            : 'border-green-300 text-green-700 bg-green-50'
                                                         }`}
                                                 >
-                                                    {isField ? 'Sân' : 'HLV'}
+                                                    {room.actorType === 'field' ? 'Sân' : room.actorType === 'coach' ? 'HLV' : 'Bắt cặp'}
                                                 </Badge>
                                             </div>
 

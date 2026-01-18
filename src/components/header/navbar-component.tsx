@@ -163,9 +163,37 @@ export const NavbarComponent = () => {
                         SportZone
                     </Link>
 
-                    {/* Desktop Nav links */}
-                    <nav className="hidden lg:flex items-center gap-6">
-                        <NavLinks />
+                    {/* Nav links */}
+                    <nav className="flex items-center gap-6">
+                        <Link to="/" className={linkClass}>
+                            Trang chủ
+                        </Link>
+                        <Link to="/fields" className={linkClass}>
+                            Sân thể thao
+                        </Link>
+                        <Link to="/coach" className={linkClass}>
+                            Huấn luyện viên
+                        </Link>
+                        <Link to="/field-coach" className={linkClass}>
+                            Đặt Sân + HLV
+                        </Link>
+                        <Link to="/matching/find-partner" className={linkClass}>
+                            Tìm đối tác
+                        </Link>
+                        {/* <Link to="/reviews" className={linkClass}>
+                        Đánh giá
+                    </Link> */}
+                        <Link to="/about" className={linkClass}>
+                            Về chúng tôi
+                        </Link>
+                        {/* <Link to="/contact" className={linkClass}>
+                        Liên hệ
+                    </Link> */}
+                        {auth.user?.role === "field_owner" && (
+                            <Link to="/field-owner-dashboard" className={linkClass}>
+                                Quản lý đặt sân
+                            </Link>
+                        )}
                     </nav>
 
                     {/* Actions */}

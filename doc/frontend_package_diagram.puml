@@ -1,0 +1,47 @@
+@startuml Frontend Package Diagram
+
+' Style definitions to match the reference image
+skinparam package {
+    BackgroundColor<<Core>> #FFF2CC
+    BackgroundColor<<Logic>> #D5E8D4
+    BackgroundColor<<Presentation>> #E1D5E7
+    BorderColor #666666
+    FontStyle bold
+}
+
+skinparam linetype ortho
+skinparam shadowing false
+
+package "Core Layer" <<Core>> {
+    package "utils" as core_utils
+    package "types" as core_types
+    package "lib (config)" as core_lib
+    package "routes" as core_routes
+}
+
+package "Logic Layer" <<Logic>> {
+    package "features (redux thunks/api)" as logic_services
+    package "features (redux slices)" as logic_slice
+    package "hooks" as logic_hooks
+    package "store" as logic_store
+    package "context" as logic_context
+    
+    logic_services ..> logic_slice : <<import>>
+}
+
+package "Presentation Layer" <<Presentation>> {
+    package "components" as pres_components
+    package "pages" as pres_pages
+    
+    pres_pages ..> pres_components : <<import>>
+}
+
+' Relationships (Arrows point to the dependency source)
+"Presentation Layer" ..> "Logic Layer" : <<import>>
+"Logic Layer" ..> "Core Layer" : <<import>>
+
+note top of "Presentation Layer": UI Components and Views
+note top of "Logic Layer": State Management and Business Logic
+note top of "Core Layer": Shared Utilities and Hard Configurations
+
+@enduml

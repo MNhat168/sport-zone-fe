@@ -11,6 +11,7 @@ import ForgotPasswordPage from "../pages/auth/forgot-password-page";
 import ResetPasswordPage from "../pages/auth/reset-password-page";
 import LandingPage from "../pages/landing/landing-page";
 import AboutPage from "../pages/about/about-page";
+import MatchingLayout from "../components/layouts/matching-layout";
 
 // ===== LAZY-LOADED PAGES =====
 // User Pages
@@ -77,6 +78,15 @@ const TournamentListPage = lazy(() => import("@/pages/list-tournament/Tournament
 const CreateTournamentPage = lazy(() => import("@/pages/create-tournament/CreateTournamentPage.tsx"));
 const TournamentDetailPage = lazy(() => import("@/pages/tournament-detail-page/tournament-detail-page.tsx"));
 const MyReportsPage = lazy(() => import("../pages/my-reports-page/my-reports-page"));
+
+// Matching System Pages
+const MatchingProfileSetupPage = lazy(() => import("../pages/matching-profile-setup/MatchingProfileSetupPage"));
+const MatchingSwipePage = lazy(() => import("../pages/matching-swipe-page/MatchingSwipePage"));
+const MatchingMatchesList = lazy(() => import("../pages/matching-matches-list/MatchingMatchesList"));
+
+const FindPartnerPage = lazy(() => import("../pages/matching-find-partner/FindPartnerPage"));
+const MatchingMatchDetail = lazy(() => import("../pages/matching-match-detail/MatchingMatchDetail"));
+
 
 // Test Pages
 const NotificationTestPage = lazy(() => import("../pages/test/notification-test-page"));
@@ -306,6 +316,55 @@ export const userRoutes: RouteObject[] = [
         <CreateTournamentPage />
       </ProtectedRoute>
     ),
+  },
+
+  // Matching System Routes
+  {
+    path: "/matching",
+    element: <MatchingLayout />,
+    children: [
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.user]}>
+            <MatchingProfileSetupPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "swipe",
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.user]}>
+            <MatchingSwipePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "matches",
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.user]}>
+            <MatchingMatchesList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "matches/:id",
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.user]}>
+            <MatchingMatchDetail />
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "find-partner",
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.user]}>
+            <FindPartnerPage />
+          </ProtectedRoute>
+        ),
+      },
+    ],
   },
 ];
 

@@ -197,6 +197,14 @@ class WebSocketService {
   isConnected(): boolean {
     return this.socket?.connected || false;
   }
+
+  on(event: string, callback: any) {
+    this.socket?.on(event, callback);
+  }
+
+  off(event: string, callback: any) {
+    this.socket?.off(event, callback);
+  }
 }
 
 export const webSocketService = new WebSocketService();
