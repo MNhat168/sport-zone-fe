@@ -25,6 +25,7 @@ const UserInvoicesPage = lazy(() => import("../pages/user-dashboard-page/invoice
 
 const UserWalletPage = lazy(() => import("../pages/user-dashboard-page/wallet/user-wallet-page"));
 const UserProfilePage = lazy(() => import("../pages/user-dashboard-page/profile/user-profile-page"));
+const UserRefundPage = lazy(() => import("../pages/user-dashboard-page/refund/user-refund-page"));
 
 // Coach Pages
 const CoachDashboardPage = lazy(() => import("../pages/coach-dashboard-page/dashboard/coach-dashboard-page.tsx"));
@@ -248,6 +249,14 @@ export const userRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserInvoicesPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user/refund",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <UserRefundPage />
       </ProtectedRoute>
     ),
   },
