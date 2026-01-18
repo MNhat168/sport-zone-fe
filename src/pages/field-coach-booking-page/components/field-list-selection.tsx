@@ -401,8 +401,8 @@ export const FieldListSelection = ({ onSelect }: FieldListSelectionProps) => {
                                             className="border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
                                             onClick={() =>
                                                 onSelect(
-                                                    field.id,
-                                                    field.name,
+                                                    field.id || '',
+                                                    field.name || '',
                                                     getLocationString(field.location),
                                                     field.basePrice || 0
                                                 )
@@ -477,8 +477,8 @@ export const FieldListSelection = ({ onSelect }: FieldListSelectionProps) => {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             onSelect(
-                                                                field.id,
-                                                                field.name,
+                                                                field.id || '',
+                                                                field.name || '',
                                                                 getLocationString(field.location),
                                                                 field.basePrice || 0
                                                             );

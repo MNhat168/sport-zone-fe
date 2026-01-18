@@ -207,9 +207,14 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
                                         </div>
 
                                         <div className="mt-4 space-y-2">
-                                            {coach.sports && coach.sports.length > 0 && (
+                                            {coach.sports && (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {coach.sports.map(sport => (
+                                                    {(Array.isArray(coach.sports) 
+                                                        ? coach.sports 
+                                                        : typeof coach.sports === 'string' 
+                                                            ? coach.sports.split(',').map(s => s.trim()).filter(Boolean)
+                                                            : []
+                                                    ).map(sport => (
                                                         <span key={sport} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[10px] uppercase font-bold">
                                                             {SPORT_TYPE_OPTIONS.find(o => o.value === sport)?.label || sport}
                                                         </span>

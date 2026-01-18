@@ -325,10 +325,10 @@ export default function FieldOwnerWalletPage() {
   const availableBalance = fieldOwnerWallet?.availableBalance || 0
 
   const periods = [
-    { value: "today", label: "Hom nay" },
-    { value: "week", label: "Tuan nay" },
-    { value: "month", label: "Thang nay" },
-    { value: "year", label: "Nam nay" }
+    { value: "today", label: "Hôm nay" },
+    { value: "week", label: "Tuần nay" },
+    { value: "month", label: "Tháng nay" },
+    { value: "year", label: "Năm nay" }
   ]
 
   const totalPages = fieldOwnerBookingsPagination?.totalPages || 1
@@ -344,16 +344,16 @@ export default function FieldOwnerWalletPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <DollarSign className="h-8 w-8 text-green-600" />
-              Trung tam Tai chinh
+              Trung Tâm Tài Chính 
             </h1>
             <p className="text-gray-600 mt-1">
-              Quan ly so du, doanh thu va tai khoan ngan hang
+              Quản lý số dư, doanh thu và tài khoản ngân hàng
             </p>
           </div>
-          <Button className="flex items-center gap-2">
+          {/* <Button className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Xuat bao cao
-          </Button>
+            Xuất báo cáo
+          </Button> */}
         </div>
 
         {/* Top Stats Cards */}
@@ -363,17 +363,17 @@ export default function FieldOwnerWalletPage() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-emerald-700">
                 <CheckCircle className="w-5 h-5" />
-                So du kha dung
+                Số dư khả dụng
               </CardTitle>
               <CardDescription className="text-emerald-600">
-                Tien co the rut ve ngan hang
+                Tiền có thể rút về ngân hàng
               </CardDescription>
             </CardHeader>
             <CardContent>
               {fieldOwnerWalletLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Dang tai...</span>
+                  <span>Đang tải...</span>
                 </div>
               ) : (
                 <>
@@ -386,7 +386,7 @@ export default function FieldOwnerWalletPage() {
                     onClick={() => setShowWithdrawModal(true)}
                   >
                     <ArrowDownToLine className="w-4 h-4 mr-2" />
-                    Rut tien
+                    Rút tiền
                   </Button>
                 </>
               )}
@@ -398,17 +398,17 @@ export default function FieldOwnerWalletPage() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-amber-700">
                 <Clock className="w-5 h-5" />
-                So du cho xu ly
+                Số dư chờ xử lý
               </CardTitle>
               <CardDescription className="text-amber-600">
-                Tien dang cho khach check-in
+                Tiền đang chờ khách check-in
               </CardDescription>
             </CardHeader>
             <CardContent>
               {fieldOwnerWalletLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Dang tai...</span>
+                  <span>Đang tải...</span>
                 </div>
               ) : (
                 <>
@@ -416,7 +416,7 @@ export default function FieldOwnerWalletPage() {
                     {formatVND(pendingBalance)}
                   </p>
                   <p className="text-sm text-amber-600 mt-2">
-                    Se duoc mo khoa sau khi khach check-in
+                    Sẽ được mở khóa sau khi khách check-in
                   </p>
                 </>
               )}
@@ -431,14 +431,14 @@ export default function FieldOwnerWalletPage() {
                 Doanh thu {periods.find(p => p.value === selectedPeriod)?.label.toLowerCase()}
               </CardTitle>
               <CardDescription className="text-blue-600">
-                Tu {totalTransactions} giao dich thanh cong
+                Từ {totalTransactions} giao dịch thành công
               </CardDescription>
             </CardHeader>
             <CardContent>
               {fieldOwnerBookingsLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Dang tai...</span>
+                  <span>Đang tải...</span>
                 </div>
               ) : (
                 <p className="text-3xl font-bold text-blue-700">
@@ -454,19 +454,19 @@ export default function FieldOwnerWalletPage() {
           <TabsList className="mb-6 grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Wallet className="w-4 h-4" />
-              <span className="hidden sm:inline">Tong quan</span>
+              <span className="hidden sm:inline">Tổng quan</span>
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Phan tich</span>
+              <span className="hidden sm:inline">Phân tích</span>
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History className="w-4 h-4" />
-              <span className="hidden sm:inline">Lich su</span>
+              <span className="hidden sm:inline">Lịch sử</span>
             </TabsTrigger>
             <TabsTrigger value="bank-accounts" className="flex items-center gap-2">
               <CreditCard className="w-4 h-4" />
-              <span className="hidden sm:inline">Ngan hang</span>
+              <span className="hidden sm:inline">Ngân hàng</span>
             </TabsTrigger>
           </TabsList>
 
@@ -474,28 +474,28 @@ export default function FieldOwnerWalletPage() {
           <TabsContent value="overview">
             <Card>
               <CardHeader>
-                <CardTitle>Thong tin vi</CardTitle>
+                <CardTitle>Thông tin ví</CardTitle>
                 <CardDescription>
                   {fieldOwnerWallet?.message || 'Tong quan so du tai khoan cua ban'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center py-3 border-b">
-                  <span className="text-muted-foreground">Tien cho check-in (Pending)</span>
+                  <span className="text-muted-foreground">Tiền cho check-in (Pending)</span>
                   <span className="font-semibold text-amber-600">{formatVND(pendingBalance)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b">
-                  <span className="text-muted-foreground">Tien co the rut (Available)</span>
+                  <span className="text-muted-foreground">Tiền có thể rút (Available)</span>
                   <span className="font-semibold text-emerald-600">{formatVND(availableBalance)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3">
-                  <span className="text-muted-foreground">Tong cong</span>
+                  <span className="text-muted-foreground">Tổng cộng</span>
                   <span className="font-bold text-lg">{formatVND(pendingBalance + availableBalance)}</span>
                 </div>
 
                 {availableBalance > 0 && availableBalance < 10000 && (
                   <p className="text-sm text-amber-600 mt-2">
-                    Can toi thieu 10.000d de rut tien
+                    ần tối thiểu 10.000đ để rút tiền
                   </p>
                 )}
 
@@ -506,7 +506,7 @@ export default function FieldOwnerWalletPage() {
                     onClick={() => setShowWithdrawModal(true)}
                   >
                     <ArrowDownToLine className="w-4 h-4 mr-2" />
-                    Rut tien ve ngan hang
+                    Rút tiền về ngân hàng
                   </Button>
                 </div>
               </CardContent>
@@ -521,7 +521,7 @@ export default function FieldOwnerWalletPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Filter className="h-5 w-5" />
-                    Loc theo thoi gian
+                    Lọc Theo Thời Gian
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -562,7 +562,7 @@ export default function FieldOwnerWalletPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm font-medium text-gray-600">
-                      So giao dich
+                      Số giao dịch
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -571,7 +571,7 @@ export default function FieldOwnerWalletPage() {
                     </div>
                     <div className="flex items-center gap-1 mt-2 text-sm text-gray-600">
                       <Calendar className="h-4 w-4" />
-                      <span>Giao dich thanh cong</span>
+                      <span>Giao dịch thành công</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -579,7 +579,7 @@ export default function FieldOwnerWalletPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm font-medium text-gray-600">
-                      Doanh thu trung binh
+                      Doanh thu trung bình
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -587,7 +587,7 @@ export default function FieldOwnerWalletPage() {
                       {formatVND(Math.round(averageRevenue))}
                     </div>
                     <div className="flex items-center gap-1 mt-2 text-sm text-gray-600">
-                      <span>Tren moi giao dich</span>
+                      <span>Trên mỗi giao dịch</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -596,16 +596,16 @@ export default function FieldOwnerWalletPage() {
               {/* Revenue Chart Placeholder */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Bieu do Doanh thu</CardTitle>
+                  <CardTitle>Biểu đồ Doanh thu</CardTitle>
                   <CardDescription>
-                    Doanh thu theo thoi gian
+                    Doanh thu theo thời gian
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
                     <div className="text-center text-gray-500">
                       <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                      <p>Bieu do doanh thu se duoc hien thi o day</p>
+                      <p>Biểu đồ doanh thu sẽ được hiển thị ở đây</p>
                     </div>
                   </div>
                 </CardContent>
@@ -619,9 +619,9 @@ export default function FieldOwnerWalletPage() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle>Lich su giao dich</CardTitle>
+                    <CardTitle>Lịch sử giao dịch</CardTitle>
                     <CardDescription>
-                      Danh sach cac giao dich thanh cong ({totalBookings} giao dich)
+                      Danh sách các giao dịch thành công ({totalBookings} giao dịch)
                     </CardDescription>
                   </div>
                   {totalBookings > itemsPerPage && (
@@ -635,11 +635,11 @@ export default function FieldOwnerWalletPage() {
                 {fieldOwnerBookingsLoading ? (
                   <div className="flex items-center justify-center py-12 text-green-600">
                     <Loader2 className="w-8 h-8 animate-spin mr-2" />
-                    <span className="text-gray-600">Dang tai du lieu...</span>
+                    <span className="text-gray-600">Đang tải dữ liệu...</span>
                   </div>
                 ) : fieldOwnerBookingsError ? (
                   <div className="text-center py-8 text-red-500">
-                    <p>Loi tai du lieu</p>
+                    <p>Lỗi tải dữ liệu</p>
                     <Button
                       variant="outline"
                       className="mt-4"
@@ -652,12 +652,12 @@ export default function FieldOwnerWalletPage() {
                         }))
                       }}
                     >
-                      Thu lai
+                      Thử lại
                     </Button>
                   </div>
                 ) : fieldOwnerBookings?.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    <p>Chua co giao dich nao</p>
+                    <p>Chưa có giao dịch nào</p>
                   </div>
                 ) : (
                   <>
@@ -669,7 +669,7 @@ export default function FieldOwnerWalletPage() {
                         >
                           <div className="flex-1">
                             <p className="font-medium text-gray-900">
-                              {booking.fieldName || "San the thao"}
+                              {booking.fieldName || "sân thể thao"}
                             </p>
                             <p className="text-sm text-gray-600">
                               {booking.date ? new Date(booking.date).toLocaleDateString('vi-VN') : "N/A"}
@@ -680,7 +680,7 @@ export default function FieldOwnerWalletPage() {
                               +{formatVND(booking.totalPrice || booking.bookingAmount || 0)}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {booking.status || "Da xac nhan"}
+                              {booking.status || "Đã xác nhận"}
                             </p>
                           </div>
                         </div>
@@ -714,15 +714,15 @@ export default function FieldOwnerWalletPage() {
       <Dialog open={showWithdrawModal} onOpenChange={setShowWithdrawModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rut tien ve ngan hang</DialogTitle>
+            <DialogTitle>Rút tiền về ngân hàng</DialogTitle>
             <DialogDescription>
-              So du kha dung: <span className="font-semibold text-emerald-600">{formatVND(availableBalance)}</span>
+              Số dư khả dụng: <span className="font-semibold text-emerald-600">{formatVND(availableBalance)}</span>
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">So tien muon rut (VND)</Label>
+              <Label htmlFor="amount">Số tiền muốn rút (VND)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -733,14 +733,14 @@ export default function FieldOwnerWalletPage() {
                 max={availableBalance}
               />
               <p className="text-xs text-muted-foreground">
-                Toi thieu: 10.000d | Toi da: {formatVND(availableBalance)}
+                Tối thiểu: 10.000đ | Tối đa: {formatVND(availableBalance)}
               </p>
             </div>
 
             {withdrawAmount && parseInt(withdrawAmount, 10) > 0 && (
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-sm">
-                  Ban se rut: <span className="font-semibold">{formatVND(parseInt(withdrawAmount, 10) || 0)}</span>
+                  Bạn sẽ rút: <span className="font-semibold">{formatVND(parseInt(withdrawAmount, 10) || 0)}</span>
                 </p>
               </div>
             )}
@@ -752,7 +752,7 @@ export default function FieldOwnerWalletPage() {
               onClick={() => setShowWithdrawModal(false)}
               disabled={withdrawLoading}
             >
-              Huy
+              Hủy
             </Button>
             <Button
               onClick={handleWithdraw}
@@ -762,12 +762,12 @@ export default function FieldOwnerWalletPage() {
               {withdrawLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Dang xu ly...
+                  Đang xử lý...
                 </>
               ) : (
                 <>
                   <ArrowDownToLine className="w-4 h-4 mr-2" />
-                  Xac nhan rut tien
+                  Xác nhận rút tiền
                 </>
               )}
             </Button>

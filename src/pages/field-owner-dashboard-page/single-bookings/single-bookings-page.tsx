@@ -429,10 +429,10 @@ export default function SingleBookingsPage() {
                 <Card className="bg-white shadow-md rounded-none border-0 gap-0">
                     <CardHeader className="border-b">
                         <CardTitle className="text-xl font-semibold text-start">
-                            Dat San Don Le
+                            Đặt Sân Đơn Lẻ 
                         </CardTitle>
                         <p className="text-gray-600 text-base mt-1.5 text-start">
-                            Quan ly cac don dat san don le.
+                            Quản lý các đơn đặt sân đơn lẻ.
                         </p>
                         <div className="mt-4">
                             <BookingFilters

@@ -14,6 +14,18 @@ import { VIETNAM_CITIES } from "@/utils/constant-value/constant"
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
+// Sports mapping
+const SPORTS_OPTIONS = [
+    { value: 'football', label: 'Bóng đá' },
+    { value: 'basketball', label: 'Bóng rổ' },
+    { value: 'tennis', label: 'Quần vợt' },
+    { value: 'badminton', label: 'Cầu lông' },
+    { value: 'swimming', label: 'Bơi lội' },
+    { value: 'volleyball', label: 'Bóng chuyền' },
+    { value: 'pickleball', label: 'Pickleball' },
+    { value: 'gym', label: 'Thể hình' },
+] as const;
+
 export default function CoachProfileTab() {
     const dispatch = useAppDispatch()
 
@@ -394,15 +406,15 @@ export default function CoachProfileTab() {
                                     Chuyên môn *
                                 </Label>
                                 <div className="flex flex-wrap gap-2">
-                                    {['football', 'basketball', 'tennis', 'badminton', 'swimming', 'volleyball', 'pickleball', 'gym'].map((spec) => (
-                                        <label key={spec} className="inline-flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-md cursor-pointer">
+                                    {SPORTS_OPTIONS.map((sport) => (
+                                        <label key={sport.value} className="inline-flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded-md cursor-pointer">
                                             <input
                                                 type="checkbox"
-                                                checked={(formData.specialization as string[]).includes(spec)}
-                                                onChange={() => handleToggleSpecialization(spec)}
+                                                checked={(formData.specialization as string[]).includes(sport.value)}
+                                                onChange={() => handleToggleSpecialization(sport.value)}
                                                 className="w-4 h-4"
                                             />
-                                            <span className="capitalize">{spec}</span>
+                                            <span>{sport.label}</span>
                                         </label>
                                     ))}
                                 </div>

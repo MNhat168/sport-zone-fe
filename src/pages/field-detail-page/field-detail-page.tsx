@@ -742,16 +742,22 @@ const FieldDetailPage: React.FC = () => {
                                 : "Liên hệ")}
                           </p>
                         </div>
-                        <Button
-                          onClick={() =>
-                            navigate("/field-booking", {
-                              state: { fieldId: currentField.id },
-                            })
-                          }
-                          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 h-auto"
-                        >
-                          Đặt sân ngay
-                        </Button>
+                        {(currentField as any)?.isActive === false ? (
+                          <div className="w-full bg-gray-100 text-gray-600 py-3 px-4 rounded-md text-center text-sm font-medium">
+                            Sân thể thao tạm thời không hoạt động
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() =>
+                              navigate("/field-booking", {
+                                state: { fieldId: currentField.id },
+                              })
+                            }
+                            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 h-auto"
+                          >
+                            Đặt sân ngay
+                          </Button>
+                        )}
                       </CardContent>
                     </Card>
 
@@ -966,16 +972,22 @@ const FieldDetailPage: React.FC = () => {
             </span>
           </div>
           <div className="flex gap-2">
-            <Button
-              onClick={() =>
-                navigate("/field-booking", {
-                  state: { fieldId: id },
-                })
-              }
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              Đặt sân ngay
-            </Button>
+            {(currentField as any)?.isActive === false ? (
+              <div className="bg-gray-100 text-gray-600 py-2 px-4 rounded-md text-sm font-medium">
+                Sân tạm thời không hoạt động
+              </div>
+            ) : (
+              <Button
+                onClick={() =>
+                  navigate("/field-booking", {
+                    state: { fieldId: id },
+                  })
+                }
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Đặt sân ngay
+              </Button>
+            )}
           </div>
         </div>
 

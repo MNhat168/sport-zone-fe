@@ -138,8 +138,8 @@ const FieldCoachBookingPage = () => {
                 ...prev,
                 field: {
                     ...prev.field,
-                    fieldId: currentField.id,
-                    fieldName: currentField.name,
+                    fieldId: currentField.id || '',
+                    fieldName: currentField.name || '',
                     fieldLocation: getLocationString(currentField.location),
                     courtPrice: currentField.basePrice || 0,
                 }

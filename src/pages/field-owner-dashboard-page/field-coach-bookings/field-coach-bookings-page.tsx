@@ -434,10 +434,10 @@ export default function FieldCoachBookingsPage() {
                 <Card className="bg-white shadow-md rounded-none border-0 gap-0">
                     <CardHeader className="border-b">
                         <CardTitle className="text-xl font-semibold text-start">
-                            Dat San Kem HLV
+                            Đặt Sân Kèm Huấn Luyện Viên
                         </CardTitle>
                         <p className="text-gray-600 text-base mt-1.5 text-start">
-                            Quan ly cac yeu cau dat san kem huan luyen vien.
+                            Quản lý các yêu cầu đặt sân kèm huấn luyện viên.
                         </p>
                         <div className="mt-4">
                             <BookingFilters

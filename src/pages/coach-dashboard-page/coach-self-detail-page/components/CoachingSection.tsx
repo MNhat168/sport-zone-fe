@@ -67,7 +67,7 @@ export function CoachingSection({
         <div className="mt-0 space-y-4 text-left">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <label className="font-bold text-sm w-36">Certification:</label>
+              <label className="font-bold text-sm w-36">Bằng Cấp:</label>
               {isEditMode ? (
                 <Input
                   value={cert}
@@ -84,7 +84,7 @@ export function CoachingSection({
             </div>
 
             <div className="flex items-center gap-3">
-              <label className="font-bold text-sm w-36">Experience:</label>
+              <label className="font-bold text-sm w-36">Kinh Nghiệm:</label>
               {isEditMode ? (
                 <Input
                   value={exp}
@@ -101,7 +101,7 @@ export function CoachingSection({
             </div>
 
             <div className="flex items-center gap-3">
-              <label className="font-bold text-sm w-36">Rank:</label>
+              <label className="font-bold text-sm w-36">Cấp Độ:</label>
               {isEditMode ? (
                 <select
                   value={localRank}
@@ -124,7 +124,7 @@ export function CoachingSection({
             </div>
 
             <div className="flex items-center gap-3">
-              <label className="font-bold text-sm w-36">Sport:</label>
+              <label className="font-bold text-sm w-36">Chuyên Môn:</label>
               {isEditMode ? (
                 <select
                   value={localSport}

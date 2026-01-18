@@ -36,13 +36,19 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           </div>
         </div>
 
-        <Button 
-          className="w-full bg-[#1a2332] hover:bg-[#1a2332]/90 text-white h-14 text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300"
-          onClick={onBookNow}
-        >
-          <Calendar className="mr-2 h-5 w-5" />
-          Đặt ngay
-        </Button>
+        {coachData?.isCoachActive === false ? (
+          <div className="w-full bg-gray-100 text-gray-600 py-3 px-4 rounded-md text-center text-sm font-medium h-14 flex items-center justify-center">
+            Huấn luyện viên tạm thời không hoạt động
+          </div>
+        ) : (
+          <Button 
+            className="w-full bg-[#1a2332] hover:bg-[#1a2332]/90 text-white h-14 text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+            onClick={onBookNow}
+          >
+            <Calendar className="mr-2 h-5 w-5" />
+            Đặt ngay
+          </Button>
+        )}
       </CardHeader>
     </Card>
   );
