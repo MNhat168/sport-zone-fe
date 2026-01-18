@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, X, Building, UserCircle } from 'lucide-react';
+import { ArrowLeft, Send, X, Building, UserCircle, Users, MessageCircle, Info } from 'lucide-react';
 import { format } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import logger from '@/utils/logger';
+import MatchProposalMessage from './MatchProposalMessage';
 
 interface ActiveChatViewProps {
     onClose: () => void;
@@ -23,12 +25,15 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
     const dispatch = useAppDispatch();
     const { currentRoom, typingUsers } = useAppSelector((state) => state.chat);
 
-    // Get current user ID
     const getCurrentUserId = () => {
         const userData = sessionStorage.getItem('user');
         if (!userData) return null;
-        const user = JSON.parse(userData);
-        return user._id;
+        try {
+            const user = JSON.parse(userData);
+            return user._id || user.id;
+        } catch (e) {
+            return null;
+        }
     };
 
     // Scroll to bottom on new messages
@@ -104,8 +109,11 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
         }
     };
 
-    const isUserMessage = (senderId: string) => {
+    const isUserMessage = (sender: string | any) => {
         const currentUserId = getCurrentUserId();
+        if (!currentUserId || !sender) return false;
+
+        const senderId = typeof sender === 'string' ? sender : sender?._id || sender?.id;
         return senderId === currentUserId;
     };
 
@@ -132,9 +140,34 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
     }
 
     const isCoachRoom = !!currentRoom.coach;
-    const actorName = isCoachRoom
-        ? currentRoom.coach?.displayName || 'Coach'
-        : currentRoom.fieldOwner?.facilityName || 'Field Owner';
+    const isFieldRoom = !!currentRoom.fieldOwner;
+    const currentUserId = getCurrentUserId();
+
+    let actorType: 'field' | 'coach' | 'match' = 'field';
+    let actorName = 'Người dùng';
+    let actorAvatar = '';
+
+    if (isCoachRoom) {
+        actorType = 'coach';
+        actorName = currentRoom.coach?.displayName || 'Huấn luyện viên';
+    } else if (isFieldRoom) {
+        actorType = 'field';
+        actorName = currentRoom.fieldOwner?.facilityName || 'Chủ sân';
+    } else {
+        actorType = 'match';
+        // Find other user
+        const otherUser = currentRoom.participants?.find((p: any) => {
+            const pId = p?._id || p;
+            return pId !== currentUserId;
+        });
+        if (otherUser && typeof otherUser === 'object') {
+            actorName = otherUser.fullName || 'Đồng đội';
+            actorAvatar = otherUser.avatarUrl || otherUser.avatar || '';
+        } else if (currentRoom.user && currentRoom.user._id !== currentUserId) {
+            actorName = currentRoom.user.fullName || 'Đồng đội';
+            actorAvatar = currentRoom.user.avatarUrl || '';
+        }
+    }
 
     // Check if someone is typing
     const isOtherTyping = Object.keys(typingUsers).some(
@@ -157,18 +190,25 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
                         </Button>
 
                         {/* Avatar */}
-                        <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isCoachRoom
-                                ? 'bg-secondary/10 text-secondary'
-                                : 'bg-primary/10 text-primary'
-                                }`}
-                        >
-                            {isCoachRoom ? (
-                                <UserCircle className="w-6 h-6" />
-                            ) : (
-                                <Building className="w-6 h-6" />
-                            )}
-                        </div>
+                        <Avatar className="w-10 h-10 flex-shrink-0 border">
+                            <AvatarImage src={actorAvatar} />
+                            <AvatarFallback
+                                className={actorType === 'field'
+                                    ? 'bg-primary/10 text-primary'
+                                    : actorType === 'coach'
+                                        ? 'bg-secondary/10 text-secondary'
+                                        : 'bg-green-100 text-green-700'
+                                }
+                            >
+                                {actorType === 'field' ? (
+                                    <Building className="w-6 h-6" />
+                                ) : actorType === 'coach' ? (
+                                    <UserCircle className="w-6 h-6" />
+                                ) : (
+                                    <Users className="w-6 h-6" />
+                                )}
+                            </AvatarFallback>
+                        </Avatar>
 
                         {/* Name and Info */}
                         <div className="flex-1 min-w-0">
@@ -178,12 +218,14 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
                                 </h3>
                                 <Badge
                                     variant="outline"
-                                    className={`text-xs px-1.5 py-0 ${isCoachRoom
-                                        ? 'border-secondary/30 text-secondary bg-secondary/5'
-                                        : 'border-primary/30 text-primary bg-primary/5'
+                                    className={`text-xs px-1.5 py-0 ${actorType === 'field'
+                                        ? 'border-primary/30 text-primary bg-primary/5'
+                                        : actorType === 'coach'
+                                            ? 'border-secondary/30 text-secondary bg-secondary/5'
+                                            : 'border-green-300 text-green-700 bg-green-50'
                                         }`}
                                 >
-                                    {isCoachRoom ? 'Huấn luyện viên' : 'Sân bóng'}
+                                    {actorType === 'field' ? 'Sân bóng' : actorType === 'coach' ? 'Huấn luyện viên' : 'Bạn bắt cặp'}
                                 </Badge>
                             </div>
                             {currentRoom.field && (
@@ -216,6 +258,26 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
                 ) : (
                     <>
                         {currentRoom.messages.map((msg: Message, index: number) => {
+                            if (msg.type === 'system') {
+                                return (
+                                    <div key={msg._id || index} className="flex justify-center my-6">
+                                        <div className="bg-slate-100/80 backdrop-blur-sm text-slate-500 text-[10px] font-black uppercase px-4 py-1.5 rounded-full border border-slate-200/50 shadow-sm flex items-center gap-2">
+                                            <Info className="w-3 h-3 text-primary" />
+                                            {msg.content}
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            if (msg.type === 'match_proposal') {
+                                const isCurrentUserMessage = isUserMessage(msg.sender);
+                                return (
+                                    <div key={msg._id || index} className={`flex mb-4 ${isCurrentUserMessage ? 'justify-end' : 'justify-start'}`}>
+                                        <MatchProposalMessage content={msg.content} isSender={isCurrentUserMessage} />
+                                    </div>
+                                );
+                            }
+
                             const isCurrentUserMessage = isUserMessage(msg.sender);
 
                             return (
@@ -302,8 +364,5 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
         </div>
     );
 };
-
-// Add missing import
-import { MessageCircle } from 'lucide-react';
 
 export default ActiveChatView;

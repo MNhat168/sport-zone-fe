@@ -4,6 +4,7 @@ import { SportType } from '@/components/enums/ENUMS';
 // Owner interface matching API response structure
 export interface FieldOwner {
     _id: string;
+    id: string;
     businessName?: string;
     name?: string;
     contact?: string; // For backward compatibility

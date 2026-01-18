@@ -1,4 +1,4 @@
-export type MessageType = 'text' | 'image' | 'file' | 'system';
+export type MessageType = 'text' | 'image' | 'file' | 'system' | 'match_proposal';
 
 export interface Message {
   _id?: string;
@@ -12,13 +12,13 @@ export interface Message {
 
 export interface ChatRoom {
   _id: string;
-  user: {
+  user?: {
     _id: string;
     fullName: string;
     avatarUrl?: string;
     phone?: string;
   };
-  fieldOwner: {
+  fieldOwner?: {
     _id: string;
     facilityName: string;
     contactPhone?: string;
@@ -29,6 +29,7 @@ export interface ChatRoom {
     displayName?: string;
     contactPhone?: string;
   };
+  participants?: any[];
   field?: {
     _id: string;
     name: string;
@@ -44,10 +45,14 @@ export interface ChatRoom {
   lastMessageBy?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  // Matching/Group specific IDs
+  matchId?: string;
+  groupSessionId?: string;
   // Additional fields for floating widget
-  actorType?: 'field' | 'coach';
+  actorType?: 'field' | 'coach' | 'match';
   actorName?: string;
   actorId?: string;
+  actorAvatar?: string;
 }
 
 export interface StartChatPayload {

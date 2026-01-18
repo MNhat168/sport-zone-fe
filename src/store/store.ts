@@ -14,6 +14,7 @@ import { bankAccountReducer } from "../features/bank-account";
 import chatReducer from "@/features/chat/chatSlice";
 import { reviewReducer } from "@/features/reviews";
 import { userReducer } from "../features/user";
+import matchingReducer from "../features/matching/matchingSlice";
 
 
 import { webSocketService } from "@/features/chat/websocket.service";
@@ -52,6 +53,7 @@ export const store = configureStore({
         chat: chatReducer,
         reviews: reviewReducer,
         user: userReducer,
+        matching: matchingReducer,
 
     },
     middleware: (getDefaultMiddleware) =>

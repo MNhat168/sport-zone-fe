@@ -66,6 +66,7 @@ export const generateFieldFromAI = createAsyncThunk<
 const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").Field => {
     return {
         id: apiField?._id || apiField?.id || "",
+        _id: apiField?._id || apiField?.id || "",
         name: apiField?.name || "",
         sportType: apiField?.sportType || "",
         description: apiField?.description || "",
@@ -86,6 +87,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         totalReviews: apiField?.totalReviews || 0,
         owner: {
             id: apiField?.owner?._id || apiField?.owner?.id || apiField?.owner || "",
+            _id: apiField?.owner?._id || apiField?.owner?.id || apiField?.owner || "",
             businessName: apiField?.owner?.businessName,
             name: apiField?.owner?.name,
             contactInfo: apiField?.owner?.contactInfo,
@@ -95,6 +97,7 @@ const mapApiFieldToAppField = (apiField: any): import("../../types/field-type").
         courts: Array.isArray(apiField?.courts)
             ? apiField.courts.map((c: any) => ({
                 id: c?._id || c?.id || "",
+                _id: c?._id || c?.id || "",
                 name: c?.name || c?.courtName || "",
                 courtNumber: c?.courtNumber,
                 isActive: c?.isActive,

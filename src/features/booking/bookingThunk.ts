@@ -602,3 +602,25 @@ export const cancelRecurringGroup = createAsyncThunk<
         return thunkAPI.rejectWithValue(errorResponse);
     }
 });
+
+/**
+ * Get booking by ID
+ */
+export const fetchBookingById = createAsyncThunk<
+    Booking,
+    string,
+    { rejectValue: ErrorResponse }
+>("booking/fetchBookingById", async (id, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(`/bookings/${id}`);
+        return response.data.data || response.data;
+    } catch (error: any) {
+        logger.error("Error getting booking by ID:", error);
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get booking",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
