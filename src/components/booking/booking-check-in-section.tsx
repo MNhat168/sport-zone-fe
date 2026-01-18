@@ -14,23 +14,23 @@ export function BookingCheckInSection({
     status,
     className = ''
 }: BookingCheckInSectionProps) {
-    // Only show for confirmed bookings
-    if (status.toLowerCase() !== 'confirmed') {
+    // Only show for confirmed bookings - add null safety check
+    if (!status || status.toLowerCase() !== 'confirmed') {
         return null
     }
 
     const handleGenerateQR = async () => {
         try {
             const response = await qrCheckinAPI.generateQR(bookingId)
-            
+
             // Handle response wrapper: {success: true, data: {...}}
             const data = response.data || response
-            
+
             if (!data.token || !data.expiresAt) {
                 console.error('Invalid QR response:', response)
                 throw new Error('Phản hồi từ server không hợp lệ')
             }
-            
+
             return {
                 token: data.token,
                 expiresAt: data.expiresAt,

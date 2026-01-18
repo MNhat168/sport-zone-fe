@@ -56,6 +56,11 @@ export function CheckInConfirmDialog({
     }
 
     const getStatusColor = (status: string) => {
+        // Add null safety check to prevent toLowerCase error
+        if (!status) {
+            return 'bg-gray-100 text-gray-800'
+        }
+
         switch (status.toLowerCase()) {
             case 'confirmed':
                 return 'bg-green-100 text-green-800'
@@ -96,7 +101,7 @@ export function CheckInConfirmDialog({
                                 {booking.field?.name || 'Sân thể thao'}
                             </h3>
                             <Badge className={`mt-2 ${getStatusColor(booking.status)}`}>
-                                {booking.status === 'confirmed' ? 'Đã xác nhận' : booking.status}
+                                {booking.status === 'confirmed' ? 'Đã xác nhận' : (booking.status || 'Chưa xác định')}
                             </Badge>
                         </div>
                     </div>
