@@ -495,7 +495,7 @@ export default function FieldOwnerWalletPage() {
 
                 {availableBalance > 0 && availableBalance < 10000 && (
                   <p className="text-sm text-amber-600 mt-2">
-                    ần tối thiểu 10.000đ để rút tiền
+                    Cần tối thiểu 10.000đ để rút tiền
                   </p>
                 )}
 
