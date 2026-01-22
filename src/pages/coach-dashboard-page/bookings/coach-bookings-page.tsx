@@ -106,59 +106,49 @@ const mapBookingToUI = (booking: any, type: 'coach' | 'field_coach'): MappedBook
     let status: "awaiting" | "accepted" | "rejected" = "awaiting";
     let statusText = "Chờ Xác Nhận";
 
-    switch (transactionStatus) {
-        case TransactionStatus.PENDING:
-            status = "awaiting";
-            statusText = "Đang Chờ";
-            break;
-        case TransactionStatus.PROCESSING:
-            status = "awaiting";
-            statusText = "Đang Xử Lý";
-            break;
-        case TransactionStatus.SUCCEEDED:
-            status = "accepted";
-            statusText = "Thành Công";
-            break;
-        case TransactionStatus.FAILED:
-            status = "rejected";
-            statusText = "Thất Bại";
-            break;
-        case TransactionStatus.CANCELLED:
-            status = "rejected";
-            statusText = "Đã Hủy";
-            break;
-        case TransactionStatus.REFUNDED:
-            status = "rejected";
-            statusText = "Đã Hoàn Tiền";
-            break;
-        default:
-            // Fallback to booking status for backward compatibility
-            switch (booking.status) {
-                case "pending":
-                    status = "awaiting";
-                    statusText = "Chờ Xác Nhận";
-                    break;
-                case "confirmed":
-                    status = "accepted";
-                    statusText = "Đã Chấp Nhận";
-                    break;
-                case "cancelled":
-                    status = "rejected";
-                    statusText = "Đã Hủy";
-                    break;
-                case "completed":
-                    status = "accepted";
-                    statusText = "Đã Hoàn Thành";
-                    break;
-            }
-            // Also check coachStatus for declined
-            if (booking.coachStatus === 'declined') {
-                status = "rejected";
-                statusText = "Đã Từ Chối";
-            } else if (booking.coachStatus === 'accepted') {
+    if (booking.coachStatus === "declined") {
+        status = "rejected";
+        statusText = "Đã Từ Chối";
+    } else if (booking.coachStatus === "pending") {
+        status = "awaiting";
+        statusText = "Đang Chờ";
+    } else {
+        switch (transactionStatus) {
+            case TransactionStatus.PENDING:
+                status = "awaiting";
+                statusText = "Đang Chờ";
+                break;
+            case TransactionStatus.PROCESSING:
+                status = "awaiting";
+                statusText = "Đang Xử Lý";
+                break;
+            case TransactionStatus.SUCCEEDED:
                 status = "accepted";
-                statusText = "Đã Chấp Nhận";
-            }
+                statusText = "Thành Công";
+                break;
+            case TransactionStatus.FAILED:
+            case TransactionStatus.CANCELLED:
+            case TransactionStatus.REFUNDED:
+                status = "rejected";
+                statusText = "Thất Bại";
+                break;
+            default:
+                switch (booking.status) {
+                    case "pending":
+                        status = "awaiting";
+                        statusText = "Chờ Xác Nhận";
+                        break;
+                    case "confirmed":
+                    case "completed":
+                        status = "accepted";
+                        statusText = "Đã Hoàn Thành";
+                        break;
+                    case "cancelled":
+                        status = "rejected";
+                        statusText = "Đã Hủy";
+                        break;
+                }
+        }
     }
 
     return {
