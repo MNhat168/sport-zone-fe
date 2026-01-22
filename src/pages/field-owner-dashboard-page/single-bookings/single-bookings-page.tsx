@@ -18,9 +18,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Lock } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
+import { OwnerReservedBookingModal } from "@/components/booking/OwnerReservedBookingModal";
+import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store/hook";
 import {
     ownerAcceptBooking,
@@ -92,6 +94,9 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
             statusText = "Cho Xac Nhan";
     }
 
+    // Check if this is an owner-reserved booking
+    const isOwnerReserved = (booking as any).metadata?.isOwnerReserved === true;
+
     return {
         id: booking.bookingId,
         academyName: booking.fieldName,
@@ -100,9 +105,10 @@ const mapBookingToUI = (booking: FieldOwnerBooking) => {
         academyImage: "/images/academies/default.jpg",
         date: formatDate(booking.date),
         time: `${startTime12h} - ${endTime12h}`,
-        payment: formatCurrency(booking.totalPrice, "VND"),
+        payment: isOwnerReserved ? "Miễn phí (Chủ sân)" : formatCurrency(booking.totalPrice, "VND"),
         status,
-        statusText,
+        statusText: isOwnerReserved ? "Đã khóa bởi chủ sân" : statusText,
+        isOwnerReserved,
         originalBooking: booking,
         transactionStatus: booking.transactionStatus,
         approvalStatus: booking.approvalStatus,
@@ -193,6 +199,7 @@ export default function SingleBookingsPage() {
     const [timeFilter, setTimeFilter] = useState("all");
     const [hiddenIds, setHiddenIds] = useState<string[]>([]);
     const [hasInitialData, setHasInitialData] = useState(false);
+    const [showOwnerReservedModal, setShowOwnerReservedModal] = useState(false);
 
     // Update URL params helper
     const updateSearchParams = useCallback(
@@ -428,12 +435,23 @@ export default function SingleBookingsPage() {
             <div className="space-y-6">
                 <Card className="bg-white shadow-md rounded-none border-0 gap-0">
                     <CardHeader className="border-b">
-                        <CardTitle className="text-xl font-semibold text-start">
-                            Đặt Sân Đơn Lẻ 
-                        </CardTitle>
-                        <p className="text-gray-600 text-base mt-1.5 text-start">
-                            Quản lý các đơn đặt sân đơn lẻ.
-                        </p>
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <CardTitle className="text-xl font-semibold text-start">
+                                    Đặt Sân Đơn Lẻ 
+                                </CardTitle>
+                                <p className="text-gray-600 text-base mt-1.5 text-start">
+                                    Quản lý các đơn đặt sân đơn lẻ.
+                                </p>
+                            </div>
+                            <Button
+                                onClick={() => setShowOwnerReservedModal(true)}
+                                className="bg-amber-600 hover:bg-amber-700 text-white"
+                            >
+                                <Lock className="w-4 h-4 mr-2" />
+                                Khóa sân nhanh
+                            </Button>
+                        </div>
                         <div className="mt-4">
                             <BookingFilters
                                 onSearch={handleSearch}
@@ -520,6 +538,20 @@ export default function SingleBookingsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <OwnerReservedBookingModal
+                isOpen={showOwnerReservedModal}
+                onClose={() => setShowOwnerReservedModal(false)}
+                onSuccess={() => {
+                    // Refresh bookings list
+                    dispatch(getMyFieldsBookings({
+                        page: currentPage,
+                        limit: itemsPerPage,
+                        status: activeTab,
+                        ...getDateRangeFromTimeFilter(timeFilter),
+                    }));
+                }}
+            />
         </FieldOwnerDashboardLayout>
     );
 }

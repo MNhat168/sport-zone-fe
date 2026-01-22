@@ -71,16 +71,16 @@ export const NavbarComponent = () => {
         }
     };
 
-    // Gom style theo trạng thái scroll
+    // Dynamic styles based on scroll state
     const linkClass = isScrolled
         ? "text-base font-medium text-gray-900 hover:text-green-600 transition-colors duration-200"
-        : "text-base font-medium text-white hover:text-green-400 transition-colors duration-200";
+        : "text-base font-medium text-white hover:text-green-300 transition-colors duration-200";
     const iconClass = isScrolled
         ? "h-5 w-5 text-gray-900 hover:text-green-600 transition-colors duration-200"
-        : "h-5 w-5 text-white hover:text-green-400 transition-colors duration-200";
+        : "h-5 w-5 text-white hover:text-green-300 transition-colors duration-200";
     const btnTriggerClass = isScrolled
         ? "text-gray-900 bg-white"
-        : "text-white bg-transparent";
+        : "text-white bg-white/10 border-white/30";
 
     // Mobile menu link style
     const mobileLinkClass = "text-base font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 px-4 py-3 rounded-lg transition-all duration-200 flex items-center";
@@ -144,7 +144,7 @@ export const NavbarComponent = () => {
             )}
             <header
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                    ? "bg-white/95 shadow-md border-b border-gray-200"
+                    ? "bg-white/95 backdrop-blur-sm shadow-md border-b border-gray-200"
                     : "bg-transparent"
                     }`}
             >
@@ -157,8 +157,8 @@ export const NavbarComponent = () => {
                         SportZone
                     </Link>
 
-                    {/* Nav links */}
-                    <nav className="flex items-center gap-6">
+                    {/* Nav links - Desktop only */}
+                    <nav className="hidden lg:flex items-center gap-6">
                         <Link to="/" className={linkClass}>
                             Trang chủ
                         </Link>

@@ -18,12 +18,11 @@ export const UserSyncProvider = ({ children }: { children: React.ReactNode }) =>
             if (hasValidated.current) return;
             hasValidated.current = true;
 
-            // Check if there's a stored user (from localStorage/sessionStorage/cookie)
+            // Check if there's a stored user (from sessionStorage/localStorage)
             const hasStoredUser = !!(
                 typeof document !== "undefined" && (
                     sessionStorage.getItem("user") ||
-                    localStorage.getItem("user") ||
-                    document.cookie.includes("user=")
+                    localStorage.getItem("user")
                 )
             );
 

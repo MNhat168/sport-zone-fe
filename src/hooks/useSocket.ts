@@ -7,24 +7,12 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 type SocketKind = 'chat' | 'notifications';
 
-// Helper function to get userId from storage (Cookie -> Session -> Local)
+// Helper function to get userId from storage (sessionStorage -> localStorage)
 const getUserId = (): string | null => {
   try {
     if (typeof document === 'undefined') return null;
 
-    // 1. Try Cookie (Single Source of Truth)
-    const match = document.cookie.match(/user=([^;]+)/);
-    if (match) {
-      try {
-        const userStr = decodeURIComponent(match[1]);
-        const user = JSON.parse(userStr);
-        if (user?._id) return user._id;
-      } catch (e) {
-        // Fall through if cookie is malformed
-      }
-    }
-
-    // 2. Try sessionStorage (Fallback)
+    // 1. Try sessionStorage (primary)
     const sessionUserStr = sessionStorage.getItem("user");
     if (sessionUserStr) {
       try {
@@ -33,7 +21,7 @@ const getUserId = (): string | null => {
       } catch { /* ignore */ }
     }
 
-    // 3. Try localStorage (Fallback)
+    // 2. Try localStorage (fallback for "remember me")
     const localUserStr = localStorage.getItem("user");
     if (localUserStr) {
       try {
@@ -64,7 +52,7 @@ export const disconnectAllSockets = () => {
 
 /**
  * Generic socket hook that can connect to different namespaces.
- * Automatically reads userId from storage (cookie -> session -> local).
+ * Automatically reads userId from storage (sessionStorage -> localStorage).
  * - chat:    `${API_URL}/chat`
  * - notifications: `${API_URL}/notifications`
  * 
@@ -77,9 +65,9 @@ export const useSocket = (kind: SocketKind = 'notifications') => {
     // Read userId from storage
     const userId = getUserId();
 
-    // ✅ Don't connect if userId is empty or invalid
+    // Don't connect if userId is empty or invalid
     if (!userId || userId.trim() === '' || userId === 'null' || userId === 'undefined') {
-      logger.warn(`[useSocket] Cannot connect to ${kind}: userId not found in cookie`);
+      logger.warn(`[useSocket] Cannot connect to ${kind}: userId not found in storage`);
       return;
     }
 

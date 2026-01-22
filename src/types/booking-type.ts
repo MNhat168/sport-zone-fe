@@ -87,6 +87,15 @@ export interface SetCoachHolidayPayload {
     endDate: string; // YYYY-MM-DD
 }
 
+export interface CreateOwnerReservedBookingPayload {
+    fieldId: string;
+    courtId: string;
+    date: string; // YYYY-MM-DD
+    startTime: string; // HH:mm
+    endTime: string; // HH:mm
+    note?: string; // Optional note (max 200 chars)
+}
+
 export type CoachStatus = "pending" | "declined" | "accepted" | "cancelled";
 
 export interface Booking {
@@ -120,6 +129,16 @@ export interface Booking {
     recurringGroupId?: string; // ID of the recurring group if part of one
     recurringType?: 'CONSECUTIVE' | 'WEEKLY'; // Type of recurring booking: CONSECUTIVE (batch) or WEEKLY (fixed weekly)
     cancellationReason?: string;
+    metadata?: {
+        isOwnerReserved?: boolean; // Đánh dấu booking do chủ sân tự đặt
+        originalPrice?: number; // Giá niêm yết của slot tại thời điểm đặt
+        systemFeeAmount?: number; // Số tiền phí hệ thống thu từ chủ sân
+        paymentMethod?: number;
+        isSlotHold?: boolean;
+        slotsReleased?: boolean;
+        slotsReleasedAt?: string;
+        [key: string]: any;
+    };
     createdAt?: string;
     updatedAt?: string;
 }

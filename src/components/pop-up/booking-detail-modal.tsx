@@ -15,7 +15,7 @@ import type { Field } from '@/types/field-type';
 import { PaymentMethod } from '@/types/payment-type';
 import { formatCurrency } from '@/utils/format-currency';
 import { getSportDisplayNameVN } from '@/components/enums/ENUMS';
-import { BookingCheckInSection } from '@/components/booking/booking-check-in-section';
+import { useNavigate } from 'react-router-dom';
 
 interface BookingDetailModalProps {
     isOpen: boolean;
@@ -24,6 +24,7 @@ interface BookingDetailModalProps {
 }
 
 const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose, booking }) => {
+    const navigate = useNavigate();
     if (!booking) return null;
 
     // Extract field data
@@ -53,7 +54,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                 console.error('No booking provided');
                 return null;
             }
-            
+
             // Validate date
             let dateObj: Date;
             if (booking.date instanceof Date) {
@@ -64,23 +65,23 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                 console.error('Invalid booking date:', booking.date);
                 return null;
             }
-            
+
             if (isNaN(dateObj.getTime())) {
                 console.error('Invalid booking date:', booking.date);
                 return null;
             }
-            
+
             // Validate startTime
             if (!booking.startTime || typeof booking.startTime !== 'string') {
                 console.error('Invalid startTime:', booking.startTime);
                 return null;
             }
-            
+
             if (!/^\d{2}:\d{2}$/.test(booking.startTime)) {
                 console.error('Invalid startTime format:', booking.startTime);
                 return null;
             }
-            
+
             // Combine date and startTime
             const [year, month, day] = [
                 dateObj.getFullYear(),
@@ -89,12 +90,12 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
             ];
             const dateTimeStr = `${year}-${month}-${day}T${booking.startTime}:00`;
             const dateTime = new Date(dateTimeStr);
-            
+
             if (isNaN(dateTime.getTime())) {
                 console.error('Invalid combined date/time:', { dateStr: `${year}-${month}-${day}`, startTime: booking.startTime });
                 return null;
             }
-            
+
             return dateTime;
         } catch (error) {
             console.error('Error parsing date/time:', error, { date: booking.date, startTime: booking.startTime });
@@ -434,25 +435,48 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                         </div>
                     )}
 
-                    {/* QR Check-in Section - Only for confirmed and paid bookings */}
+                    {/* Field QR Check-in Instructions - Only for confirmed and paid bookings */}
                     {(() => {
                         // Check if booking is confirmed
                         const isConfirmed = booking.status?.toLowerCase() === 'confirmed';
-                        
-                        // Check payment status - support both paymentStatus field and payment.status
-                        const isPaid = booking.paymentStatus === 'paid' || 
-                                      (typeof booking.payment === 'object' && booking.payment?.status === 'succeeded');
-                        
-                        // Get start date time and validate it's valid
-                        const startDateTime = getStartDateTime();
-                        
-                        return isConfirmed && isPaid && startDateTime ? (
-                            <div className="lg:col-span-2">
-                                <BookingCheckInSection
-                                    bookingId={booking._id}
-                                    startTime={startDateTime}
-                                    status={booking.status}
-                                />
+
+                        // Check payment status
+                        const isPaid = booking.paymentStatus === 'paid' ||
+                            (typeof booking.payment === 'object' && booking.payment?.status === 'succeeded');
+
+                        return isConfirmed && isPaid ? (
+                            <div className="lg:col-span-2 bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="text-4xl">📱</div>
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                                            Hướng dẫn Check-in
+                                        </h3>
+                                        <div className="text-sm text-blue-800 space-y-2">
+                                            <p className="font-medium">Khi đến sân, vui lòng thực hiện các bước sau:</p>
+                                            <ol className="list-decimal list-inside space-y-1 ml-2">
+                                                <li>Mở ứng dụng trên điện thoại</li>
+                                                <li>Tìm mã QR Check-in tại khu vực lễ tân của sân</li>
+                                                <li>Quét mã QR bằng camera trong app</li>
+                                                <li>Chọn booking của bạn để hoàn tất check-in</li>
+                                            </ol>
+                                            <div className="pt-3 border-t border-blue-200 mt-3">
+                                                <p className="text-xs text-blue-700 italic">
+                                                    💡 Lưu ý: Bạn không cần tạo mã QR riêng nữa. Chỉ cần quét mã có sẵn tại sân!
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            onClick={() => {
+                                                navigate('/user/qr-checkin');
+                                                onClose();
+                                            }}
+                                            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                                        >
+                                            Đi đến trang Check-in
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         ) : null;
                     })()}

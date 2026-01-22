@@ -809,6 +809,7 @@ export const getMyFieldsBookings = createAsyncThunk<
         if (params.limit) queryParams.append('limit', params.limit.toString());
         if (params.type) queryParams.append('type', params.type);
         if (params.recurringFilter) queryParams.append('recurringFilter', params.recurringFilter);
+        if (params.recurringType) queryParams.append('recurringType', params.recurringType);
         if (params.sortBy) queryParams.append('sortBy', params.sortBy);
         if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 

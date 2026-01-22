@@ -257,13 +257,13 @@ export default function RecurringBookingsPage() {
         dispatch(
             getMyFieldsBookings({
                 fieldName: searchQuery || undefined,
-                status: activeTab, // Use booking status, not transaction status
+                status: activeTab, // Use booking status
                 startDate,
                 endDate,
                 page: currentPage,
                 limit: itemsPerPage,
                 type: 'field', // Hard-coded for field-only bookings
-                recurringFilter: 'only', // Chỉ lấy weekly recurring bookings (có recurringGroupId)
+                recurringType: 'WEEKLY', // Filter for weekly recurring bookings
                 sortBy,
                 sortOrder,
             })

@@ -310,12 +310,12 @@ export default function CoachSelfDetailPage() {
   // Resolve coachId: prefer param, else thunk resolve by userId
   useEffect(() => {
     if (initialCoachId) return;
-    // lấy userId từ cookie/session
+    // Get userId from sessionStorage/localStorage
     let userId: string | null = null;
     try {
-      const cookieUserStr = document.cookie.match(/user=([^;]+)/)?.[1];
-      const storageUserStr = sessionStorage.getItem("user");
-      const raw = cookieUserStr ? decodeURIComponent(cookieUserStr) : storageUserStr;
+      const sessionUserStr = sessionStorage.getItem("user");
+      const localUserStr = localStorage.getItem("user");
+      const raw = sessionUserStr || localUserStr;
       if (raw) {
         const user = JSON.parse(raw);
         if (typeof user?._id === "string") userId = user._id;
@@ -838,9 +838,9 @@ export default function CoachSelfDetailPage() {
             onClick={() => {
               let uid = "";
               try {
-                const cookieUserStr = document.cookie.match(/user=([^;]+)/)?.[1];
-                const storageUserStr = sessionStorage.getItem("user");
-                const raw = cookieUserStr ? decodeURIComponent(cookieUserStr) : storageUserStr;
+                const sessionUserStr = sessionStorage.getItem("user");
+                const localUserStr = localStorage.getItem("user");
+                const raw = sessionUserStr || localUserStr;
                 if (raw) {
                   const user = JSON.parse(raw);
                   if (typeof user?._id === "string") uid = user._id;
@@ -1080,11 +1080,11 @@ export default function CoachSelfDetailPage() {
                                       dispatch(getCoachById(coachId));
                                     } else {
                                       const errorMsg = action?.payload?.message || action?.error?.message || 'Lưu thất bại';
-                                      logger.error('Update coach failed', { 
-                                        error: errorMsg, 
+                                      logger.error('Update coach failed', {
+                                        error: errorMsg,
                                         action,
                                         payload,
-                                        fullError: action?.payload 
+                                        fullError: action?.payload
                                       });
                                       CustomFailedToast(String(errorMsg));
                                     }
@@ -1193,12 +1193,12 @@ export default function CoachSelfDetailPage() {
                 onCoachingSummaryChange={(val) => { setEditableCoachingSummary(val); setIsDirty(true); }}
                 certification={currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? resolvedCoachRaw?.certification ?? ""}
                 experienceText={currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? resolvedCoachRaw?.experience ?? ""}
-                onCertificationChange={(val) => { 
+                onCertificationChange={(val) => {
                   const exp = currentCoach?.coachingDetails?.experience ?? resolvedCoachRaw?.coachingDetails?.experience ?? resolvedCoachRaw?.experience ?? "";
                   setEditableCoachingSummary(exp && val ? `${exp} — ${val}` : exp || val);
                   setIsDirty(true);
                 }}
-                onExperienceChange={(val) => { 
+                onExperienceChange={(val) => {
                   const cert = currentCoach?.coachingDetails?.certification ?? resolvedCoachRaw?.coachingDetails?.certification ?? resolvedCoachRaw?.certification ?? "";
                   setEditableCoachingSummary(val && cert ? `${val} — ${cert}` : val || cert);
                   setIsDirty(true);

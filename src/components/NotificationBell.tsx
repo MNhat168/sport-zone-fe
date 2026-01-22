@@ -9,14 +9,22 @@ type Notification = {
   createdAt: string;
 };
 
-// With cookie-based auth, read a lightweight non-sensitive `user` cookie storing the id for convenience
-const readUserIdFromCookie = (): string | null => {
+// Read userId from storage (sessionStorage -> localStorage)
+const readUserIdFromStorage = (): string | null => {
   try {
-    const match = typeof document !== 'undefined' ? document.cookie.match(/user=([^;]+)/) : null;
-    if (!match) return null;
-    const userStr = decodeURIComponent(match[1]);
-    const user = JSON.parse(userStr);
-    return user?._id || null;
+    // Try sessionStorage first
+    const sessionUserStr = sessionStorage.getItem("user");
+    if (sessionUserStr) {
+      const user = JSON.parse(sessionUserStr);
+      return user?._id || null;
+    }
+    // Fallback to localStorage
+    const localUserStr = localStorage.getItem("user");
+    if (localUserStr) {
+      const user = JSON.parse(localUserStr);
+      return user?._id || null;
+    }
+    return null;
   } catch { return null; }
 };
 
@@ -24,7 +32,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
-  const userId = useMemo(readUserIdFromCookie, []);
+  const userId = useMemo(readUserIdFromStorage, []);
 
   const fetchNotifications = async () => {
     if (!userId) return;

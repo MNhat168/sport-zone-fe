@@ -12,16 +12,18 @@ import { SPORT_TYPE_OPTIONS, DISTRICT_OPTIONS } from "@/utils/constant-value/con
 interface CoachListSelectionProps {
     onSelect: (coachId: string, coachName: string, coachPrice: number) => void;
     onBack: () => void;
+    initialSportFilter?: string;
 }
 
-export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps) => {
+export const CoachListSelection = ({ onSelect, onBack, initialSportFilter }: CoachListSelectionProps) => {
     const dispatch = useAppDispatch();
     const { coaches, loading, error } = useAppSelector((state) => state.coach);
 
     // Filter states
     const [searchName, setSearchName] = useState("");
-    const [sportFilter, setSportFilter] = useState("all");
+    const [sportFilter, setSportFilter] = useState(initialSportFilter || "all");
     const [districtFilter, setDistrictFilter] = useState("all");
+    const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 
     useEffect(() => {
         const filters: any = {};
@@ -31,6 +33,12 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
 
         dispatch(getCoaches(Object.keys(filters).length > 0 ? filters : undefined));
     }, [dispatch, searchName, sportFilter, districtFilter]);
+
+    // Client-side filtering for rating
+    const filteredCoaches = coaches?.filter(coach => {
+        if (ratingFilter && coach.rating < ratingFilter) return false;
+        return true;
+    });
 
     const formatVND = (value: number): string => {
         try {
@@ -42,8 +50,8 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
 
     const clearFilters = () => {
         setSearchName("");
-        setSportFilter("all");
         setDistrictFilter("all");
+        setRatingFilter(null);
     };
 
     if (loading && !coaches.length) {
@@ -102,18 +110,9 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
                                 <p className="text-xs font-medium text-gray-500 mb-1 text-start">Loại thể thao</p>
                                 <div className="flex items-center gap-2">
                                     <Trophy className="w-4 h-4 text-gray-500" />
-                                    <Select value={sportFilter} onValueChange={setSportFilter}>
-                                        <SelectTrigger className="h-10">
-                                            <SelectValue placeholder="Tất cả môn" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {SPORT_TYPE_OPTIONS.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex h-10 w-full items-center rounded-md border border-input bg-gray-100 px-3 py-2 text-sm text-gray-500 cursor-default">
+                                        {SPORT_TYPE_OPTIONS.find(o => o.value === sportFilter)?.label || "Tất cả môn"}
+                                    </div>
                                 </div>
                             </div>
 
@@ -138,8 +137,30 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
                                 </div>
                             </div>
 
+                            {/* Rating Filter */}
+                            <div>
+                                <p className="text-xs font-medium text-gray-500 mb-1 text-start">Đánh giá sao</p>
+                                <div className="flex items-center gap-2">
+                                    <Star className="w-4 h-4 text-yellow-500" />
+                                    <Select
+                                        value={ratingFilter?.toString() || "all"}
+                                        onValueChange={(val) => setRatingFilter(val === "all" ? null : Number(val))}
+                                    >
+                                        <SelectTrigger className="h-10">
+                                            <SelectValue placeholder="Tất cả đánh giá" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Tất cả đánh giá</SelectItem>
+                                            <SelectItem value="5">5 sao</SelectItem>
+                                            <SelectItem value="4">Từ 4 sao trở lên</SelectItem>
+                                            <SelectItem value="3">Từ 3 sao trở lên</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
                             {/* Clear Filters */}
-                            {(searchName || sportFilter !== "all" || districtFilter !== "all") && (
+                            {(searchName || districtFilter !== "all" || ratingFilter !== null) && (
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -163,8 +184,8 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                        {coaches && coaches.length > 0 ? (
-                            coaches.map((coach) => (
+                        {filteredCoaches && filteredCoaches.length > 0 ? (
+                            filteredCoaches.map((coach) => (
                                 <Card
                                     key={coach.id}
                                     className="border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
@@ -209,9 +230,9 @@ export const CoachListSelection = ({ onSelect, onBack }: CoachListSelectionProps
                                         <div className="mt-4 space-y-2">
                                             {coach.sports && (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {(Array.isArray(coach.sports) 
-                                                        ? coach.sports 
-                                                        : typeof coach.sports === 'string' 
+                                                    {(Array.isArray(coach.sports)
+                                                        ? coach.sports
+                                                        : typeof coach.sports === 'string'
                                                             ? coach.sports.split(',').map(s => s.trim()).filter(Boolean)
                                                             : []
                                                     ).map(sport => (

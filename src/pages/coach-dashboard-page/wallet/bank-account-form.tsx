@@ -137,11 +137,6 @@ export function BankAccountForm({
       setUploading(false)
     }
 
-    if (!verificationDocumentUrl) {
-      CustomFailedToast('Vui lòng tải ảnh QR tài khoản để nhận tiền')
-      return
-    }
-
     await onSubmit({
       accountName: formData.accountName,
       accountNumber: formData.accountNumber,
@@ -207,7 +202,7 @@ export function BankAccountForm({
       </div>
 
       <div className="space-y-2.5">
-        <Label htmlFor="verificationDocument">Ảnh/QR tài khoản nhận tiền (bắt buộc)</Label>
+        <Label htmlFor="verificationDocument">Ảnh/QR tài khoản nhận tiền (tùy chọn)</Label>
         <div className="space-y-2">
           {!filePreview || (filePreview && !filePreview.startsWith('blob:') && !filePreview.startsWith('http')) ? (
             <div className="flex items-center gap-2">

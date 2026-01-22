@@ -263,7 +263,7 @@ export default function ConsecutiveBookingsPage() {
                 page: currentPage,
                 limit: itemsPerPage,
                 type: 'field', // Hard-coded for field-only bookings
-                recurringFilter: 'none', // Chỉ lấy consecutive bookings (không có recurringGroupId)
+                recurringType: 'CONSECUTIVE', // Filter for consecutive bookings (multi-day)
                 sortBy,
                 sortOrder,
             })

@@ -131,8 +131,7 @@ export const NavbarDarkComponent = () => {
                 </div>
             )}
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white/95 shadow-md border-b border-gray-200" : "bg-transparent"
-                    }`}
+                className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-md border-b border-gray-200 transition-all duration-300"
             >
                 <div className="container mx-auto max-w-screen-2xl flex h-20 items-center justify-between px-4">
                     {/* Logo */}
@@ -143,8 +142,8 @@ export const NavbarDarkComponent = () => {
                         SportZone
                     </Link>
 
-                    {/* Nav links */}
-                    <nav className="flex items-center gap-6">
+                    {/* Nav links - Desktop only */}
+                    <nav className="hidden lg:flex items-center gap-6">
                         <Link to="/" className={linkClass}>
                             Trang chủ
                         </Link>

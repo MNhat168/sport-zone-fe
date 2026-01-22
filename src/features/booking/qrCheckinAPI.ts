@@ -4,43 +4,58 @@ import { BASE_URL } from '../../utils/constant-value/constant'
 // QR Check-in API endpoints
 export const qrCheckinAPI = {
     /**
-     * Generate QR code for check-in
-     * Only available within time window (default: 15 minutes before match)
+     * @deprecated Old booking-specific QR generation is no longer supported
+     * Users should scan field QR codes at the venue instead
      */
-    generateQR: async (bookingId: string) => {
+    // generateQR: DEPRECATED - removed
+
+    /**
+     * @deprecated Check-in window is no longer applicable for field QR check-in
+     */
+    // getCheckInWindow: DEPRECATED - removed
+
+    /**
+     * Get user's bookings for a field today (for field QR check-in)
+     * Used when user scans a field QR code
+     */
+    getCheckInOptions: async (fieldId: string) => {
         const response = await axiosPrivate.get(
-            `${BASE_URL}/bookings/${bookingId}/check-in-qr`
+            `${BASE_URL}/bookings/check-in/options`,
+            { params: { fieldId } }
         )
         return response.data
     },
 
     /**
-     * Get check-in window information
-     * Returns when QR generation becomes available
+     * Confirm check-in with field QR token
+     * Used for field QR check-in flow
      */
-    getCheckInWindow: async (bookingId: string) => {
-        const response = await axiosPrivate.get(
-            `${BASE_URL}/bookings/${bookingId}/check-in-window`
+    confirmCheckInWithFieldQR: async (token: string, bookingId: string) => {
+        const response = await axiosPrivate.post(
+            `${BASE_URL}/bookings/check-in`,
+            { token, bookingId }
         )
         return response.data
     },
 }
 
 // Export types for TypeScript
-export interface QRCheckInResponse {
-    token: string
-    expiresAt: string
-    bookingId: string
-    startTime: string
-    fieldName?: string
-}
+// DEPRECATED interfaces removed: QRCheckInResponse, CheckInWindowResponse
 
-export interface CheckInWindowResponse {
-    windowStartsAt: string
-    windowEndsAt: string
-    windowDurationMinutes: number
-    canGenerateNow: boolean
-    timeUntilWindowMs: number
-    bookingStartTime: string
-    message?: string
+export interface UserBookingOption {
+    _id: string
+    date: string
+    fieldStartTime: string
+    fieldEndTime: string
+    field: {
+        _id: string
+        name: string
+    }
+    court?: {
+        _id: string
+        name: string
+        courtNumber: number
+    }
+    status: string
+    paymentStatus: string
 }

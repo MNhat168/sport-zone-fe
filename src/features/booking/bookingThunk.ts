@@ -14,6 +14,7 @@ import type {
     UpcomingBooking,
     ErrorResponse,
     CreateCombinedBookingPayload,
+    CreateOwnerReservedBookingPayload,
 } from "../../types/booking-type";
 import axiosPrivate from "../../utils/axios/axiosPrivate";
 import logger from "../../utils/logger";
@@ -33,6 +34,7 @@ import {
     CREATE_COMBINED_BOOKING_API,
     CREATE_PAYOS_PAYMENT_API,
     CREATE_PAYOS_PAYMENT_RECURRING_API,
+    CREATE_OWNER_RESERVED_BOOKING_API,
 } from "./bookingAPI";
 
 /**
@@ -472,6 +474,29 @@ export const createCoachBookingV2 = createAsyncThunk<
         const errorResponse: ErrorResponse = {
             message: error?.message || "Failed to create coach booking",
             status: error?.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Create owner-reserved booking
+ * Allows field owner to reserve their own slots with system fee
+ */
+export const createOwnerReservedBooking = createAsyncThunk<
+    Booking,
+    CreateOwnerReservedBookingPayload,
+    { rejectValue: ErrorResponse }
+>("booking/createOwnerReservedBooking", async (payload, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.post(CREATE_OWNER_RESERVED_BOOKING_API, payload);
+        logger.log("Owner-reserved booking created successfully:", response.data);
+        return response.data;
+    } catch (error: any) {
+        logger.error("Error creating owner-reserved booking:", error);
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to create owner-reserved booking",
+            status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);
     }

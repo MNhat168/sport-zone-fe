@@ -35,6 +35,7 @@ interface CombinedBookingData {
         fieldId: string;
         fieldName: string;
         fieldLocation: string;
+        sportType: string;
         date: string;
         startTime: string;
         endTime: string;
@@ -84,6 +85,7 @@ const FieldCoachBookingPage = () => {
             fieldId: '',
             fieldName: '',
             fieldLocation: '',
+            sportType: '',
             date: '',
             startTime: '',
             endTime: '',
@@ -141,11 +143,12 @@ const FieldCoachBookingPage = () => {
                     fieldId: currentField.id || '',
                     fieldName: currentField.name || '',
                     fieldLocation: getLocationString(currentField.location),
+                    sportType: currentField.sportType || '',
                     courtPrice: currentField.basePrice || 0,
                 }
             }));
         }
-    }, [currentField?.id, currentField?.name, currentField?.location, currentField?.basePrice]);
+    }, [currentField?.id, currentField?.name, currentField?.location, currentField?.sportType, currentField?.basePrice]);
 
     // Fetch courts for the field
     useEffect(() => {
@@ -470,6 +473,7 @@ const FieldCoachBookingPage = () => {
                     <CoachListSelection
                         onSelect={handleCoachSelect}
                         onBack={handleCoachSelectBack}
+                        initialSportFilter={bookingData.field.sportType}
                     />
                 )}
 

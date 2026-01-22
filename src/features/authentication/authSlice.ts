@@ -21,7 +21,7 @@ import {
     removeBookmarkFields,
 } from "../user/userThunk";
 import type { AuthResponse, ErrorResponse } from "../../types/authentication-type";
-import { clearUserAuth, setCookie } from "../../lib/cookies";
+import { clearUserAuth } from "../../lib/cookies";
 
 // Extend the User type from AuthResponse to include new fields
 // This assumes AuthResponse['user'] is the User interface we want to modify.
@@ -58,25 +58,12 @@ interface AuthState {
     deactivateLoading: boolean;
 }
 
-const readUserFromCookie = (): any | null => {
-    try {
-        if (typeof document === "undefined") return null;
-        const match = document.cookie.match(/user=([^;]+)/);
-        if (!match) return null;
-        const userStr = decodeURIComponent(match[1]);
-        return JSON.parse(userStr);
-    } catch { return null; }
-};
-
 const getStoredUser = () => {
     try {
-        // Ưu tiên cookie trước, rồi fallback localStorage
-        const fromCookie = readUserFromCookie();
-        if (fromCookie) return fromCookie;
-        // Sau cookie, ưu tiên sessionStorage (rememberMe = false)
+        // Prioritize sessionStorage (temporary session)
         const sessionUserStr = sessionStorage.getItem("user");
         if (sessionUserStr) return JSON.parse(sessionUserStr);
-        // Cuối cùng mới đến localStorage (rememberMe = true)
+        // Fallback to localStorage (remember me)
         const localUserStr = localStorage.getItem("user");
         return localUserStr ? JSON.parse(localUserStr) : null;
     } catch {
@@ -128,38 +115,29 @@ const authSlice = createSlice({
         },
         updateUser: (state, action: PayloadAction<AuthResponse["user"]>) => {
             state.user = action.payload;
-            // Ghi vào nơi đang sử dụng hiện tại: ưu tiên sessionStorage nếu có, ngược lại localStorage
+            // Write to current storage: prefer sessionStorage if active, otherwise localStorage
             const isSessionActive = !!sessionStorage.getItem("user");
             const target = isSessionActive ? sessionStorage : localStorage;
             target.setItem("user", JSON.stringify(action.payload));
-            // Sync to cookie
-            setCookie("user", JSON.stringify(action.payload));
         },
-        // Thêm action để force refresh avatar
+        // Force refresh avatar
         refreshAvatar: (state) => {
             if (state.user) {
                 state.user = { ...state.user };
                 const isSessionActive = !!sessionStorage.getItem("user");
                 const target = isSessionActive ? sessionStorage : localStorage;
                 target.setItem("user", JSON.stringify(state.user));
-                // Sync to cookie
-                setCookie("user", JSON.stringify(state.user));
             }
         },
-        // Đồng bộ lại user từ cookie trước, rồi mới đến localStorage
+        // Sync user from storage (sessionStorage -> localStorage)
         syncFromLocalStorage: (state) => {
-            const cookieUser = readUserFromCookie();
-            if (cookieUser) {
-                state.user = cookieUser;
-                return;
-            }
             const sessionUser = sessionStorage.getItem("user");
             if (sessionUser) {
                 try {
                     const parsedUser = JSON.parse(sessionUser);
                     state.user = parsedUser;
                 } catch (error) {
-                    logger.error("Error parsing user from localStorage:", error);
+                    logger.error("Error parsing user from sessionStorage:", error);
                 }
                 return;
             }
@@ -205,9 +183,6 @@ const authSlice = createSlice({
                     // Store ONLY in sessionStorage (not localStorage for security)
                     sessionStorage.setItem("user", JSON.stringify(user));
                     sessionStorage.setItem("auth_method", authMethod);
-
-                    // Also sync to cookie for compatibility (user data only, not auth tokens)
-                    setCookie("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in login response", status: "500" } as any;
                 }
@@ -226,9 +201,6 @@ const authSlice = createSlice({
                     // Store ONLY in sessionStorage (not localStorage for security)
                     sessionStorage.setItem("user", JSON.stringify(user));
                     sessionStorage.setItem("auth_method", authMethod);
-
-                    // Also sync to cookie for compatibility (user data only, not auth tokens)
-                    setCookie("user", JSON.stringify(user));
                 } else {
                     state.error = { message: "Missing user in google login response", status: "500" } as any;
                 }
@@ -297,8 +269,6 @@ const authSlice = createSlice({
                     const isSessionActive = !!sessionStorage.getItem("user");
                     const target = isSessionActive ? sessionStorage : localStorage;
                     target.setItem("user", JSON.stringify(user));
-                    // Sync to cookie
-                    setCookie("user", JSON.stringify(user));
                 }
             })
             .addCase(validateSession.rejected, (state) => {
@@ -323,8 +293,6 @@ const authSlice = createSlice({
                     const isSessionActive = !!sessionStorage.getItem("user");
                     const target = isSessionActive ? sessionStorage : localStorage;
                     target.setItem("user", JSON.stringify(user));
-                    // Sync to cookie
-                    setCookie("user", JSON.stringify(user));
                 }
             })
             .addCase(refreshToken.rejected, (state) => {
@@ -349,11 +317,10 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.user = action.payload; // Sync profile data to auth user
                 state.error = null;
-                // Update storage & cookie
+                // Update storage
                 const isSessionActive = !!sessionStorage.getItem("user");
                 const target = isSessionActive ? sessionStorage : localStorage;
                 target.setItem("user", JSON.stringify(action.payload));
-                setCookie("user", JSON.stringify(action.payload));
             })
             .addCase(getUserProfile.rejected, (state, action) => {
                 state.loading = false;
@@ -369,11 +336,10 @@ const authSlice = createSlice({
                 state.updateLoading = false;
                 state.user = action.payload;
                 state.updateError = null;
-                // Update storage & cookie
+                // Update storage
                 const isSessionActive = !!sessionStorage.getItem("user");
                 const target = isSessionActive ? sessionStorage : localStorage;
                 target.setItem("user", JSON.stringify(action.payload));
-                setCookie("user", JSON.stringify(action.payload));
             })
             .addCase(updateUserProfile.rejected, (state, action) => {
                 state.updateLoading = false;
@@ -383,22 +349,30 @@ const authSlice = createSlice({
             // Set bookmark coaches
             .addCase(setBookmarkCoaches.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
+                const isSessionActive = !!sessionStorage.getItem("user");
+                const target = isSessionActive ? sessionStorage : localStorage;
+                target.setItem("user", JSON.stringify(action.payload));
             })
             // Remove bookmark coaches
             .addCase(removeBookmarkCoaches.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
+                const isSessionActive = !!sessionStorage.getItem("user");
+                const target = isSessionActive ? sessionStorage : localStorage;
+                target.setItem("user", JSON.stringify(action.payload));
             })
             // Set bookmark fields
             .addCase(setBookmarkFields.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
+                const isSessionActive = !!sessionStorage.getItem("user");
+                const target = isSessionActive ? sessionStorage : localStorage;
+                target.setItem("user", JSON.stringify(action.payload));
             })
             // Remove bookmark fields
             .addCase(removeBookmarkFields.fulfilled, (state, action) => {
                 state.user = action.payload;
-                setCookie("user", JSON.stringify(action.payload));
+                const isSessionActive = !!sessionStorage.getItem("user");
+                const target = isSessionActive ? sessionStorage : localStorage;
+                target.setItem("user", JSON.stringify(action.payload));
             })
 
             // Forgot password

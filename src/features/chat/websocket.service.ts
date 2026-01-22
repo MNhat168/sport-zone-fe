@@ -27,32 +27,28 @@ class WebSocketService {
       return;
     }
 
-    // Get user data from cookie (Single Source of Truth)
+    // Get user data from storage (sessionStorage -> localStorage)
     let userId: string | null = null;
     try {
-      const match = document.cookie.match(/user=([^;]+)/);
-      if (match) {
-        const userStr = decodeURIComponent(match[1]);
-        const user = JSON.parse(userStr);
+      const sessionUserStr = sessionStorage.getItem("user");
+      if (sessionUserStr) {
+        const user = JSON.parse(sessionUserStr);
         userId = user?._id || null;
       }
-    } catch (e) {
-      logger.error("[WebSocketService] Failed to parse user from cookie", e);
-    }
 
-    if (!userId) {
-      // Fallback to storage if cookie not found yet
-      const userData = sessionStorage.getItem("user") || localStorage.getItem("user");
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
+      if (!userId) {
+        const localUserStr = localStorage.getItem("user");
+        if (localUserStr) {
+          const user = JSON.parse(localUserStr);
           userId = user?._id || null;
-        } catch { /* ignore */ }
+        }
       }
+    } catch (e) {
+      logger.error("[WebSocketService] Failed to parse user from storage", e);
     }
 
     if (!userId) {
-      logger.error("[WebSocketService] No user ID found in cookie or storage");
+      logger.error("[WebSocketService] No user ID found in storage");
       return;
     }
 

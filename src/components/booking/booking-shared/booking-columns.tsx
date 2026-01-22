@@ -20,6 +20,7 @@ export interface BookingRow {
   transactionStatus?: string;
   approvalStatus?: string;
   createdAt?: string;
+  isOwnerReserved?: boolean; // Flag for owner-reserved bookings
   // Original data for actions
   originalBooking?: unknown;
 }
@@ -195,14 +196,28 @@ export function createBookingColumns(
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Trạng Thái" />
       ),
-      cell: ({ row }) => (
-        <Badge
-          variant="secondary"
-          className={`${getStatusBadgeStyles(row.original.status)} rounded-sm`}
-        >
-          {row.original.statusText}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const isOwnerReserved = row.original.isOwnerReserved === true;
+        return (
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="secondary"
+              className={`${getStatusBadgeStyles(row.original.status)} rounded-sm`}
+            >
+              {row.original.statusText}
+            </Badge>
+            {isOwnerReserved && (
+              <Badge
+                variant="outline"
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-sm border-gray-300"
+                title="Đã khóa bởi chủ sân"
+              >
+                🔒 Chủ sân
+              </Badge>
+            )}
+          </div>
+        );
+      },
       enableSorting: false,
       enableColumnFilter: false,
       meta: { className: "w-32" },

@@ -55,8 +55,6 @@ export function clearUserAuth(): void {
     localStorage.clear();
     // Clear all sessionStorage (transient data)
     sessionStorage.clear();
-    // Clear cookie
-    document.cookie = "user=; path=/; max-age=0";
 
     // Reset sockets
     try {

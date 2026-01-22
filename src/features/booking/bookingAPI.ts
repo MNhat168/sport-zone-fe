@@ -23,3 +23,6 @@ export const SET_COACH_HOLIDAY_API = `${BASE_URL}/schedules/set-holiday`;
 export const GET_RECURRING_GROUP_API = (groupId: string) => `${BASE_URL}/bookings/recurring-group/${groupId}`;
 export const CANCEL_RECURRING_GROUP_API = (groupId: string) => `${BASE_URL}/bookings/recurring-group/${groupId}/cancel`;
 
+// Owner-Reserved Booking
+export const CREATE_OWNER_RESERVED_BOOKING_API = `${BASE_URL}/bookings/owner-reserved`;
+

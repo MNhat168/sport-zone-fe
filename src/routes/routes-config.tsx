@@ -100,6 +100,8 @@ const NotificationTestPage = lazy(() => import("../pages/test/notification-test-
 
 // Check-in Pages
 const FieldOwnerCheckInPage = lazy(() => import("../pages/field-owner-dashboard-page/check-in/field-owner-check-in-page"));
+const UserQRCheckinPage = lazy(() => import("../pages/user-dashboard-page/check-in/user-qr-checkin-page"));
+const FieldQRManagementPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/field-qr-management-page"));
 
 // Error Pages
 import GeneralError from "../pages/error/general-error";
@@ -267,6 +269,14 @@ export const userRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.user]}>
         <UserRefundPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user/qr-checkin",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.user]}>
+        <UserQRCheckinPage />
       </ProtectedRoute>
     ),
   },
@@ -759,6 +769,14 @@ export const fieldOwnerRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
         <FieldOwnerCheckInPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/field-owner/qr-management",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <FieldQRManagementPage />
       </ProtectedRoute>
     ),
   },

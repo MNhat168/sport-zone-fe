@@ -342,6 +342,12 @@ export interface GetMyFieldsParams {
 
 // Field owner bookings interfaces
 export interface FieldOwnerBooking {
+    metadata?: {
+        isOwnerReserved?: boolean;
+        originalPrice?: number;
+        systemFeeAmount?: number;
+        [key: string]: any;
+    };
     bookingId: string;
     fieldId: string;
     fieldName: string;
@@ -378,6 +384,7 @@ export interface FieldOwnerBookingsParams {
     limit?: number;
     type?: 'field' | 'coach' | 'field_coach'; // Booking type filter
     recurringFilter?: 'none' | 'only' | 'all'; // Filter by recurring status: none (single only), only (recurring only), all (default)
+    recurringType?: 'CONSECUTIVE' | 'WEEKLY'; // Filter by recurring type: CONSECUTIVE (multi-day) or WEEKLY (weekly pattern)
     sortBy?: 'createdAt' | 'date' | 'totalPrice'; // Field to sort by
     sortOrder?: 'asc' | 'desc'; // Sort direction
 }
