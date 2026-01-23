@@ -66,11 +66,14 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formData, updateFormData, onUpl
             {/* Certification Photos */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ảnh chứng chỉ / Bằng cấp
+                    Chứng chỉ / Bằng cấp (Ảnh hoặc Tài liệu)
                 </label>
+                <p className="text-xs text-gray-500 mb-2">
+                    Hỗ trợ: Ảnh (JPG, PNG, WEBP), Tài liệu (PDF, DOC, DOCX), File nén (ZIP, RAR, 7Z) - tối đa 10MB
+                </p>
                 <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf,.zip,.rar,.7z,.doc,.docx,.xls,.xlsx"
                     multiple
                     onChange={handleCertificationPhotoUpload}
                     disabled={uploading}

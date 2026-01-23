@@ -25,6 +25,7 @@ import {
     VALIDATE_WEEKLY_RECURRING_BOOKING_API,
     PARSE_BOOKING_REQUEST_API,
     CANCEL_FIELD_BOOKING_API,
+    GET_CANCELLATION_INFO_API,
     CREATE_SESSION_BOOKING_API,
     CANCEL_SESSION_BOOKING_API,
     GET_MY_BOOKINGS_API,
@@ -204,6 +205,27 @@ export const parseBookingRequest = createAsyncThunk<
         logger.error("Error parsing booking request:", error);
         const errorResponse = {
             message: error.response?.data?.message || error.message || "Failed to parse booking request",
+            status: error.response?.status?.toString() || "500",
+        };
+        return thunkAPI.rejectWithValue(errorResponse);
+    }
+});
+
+/**
+ * Get cancellation info for a booking
+ */
+export const getCancellationInfo = createAsyncThunk<
+    any,
+    { bookingId: string; role: 'user' | 'owner' | 'coach' },
+    { rejectValue: ErrorResponse }
+>("booking/getCancellationInfo", async ({ bookingId, role }, thunkAPI) => {
+    try {
+        const response = await axiosPrivate.get(GET_CANCELLATION_INFO_API(bookingId, role));
+        return response.data;
+    } catch (error: any) {
+        logger.error("Error getting cancellation info:", error);
+        const errorResponse: ErrorResponse = {
+            message: error.response?.data?.message || error.message || "Failed to get cancellation info",
             status: error.response?.status?.toString() || "500",
         };
         return thunkAPI.rejectWithValue(errorResponse);

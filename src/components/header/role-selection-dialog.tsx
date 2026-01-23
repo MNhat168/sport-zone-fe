@@ -32,12 +32,42 @@ export const RoleSelectionDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[90vw] w-full md:max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none">
+            <DialogContent
+                showCloseButton={false}
+                className="max-w-[90vw] w-full md:max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none"
+            >
                 <DialogHeader className="sr-only">
                     <DialogTitle>Chọn vai trò đối tác</DialogTitle>
                 </DialogHeader>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 h-[80vh] md:h-[500px] gap-4 md:gap-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 h-[80vh] md:h-[500px] gap-4 md:gap-0 relative">
+                    {/* Custom Close Button */}
+                    <div className="absolute top-4 right-4 z-50">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="bg-black/20 hover:bg-black/40 text-white rounded-full p-1 h-8 w-8 backdrop-blur-sm transition-all"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            <span className="sr-only">Close</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-4 w-4"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </Button>
+                    </div>
+
                     {/* Become a Coach Section */}
                     <div className="relative group overflow-hidden cursor-pointer h-full rounded-xl md:rounded-none md:rounded-l-xl">
                         <div

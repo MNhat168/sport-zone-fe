@@ -26,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { useFieldOwnerBookings } from "@/hooks/queries/useFieldOwnerBookings";
 import { useAcceptBooking, useRejectBooking } from "@/hooks/mutations/useBookingMutations";
 import { fieldOwnerBookingAPI } from "@/features/field/fieldOwnerBookingAPI";
+import { getCancellationInfo } from "@/features/booking/bookingThunk";
+import { useAppDispatch } from "@/store/hook";
 import type { FieldOwnerBooking } from "@/types/field-type";
 import logger from "@/utils/logger";
 import { formatCurrency } from "@/utils/format-currency";
@@ -181,6 +183,7 @@ export default function SingleBookingsPage() {
         open: boolean;
         action: 'accept' | 'cancel' | null;
         bookingId: string | null;
+        cancellationInfo?: any;
     }>({ open: false, action: null, bookingId: null });
     const [activeTab, setActiveTab] = useState<BookingStatusType>('confirmed');
     const [searchQuery, setSearchQuery] = useState("");
@@ -336,8 +339,16 @@ export default function SingleBookingsPage() {
         setConfirmState({ open: true, action: 'accept', bookingId });
     };
 
-    const handleCancel = (bookingId: string) => {
-        setConfirmState({ open: true, action: 'cancel', bookingId });
+    const handleCancel = async (bookingId: string) => {
+        try {
+            // Fetch cancellation info before showing confirmation
+            const cancellationInfo = await dispatch(getCancellationInfo({ bookingId, role: 'owner' })).unwrap();
+            setConfirmState({ open: true, action: 'cancel', bookingId, cancellationInfo });
+        } catch (error: any) {
+            logger.error('Failed to get cancellation info:', error);
+            // Still show dialog but without cancellation info
+            setConfirmState({ open: true, action: 'cancel', bookingId });
+        }
     };
 
     const handleConfirmAction = async () => {
@@ -355,7 +366,7 @@ export default function SingleBookingsPage() {
         } catch (e) {
             logger.error(`${action} booking failed`, e);
         } finally {
-            setConfirmState({ open: false, action: null, bookingId: null });
+            setConfirmState({ open: false, action: null, bookingId: null, cancellationInfo: undefined });
         }
     };
 
@@ -517,19 +528,58 @@ export default function SingleBookingsPage() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            {confirmState.action === 'accept' ? 'Xac nhan chap nhan' : 'Xac nhan hanh dong'}
+                            {confirmState.action === 'accept' ? 'Xác nhận chấp nhận' : 'Xác nhận hủy booking'}
                         </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {confirmState.action === 'accept'
-                                ? 'Ban co chac chan muon chap nhan yeu cau dat cho nay khong?'
-                                : 'Ban co chac chan muon thuc hien hanh dong nay khong? Hanh dong nay khong the hoan tac.'}
+                        <AlertDialogDescription className="space-y-3">
+                            {confirmState.action === 'accept' ? (
+                                <p>Bạn có chắc chắn muốn chấp nhận yêu cầu đặt chỗ này không?</p>
+                            ) : (
+                                <>
+                                    {confirmState.cancellationInfo && !confirmState.cancellationInfo.eligibility?.allowed ? (
+                                        <Alert variant="destructive">
+                                            <AlertCircle className="h-4 w-4" />
+                                            <AlertDescription>
+                                                {confirmState.cancellationInfo.eligibility?.errorMessage || 'Booking này không thể được hủy.'}
+                                            </AlertDescription>
+                                        </Alert>
+                                    ) : (
+                                        <>
+                                            <p>Bạn có chắc chắn muốn hủy booking này không? Khách hàng sẽ nhận 100% refund.</p>
+                                            {confirmState.cancellationInfo && (
+                                                <div className="space-y-2">
+                                                    {confirmState.cancellationInfo.warningMessage && (
+                                                        <Alert variant={confirmState.cancellationInfo.penaltyPercentage === 100 ? "destructive" : "default"}>
+                                                            <AlertCircle className="h-4 w-4" />
+                                                            <AlertDescription>
+                                                                {confirmState.cancellationInfo.warningMessage}
+                                                            </AlertDescription>
+                                                        </Alert>
+                                                    )}
+                                                    {confirmState.cancellationInfo.penaltyAmount !== undefined && confirmState.cancellationInfo.penaltyAmount > 0 && (
+                                                        <div className="text-sm bg-red-50 p-3 rounded-md border border-red-200">
+                                                            <p className="font-medium text-red-900">
+                                                                Phí phạt: {confirmState.cancellationInfo.penaltyAmount.toLocaleString('vi-VN')} đ
+                                                                {confirmState.cancellationInfo.penaltyPercentage !== undefined && (
+                                                                    <span> ({confirmState.cancellationInfo.penaltyPercentage}%)</span>
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Huy</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmAction}>
-                            {confirmState.action === 'accept' ? 'Chap nhan' : 'Xac nhan'}
-                        </AlertDialogAction>
+                        <AlertDialogCancel>Hủy</AlertDialogCancel>
+                        {confirmState.action === 'accept' || confirmState.cancellationInfo?.eligibility?.allowed !== false ? (
+                            <AlertDialogAction onClick={handleConfirmAction}>
+                                {confirmState.action === 'accept' ? 'Chấp nhận' : 'Xác nhận hủy'}
+                            </AlertDialogAction>
+                        ) : null}
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

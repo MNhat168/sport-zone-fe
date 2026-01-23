@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Menu } from "lucide-react";
+import { User, LogOut, Menu, FileText } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
 import { clearUserAuth } from "../../lib/cookies";
@@ -34,11 +34,16 @@ import { NotificationBell } from "./notification-bell";
 import { Loading } from "@/components/ui/loading";
 import { RoleSelectionDialog } from "./role-selection-dialog";
 
+import { getMyCoachRegistration } from "../../features/coach-registration";
+import { getMyRegistrationStatus } from "../../features/field-owner-registration";
+
 export const NavbarDarkComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const auth = useAppSelector((state: RootState) => state.auth);
+    const { currentRequest: coachRequest } = useAppSelector((state: RootState) => state.coachRegistration);
+    const { currentRequest: fieldRequest } = useAppSelector((state: RootState) => state.registration);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -47,10 +52,23 @@ export const NavbarDarkComponent = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    useEffect(() => {
+        if (auth.user) {
+            if (!coachRequest) dispatch(getMyCoachRegistration());
+            if (!fieldRequest) dispatch(getMyRegistrationStatus());
+        }
+    }, [dispatch, auth.user, coachRequest, fieldRequest]);
+
+    const isCoachPending = coachRequest?.status === 'pending';
+    const isFieldOwnerPending = fieldRequest?.status === 'pending';
+    const hasPendingRegistration = isCoachPending || isFieldOwnerPending;
+
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [openRoleDialog, setOpenRoleDialog] = useState(false);
+    // ... existing code ...
+
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -235,17 +253,27 @@ export const NavbarDarkComponent = () => {
                                 </Button>
                             </div>
                         )}
-                        
+
                         {auth.user?.role === "user" && (
-                            <Button
-                                variant="ghost"
-                                className={linkClass}
-                                onClick={() => setOpenRoleDialog(true)}
-                            >
-                                Trở thành đối tác
-                            </Button>
+                            hasPendingRegistration ? (
+                                <Button
+                                    variant="ghost"
+                                    className={linkClass}
+                                    onClick={() => navigate(isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status")}
+                                >
+                                    <FileText className="mr-2 h-5 w-5" /> Trạng thái đăng ký
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="ghost"
+                                    className={linkClass}
+                                    onClick={() => setOpenRoleDialog(true)}
+                                >
+                                    Trở thành đối tác
+                                </Button>
+                            )
                         )}
-                        
+
                         {/* Mobile Menu Toggle */}
                         <div className="lg:hidden ml-2">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>

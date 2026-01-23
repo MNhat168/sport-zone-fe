@@ -7,6 +7,7 @@ export const VALIDATE_CONSECUTIVE_DAYS_BOOKING_API = `${BASE_URL}/bookings/conse
 export const VALIDATE_WEEKLY_RECURRING_BOOKING_API = `${BASE_URL}/bookings/weekly-recurring/validate`;
 export const PARSE_BOOKING_REQUEST_API = `${BASE_URL}/bookings/ai/parse`; // Turn 3
 export const CANCEL_FIELD_BOOKING_API = (id: string) => `${BASE_URL}/bookings/${id}/cancel`;
+export const GET_CANCELLATION_INFO_API = (id: string, role: 'user' | 'owner' | 'coach') => `${BASE_URL}/bookings/${id}/cancellation-info?role=${role}`;
 export const CREATE_SESSION_BOOKING_API = `${BASE_URL}/bookings/session`;
 export const CREATE_COMBINED_BOOKING_API = `${BASE_URL}/bookings/combined-hold`;
 export const CANCEL_SESSION_BOOKING_API = `${BASE_URL}/bookings/session/cancel`;

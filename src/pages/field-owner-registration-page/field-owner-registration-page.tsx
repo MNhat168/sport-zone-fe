@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hook"
-import { submitRegistrationRequest, uploadRegistrationDocument, type CreateRegistrationRequestPayload } from "@/features/field-owner-registration"
+import { submitRegistrationRequest, uploadRegistrationDocument, getMyRegistrationStatus, type CreateRegistrationRequestPayload } from "@/features/field-owner-registration"
 // Note: uploadRegistrationDocument is now only used for business license upload
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CustomSuccessToast, CustomFailedToast } from "@/components/toast/notificiation-toast"
@@ -30,13 +30,14 @@ import {
 } from "@/components/ui/alert-dialog"
 import logger from "@/utils/logger"
 import { Button } from "@/components/ui/button"
+import { Loading } from "@/components/ui/loading"
 
 type RegistrationStep = 1 | 2 | 3 | 4
 
 export default function FieldOwnerRegistrationPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const { submitting } = useAppSelector((state) => state.registration)
+  const { submitting, currentRequest, loading } = useAppSelector((state) => state.registration)
   const authUser = useAppSelector((state) => state.auth.user)
 
   const [currentStep, setCurrentStep] = useState<RegistrationStep>(1)
@@ -54,6 +55,26 @@ export default function FieldOwnerRegistrationPage() {
     ekycSessionId: undefined,
     ekycData: undefined,
   })
+
+  // Check if user already has a pending registration request
+  useEffect(() => {
+    const checkExistingRegistration = async () => {
+      try {
+        await dispatch(getMyRegistrationStatus()).unwrap()
+      } catch (error) {
+        // Ignore errors, just means no registration found
+      }
+    }
+    checkExistingRegistration()
+  }, [dispatch])
+
+  // Redirect if user has pending or approved registration
+  useEffect(() => {
+    if (currentRequest && (currentRequest.status === 'pending' || currentRequest.status === 'approved')) {
+      CustomFailedToast("Bạn đã có đơn đăng ký đang được xử lý. Vui lòng chờ kết quả.")
+      navigate("/field-owner-registration-status")
+    }
+  }, [currentRequest, navigate])
 
   const steps = [
     { number: 1, title: "Thông tin cá nhân & eKYC", icon: User },
@@ -202,6 +223,36 @@ export default function FieldOwnerRegistrationPage() {
       default:
         return null
     }
+  }
+
+  // Show loading while checking registration status
+  if (loading) {
+    return (
+      <>
+        <NavbarDarkComponent />
+        <PageWrapper>
+          <PageHeader
+            title="Đăng ký làm chủ sân"
+            breadcrumbs={[{ label: "Trang chủ", href: "/" }, { label: "Đăng ký chủ sân" }]}
+          />
+          <div className="max-w-5xl mx-auto px-4 py-8">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center py-10 gap-4">
+                  <Loading size={48} className="text-primary" />
+                  <p className="text-center text-gray-600">Đang kiểm tra trạng thái đăng ký...</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </PageWrapper>
+      </>
+    )
+  }
+
+  // Don't render form if user has pending/approved registration
+  if (currentRequest && (currentRequest.status === 'pending' || currentRequest.status === 'approved')) {
+    return null
   }
 
   return (

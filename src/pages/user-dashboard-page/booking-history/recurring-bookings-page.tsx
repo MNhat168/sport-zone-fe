@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { SortingState } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,8 @@ import { PageWrapper } from "@/components/layouts/page-wrapper";
 import { BookingFilters } from "@/components/booking/booking-shared/booking-filter";
 import { BookingTable, type BookingRow } from "@/components/booking/booking-shared/booking-table";
 import BookingDetailModal from "@/components/pop-up/booking-detail-modal";
-import { useAppDispatch, useAppSelector } from "@/store/hook";
-import { getMyBookings, cancelFieldBooking } from "@/features/booking/bookingThunk";
-import { clearBookings } from "@/features/booking/bookingSlice";
+import { useUserBookings } from "@/hooks/queries/useUserBookings";
+import { useCancelBooking } from "@/hooks/mutations/useUserBookingMutations";
 import type { Booking } from "@/types/booking-type";
 import logger from "@/utils/logger";
 import { formatCurrency } from "@/utils/format-currency";
@@ -160,24 +159,13 @@ const getNumberParam = (params: URLSearchParams, key: string, defaultValue: numb
 };
 
 export default function RecurringBookingsPage() {
-    const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const bookingState = useAppSelector((state) => state?.booking);
-    const bookings = bookingState?.bookings || [];
-    const pagination = bookingState?.pagination || null;
-    const loadingBookings = bookingState?.loadingBookings || false;
-    const error = bookingState?.error || null;
-
-    // Read pagination from URL (with defaults)
     const currentPage = getNumberParam(searchParams, 'page', 1);
     const itemsPerPage = getNumberParam(searchParams, 'limit', 10);
-
-    // Read sorting from URL (with defaults)
     const sortBy = (searchParams.get('sortBy') || 'createdAt') as 'createdAt' | 'date' | 'totalPrice';
     const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
 
-    // Convert to TanStack Table SortingState
     const sorting: SortingState = useMemo(() => {
         return sortBy ? [{ id: sortBy, desc: sortOrder === 'desc' }] : [];
     }, [sortBy, sortOrder]);
@@ -193,9 +181,24 @@ export default function RecurringBookingsPage() {
     const [activeTab, setActiveTab] = useState<BookingStatusType>('confirmed');
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
-    const [hasInitialData, setHasInitialData] = useState(false);
 
-    // Update URL params helper
+    const { startDate, endDate } = useMemo(() => getDateRangeFromTimeFilter(timeFilter), [timeFilter]);
+
+    const { data: response, isLoading, error } = useUserBookings({
+        status: activeTab,
+        type: 'field',
+        recurringFilter: 'only',
+        startDate,
+        endDate,
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchQuery || undefined,
+    });
+
+    const bookings = response?.bookings || [];
+    const pagination = response?.pagination;
+    const cancelMutation = useCancelBooking();
+
     const updateSearchParams = useCallback(
         (updates: Record<string, string | undefined>) => {
             setSearchParams((prev) => {
@@ -212,46 +215,6 @@ export default function RecurringBookingsPage() {
         },
         [setSearchParams]
     );
-
-    // Helper to fetch bookings - chỉ lấy weekly recurring bookings (có recurringGroupId)
-    const fetchBookings = useCallback((isInitial = false) => {
-        const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
-
-        dispatch(
-            getMyBookings({
-                status: activeTab,
-                type: 'field',
-                recurringFilter: 'only', // Chỉ lấy weekly recurring bookings (có recurringGroupId)
-                startDate,
-                endDate,
-                page: currentPage,
-                limit: itemsPerPage,
-                search: searchQuery || undefined,
-            })
-        ).then(() => {
-            if (isInitial) setHasInitialData(true);
-        });
-    }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage]);
-
-    // Clear bookings when component mounts to avoid showing stale data
-    useEffect(() => {
-        dispatch(clearBookings());
-    }, [dispatch]);
-
-    // Fetch bookings on mount and whenever filters/pagination change
-    useEffect(() => {
-        fetchBookings(true);
-    }, [fetchBookings]);
-
-    // Polling for updates every 30 seconds
-    useEffect(() => {
-        if (!hasInitialData) return;
-        const interval = setInterval(() => {
-            fetchBookings(false);
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [fetchBookings, hasInitialData]);
 
     const handleViewDetails = (bookingId: string) => {
         const booking = bookings.find((b) => b._id === bookingId);
@@ -279,15 +242,7 @@ export default function RecurringBookingsPage() {
             if (action === 'cancel') {
                 const booking = bookings.find((b) => b._id === bookingId);
                 const courtId = getCourtIdFromBooking(booking);
-
-                await dispatch(
-                    cancelFieldBooking({
-                        id: bookingId,
-                        payload: courtId ? { courtId } : undefined,
-                    })
-                ).unwrap();
-
-                fetchBookings(false);
+                await cancelMutation.mutateAsync({ bookingId, courtId });
             }
         } catch (e) {
             logger.error(`${action} booking failed`, e);
@@ -368,7 +323,7 @@ export default function RecurringBookingsPage() {
                                 <p className="text-gray-600 text-base mt-1.5 text-start">
                                     Quản lý và theo dõi tất cả các đặt sân định kỳ hàng tuần của bạn (ví dụ: đặt thứ 2 và thứ 4 hàng tuần trong 4 tuần).
                                 </p>
-                                
+
                                 {/* Status Tabs */}
                                 <div className="flex space-x-1 mt-4">
                                     <Button
@@ -381,17 +336,6 @@ export default function RecurringBookingsPage() {
                                             } transition-all duration-200`}
                                     >
                                         Đã xác nhận
-                                    </Button>
-                                    <Button
-                                        variant={activeTab === "pending" ? "default" : "outline"}
-                                        onClick={() => {
-                                            setActiveTab("pending");
-                                            updateSearchParams({ page: undefined });
-                                        }}
-                                        className={`${activeTab === "pending" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
-                                            } transition-all duration-200`}
-                                    >
-                                        Đang chờ
                                     </Button>
                                     <Button
                                         variant={activeTab === "cancelled" ? "default" : "outline"}
@@ -435,11 +379,11 @@ export default function RecurringBookingsPage() {
                                     </Alert>
                                 )}
 
-                                {loadingBookings && !hasInitialData ? (
+                                {isLoading ? (
                                     <div className="flex items-center justify-center py-12">
                                         <Loading size={32} />
                                     </div>
-                                ) : hasInitialData ? (
+                                ) : (
                                     <>
                                         {mappedBookings.length === 0 ? (
                                             <div className="text-center py-12">
@@ -462,11 +406,11 @@ export default function RecurringBookingsPage() {
                                                 onPageSizeChange={handlePageSizeChange}
                                                 sorting={sorting}
                                                 onSortingChange={handleSortingChange}
-                                                isLoading={loadingBookings}
+                                                isLoading={isLoading}
                                             />
                                         )}
                                     </>
-                                ) : null}
+                                )}
                             </CardContent>
                         </Card>
                     </div>

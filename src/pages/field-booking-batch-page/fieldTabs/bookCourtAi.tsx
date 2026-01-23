@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar as CalendarIcon, Sparkles, Repeat } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Calendar as CalendarIcon, Repeat } from 'lucide-react';
 import type { Field } from '@/types/field-type';
 import { useLocation } from "react-router-dom";
 import { useAppSelector } from '@/store/hook';
 import { toast } from 'react-toastify';
-import { NaturalLanguageInput } from "@/components/booking/NaturalLanguageInput";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingConflictModal } from "@/components/booking/BookingConflictModal";
 import { ConsecutiveBookingTab } from './ConsecutiveBookingTab';
@@ -44,8 +42,7 @@ export const BookCourtAiTab: React.FC<BookCourtAiTabProps> = ({
     const venue = (venueProp || currentField || (location.state as any)?.venue) as Field | undefined;
 
     // === State ===
-    const [bookingMode, setBookingMode] = useState<'consecutive' | 'weekly'>('consecutive');
-    const [isAiMode, setIsAiMode] = useState(false);
+    const [bookingMode, setBookingMode] = useState<'consecutive' | 'weekly'>('weekly');
 
     // Shared Form Data
     const [formData, setFormData] = useState<BookingFormData>({
@@ -64,7 +61,7 @@ export const BookCourtAiTab: React.FC<BookCourtAiTabProps> = ({
         startDate: '',
         endDate: '',
         daysOfWeek: [],
-        numberOfWeeks: 4
+        numberOfWeeks: 2
     });
 
     // Conflict Handling State
@@ -125,11 +122,18 @@ export const BookCourtAiTab: React.FC<BookCourtAiTabProps> = ({
             if (res.type === 'switch' && res.courtId) {
                 dateOverrides[date] = { courtId: res.courtId };
             } else if (res.type === 'reschedule' && res.courtId && res.newStartTime && res.newEndTime) {
-                dateOverrides[date] = {
-                    courtId: res.courtId,
+                const override: any = {
                     startTime: res.newStartTime,
                     endTime: res.newEndTime
                 };
+
+                // Only include courtId if it's different from base payload
+                // This prevents backend from treating it as a "court switch" if strictly validating
+                if (res.courtId !== basePayload.courtId) {
+                    override.courtId = res.courtId;
+                }
+
+                dateOverrides[date] = override;
             }
         });
 
@@ -155,73 +159,27 @@ export const BookCourtAiTab: React.FC<BookCourtAiTabProps> = ({
                     <p className="text-gray-500">Hỗ trợ đặt lịch nhiều ngày và cố định hàng tuần</p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700">Nhập tự nhiên</span>
-                    <Button
-                        variant={isAiMode ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsAiMode(!isAiMode)}
-                        className={isAiMode ? "bg-purple-600 hover:bg-purple-700 text-white gap-2" : "gap-2"}
-                    >
-                        <Sparkles className="w-4 h-4" />
-                        {isAiMode ? "Đang bật" : "Bật nhập tự nhiên"}
-                    </Button>
-                </div>
+
             </div>
 
-            {/* Natural Language Input Section */}
-            {isAiMode && venue && (
-                <div className="animate-in slide-in-from-top-4 duration-300">
-                    <Card className="border-purple-200 bg-purple-50">
-                        <CardContent className="p-4">
-                            <NaturalLanguageInput
-                                fieldId={venue._id || (venue as any).id}
-                                onParsed={(data) => {
-                                    // Map ParsedData to our state
-                                    if (data.type === 'weekly') {
-                                        setBookingMode('weekly');
-                                        setWeeklyData({
-                                            startDate: data.startDate || '',
-                                            endDate: data.endDate || '',
-                                            daysOfWeek: data.weekdays || [],
-                                            numberOfWeeks: data.numberOfWeeks || 4
-                                        });
-                                    } else {
-                                        setBookingMode('consecutive');
-                                        setDateRange({
-                                            start: data.startDate || '',
-                                            end: data.endDate || ''
-                                        });
-                                    }
-                                    setFormData(prev => ({
-                                        ...prev,
-                                        startTime: data.startTime || prev.startTime,
-                                        endTime: data.endTime || prev.endTime,
-                                    }));
-                                    toast.success('Đã điền thông tin từ yêu cầu của bạn!');
-                                }}
-                            />
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
+
 
             {/* Main Tabs */}
             <Tabs value={bookingMode} onValueChange={(v) => setBookingMode(v as 'consecutive' | 'weekly')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 h-12 bg-gray-100 p-1 rounded-xl">
-                    <TabsTrigger
-                        value="consecutive"
-                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#00775C] data-[state=active]:shadow-sm font-medium transition-all"
-                    >
-                        <CalendarIcon className="w-4 h-4 mr-2" />
-                        Đặt nhiều ngày
-                    </TabsTrigger>
                     <TabsTrigger
                         value="weekly"
                         className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm font-medium transition-all"
                     >
                         <Repeat className="w-4 h-4 mr-2" />
                         Cố định hàng tuần
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="consecutive"
+                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#00775C] data-[state=active]:shadow-sm font-medium transition-all"
+                    >
+                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        Đặt nhiều ngày
                     </TabsTrigger>
                 </TabsList>
 

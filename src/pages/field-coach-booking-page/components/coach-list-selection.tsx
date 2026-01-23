@@ -13,9 +13,13 @@ interface CoachListSelectionProps {
     onSelect: (coachId: string, coachName: string, coachPrice: number) => void;
     onBack: () => void;
     initialSportFilter?: string;
+    // Availability filtering props
+    selectedDate?: string;
+    selectedStartTime?: string;
+    selectedEndTime?: string;
 }
 
-export const CoachListSelection = ({ onSelect, onBack, initialSportFilter }: CoachListSelectionProps) => {
+export const CoachListSelection = ({ onSelect, onBack, initialSportFilter, selectedDate, selectedStartTime, selectedEndTime }: CoachListSelectionProps) => {
     const dispatch = useAppDispatch();
     const { coaches, loading, error } = useAppSelector((state) => state.coach);
 
@@ -31,8 +35,13 @@ export const CoachListSelection = ({ onSelect, onBack, initialSportFilter }: Coa
         if (sportFilter && sportFilter !== "all") filters.sportType = sportFilter;
         if (districtFilter && districtFilter !== "all") filters.district = districtFilter;
 
+        // Add availability filtering if date/time provided
+        if (selectedDate) filters.date = selectedDate;
+        if (selectedStartTime) filters.startTime = selectedStartTime;
+        if (selectedEndTime) filters.endTime = selectedEndTime;
+
         dispatch(getCoaches(Object.keys(filters).length > 0 ? filters : undefined));
-    }, [dispatch, searchName, sportFilter, districtFilter]);
+    }, [dispatch, searchName, sportFilter, districtFilter, selectedDate, selectedStartTime, selectedEndTime]);
 
     // Client-side filtering for rating
     const filteredCoaches = coaches?.filter(coach => {

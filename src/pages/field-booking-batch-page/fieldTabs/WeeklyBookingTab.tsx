@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Repeat } from 'lucide-react';
+import { Repeat, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { WeeklyPatternSelector } from "@/components/booking/WeeklyPatternSelector";
 import { Loading } from '@/components/ui/loading';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'react-toastify';
 import logger from '@/utils/logger';
 import { useAppDispatch } from '@/store/hook';
@@ -224,6 +225,11 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
             return;
         }
 
+        if (weeklyData.numberOfWeeks > 2) {
+            toast.error('Thời gian đặt sân tối đa là 2 tuần');
+            return;
+        }
+
         setIsValidating(true);
 
         // Handle both 'id' and '_id' field names for venue, ensure it's a string
@@ -238,6 +244,8 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
             endTime: formData.endTime,
             numberOfWeeks: weeklyData.numberOfWeeks || 4,
         };
+
+        console.log('[WEEKLY BOOKING] Payload:', payload);
 
         try {
             // VALIDATE only - don't create booking yet
@@ -265,7 +273,7 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
                     data: { ...payload, summary }
                 });
             } else {
-                toast.error(error.message || 'Co loi xay ra khi kiem tra lich');
+                toast.error(error.message || 'Có lỗi xảy ra khi kiểm tra lịch');
             }
         } finally {
             setIsValidating(false);
@@ -281,7 +289,7 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
     return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-8 space-y-6">
-                <Card className="border-none shadow-sm bg-white rounded-xl overflow-hidden">
+                <Card className="border border-gray-200 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl overflow-hidden">
                     <CardContent className="p-0">
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-blue-100">
                             <div className="flex items-center gap-3 mb-4">
@@ -294,7 +302,7 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-6">
+                            <div className="grid grid-cols-1 gap-6 p-6">
                                 {/* Court Selection */}
                                 <div className="space-y-2">
                                     <Label className="text-sm font-medium text-gray-700">Chọn sân con</Label>
@@ -311,8 +319,8 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
                                                         setFormData(prev => ({ ...prev, courtId, courtName: court.name }));
                                                     }}
                                                     className={`px-4 py-2 rounded-lg border transition-colors ${formData.courtId === ((court as any).id || court._id)
-                                                        ? 'bg-emerald-600 text-white border-emerald-600'
-                                                        : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-500'
+                                                        ? 'bg-blue-600 text-white border-blue-600'
+                                                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-500'
                                                         }`}
                                                 >
                                                     {court.name}
@@ -331,6 +339,7 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
                                     onStartDateChange={(date) => setWeeklyData(prev => ({ ...prev, startDate: date || '' }))}
                                 />
 
+                                {/* Time Slot Selection */}
                                 <div className="space-y-3">
                                     <Label className="text-sm font-medium text-gray-700">Chọn khung giờ cố định</Label>
 
@@ -359,15 +368,19 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
                                                     const startD = new Date(weeklyData.startDate);
                                                     const dayName = dayNames[startD.getDay()];
 
-                                                    let operatingHour = venue.operatingHours?.find(h => h && h.day && h.day.toLowerCase() === dayName);
+                                                    const operatingHour = venue.operatingHours?.find(h => h && h.day && h.day.toLowerCase() === dayName);
 
                                                     if (!operatingHour) {
-                                                        const firstAvailable = venue.operatingHours?.find(h => h && h.start && h.end);
-                                                        if (firstAvailable) {
-                                                            operatingHour = firstAvailable;
-                                                        } else {
-                                                            operatingHour = { start: '05:00', end: '23:00', day: dayName, duration: 0 };
-                                                        }
+                                                        return (
+                                                            <Alert variant="destructive" className="mt-4">
+                                                                <AlertCircle className="h-4 w-4" />
+                                                                <AlertTitle>Không có giờ hoạt động</AlertTitle>
+                                                                <AlertDescription>
+                                                                    Sân chưa được cấu hình giờ hoạt động cho {WEEKDAY_LABEL_MAP[dayName] || dayName}. 
+                                                                    Vui lòng liên hệ chủ sân hoặc chọn ngày khác.
+                                                                </AlertDescription>
+                                                            </Alert>
+                                                        );
                                                     }
 
                                                     const slotDuration = venue.slotDuration || 60;
@@ -575,14 +588,14 @@ export const WeeklyBookingTab: React.FC<WeeklyBookingTabProps> = ({
             {/* Right Column: Summary & Validation */}
             <div className="md:col-span-4 space-y-6">
                 <div className="sticky top-24">
-                    <Card className="border shadow-lg bg-white/95 backdrop-blur-sm z-20">
+                    <Card className="border shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm z-20">
                         <CardHeader className="pb-3 border-b bg-blue-50/50">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <Repeat className="w-5 h-5 text-blue-700" />
                                 Thông tin lịch cố định
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4 pt-4">
+                        <CardContent className="space-y-4 pt-4 bg-gradient-to-r from-blue-50 to-indigo-50">
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between py-1 border-b border-dashed">
                                     <span className="text-gray-500">Sân:</span>

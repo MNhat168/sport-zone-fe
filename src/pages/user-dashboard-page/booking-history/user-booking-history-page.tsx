@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,11 +23,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useAppSelector, useAppDispatch } from "@/store/hook"
-import { getMyBookings, cancelFieldBooking } from "@/features/booking/bookingThunk"
+import { useAppDispatch } from "@/store/hook"
+import { getCancellationInfo } from "@/features/booking/bookingThunk"
+import { useUserBookings } from "@/hooks/queries/useUserBookings"
+import { useCancelBooking } from "@/hooks/mutations/useUserBookingMutations"
 import type { Booking } from "@/types/booking-type"
 import BookingDetailModal from "@/components/pop-up/booking-detail-modal"
 import logger from "@/utils/logger"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
@@ -88,11 +92,6 @@ export default function UserBookingsPage() {
     }
   }
 
-  const bookingState = useAppSelector((state) => state?.booking)
-  const bookings = bookingState?.bookings || []
-  const pagination = bookingState?.pagination || null
-  const loadingBookings = bookingState?.loadingBookings || false
-  const error = bookingState?.error || null
 
   const [activeTab, setActiveTab] = useState<"confirmed" | "pending" | "cancelled">("confirmed")
   const [searchTerm, setSearchTerm] = useState("")
@@ -106,7 +105,7 @@ export default function UserBookingsPage() {
   const [pageSize, setPageSize] = useState(10)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [confirmState, setConfirmState] = useState<{ open: boolean; action: 'cancel' | null; bookingId: string | null }>({
+  const [confirmState, setConfirmState] = useState<{ open: boolean; action: 'cancel' | null; bookingId: string | null; cancellationInfo?: any }>({
     open: false,
     action: null,
     bookingId: null
@@ -125,52 +124,42 @@ export default function UserBookingsPage() {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Load bookings when component mounts and when filters change
-  useEffect(() => {
-    const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter)
+  // Calculate date range from time filter
+  const { startDate, endDate } = useMemo(() => getDateRangeFromTimeFilter(timeFilter), [timeFilter])
 
-    const params: any = {
-      page: currentPage,
-      limit: pageSize,
-      startDate,
-      endDate,
-      search: debouncedSearch
-    }
-
-    // Map activeTab to API status
-    // Matching logic from Field Owner: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-    // Note: Field Owner splits into different pages/logic, but for User we combine params.
-    if (activeTab === "pending") {
-      params.status = "pending"
-    } else if (activeTab === "confirmed") {
-      // "confirmed" tab usually implies confirmed bookings, possibly completed too?
-      // For now, let's keep it strict to "confirmed" unless user feedback says otherwise.
-      // Reference single-bookings had: status: activeTab
-      params.status = "confirmed"
-    } else if (activeTab === "cancelled") {
-      params.status = "cancelled"
-    }
-
-    // Map viewType to API type and recurring filter
+  // Map viewType to API params
+  const { type, recurringFilter } = useMemo(() => {
     if (viewType === "courts") {
-      params.type = "field"
-      params.recurringFilter = "none" // Single bookings only
+      return { type: "field" as const, recurringFilter: "none" as const }
     } else if (viewType === "batch") {
-      // Batch bookings are typically consecutive days or similar, treated as recurring group?
-      // If "batch" means "Multiple Courts/Recurring" from earlier context:
-      params.type = "field"
-      params.recurringFilter = "only" // Treat batch as recurring group for now
+      return { type: "field" as const, recurringFilter: "only" as const }
     } else if (viewType === "recurring") {
-      params.type = "field"
-      params.recurringFilter = "only" // Recurring bookings only
+      return { type: "field" as const, recurringFilter: "only" as const }
     } else if (viewType === "coaches") {
-      params.type = "coach"
+      return { type: "coach" as const, recurringFilter: undefined }
     } else if (viewType === "combined") {
-      params.type = "field_coach"
+      return { type: "field_coach" as const, recurringFilter: undefined }
     }
+    return { type: "field" as const, recurringFilter: "none" as const }
+  }, [viewType])
 
-    dispatch(getMyBookings(params))
-  }, [dispatch, activeTab, viewType, currentPage, pageSize, timeFilter, debouncedSearch])
+  // Use TanStack Query for data fetching
+  const { data: response, isLoading, error } = useUserBookings({
+    page: currentPage,
+    limit: pageSize,
+    startDate,
+    endDate,
+    search: debouncedSearch,
+    status: activeTab,
+    type,
+    recurringFilter,
+  })
+
+  const bookings = response?.bookings || []
+  const pagination = response?.pagination
+
+  // Mutation hook for cancel booking
+  const cancelMutation = useCancelBooking()
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -257,8 +246,16 @@ export default function UserBookingsPage() {
     return typeof court === 'string' ? court : court?._id
   }
 
-  const handleCancelBooking = (bookingId: string) => {
-    setConfirmState({ open: true, action: 'cancel', bookingId })
+  const handleCancelBooking = async (bookingId: string) => {
+    try {
+      // Fetch cancellation info before showing confirmation
+      const cancellationInfo = await dispatch(getCancellationInfo({ bookingId, role: 'user' })).unwrap()
+      setConfirmState({ open: true, action: 'cancel', bookingId, cancellationInfo })
+    } catch (error: any) {
+      logger.error('Failed to get cancellation info:', error)
+      // Still show dialog but without cancellation info
+      setConfirmState({ open: true, action: 'cancel', bookingId })
+    }
   }
 
   const handleConfirmAction = async () => {
@@ -270,45 +267,13 @@ export default function UserBookingsPage() {
         const booking = bookings.find((b) => b._id === bookingId)
         const courtId = getCourtIdFromBooking(booking)
 
-        await dispatch(
-          cancelFieldBooking({
-            id: bookingId,
-            payload: courtId ? { courtId } : undefined,
-          })
-        ).unwrap()
-
-        // Refresh bookings after cancellation
-        const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter)
-        const params: any = {
-          page: currentPage,
-          limit: pageSize,
-          status: activeTab,
-          startDate,
-          endDate,
-          search: debouncedSearch
-        }
-
-        if (viewType === "courts") {
-          params.type = "field"
-          params.recurringFilter = "none"
-        } else if (viewType === "batch") {
-          params.type = "field"
-          params.recurringFilter = "only"
-        } else if (viewType === "recurring") {
-          params.type = "field"
-          params.recurringFilter = "only"
-        } else if (viewType === "coaches") {
-          params.type = "coach"
-        } else if (viewType === "combined") {
-          params.type = "field_coach"
-        }
-
-        dispatch(getMyBookings(params))
+        await cancelMutation.mutateAsync({ bookingId, courtId })
+        // No manual refresh needed! Cache invalidation handles it automatically
       }
     } catch (error) {
       logger.error('Failed to perform action:', error)
     } finally {
-      setConfirmState({ open: false, action: null, bookingId: null })
+      setConfirmState({ open: false, action: null, bookingId: null, cancellationInfo: undefined })
     }
   }
 
@@ -432,7 +397,7 @@ export default function UserBookingsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {loadingBookings ? (
+                      {isLoading ? (
                         <tr>
                           <td colSpan={6} className="py-8 text-center">
                             <div className="flex flex-col items-center justify-center gap-3">
@@ -499,7 +464,7 @@ export default function UserBookingsPage() {
                               </td>
 
                               <td className="py-4 px-2">
-                                {['pending', 'confirmed'].includes(booking.status.toLowerCase()) && (
+                                {['pending', 'confirmed'].includes(booking.status.toLowerCase()) && booking.status.toLowerCase() !== 'completed' && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -508,6 +473,9 @@ export default function UserBookingsPage() {
                                   >
                                     Hủy
                                   </Button>
+                                )}
+                                {booking.status.toLowerCase() === 'completed' && (
+                                  <span className="text-xs text-gray-400">Không thể hủy</span>
                                 )}
                               </td>
                             </tr>
@@ -578,18 +546,56 @@ export default function UserBookingsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận hủy đặt sân</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>Bạn có chắc chắn muốn hủy đặt sân này không? Hành động này không thể hoàn tác.</p>
-              <p className="text-sm text-yellow-600 font-medium bg-yellow-50 p-3 rounded-md border border-yellow-200">
-                Lưu ý: Bạn chỉ được hoàn tiền từ chủ sân / huấn luyện viên khi hủy đặt trước 12h tính từ thời điểm bắt đầu slot bạn đặt.
-              </p>
+            <AlertDialogDescription className="space-y-3">
+              {confirmState.cancellationInfo && !confirmState.cancellationInfo.eligibility?.allowed ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Không thể hủy booking này</AlertTitle>
+                  <AlertDescription>
+                    {confirmState.cancellationInfo.eligibility?.errorMessage || 'Booking này không thể được hủy.'}
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <>
+                  <p>Bạn có chắc chắn muốn hủy đặt sân này không? Hành động này không thể hoàn tác.</p>
+                  {confirmState.cancellationInfo && (
+                    <div className="space-y-2">
+                      {confirmState.cancellationInfo.warningMessage && (
+                        <Alert variant={confirmState.cancellationInfo.refundPercentage === 0 ? "destructive" : "default"}>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            {confirmState.cancellationInfo.warningMessage}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      {confirmState.cancellationInfo.refundAmount !== undefined && (
+                        <div className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">
+                          <p className="font-medium text-blue-900">
+                            Số tiền hoàn lại: {confirmState.cancellationInfo.refundAmount.toLocaleString('vi-VN')} đ
+                            {confirmState.cancellationInfo.refundPercentage !== undefined && (
+                              <span> ({confirmState.cancellationInfo.refundPercentage}%)</span>
+                            )}
+                          </p>
+                          {confirmState.cancellationInfo.refundPercentage === 0 && (
+                            <p className="text-xs text-red-600 mt-1">
+                              Bạn sẽ không nhận lại tiền nếu hủy booking này.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Đóng</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAction} className="bg-red-600 hover:bg-red-700 text-white">
-              Xác nhận hủy
-            </AlertDialogAction>
+            {confirmState.cancellationInfo?.eligibility?.allowed !== false && (
+              <AlertDialogAction onClick={handleConfirmAction} className="bg-red-600 hover:bg-red-700 text-white">
+                Xác nhận hủy
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

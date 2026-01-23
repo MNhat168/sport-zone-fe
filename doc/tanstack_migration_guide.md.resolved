@@ -1,0 +1,449 @@
+# Hướng Dẫn Áp Dụng TanStack Query + Redux cho User Booking List
+
+## Tổng Quan
+
+Tài liệu này hướng dẫn cách áp dụng pattern **TanStack Query + Redux** từ Field Owner Dashboard vào User Booking List để giảm việc reload trang và tối ưu UX.
+
+## Kiến Trúc Hiện Tại vs Mục Tiêu
+
+### Hiện Tại (User Booking)
+- Sử dụng Redux thunks (`getMyBookings`, `cancelFieldBooking`) để fetch và mutate data
+- Manual reload sau mỗi action
+- Không có automatic background refetch
+- Loading state phụ thuộc hoàn toàn vào Redux
+
+### Mục Tiêu (Pattern từ Field Owner)
+- **TanStack Query** cho server state (fetch, cache, refetch)
+- **Redux** chỉ cho global UI state (nếu cần)
+- Automatic background refetch mỗi 30s
+- Optimistic updates và cache invalidation
+- Không loading flicker khi refetch
+
+---
+
+## Bước 1: Tạo Query Hooks
+
+### 1.1. Tạo File Query Hook
+
+Tạo file: `FE/src/hooks/queries/useUserBookings.ts`
+
+```typescript
+import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { bookingAPI } from '@/features/booking/bookingAPI';
+import type { BookingQueryParams } from '@/types/booking-type';
+
+// Query key factory for user bookings
+export const userBookingsKeys = {
+    all: ['userBookings'] as const,
+    lists: () => [...userBookingsKeys.all, 'list'] as const,
+    list: (params: BookingQueryParams) =>
+        [...userBookingsKeys.lists(), params] as const,
+    detail: (id: string) => [...userBookingsKeys.all, 'detail', id] as const,
+};
+
+/**
+ * Hook for fetching user bookings with automatic background refetch
+ * Replaces getMyBookings thunk
+ */
+export function useUserBookings(
+    params: BookingQueryParams,
+    options?: Partial<UseQueryOptions<any, Error, any, any>>
+) {
+    return useQuery({
+        queryKey: userBookingsKeys.list(params),
+        queryFn: async () => {
+            const response = await bookingAPI.getMyBookings(params);
+            return response;
+        },
+        // Only re-render when data or error actually changes
+        notifyOnChangeProps: ['data', 'error'] as const,
+        // Automatic background refetch every 30 seconds
+        refetchInterval: 30000,
+        // Don't refetch in background when window is not focused
+        refetchIntervalInBackground: false,
+        // Keep previous data while fetching new data (no loading flicker)
+        placeholderData: (previousData) => previousData,
+        ...options,
+    });
+}
+
+/**
+ * Hook for fetching single booking details
+ */
+export function useUserBookingDetail(
+    bookingId: string,
+    options?: Partial<UseQueryOptions<any, Error, any, any>>
+) {
+    return useQuery({
+        queryKey: userBookingsKeys.detail(bookingId),
+        queryFn: () => bookingAPI.getBookingDetail(bookingId),
+        enabled: !!bookingId,
+        ...options,
+    });
+}
+```
+
+### 1.2. Kiểm Tra/Tạo Booking API
+
+Đảm bảo [FE/src/features/booking/bookingAPI.ts](file:///e:/Capstone-project/FE/src/features/booking/bookingAPI.ts) export các methods cần thiết:
+
+```typescript
+// Example structure
+export const bookingAPI = {
+    getMyBookings: async (params: BookingQueryParams) => {
+        // API call implementation
+    },
+    getBookingDetail: async (bookingId: string) => {
+        // API call implementation
+    },
+    // ... other methods
+};
+```
+
+---
+
+## Bước 2: Tạo Mutation Hooks
+
+### 2.1. Tạo File Mutation Hook
+
+Tạo file: `FE/src/hooks/mutations/useUserBookingMutations.ts`
+
+```typescript
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { bookingAPI } from '@/features/booking/bookingAPI';
+import { userBookingsKeys } from '../queries/useUserBookings';
+import { toast } from 'sonner';
+
+/**
+ * Mutation hook for canceling a booking
+ * Automatically invalidates booking list cache on success
+ */
+export function useCancelBooking() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ bookingId, courtId }: { bookingId: string; courtId?: string }) =>
+            bookingAPI.cancelBooking({ id: bookingId, payload: courtId ? { courtId } : undefined }),
+        onSuccess: () => {
+            // Invalidate all booking lists to trigger refetch
+            queryClient.invalidateQueries({
+                queryKey: userBookingsKeys.all
+            });
+            toast.success('Đã hủy đặt sân thành công');
+        },
+        onError: (error: any) => {
+            toast.error(error?.message || 'Có lỗi xảy ra khi hủy đặt sân');
+        },
+    });
+}
+
+/**
+ * Additional mutations if needed
+ */
+export function useRateBooking() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ bookingId, rating }: { bookingId: string; rating: number }) =>
+            bookingAPI.rateBooking(bookingId, rating),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: userBookingsKeys.all
+            });
+            toast.success('Đã đánh giá thành công');
+        },
+        onError: (error: any) => {
+            toast.error(error?.message || 'Có lỗi xảy ra khi đánh giá');
+        },
+    });
+}
+```
+
+---
+
+## Bước 3: Refactor User Booking Page
+
+### 3.1. Import TanStack Query Hooks
+
+Trong [user-booking-history-page.tsx](file:///e:/Capstone-project/FE/src/pages/user-dashboard-page/booking-history/user-booking-history-page.tsx), thay thế imports:
+
+```typescript
+// BEFORE (Redux thunks)
+import { useAppSelector, useAppDispatch } from "@/store/hook"
+import { getMyBookings, cancelFieldBooking } from "@/features/booking/bookingThunk"
+
+// AFTER (TanStack Query hooks)
+import { useUserBookings } from "@/hooks/queries/useUserBookings";
+import { useCancelBooking } from "@/hooks/mutations/useUserBookingMutations";
+import { getCancellationInfo } from "@/features/booking/bookingThunk"; // Keep for cancellation info
+import { useAppDispatch } from "@/store/hook"; // Only if needed for getCancellationInfo
+```
+
+### 3.2. Thay Thế Data Fetching Logic
+
+```typescript
+// BEFORE (Redux)
+const dispatch = useAppDispatch()
+const bookingState = useAppSelector((state) => state?.booking)
+const bookings = bookingState?.bookings || []
+const pagination = bookingState?.pagination || null
+const loadingBookings = bookingState?.loadingBookings || false
+const error = bookingState?.error || null
+
+useEffect(() => {
+    dispatch(getMyBookings(params))
+}, [dispatch, activeTab, viewType, currentPage, pageSize, timeFilter, debouncedSearch])
+
+// AFTER (TanStack Query)
+const { startDate, endDate } = useMemo(() => getDateRangeFromTimeFilter(timeFilter), [timeFilter]);
+
+const { data: response, isLoading, error } = useUserBookings({
+    page: currentPage,
+    limit: pageSize,
+    startDate,
+    endDate,
+    search: debouncedSearch,
+    status: activeTab,
+    type: viewType === "courts" ? "field" : viewType === "coaches" ? "coach" : "field_coach",
+    recurringFilter: viewType === "courts" ? "none" : viewType === "batch" || viewType === "recurring" ? "only" : undefined,
+});
+
+const bookings = response?.data?.bookings || [];
+const pagination = response?.data?.pagination;
+```
+
+> ⚠️ **Lưu ý**: `useUserBookings` tự động refetch khi params thay đổi, không cần `useEffect` thủ công!
+
+### 3.3. Thay Thế Mutation Logic
+
+```typescript
+// BEFORE (Redux thunk)
+const handleConfirmAction = async () => {
+    const { action, bookingId } = confirmState
+    if (!bookingId || !action) return
+
+    try {
+        if (action === 'cancel') {
+            const booking = bookings.find((b) => b._id === bookingId)
+            const courtId = getCourtIdFromBooking(booking)
+
+            await dispatch(
+                cancelFieldBooking({
+                    id: bookingId,
+                    payload: courtId ? { courtId } : undefined,
+                })
+            ).unwrap()
+
+            // Manual refresh
+            dispatch(getMyBookings(params))
+        }
+    } catch (error) {
+        logger.error('Failed to perform action:', error)
+    } finally {
+        setConfirmState({ open: false, action: null, bookingId: null })
+    }
+}
+
+// AFTER (TanStack Mutation)
+const cancelMutation = useCancelBooking();
+
+const handleConfirmAction = async () => {
+    const { action, bookingId } = confirmState
+    if (!bookingId || !action) return
+
+    try {
+        if (action === 'cancel') {
+            const booking = bookings.find((b) => b._id === bookingId)
+            const courtId = getCourtIdFromBooking(booking)
+
+            await cancelMutation.mutateAsync({ bookingId, courtId })
+            // No manual refresh needed! Cache invalidation handles it automatically
+        }
+    } catch (error) {
+        logger.error('Failed to perform action:', error)
+    } finally {
+        setConfirmState({ open: false, action: null, bookingId: null, cancellationInfo: undefined })
+    }
+}
+```
+
+### 3.4. Update Loading States
+
+```typescript
+// BEFORE
+{loadingBookings ? (
+    <Loading />
+) : error ? (
+    <div>Lỗi: {error.message}</div>
+) : (
+    // Render bookings
+)}
+
+// AFTER
+{isLoading ? (
+    <Loading />
+) : error ? (
+    <div>Lỗi: {error?.message}</div>
+) : (
+    // Render bookings
+)}
+```
+
+---
+
+## Bước 4: Tối Ưu URL Sync (Tùy Chọn)
+
+Nếu muốn sync state với URL như Field Owner:
+
+### 4.1. Update Search Params Helper
+
+```typescript
+const [searchParams, setSearchParams] = useSearchParams();
+
+const currentPage = getNumberParam(searchParams, 'page', 1);
+const pageSize = getNumberParam(searchParams, 'limit', 10);
+const sortBy = (searchParams.get('sortBy') || 'createdAt') as 'createdAt' | 'date' | 'totalPrice';
+const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
+
+const updateSearchParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+        setSearchParams((prev) => {
+            const newParams = new URLSearchParams(prev);
+            for (const [key, value] of Object.entries(updates)) {
+                if (value === undefined || value === '') {
+                    newParams.delete(key);
+                } else {
+                    newParams.set(key, value);
+                }
+            }
+            return newParams;
+        });
+    },
+    [setSearchParams]
+);
+```
+
+### 4.2. Update Event Handlers
+
+```typescript
+const handlePageChange = (page: number) => {
+    updateSearchParams({ page: page === 1 ? undefined : String(page) });
+};
+
+const handlePageSizeChange = (size: number) => {
+    updateSearchParams({
+        limit: size === 10 ? undefined : String(size),
+        page: undefined, // Reset to page 1
+    });
+};
+
+const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    updateSearchParams({ page: undefined }); // Reset to page 1
+};
+```
+
+---
+
+## Bước 5: Cleanup (Xóa Code Cũ)
+
+### 5.1. Xóa Redux Selectors (Nếu Không Dùng)
+
+```typescript
+// Delete if no longer needed
+const bookingState = useAppSelector((state) => state?.booking)
+```
+
+### 5.2. Xóa Manual useEffect for Fetching
+
+```typescript
+// Delete this entire block
+useEffect(() => {
+    const params: any = { ... }
+    dispatch(getMyBookings(params))
+}, [dispatch, activeTab, viewType, currentPage, pageSize, timeFilter, debouncedSearch])
+```
+
+### 5.3. Xóa Manual Refresh Calls
+
+```typescript
+// Delete manual refresh after mutations
+dispatch(getMyBookings(params)) // Not needed anymore!
+```
+
+---
+
+## Bước 6: Testing Checklist
+
+- [ ] Bookings load correctly on page mount
+- [ ] Filters (search, time, status, view type) work correctly
+- [ ] Pagination works (page change, page size change)
+- [ ] Sorting works (if implemented)
+- [ ] Cancel booking mutation works
+- [ ] Cache automatically refreshes after cancel
+- [ ] Background refetch happens every 30s
+- [ ] No loading flicker during background refetch
+- [ ] Error handling displays correctly
+- [ ] URL params sync correctly (if implemented)
+
+---
+
+## Lợi Ích của Pattern Mới
+
+1. **Automatic Background Refetch**: Data tự động cập nhật mỗi 30s mà không cần user reload
+2. **No Loading Flicker**: Sử dụng [placeholderData](file:///e:/Capstone-project/FE/src/hooks/queries/useFieldOwnerBookings.ts#35-37) để giữ UI stable khi refetch
+3. **Smart Caching**: TanStack Query cache data theo query keys, giảm API calls
+4. **Optimistic Updates**: UI cập nhật ngay lập tức, không đợi API response
+5. **Automatic Cache Invalidation**: Sau mutation, cache tự động invalidate và refetch
+6. **Better UX**: User không cần manual refresh, data luôn fresh
+
+---
+
+## Tham Khảo
+
+- **Field Owner Implementation**: [FE/src/pages/field-owner-dashboard-page/single-bookings/single-bookings-page.tsx](file:///e:/Capstone-project/FE/src/pages/field-owner-dashboard-page/single-bookings/single-bookings-page.tsx)
+- **Query Hooks**: [FE/src/hooks/queries/useFieldOwnerBookings.ts](file:///e:/Capstone-project/FE/src/hooks/queries/useFieldOwnerBookings.ts)
+- **Mutation Hooks**: [FE/src/hooks/mutations/useBookingMutations.ts](file:///e:/Capstone-project/FE/src/hooks/mutations/useBookingMutations.ts)
+- **TanStack Query Docs**: https://tanstack.com/query/latest/docs/react/overview
+
+---
+
+## Lưu Ý Quan Trọng
+
+> **CRITICAL**: Đảm bảo `QueryClientProvider` đã được setup trong `main.tsx` trước khi sử dụng hooks!
+
+```typescript
+// main.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 1000 * 30, // 30 seconds
+            refetchOnWindowFocus: false,
+        },
+    },
+});
+
+<QueryClientProvider client={queryClient}>
+    <Provider store={store}>
+        <App />
+    </Provider>
+</QueryClientProvider>
+```
+
+> **TIP**: Cài `@tanstack/react-query-devtools` để debug queries dễ dàng hơn!
+
+```bash
+npm install @tanstack/react-query-devtools
+```
+
+```typescript
+// Add to app
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+<QueryClientProvider client={queryClient}>
+    <App />
+    <ReactQueryDevtools initialIsOpen={false} />
+</QueryClientProvider>
+```

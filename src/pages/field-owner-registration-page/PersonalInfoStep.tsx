@@ -3,12 +3,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Shield, CheckCircle2, XCircle } from "lucide-react"
+import { Shield, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 import { Loading } from "@/components/ui/loading"
 import { createEkycSession } from "@/features/field-owner-registration/registrationAPI"
 import { useEkycPolling } from "@/hooks/useEkycPolling"
 import { CustomFailedToast, CustomSuccessToast } from "@/components/toast/notificiation-toast"
 import type { CreateRegistrationRequestPayload } from "@/features/field-owner-registration"
+import { useAppSelector } from "@/store/hook"
 import logger from "@/utils/logger"
 interface PersonalInfoStepProps {
   formData: Partial<CreateRegistrationRequestPayload>
@@ -20,9 +21,16 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
   const { status, data, error, startPolling, stopPolling } = useEkycPolling()
   const popupRef = useRef<Window | null>(null)
   const popupCheckIntervalRef = useRef<number | null>(null)
+  const { currentRequest: fieldOwnerRequest } = useAppSelector((state) => state.registration)
+  const { currentRequest: coachRequest } = useAppSelector((state) => state.coachRegistration)
 
   const isEkycVerified = status === "verified"
   const isEkycPending = status === "polling"
+  
+  // Check if user has pending registration request (either field owner or coach)
+  const hasPendingFieldOwnerRegistration = fieldOwnerRequest && (fieldOwnerRequest.status === 'pending' || fieldOwnerRequest.status === 'approved')
+  const hasPendingCoachRegistration = coachRequest && (coachRequest.status === 'pending' || coachRequest.status === 'approved')
+  const hasPendingRegistration = hasPendingFieldOwnerRegistration || hasPendingCoachRegistration
 
   // Helper function to close popup reliably
   const closePopupSafely = useCallback(() => {
@@ -151,6 +159,12 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
   }, [formData.ekycSessionId, closePopupSafely])
 
   const handleStartEkyc = async () => {
+    // Prevent creating new eKYC if user has pending registration
+    if (hasPendingRegistration) {
+      CustomFailedToast("Bạn đã có đơn đăng ký đang được xử lý. Vui lòng chờ kết quả trước khi tạo đơn mới.")
+      return
+    }
+
     try {
       setIsCreatingSession(true)
 
@@ -248,24 +262,46 @@ export default function PersonalInfoStep({ formData, onFormDataChange }: Persona
             </div>
 
             {!isEkycVerified && !isEkycPending && (
-              <Button
-                type="button"
-                onClick={handleStartEkyc}
-                disabled={isCreatingSession}
-                className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm text-white"
-              >
-                {isCreatingSession ? (
-                  <>
-                    <Loading size={16} className="mr-2 inline-block" />
-                    Đang khởi tạo...
-                  </>
+              <>
+                {hasPendingRegistration ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs sm:text-sm font-medium text-amber-900">
+                          Bạn đã có đơn đăng ký đang được xử lý
+                        </p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          {hasPendingFieldOwnerRegistration && hasPendingCoachRegistration
+                            ? "Bạn có đơn đăng ký chủ sân và huấn luyện viên đang được xử lý. Vui lòng chờ kết quả trước khi tạo đơn mới."
+                            : hasPendingFieldOwnerRegistration
+                            ? "Bạn có đơn đăng ký chủ sân đang được xử lý. Vui lòng chờ kết quả trước khi tạo đơn mới."
+                            : "Bạn có đơn đăng ký huấn luyện viên đang được xử lý. Vui lòng chờ kết quả trước khi tạo đơn mới."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  <>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Xác thực ngay
-                  </>
+                  <Button
+                    type="button"
+                    onClick={handleStartEkyc}
+                    disabled={isCreatingSession}
+                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm text-white"
+                  >
+                    {isCreatingSession ? (
+                      <>
+                        <Loading size={16} className="mr-2 inline-block" />
+                        Đang khởi tạo...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Xác thực ngay
+                      </>
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </>
             )}
 
             {isEkycPending && (

@@ -36,8 +36,7 @@ export function UserDashboardTabs() {
     }
 
     // Check if any secondary tab is active
-    const isSecondaryTabActive = 
-        isActive("/user/combined-bookings") ||
+    const isSecondaryTabActive =
         isActive("/user/refund") ||
         isActive("/user-profile")
 
@@ -67,14 +66,14 @@ export function UserDashboardTabs() {
                     <div className="flex-1 max-w-[1320px] px-3 flex flex-col justify-start items-start">
                         <div className="w-full pb-6 flex justify-start items-end gap-7 overflow-x-auto tabs-scroll-container" style={{ scrollBehavior: 'smooth' }}>
                             {/* Primary Tabs - Visible with horizontal scroll */}
-                            <Button
+                            {/* <Button
                                 variant="ghost"
                                 className={baseTabClasses(isActive("/user-dashboard"))}
                                 onClick={() => handleNavigation("/user-dashboard")}
                             >
                                 <LayoutDashboard className="w-6 h-6" />
                                 <div className="text-center text-base font-medium">Tổng quan</div>
-                            </Button>
+                            </Button> */}
 
                             <Button
                                 variant="ghost"
@@ -112,16 +111,24 @@ export function UserDashboardTabs() {
                                 <div className="text-center text-base font-medium">Đặt HLV</div>
                             </Button>
 
+                            <Button
+                                variant="ghost"
+                                className={baseTabClasses(isActive("/user/combined-bookings"))}
+                                onClick={() => handleNavigation("/user/combined-bookings")}
+                            >
+                                <LayoutDashboard className="w-6 h-6" />
+                                <div className="text-center text-base font-medium">Combo Sân + HLV</div>
+                            </Button>
+
                             {/* Secondary Tabs - Dropdown Menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="ghost"
-                                        className={`w-48 h-32 p-4 rounded-[10px] border border-gray-200 flex flex-col justify-center items-center gap-2.5 transition-all duration-200 flex-shrink-0 ${
-                                            isSecondaryTabActive
+                                        className={`w-48 h-32 p-4 rounded-[10px] border border-gray-200 flex flex-col justify-center items-center gap-2.5 transition-all duration-200 flex-shrink-0 ${isSecondaryTabActive
                                                 ? "bg-emerald-700 text-white hover:bg-emerald-800"
                                                 : "bg-white text-black hover:bg-emerald-700 hover:text-white"
-                                        }`}
+                                            }`}
                                     >
                                         <MoreHorizontal className="w-6 h-6" />
                                         <div className="text-center text-base font-medium">Khác</div>
@@ -133,27 +140,10 @@ export function UserDashboardTabs() {
                                 >
                                     <DropdownMenuItem
                                         asChild
-                                        className={`cursor-pointer ${
-                                            isActive("/user/combined-bookings")
+                                        className={`cursor-pointer ${isActive("/user/refund")
                                                 ? "bg-emerald-50 text-emerald-700"
                                                 : "text-black hover:bg-gray-50"
-                                        }`}
-                                    >
-                                        <button
-                                            onClick={() => handleNavigation("/user/combined-bookings")}
-                                            className="w-full flex items-center p-2"
-                                        >
-                                            <User className="mr-2 h-5 w-5" />
-                                            <span className="text-base">Combo Sân + HLV</span>
-                                        </button>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        asChild
-                                        className={`cursor-pointer ${
-                                            isActive("/user/refund")
-                                                ? "bg-emerald-50 text-emerald-700"
-                                                : "text-black hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <button
                                             onClick={() => handleNavigation("/user/refund")}
@@ -165,11 +155,10 @@ export function UserDashboardTabs() {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         asChild
-                                        className={`cursor-pointer ${
-                                            isActive("/user-profile")
+                                        className={`cursor-pointer ${isActive("/user-profile")
                                                 ? "bg-emerald-50 text-emerald-700"
                                                 : "text-black hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         <button
                                             onClick={() => handleNavigation("/user-profile")}

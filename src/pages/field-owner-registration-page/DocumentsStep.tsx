@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Upload, X, FileText, Image as ImageIcon } from "lucide-react"
+import { Upload, X, FileText, Image as ImageIcon, FileArchive } from "lucide-react"
 import { CustomFailedToast } from "@/components/toast/notificiation-toast"
 import type { CreateRegistrationRequestPayload } from "@/features/field-owner-registration"
 
@@ -13,7 +13,7 @@ interface DocumentsStepProps {
 interface FileUploadState {
   file: File | null
   preview: string | null
-  fileType: 'image' | 'pdf' | null
+  fileType: 'image' | 'pdf' | 'document' | 'archive' | null
 }
 
 export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps) {
@@ -36,10 +36,22 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.documents])
 
-  const getFileType = (file: File | null): 'image' | 'pdf' | null => {
+  const getFileType = (file: File | null): 'image' | 'pdf' | 'document' | 'archive' | null => {
     if (file) {
       if (file.type.startsWith('image/')) return 'image'
       if (file.type === 'application/pdf') return 'pdf'
+      // Archive files
+      if (file.type === 'application/zip' ||
+        file.type === 'application/x-zip-compressed' ||
+        file.type === 'application/x-rar-compressed' ||
+        file.type === 'application/x-7z-compressed' ||
+        file.name.match(/\.(zip|rar|7z)$/i)) return 'archive'
+      // Document files
+      if (file.type === 'application/msword' ||
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.type === 'application/vnd.ms-excel' ||
+        file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        file.name.match(/\.(doc|docx|xls|xlsx)$/i)) return 'document'
     }
     return null
   }
@@ -81,11 +93,19 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
   }, [businessLicenseState.file])
 
   const validateFile = (file: File): boolean => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf']
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+      'application/pdf',
+      'application/zip', 'application/x-zip-compressed',
+      'application/x-rar-compressed', 'application/x-7z-compressed',
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]
+    const allowedExtensions = /\.(jpg|jpeg|png|webp|pdf|zip|rar|7z|doc|docx|xls|xlsx)$/i
     const maxSize = 10 * 1024 * 1024 // 10MB
 
-    if (!allowedTypes.includes(file.type)) {
-      CustomFailedToast('Chỉ chấp nhận file ảnh (JPG, PNG, WEBP) hoặc PDF')
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.test(file.name)) {
+      CustomFailedToast('Chỉ chấp nhận file ảnh (JPG, PNG, WEBP), tài liệu (PDF, DOC, DOCX, XLS, XLSX) hoặc file nén (ZIP, RAR, 7Z)')
       return false
     }
 
@@ -130,7 +150,7 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
   const handleRemoveFieldImage = (index: number) => {
     const nextImages = fieldImages.filter((_, i) => i !== index)
     setFieldImages(nextImages)
-    
+
     const documents = formData.documents as any || {}
     onFormDataChange({
       ...formData,
@@ -152,14 +172,14 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
     }
 
     // Determine file type
-    const fileType: 'image' | 'pdf' = file.type.startsWith('image/') ? 'image' : 'pdf'
+    const fileType = getFileType(file)
 
     // Create preview immediately for images
     let preview: string | null = null
     if (fileType === 'image') {
       preview = URL.createObjectURL(file)
-    } else if (fileType === 'pdf') {
-      // For PDF, show a placeholder or file name
+    } else {
+      // For non-images, show file name
       preview = file.name
     }
 
@@ -219,17 +239,19 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
     fieldName: 'businessLicense'
   ) => {
     const isImage = state.fileType === 'image' || (state.preview && (
-      state.preview.startsWith('blob:') || 
-      state.preview.startsWith('data:') || 
+      state.preview.startsWith('blob:') ||
+      state.preview.startsWith('data:') ||
       state.preview.match(/\.(jpg|jpeg|png|webp|gif)/i) ||
-      (state.preview.startsWith('http') && !state.preview.match(/\.pdf/i))
+      (state.preview.startsWith('http') && !state.preview.match(/\.(pdf|zip|rar|7z|doc|docx|xls|xlsx)/i))
     ))
     const isPdf = state.fileType === 'pdf' || (state.preview && state.preview.match(/\.pdf/i))
+    const isArchive = state.fileType === 'archive' || (state.preview && state.preview.match(/\.(zip|rar|7z)/i))
+    const isDocument = state.fileType === 'document' || (state.preview && state.preview.match(/\.(doc|docx|xls|xlsx)/i))
 
     return (
       <div className="space-y-2">
         <Label className="text-sm font-medium">{label}</Label>
-        
+
         {state.preview ? (
           <div className="relative border border-gray-300 rounded-lg p-4 bg-gray-50">
             {isImage ? (
@@ -266,6 +288,40 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+            ) : isArchive ? (
+              <div className="relative flex items-center justify-center py-8 bg-white rounded-lg border border-gray-200">
+                <div className="flex flex-col items-center space-y-2">
+                  <FileArchive className="w-12 h-12 text-purple-500" />
+                  <p className="text-sm font-medium">Archived File</p>
+                  <p className="text-xs text-gray-500">{state.preview}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                  onClick={() => handleRemove(setState, fieldName, state)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : isDocument ? (
+              <div className="relative flex items-center justify-center py-8 bg-white rounded-lg border border-gray-200">
+                <div className="flex flex-col items-center space-y-2">
+                  <FileText className="w-12 h-12 text-blue-500" />
+                  <p className="text-sm font-medium">Document</p>
+                  <p className="text-xs text-gray-500">{state.preview}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                  onClick={() => handleRemove(setState, fieldName, state)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             ) : null}
             <Button
               type="button"
@@ -283,7 +339,7 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
               <Upload className="w-10 h-10 text-gray-400" />
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-700">Chọn file để tải lên</p>
-                <p className="text-xs text-gray-500">Hỗ trợ: JPG, PNG, WEBP, PDF (tối đa 10MB)</p>
+                <p className="text-xs text-gray-500">Hỗ trợ: Ảnh (JPG, PNG, WEBP), Tài liệu (PDF, DOC, DOCX), File nén (ZIP, RAR, 7Z) - tối đa 10MB</p>
               </div>
             </div>
             <Button
@@ -300,7 +356,7 @@ export function DocumentsStep({ formData, onFormDataChange }: DocumentsStepProps
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+          accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf,.zip,.rar,.7z,.doc,.docx,.xls,.xlsx"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]

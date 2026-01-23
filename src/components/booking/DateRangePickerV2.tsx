@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatDateRange } from 'little-date'
 import { ChevronDownIcon } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
@@ -37,21 +37,48 @@ export const DateRangePickerV2: React.FC<DateRangePickerV2Props> = ({
         return undefined;
     });
 
+    // Sync internal state with props when they change externally
+    useEffect(() => {
+        if (startDate && endDate) {
+            setRange({
+                from: new Date(startDate),
+                to: new Date(endDate)
+            });
+        } else if (!startDate && !endDate) {
+            setRange(undefined);
+        }
+    }, [startDate, endDate]);
+
     const handleSelect = (selectedRange: DateRange | undefined) => {
         setRange(selectedRange);
-        if (selectedRange?.from) {
+        
+        // If no range selected, reset both dates
+        if (!selectedRange || (!selectedRange.from && !selectedRange.to)) {
+            onStartDateChange('');
+            onEndDateChange('');
+            return;
+        }
+        
+        if (selectedRange.from) {
             const offset = selectedRange.from.getTimezoneOffset();
             const correctedDate = new Date(selectedRange.from.getTime() - (offset * 60 * 1000));
             const dateStr = correctedDate.toISOString().split('T')[0];
             onStartDateChange(dateStr);
+        } else {
+            // If from is cleared, clear start date
+            onStartDateChange('');
         }
-        if (selectedRange?.to) {
+        
+        if (selectedRange.to) {
             const offset = selectedRange.to.getTimezoneOffset();
             const correctedDate = new Date(selectedRange.to.getTime() - (offset * 60 * 1000));
             const dateStr = correctedDate.toISOString().split('T')[0];
             onEndDateChange(dateStr);
-        } else if (selectedRange?.from && !selectedRange?.to) {
+        } else if (selectedRange.from && !selectedRange.to) {
             // If only start date is selected, clear end date
+            onEndDateChange('');
+        } else if (!selectedRange.from) {
+            // If from is cleared, also clear end date
             onEndDateChange('');
         }
     };
@@ -79,6 +106,21 @@ export const DateRangePickerV2: React.FC<DateRangePickerV2Props> = ({
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className='w-auto overflow-hidden p-0 bg-white' align='start'>
+                    <div className="p-2 border-b flex justify-end">
+                        {(startDate || endDate) && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setRange(undefined);
+                                    onStartDateChange('');
+                                    onEndDateChange('');
+                                }}
+                                className="text-xs text-gray-600 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100"
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
                     <Calendar
                         mode='range'
                         selected={range}

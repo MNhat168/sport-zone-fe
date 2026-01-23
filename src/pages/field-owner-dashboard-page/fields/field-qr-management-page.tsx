@@ -65,7 +65,32 @@ export default function FieldQRManagementPage() {
             toast.success('Đã tạo mã QR thành công!')
         } catch (error: any) {
             logger.error('Failed to generate QR:', error)
-            toast.error(error.response?.data?.message || 'Không thể tạo mã QR')
+            
+            // Extract error message with better handling
+            let errorMessage = 'Không thể tạo mã QR'
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message
+            } else if (error.message) {
+                errorMessage = error.message
+            }
+            
+            // Show more specific error messages
+            if (error.response?.status === 403) {
+                if (errorMessage.includes('not a field owner')) {
+                    errorMessage = 'Bạn chưa có hồ sơ chủ sân. Vui lòng liên hệ hỗ trợ để được hỗ trợ.'
+                } else if (errorMessage.includes('do not own')) {
+                    errorMessage = 'Bạn không có quyền tạo QR code cho sân này. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.'
+                } else {
+                    errorMessage = 'Bạn không có quyền thực hiện thao tác này. ' + errorMessage
+                }
+            } else if (error.response?.status === 404) {
+                errorMessage = 'Không tìm thấy sân. Vui lòng làm mới trang và thử lại.'
+            } else if (error.response?.status === 400) {
+                errorMessage = 'Dữ liệu không hợp lệ: ' + errorMessage
+            }
+            
+            toast.error(errorMessage)
         } finally {
             setGeneratingQR(null)
         }
@@ -82,7 +107,32 @@ export default function FieldQRManagementPage() {
             setRegeneratingField(null)
         } catch (error: any) {
             logger.error('Failed to regenerate QR:', error)
-            toast.error(error.response?.data?.message || 'Không thể tạo lại mã QR')
+            
+            // Extract error message with better handling
+            let errorMessage = 'Không thể tạo lại mã QR'
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message
+            } else if (error.message) {
+                errorMessage = error.message
+            }
+            
+            // Show more specific error messages
+            if (error.response?.status === 403) {
+                if (errorMessage.includes('not a field owner')) {
+                    errorMessage = 'Bạn chưa có hồ sơ chủ sân. Vui lòng liên hệ hỗ trợ để được hỗ trợ.'
+                } else if (errorMessage.includes('do not own')) {
+                    errorMessage = 'Bạn không có quyền tạo lại QR code cho sân này. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.'
+                } else {
+                    errorMessage = 'Bạn không có quyền thực hiện thao tác này. ' + errorMessage
+                }
+            } else if (error.response?.status === 404) {
+                errorMessage = 'Không tìm thấy sân. Vui lòng làm mới trang và thử lại.'
+            } else if (error.response?.status === 400) {
+                errorMessage = 'Dữ liệu không hợp lệ: ' + errorMessage
+            }
+            
+            toast.error(errorMessage)
         }
     }
 

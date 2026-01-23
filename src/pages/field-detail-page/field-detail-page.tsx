@@ -9,7 +9,7 @@ import { getFieldById } from "@/features/field/fieldThunk"
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { FooterComponent } from "@/components/footer/footer-component"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
-import { ChevronLeft, ChevronRight, MapPin, Share2, Star, CalendarDays, AlertCircle, MessageCircle, Sparkles, Bot, Bookmark } from "lucide-react"
+import { ChevronLeft, ChevronRight, MapPin, Share2, Star, AlertCircle, MessageCircle, Sparkles, Bot, Bookmark, Clock } from "lucide-react"
 import L from "leaflet"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Loading } from "@/components/ui/loading"
@@ -96,7 +96,9 @@ const FieldDetailPage: React.FC = () => {
       try {
         // refresh profile to sync bookmarkFields with server
         dispatch(getUserProfile())
-      } catch { }
+      } catch {
+        // Ignore errors when refreshing profile
+      }
     }
   }
 
@@ -120,7 +122,11 @@ const FieldDetailPage: React.FC = () => {
 
     if ((missingBookmarks || notIncluded) && !withinCooldown) {
       dispatch(getUserProfile()).finally(() => {
-        try { localStorage.setItem(PROFILE_REFRESH_KEY, String(Date.now())) } catch { }
+        try {
+          localStorage.setItem(PROFILE_REFRESH_KEY, String(Date.now()))
+        } catch {
+          // Ignore localStorage errors
+        }
       })
     }
   }, [id, authUser, dispatch])
@@ -272,6 +278,40 @@ const FieldDetailPage: React.FC = () => {
       0
     const n = Number(raw)
     return Number.isFinite(n) && n >= 0 ? n : 0
+  }, [currentField])
+
+  // Format operating hours for display
+  const formatOperatingHours = (operatingHours?: Array<{ day: string; start: string; end: string }>): string | null => {
+    if (!operatingHours || operatingHours.length === 0) {
+      return null
+    }
+
+    // Check if all days have the same hours
+    const firstHours = operatingHours[0]
+    const allSame = operatingHours.every(oh =>
+      oh.start === firstHours.start && oh.end === firstHours.end
+    )
+
+    if (allSame) {
+      return `${firstHours.start} - ${firstHours.end}`
+    }
+
+    // If different, show today's hours
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    const today = new Date().getDay()
+    const todayName = dayNames[today]
+    const todayHours = operatingHours.find(oh => oh.day === todayName)
+
+    if (todayHours) {
+      return `${todayHours.start} - ${todayHours.end}`
+    }
+
+    // Fallback: show first available hours
+    return `${operatingHours[0].start} - ${operatingHours[0].end}`
+  }
+
+  const operatingHoursDisplay = useMemo(() => {
+    return formatOperatingHours(currentField?.operatingHours as Array<{ day: string; start: string; end: string }> | undefined)
   }, [currentField])
 
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -627,6 +667,12 @@ const FieldDetailPage: React.FC = () => {
                   {currentField?.sportType ? getSportDisplayNameVN(currentField.sportType) : "-"}
                 </span>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Giờ hoạt động:</span>
+                <span className="font-medium">
+                  {operatingHoursDisplay || "-"}
+                </span>
+              </div>
               {/* <div className="flex items-center gap-2">
                                 <span className="text-gray-500">Giá:</span>
                                 <span className="font-medium">{currentField?.price || ((currentField as any)?.basePrice ? `${(currentField as any).basePrice.toLocaleString()}đ/giờ` : "-")}</span>
@@ -704,36 +750,23 @@ const FieldDetailPage: React.FC = () => {
 
                 <aside className="lg:col-span-1">
                   <div className="lg:sticky lg:top-20 space-y-4">
-                    {/* Info card */}
-                    <Card className="bg-white rounded-2xl shadow-md border border-gray-100">
-                      <CardHeader className="">
-                        <div className="flex items-center gap-3 justify-center">
-                          <div className="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-green-100 shrink-0">
-                            <CalendarDays className="h-6 w-6 text-green-600 block" />
-                          </div>
-                          <div className="text-left">
-                            <CardTitle className="text-lg font-semibold text-gray-900">
-                              Lịch trống
-                            </CardTitle>
-                            <CardDescription className="text-gray-600 text-sm mt-1">
-                              Kiểm tra lịch trống vào thời gian thuận tiện của bạn
-                            </CardDescription>
-                          </div>
+                    {/* Single Booking card */}
+                    <Card className="shadow-md border border-green-100 bg-white hover:shadow-lg transition-shadow">
+                      <CardHeader className="pb-4 border-b border-green-50">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-green-600"></div>
+                          <CardTitle className="text-sm font-semibold text-gray-800">
+                            Đặt sân lẻ
+                          </CardTitle>
                         </div>
+                        <CardDescription className="text-xs text-gray-500 mt-1">
+                          Đặt một khung giờ đơn lẻ
+                        </CardDescription>
                       </CardHeader>
-                    </Card>
-
-                    {/* Booking card */}
-                    <Card className="shadow-lg border-0 bg-white">
-                      <CardHeader className="pb-4">
-                        <CardTitle className="text-sm text-gray-700">
-                          Lịch trống
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-4 pt-4">
                         <div>
                           <p className="text-xs text-gray-500 mb-1">
-                            Đặt sân
+                            Giá thuê
                           </p>
                           <p className="text-3xl font-bold text-green-600">
                             {currentField.price ||
@@ -742,6 +775,12 @@ const FieldDetailPage: React.FC = () => {
                                 : "Liên hệ")}
                           </p>
                         </div>
+                        {operatingHoursDisplay && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Clock className="h-3 w-3" />
+                            <span>Giờ hoạt động: {operatingHoursDisplay}</span>
+                          </div>
+                        )}
                         {(currentField as any)?.isActive === false ? (
                           <div className="w-full bg-gray-100 text-gray-600 py-3 px-4 rounded-md text-center text-sm font-medium">
                             Sân thể thao tạm thời không hoạt động
@@ -753,7 +792,7 @@ const FieldDetailPage: React.FC = () => {
                                 state: { fieldId: currentField.id },
                               })
                             }
-                            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 h-auto"
+                            className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 h-auto font-medium shadow-sm"
                           >
                             Đặt sân ngay
                           </Button>
@@ -762,27 +801,39 @@ const FieldDetailPage: React.FC = () => {
                     </Card>
 
                     {/* Batch Booking card */}
-                    <Card className="shadow-lg border-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 border-l-4 border-indigo-500 overflow-hidden relative group transition-all hover:shadow-xl">
+                    <Card className="shadow-md border-2 border-green-200 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 overflow-hidden relative group transition-all hover:shadow-xl hover:border-green-300">
                       <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Sparkles className="h-24 w-24 text-indigo-600" />
+                        <Sparkles className="h-24 w-24 text-green-600" />
                       </div>
-                      <CardHeader className="pb-2 relative z-10">
-                        <CardTitle className="text-sm font-bold text-indigo-700 flex items-center gap-2">
-                          <Bot className="h-4 w-4" />
-                          ĐẶT SÂN HÀNG LOẠT
-                        </CardTitle>
+                      <CardHeader className="pb-3 border-b border-green-100 relative z-10">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></div>
+                          <CardTitle className="text-sm font-bold text-green-700 flex items-center gap-2">
+                            <Bot className="h-4 w-4 text-emerald-600" />
+                            Đặt sân hàng loạt
+                          </CardTitle>
+                        </div>
+                        <CardDescription className="text-xs text-green-600 mt-1 font-medium">
+                          Đặt nhiều khung giờ cùng lúc
+                        </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-3 relative z-10">
-                        <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                      <CardContent className="space-y-3 pt-4 relative z-10">
+                        <p className="text-[11px] text-slate-700 leading-relaxed font-medium">
                           Đặt nhiều khung giờ, nhiều ngày liên tục hoặc định kỳ hàng tuần một cách nhanh chóng và tiện lợi.
                         </p>
+                        {operatingHoursDisplay && (
+                          <div className="flex items-center gap-2 text-xs text-green-600 font-medium">
+                            <Clock className="h-3 w-3" />
+                            <span>Giờ hoạt động: {operatingHoursDisplay}</span>
+                          </div>
+                        )}
                         <Button
                           onClick={() =>
                             navigate("/field-booking-batch", {
                               state: { fieldId: currentField.id },
                             })
                           }
-                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md border-0 group/btn h-9 text-xs"
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md border-0 group/btn h-9 text-xs font-semibold"
                         >
                           <Sparkles className="mr-2 h-3.5 w-3.5 group-hover/btn:animate-pulse" />
                           Đặt sân hàng loạt

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useAppSelector } from "@/store/hook";
+import { useAppSelector, useAppDispatch } from "@/store/hook";
+import { getCancellationInfo } from "@/features/booking/bookingThunk";
 import { CoachDashboardLayout } from "@/components/layouts/coach-dashboard-layout";
 import {
     Table,
@@ -269,6 +270,10 @@ export default function CoachBookingsPage() {
     const [selectedBooking, setSelectedBooking] = useState<MappedBooking | null>(null);
     const [detailDialogOpen, setDetailDialogOpen] = useState(false);
     const [hasInitialData, setHasInitialData] = useState(false);
+    const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+    const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
+    const [cancellationInfo, setCancellationInfo] = useState<any>(null);
+    const dispatch = useAppDispatch();
 
 
 
@@ -381,17 +386,37 @@ export default function CoachBookingsPage() {
         if (!coachId) return;
 
         try {
+            // Fetch cancellation info before showing confirmation
+            const info = await dispatch(getCancellationInfo({ bookingId, role: 'coach' })).unwrap();
+            setCancellationInfo(info);
+            setCancelBookingId(bookingId);
+            setCancelConfirmOpen(true);
+        } catch (error: any) {
+            logger.error('Failed to get cancellation info:', error);
+            // Still show dialog but without cancellation info
+            setCancelBookingId(bookingId);
+            setCancelConfirmOpen(true);
+        }
+    };
+
+    const handleConfirmCancel = async () => {
+        if (!coachId || !cancelBookingId) return;
+
+        try {
             await axiosPrivate.patch(
-                `/bookings/coach/${coachId}/${bookingId}/cancel`
+                `/bookings/coach/${coachId}/${cancelBookingId}/cancel`
             );
 
             setBookings((prev) =>
                 prev.map((b) =>
-                    (b._id || b.id) === bookingId
+                    (b._id || b.id) === cancelBookingId
                         ? { ...b, status: "cancelled", transactionStatus: TransactionStatus.CANCELLED }
                         : b
                 )
             );
+            setCancelConfirmOpen(false);
+            setCancelBookingId(null);
+            setCancellationInfo(null);
         } catch (err) {
             logger.error("Cancel booking failed", err);
         }
@@ -815,6 +840,65 @@ export default function CoachBookingsPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Cancel Confirmation Dialog */}
+            <Dialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận hủy booking</DialogTitle>
+                        <DialogDescription className="space-y-3">
+                            {cancellationInfo && !cancellationInfo.eligibility?.allowed ? (
+                                <Alert variant="destructive">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription>
+                                        {cancellationInfo.eligibility?.errorMessage || 'Booking này không thể được hủy.'}
+                                    </AlertDescription>
+                                </Alert>
+                            ) : (
+                                <>
+                                    <p>Bạn có chắc chắn muốn hủy booking này không? Khách hàng sẽ nhận 100% refund.</p>
+                                    {cancellationInfo && (
+                                        <div className="space-y-2">
+                                            {cancellationInfo.warningMessage && (
+                                                <Alert variant={cancellationInfo.penaltyPercentage === 100 ? "destructive" : "default"}>
+                                                    <AlertCircle className="h-4 w-4" />
+                                                    <AlertDescription>
+                                                        {cancellationInfo.warningMessage}
+                                                    </AlertDescription>
+                                                </Alert>
+                                            )}
+                                            {cancellationInfo.penaltyAmount !== undefined && cancellationInfo.penaltyAmount > 0 && (
+                                                <div className="text-sm bg-red-50 p-3 rounded-md border border-red-200">
+                                                    <p className="font-medium text-red-900">
+                                                        Phí phạt: {cancellationInfo.penaltyAmount.toLocaleString('vi-VN')} đ
+                                                        {cancellationInfo.penaltyPercentage !== undefined && (
+                                                            <span> ({cancellationInfo.penaltyPercentage}%)</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => {
+                            setCancelConfirmOpen(false);
+                            setCancelBookingId(null);
+                            setCancellationInfo(null);
+                        }}>
+                            Đóng
+                        </Button>
+                        {cancellationInfo?.eligibility?.allowed !== false && (
+                            <Button variant="destructive" onClick={handleConfirmCancel}>
+                                Xác nhận hủy
+                            </Button>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </CoachDashboardLayout>
     );
 }

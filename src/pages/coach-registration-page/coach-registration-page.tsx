@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '@/store/hook';
-import { submitCoachRegistration, uploadCoachDocument, type CreateCoachRegistrationPayload } from '@/features/coach-registration';
+import { useAppDispatch, useAppSelector } from '@/store/hook';
+import { submitCoachRegistration, uploadCoachDocument, getMyCoachRegistration, type CreateCoachRegistrationPayload } from '@/features/coach-registration';
 import { toast } from 'react-toastify';
 import PersonalInfoStep from './PersonalInfoStep';
 import CoachProfileStep from './CoachProfileStep';
@@ -10,6 +10,8 @@ import ConfirmationStep from './ConfirmationStep';
 import { NavbarDarkComponent } from "@/components/header/navbar-dark-component"
 import { PageWrapper } from "@/components/layouts/page-wrapper"
 import PageHeader from "@/components/header-banner/page-header"
+import { Loading } from "@/components/ui/loading"
+import { Card, CardContent } from "@/components/ui/card"
 
 const STEPS = [
     { id: 1, name: 'Thông tin cá nhân & eKYC', component: PersonalInfoStep },
@@ -21,6 +23,7 @@ const STEPS = [
 const CoachRegistrationPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const { currentRequest, loading } = useAppSelector((state) => state.coachRegistration);
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,6 +43,26 @@ const CoachRegistrationPage: React.FC = () => {
         profilePhoto: undefined,
         certificationPhotos: [],
     });
+
+    // Check if user already has a pending registration request
+    useEffect(() => {
+        const checkExistingRegistration = async () => {
+            try {
+                await dispatch(getMyCoachRegistration()).unwrap();
+            } catch (error) {
+                // Ignore errors, just means no registration found
+            }
+        };
+        checkExistingRegistration();
+    }, [dispatch]);
+
+    // Redirect if user has pending or approved registration
+    useEffect(() => {
+        if (currentRequest && (currentRequest.status === 'pending' || currentRequest.status === 'approved')) {
+            toast.error("Bạn đã có đơn đăng ký đang được xử lý. Vui lòng chờ kết quả.");
+            navigate("/coach-registration-status");
+        }
+    }, [currentRequest, navigate]);
 
     const updateFormData = (data: Partial<CreateCoachRegistrationPayload>) => {
         setFormData(prev => ({ ...prev, ...data }));
@@ -71,6 +94,36 @@ const CoachRegistrationPage: React.FC = () => {
             setIsSubmitting(false);
         }
     };
+
+    // Show loading while checking registration status
+    if (loading) {
+        return (
+            <>
+                <NavbarDarkComponent />
+                <PageWrapper>
+                    <PageHeader
+                        title="Đăng ký làm Huấn Luyện Viên"
+                        breadcrumbs={[{ label: "Trang chủ", href: "/" }, { label: "Đăng ký huấn luyện viên" }]}
+                    />
+                    <div className="max-w-4xl mx-auto px-4 py-8">
+                        <Card>
+                            <CardContent className="pt-6">
+                                <div className="flex flex-col items-center justify-center py-10 gap-4">
+                                    <Loading size={48} className="text-green-600" />
+                                    <p className="text-center text-gray-600">Đang kiểm tra trạng thái đăng ký...</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </PageWrapper>
+            </>
+        );
+    }
+
+    // Don't render form if user has pending/approved registration
+    if (currentRequest && (currentRequest.status === 'pending' || currentRequest.status === 'approved')) {
+        return null;
+    }
 
     const CurrentStepComponent = STEPS[currentStep - 1].component;
 

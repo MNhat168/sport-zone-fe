@@ -474,6 +474,9 @@ const FieldCoachBookingPage = () => {
                         onSelect={handleCoachSelect}
                         onBack={handleCoachSelectBack}
                         initialSportFilter={bookingData.field.sportType}
+                        selectedDate={bookingData.field.date}
+                        selectedStartTime={bookingData.field.startTime}
+                        selectedEndTime={bookingData.field.endTime}
                     />
                 )}
 

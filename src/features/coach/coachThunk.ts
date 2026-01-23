@@ -115,6 +115,9 @@ export const getCoaches = createAsyncThunk<
         if (filters.minRate) queryParams.append("minRate", filters.minRate.toString());
         if (filters.maxRate) queryParams.append("maxRate", filters.maxRate.toString());
         if (filters.district) queryParams.append("district", filters.district);
+        if (filters.date) queryParams.append("date", filters.date);
+        if (filters.startTime) queryParams.append("startTime", filters.startTime);
+        if (filters.endTime) queryParams.append("endTime", filters.endTime);
 
         const url = queryParams.toString() ? `${COACHES_API}?${queryParams}` : COACHES_API;
         const response = await axiosPublic.get(url);

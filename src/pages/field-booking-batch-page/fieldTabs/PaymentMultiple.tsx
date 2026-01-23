@@ -61,6 +61,7 @@ export const PaymentMultiple: React.FC<PaymentMultipleProps> = ({
     const [bookingIds, setBookingIds] = useState<string[]>([]);
     const [summary, setSummary] = useState<any>(null);
     const [holdError, setHoldError] = useState<string | null>(null);
+    const [firstBooking, setFirstBooking] = useState<any>(null); // Store first booking for breakdown
 
     // Payment state
     const [payosWindow, setPayosWindow] = useState<Window | null>(null);
@@ -127,6 +128,58 @@ export const PaymentMultiple: React.FC<PaymentMultipleProps> = ({
             setHoldError('Lỗi khi khôi phục thông tin booking. Vui lòng quay lại và thử lại.');
         }
     }, []);
+
+    // Fetch first booking to get breakdown details (amenitiesFee, bookingAmount, platformFee)
+    useEffect(() => {
+        const fetchFirstBooking = async () => {
+            if (!heldBookingId || firstBooking) return;
+
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}`,
+                    { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+                );
+
+                if (response.ok) {
+                    const rawData = await response.json();
+                    const data = rawData.data || rawData;
+                    setFirstBooking(data);
+                    logger.debug('[PAYMENT MULTIPLE] Fetched first booking for breakdown:', data);
+                }
+            } catch (error) {
+                logger.warn('[PAYMENT MULTIPLE] Failed to fetch first booking for breakdown:', error);
+                // Continue without breakdown - will use summary only
+            }
+        };
+
+        fetchFirstBooking();
+    }, [heldBookingId, firstBooking]);
+
+    // Fetch first booking to get breakdown details (amenitiesFee, bookingAmount, platformFee)
+    useEffect(() => {
+        const fetchFirstBooking = async () => {
+            if (!heldBookingId || firstBooking) return;
+
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}`,
+                    { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+                );
+
+                if (response.ok) {
+                    const rawData = await response.json();
+                    const data = rawData.data || rawData;
+                    setFirstBooking(data);
+                    logger.debug('[PAYMENT MULTIPLE] Fetched first booking for breakdown:', data);
+                }
+            } catch (error) {
+                logger.warn('[PAYMENT MULTIPLE] Failed to fetch first booking for breakdown:', error);
+                // Continue without breakdown - will use summary only
+            }
+        };
+
+        fetchFirstBooking();
+    }, [heldBookingId, firstBooking]);
 
     // Clear session storage - defined before cancel handlers
     const clearBookingSession = useCallback(() => {
@@ -255,6 +308,68 @@ export const PaymentMultiple: React.FC<PaymentMultipleProps> = ({
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Calculate breakdown from summary and first booking
+    const calculateBreakdown = () => {
+        if (!summary) {
+            logger.warn('[PAYMENT MULTIPLE] No summary available for breakdown calculation');
+            return null;
+        }
+
+        const pricePerBooking = summary.pricePerBooking || summary.pricePerDay || 0;
+        const totalBookings = summary.totalBookings || bookingIds.length || 0;
+
+        logger.debug('[PAYMENT MULTIPLE] Calculating breakdown:', {
+            pricePerBooking,
+            totalBookings,
+            hasFirstBooking: !!firstBooking,
+            summary
+        });
+
+        // Try to get detailed breakdown from first booking
+        let amenitiesFeePerBooking = 0;
+        let bookingAmountPerBooking = 0;
+        let platformFeePerBooking = 0;
+
+        if (firstBooking) {
+            amenitiesFeePerBooking = firstBooking.amenitiesFee || 0;
+            bookingAmountPerBooking = firstBooking.bookingAmount || 0;
+            platformFeePerBooking = firstBooking.platformFee || 0;
+        } else {
+            // Fallback: calculate from pricePerBooking
+            // pricePerBooking = (courtPrice + amenitiesFee) * 1.05
+            // We need to reverse calculate, but we don't know amenitiesFee
+            // So we'll estimate: assume amenitiesFee = 0 for now
+            const subtotalPerBooking = pricePerBooking / 1.05;
+            platformFeePerBooking = pricePerBooking - subtotalPerBooking;
+            bookingAmountPerBooking = subtotalPerBooking;
+            amenitiesFeePerBooking = 0; // Unknown without booking data
+        }
+
+        const courtPricePerBooking = bookingAmountPerBooking - amenitiesFeePerBooking;
+        const subtotalPerBooking = bookingAmountPerBooking;
+
+        const totalSubtotal = subtotalPerBooking * totalBookings;
+        const totalPlatformFee = platformFeePerBooking * totalBookings;
+        const totalAmenitiesFee = amenitiesFeePerBooking * totalBookings;
+
+        const breakdown = {
+            courtPricePerBooking,
+            amenitiesFeePerBooking,
+            platformFeePerBooking,
+            subtotalPerBooking,
+            pricePerBooking,
+            totalBookings,
+            totalSubtotal,
+            totalPlatformFee,
+            totalAmenitiesFee,
+            discount: summary.discount || { rate: 0, amount: 0 },
+            totalAmount: summary.totalAmount || 0
+        };
+
+        logger.debug('[PAYMENT MULTIPLE] Calculated breakdown:', breakdown);
+        return breakdown;
     };
 
     // Handle PayOS payment initiation
@@ -438,23 +553,35 @@ export const PaymentMultiple: React.FC<PaymentMultipleProps> = ({
     if (paymentSuccess) {
         return (
             <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
-                <Card className="border border-green-200 bg-green-50">
+                <Card className="border border-gray-200">
                     <CardContent className="p-8 text-center">
-                        <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                            <CheckCircle2 className="w-12 h-12 text-green-600" />
+                        <div className="mb-6">
+                            <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg
+                                    className="w-12 h-12 text-green-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </div>
                         </div>
                         <h2 className="text-3xl font-bold text-gray-900 mb-3">
                             Thanh toán thành công!
                         </h2>
                         <p className="text-lg text-gray-600 mb-6">
-                            Đã tạo {bookingIds.length || summary?.totalBookings || summary?.totalDates || 0} booking thành công.
-                            Chúng tôi đã gửi email xác nhận đến {bookingData?.email}.
+                            Đặt sân của bạn đã được xác nhận. Chúng tôi đã gửi email xác nhận đến {bookingData?.email}.
                         </p>
-
                         {summary && (
-                            <div className="bg-white rounded-lg p-6 mb-6 text-left max-w-md mx-auto border">
-                                <h3 className="font-semibold text-gray-900 mb-4">Tóm tắt đặt sân</h3>
-                                <div className="space-y-2 text-sm">
+                            <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left max-w-md mx-auto">
+                                <h3 className="font-semibold text-gray-900 mb-4">Thông tin đặt sân</h3>
+                                <div className="space-y-3 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-500">Sân:</span>
                                         <span className="font-medium">{currentField?.name}</span>
@@ -464,14 +591,17 @@ export const PaymentMultiple: React.FC<PaymentMultipleProps> = ({
                                         <span className="font-medium">{summary.totalBookings || summary.totalDates} buổi</span>
                                     </div>
                                     <div className="flex justify-between pt-3 border-t">
-                                        <span className="font-semibold">Tổng:</span>
+                                        <span className="font-semibold text-gray-900">Tổng:</span>
                                         <span className="font-semibold text-green-600">
-                                            {formatVND(summary.totalAmount)}
+                                            {formatVND(summary.totalAmount || 0)}
                                         </span>
                                     </div>
                                 </div>
                             </div>
                         )}
+                        <p className="text-sm text-gray-500">
+                            Bạn có thể đóng trang này hoặc kiểm tra lịch sử đặt sân trong tài khoản của bạn.
+                        </p>
                     </CardContent>
                 </Card>
             </div>
@@ -552,23 +682,79 @@ export const PaymentMultiple: React.FC<PaymentMultipleProps> = ({
                         </CardHeader>
                         <CardContent className="p-6 space-y-4">
                             {/* Pricing Breakdown */}
-                            {summary && (
-                                <>
-                                    <div className="flex justify-between py-2">
-                                        <span className="text-gray-500">Giá mỗi buổi:</span>
-                                        <span className="font-medium">
-                                            {formatVND(summary.pricePerDay || summary.pricePerBooking || 0)}
-                                        </span>
-                                    </div>
+                            {!summary ? (
+                                <div className="text-center py-4 text-gray-500">
+                                    <p className="text-sm">Đang tải thông tin thanh toán...</p>
+                                </div>
+                            ) : (() => {
+                                const breakdown = calculateBreakdown();
+                                if (!breakdown) {
+                                    return (
+                                        <div className="text-center py-4 text-gray-500">
+                                            <p className="text-sm">Không thể tính toán breakdown. Vui lòng thử lại.</p>
+                                        </div>
+                                    );
+                                }
 
-                                    <div className="flex justify-between py-3 border-t border-dashed text-lg">
-                                        <span className="font-semibold">Tổng cộng:</span>
-                                        <span className="font-bold text-emerald-600">
-                                            {formatVND(summary.totalAmount || 0)}
-                                        </span>
-                                    </div>
-                                </>
-                            )}
+                                return (
+                                    <>
+                                        {/* Per booking breakdown */}
+                                        <div className="space-y-2 pb-3 border-b border-dashed">
+                                            <h4 className="text-sm font-semibold text-gray-700">Chi phí mỗi buổi:</h4>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">Giá sân:</span>
+                                                <span className="font-medium">{formatVND(breakdown.courtPricePerBooking)}</span>
+                                            </div>
+                                            {breakdown.amenitiesFeePerBooking > 0 && (
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">Tiện ích:</span>
+                                                    <span className="font-medium">{formatVND(breakdown.amenitiesFeePerBooking)}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between text-sm font-semibold pt-2 border-t">
+                                                <span className="text-gray-700">Tạm tính/buổi:</span>
+                                                <span className="text-emerald-600">{formatVND(breakdown.subtotalPerBooking)}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Total breakdown */}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">Số buổi:</span>
+                                                <span className="font-semibold">{breakdown.totalBookings} buổi</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">Tạm tính:</span>
+                                                <span className="font-medium">{formatVND(breakdown.totalSubtotal)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">Phí dịch vụ (5%):</span>
+                                                <span className="font-medium">{formatVND(breakdown.totalPlatformFee)}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Discount */}
+                                        {breakdown.discount && (breakdown.discount.rate > 0 || breakdown.discount.amount > 0) && (
+                                            <div className="space-y-2 pt-2 border-t border-dashed">
+                                                <div className="flex justify-between text-sm text-green-600">
+                                                    <span>Giảm giá ({breakdown.discount.rate > 0 ? `${breakdown.discount.rate}%` : 'Voucher'}):</span>
+                                                    <span className="font-medium">-{formatVND(breakdown.discount.amount)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Grand Total */}
+                                        <div className="pt-3 border-t border-dashed">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-lg font-semibold text-gray-900">Tổng cộng:</span>
+                                                <span className="text-xl font-bold text-emerald-600">
+                                                    {formatVND(breakdown.totalAmount)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            })()}
 
                             {/* Payment Button */}
                             <Button

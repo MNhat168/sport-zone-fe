@@ -72,10 +72,18 @@ export const fieldOwnerBookingAPI = {
     },
 
     /**
+     * Get cancellation info for owner
+     */
+    async getOwnerCancellationInfo(bookingId: string) {
+        const response = await axiosPrivate.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/bookings/${bookingId}/cancellation-info?role=owner`);
+        return response.data;
+    },
+
+    /**
      * Reject/cancel a booking
      */
-    async ownerRejectBooking({ bookingId }: { bookingId: string }) {
-        const response = await axiosPrivate.patch(OWNER_REJECT_BOOKING_API(bookingId));
+    async ownerRejectBooking({ bookingId, reason }: { bookingId: string; reason?: string }) {
+        const response = await axiosPrivate.patch(OWNER_REJECT_BOOKING_API(bookingId), reason ? { reason } : {});
         return response.data;
     },
 };

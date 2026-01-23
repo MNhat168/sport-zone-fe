@@ -245,26 +245,46 @@ export function createBookingColumns(
         const booking = row.original;
 
         if (booking.status === "awaiting") {
-          return (
-            <div className="flex items-center gap-2">
+          // Only show Accept/Deny if handlers are provided
+          if (actions.onAccept || actions.onDeny) {
+            return (
+              <div className="flex items-center gap-2">
+                {actions.onAccept && (
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="bg-green-600 hover:bg-green-700 text-white h-8"
+                    onClick={() => actions.onAccept?.(booking.id)}
+                  >
+                    Chấp Nhận
+                  </Button>
+                )}
+                {actions.onDeny && (
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="h-8 bg-red-600 hover:bg-red-700 text-white"
+                    onClick={() => actions.onDeny?.(booking.id)}
+                  >
+                    Từ Chối
+                  </Button>
+                )}
+              </div>
+            );
+          }
+          // If no Accept/Deny handlers, show Cancel button if available
+          if (actions.onCancel) {
+            return (
               <Button
                 type="button"
-                variant="default"
-                className="bg-green-600 hover:bg-green-700 text-white h-8"
-                onClick={() => actions.onAccept?.(booking.id)}
-              >
-                Chấp Nhận
-              </Button>
-              <Button
-                type="button"
-                variant="default"
+                variant="destructive"
                 className="h-8 bg-red-600 hover:bg-red-700 text-white"
-                onClick={() => actions.onDeny?.(booking.id)}
+                onClick={() => actions.onCancel?.(booking.id)}
               >
-                Từ Chối
+                Hủy Đặt
               </Button>
-            </div>
-          );
+            );
+          }
         }
 
         if (booking.status === "accepted") {

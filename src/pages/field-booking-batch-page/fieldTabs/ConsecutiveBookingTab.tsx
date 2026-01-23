@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { DateRangePickerV2 } from "@/components/booking/DateRangePickerV2";
 import { Loading } from '@/components/ui/loading';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'react-toastify';
 import logger from '@/utils/logger';
 import { useAppDispatch } from '@/store/hook';
 import { validateConsecutiveDaysBooking } from "@/features/booking/bookingThunk";
 import type { Field } from '@/types/field-type';
+
+const WEEKDAY_LABEL_MAP: { [key: string]: string } = {
+    'monday': 'Thứ 2',
+    'tuesday': 'Thứ 3',
+    'wednesday': 'Thứ 4',
+    'thursday': 'Thứ 5',
+    'friday': 'Thứ 6',
+    'saturday': 'Thứ 7',
+    'sunday': 'Chủ nhật',
+};
 
 interface BookingFormData {
     date: string;
@@ -187,7 +198,22 @@ export const ConsecutiveBookingTab: React.FC<ConsecutiveBookingTabProps> = ({
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const dayName = dayNames[date.getDay()];
         const operatingDays = getOperatingDays();
-        return !operatingDays.includes(dayName);
+
+        // Check if it's an operating day
+        if (!operatingDays.includes(dayName)) return true;
+
+        // If start date is selected, disable dates more than 14 days from start
+        if (dateRange.start) {
+            const startDate = new Date(dateRange.start);
+            startDate.setHours(0, 0, 0, 0);
+
+            const diffTime = Math.abs(date.getTime() - startDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 14) return true;
+        }
+
+        return false;
     };
 
     const handleConsecutiveBooking = async () => {
@@ -211,6 +237,17 @@ export const ConsecutiveBookingTab: React.FC<ConsecutiveBookingTabProps> = ({
 
         if (endTotal <= startTotal) {
             toast.error('Giờ kết thúc phải sau giờ bắt đầu');
+            return;
+        }
+
+        // Validate max 14 days range
+        const startDate = new Date(dateRange.start);
+        const endDate = new Date(dateRange.end);
+        const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 14) {
+            toast.error('Thời gian đặt sân tối đa là 14 ngày (2 tuần)');
             return;
         }
 
@@ -267,7 +304,7 @@ export const ConsecutiveBookingTab: React.FC<ConsecutiveBookingTabProps> = ({
     return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-8 space-y-6">
-                <Card className="border-none shadow-sm bg-white rounded-xl overflow-hidden">
+                <Card className="border-none shadow-sm bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl overflow-hidden">
                     <CardContent className="p-0">
                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 border-b border-green-100">
                             <div className="flex items-center gap-3 mb-4">
@@ -280,7 +317,7 @@ export const ConsecutiveBookingTab: React.FC<ConsecutiveBookingTabProps> = ({
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
                                 {/* Court Selection */}
                                 <div className="space-y-2 col-span-1 md:col-span-2">
                                     <Label className="text-sm font-medium text-gray-700">Chọn sân con</Label>
@@ -357,15 +394,19 @@ export const ConsecutiveBookingTab: React.FC<ConsecutiveBookingTabProps> = ({
                                                     const startD = new Date(dateRange.start);
                                                     const dayName = dayNames[startD.getDay()];
 
-                                                    let operatingHour = venue.operatingHours?.find(h => h && h.day && h.day.toLowerCase() === dayName);
+                                                    const operatingHour = venue.operatingHours?.find(h => h && h.day && h.day.toLowerCase() === dayName);
 
                                                     if (!operatingHour) {
-                                                        const firstAvailable = venue.operatingHours?.find(h => h && h.start && h.end);
-                                                        if (firstAvailable) {
-                                                            operatingHour = firstAvailable;
-                                                        } else {
-                                                            operatingHour = { start: '05:00', end: '23:00', day: dayName, duration: 0 };
-                                                        }
+                                                        return (
+                                                            <Alert variant="destructive" className="mt-4">
+                                                                <AlertCircle className="h-4 w-4" />
+                                                                <AlertTitle>Không có giờ hoạt động</AlertTitle>
+                                                                <AlertDescription>
+                                                                    Sân chưa được cấu hình giờ hoạt động cho {WEEKDAY_LABEL_MAP[dayName] || dayName}. 
+                                                                    Vui lòng liên hệ chủ sân hoặc chọn ngày khác.
+                                                                </AlertDescription>
+                                                            </Alert>
+                                                        );
                                                     }
 
                                                     const slotDuration = venue.slotDuration || 60;
@@ -551,14 +592,14 @@ export const ConsecutiveBookingTab: React.FC<ConsecutiveBookingTabProps> = ({
             {/* Right Column: Summary & Validation */}
             <div className="md:col-span-4 space-y-6">
                 <div className="sticky top-24">
-                    <Card className="border shadow-lg bg-white/95 backdrop-blur-sm z-20">
+                    <Card className="border shadow-lg bg-gradient-to-r from-green-50 to-emerald-50 backdrop-blur-sm z-20">
                         <CardHeader className="pb-3 border-b bg-green-50/50">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-[#00775C]" />
                                 Thông tin đặt sân
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4 pt-4">
+                        <CardContent className="space-y-4 pt-4 bg-gradient-to-r from-green-50 to-emerald-50">
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between py-1 border-b border-dashed">
                                     <span className="text-gray-500">Sân:</span>
