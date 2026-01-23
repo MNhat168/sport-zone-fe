@@ -158,7 +158,7 @@ export const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ formData, onChan
                     className="max-w-xs"
                 />
                 <p className="text-sm text-slate-500">
-                    Thông tin này giúp chúng tôi tìm đối tác phù hợp với độ tuổi của bạn
+                    Thông tin này giúp chúng tôi tìm bạn chơi phù hợp với độ tuổi của bạn
                 </p>
             </div>
         </div>

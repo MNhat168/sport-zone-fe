@@ -10,8 +10,15 @@ import { useNavigate } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { unmatchById } from '@/features/matching/matchingThunk';
+import { updateMatch } from '@/features/matching/matchingSlice';
+import { useMatchingSocket } from '@/hooks/useMatchingSocket';
+import ScheduleModal from '@/components/matching/ScheduleModal';
 
-const MatchCard: React.FC<{ match: any; currentUserId: string }> = ({ match, currentUserId }) => {
+const MatchCard: React.FC<{ match: any; currentUserId: string; onOpenSchedule: (match: any) => void }> = ({
+    match,
+    currentUserId,
+    onOpenSchedule
+}) => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -31,6 +38,8 @@ const MatchCard: React.FC<{ match: any; currentUserId: string }> = ({ match, cur
             }
         }
     };
+
+    const hasBooking = !!match.bookingId;
 
     return (
         <Card className="hover:shadow-md transition-all overflow-hidden border border-slate-100">
@@ -65,8 +74,19 @@ const MatchCard: React.FC<{ match: any; currentUserId: string }> = ({ match, cur
                         </Button>
 
                         <div className="flex gap-2">
-                            <Button variant="outline" size="icon" className="rounded-full h-11 w-11">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className={`rounded-full h-11 w-11 relative ${hasBooking ? 'border-primary/50 text-primary hover:bg-primary/5' : ''}`}
+                                onClick={() => hasBooking && onOpenSchedule(match)}
+                            >
                                 <Calendar size={18} />
+                                {hasBooking && (
+                                    <span className="absolute top-0 right-0 flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white"></span>
+                                    </span>
+                                )}
                             </Button>
 
                             <DropdownMenu>
@@ -95,9 +115,39 @@ const MatchingMatchesList: React.FC = () => {
     const { matches, loading } = useAppSelector((state) => state.matching);
     const { user } = useAppSelector((state) => state.auth);
 
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [selectedMatch, setSelectedMatch] = React.useState<any>(null);
+
+    const { onMatchConfirmed } = useMatchingSocket();
+
     useEffect(() => {
         dispatch(fetchMyMatches(undefined));
     }, [dispatch]);
+
+    useEffect(() => {
+        onMatchConfirmed((data) => {
+            // Find the match in current list
+            const matchToUpdate = matches.find(m => m._id === data.matchId);
+            if (matchToUpdate) {
+                // Update match status and booking info in Redux
+                const updatedMatch = {
+                    ...matchToUpdate,
+                    status: data.status,
+                    bookingId: data.bookingId,
+                    scheduledDate: data.scheduledDate,
+                    scheduledStartTime: data.startTime,
+                    scheduledEndTime: data.endTime
+                };
+                dispatch(updateMatch(updatedMatch));
+                toast.success('Lịch chơi đã được xác nhận!');
+            }
+        });
+    }, [onMatchConfirmed, matches, dispatch]);
+
+    const handleOpenSchedule = (match: any) => {
+        setSelectedMatch(match);
+        setIsModalOpen(true);
+    };
 
     return (
         <div className="bg-transparent py-6 px-4">
@@ -123,6 +173,7 @@ const MatchingMatchesList: React.FC = () => {
                                 key={match._id}
                                 match={match}
                                 currentUserId={user?._id || (user as any)?.id}
+                                onOpenSchedule={handleOpenSchedule}
                             />
                         ))}
                     </div>
@@ -145,6 +196,12 @@ const MatchingMatchesList: React.FC = () => {
                     </Card>
                 )}
             </div>
+
+            <ScheduleModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                match={selectedMatch}
+            />
         </div>
     );
 };

@@ -9,6 +9,8 @@ import {
     UNREAD_COUNT_API,
     GET_FIELD_OWNER_CHAT_ROOMS_API,
     GET_COACH_CHAT_ROOMS_API,
+    MATCHING_UNREAD_COUNT_API,
+    UNREAD_PER_MATCH_API,
 } from "./chatAPI";
 import type { ChatRoom, StartChatPayload } from "./chat-type";
 
@@ -134,6 +136,36 @@ export const startCoachChat = createAsyncThunk(
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || error.message || "Failed to start coach chat"
+            );
+        }
+    }
+);
+
+// Get unread count for matching chats only
+export const fetchMatchingUnreadCount = createAsyncThunk(
+    "chat/fetchMatchingUnreadCount",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axiosPrivate.get(MATCHING_UNREAD_COUNT_API);
+            return response.data.count;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message || "Failed to fetch matching unread count"
+            );
+        }
+    }
+);
+
+// Get unread count per match
+export const fetchUnreadPerMatch = createAsyncThunk(
+    "chat/fetchUnreadPerMatch",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axiosPrivate.get(UNREAD_PER_MATCH_API);
+            return response.data.unreadCounts;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message || "Failed to fetch unread counts per match"
             );
         }
     }

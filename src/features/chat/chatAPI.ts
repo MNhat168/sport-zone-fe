@@ -12,3 +12,5 @@ export const GET_COACH_CHAT_ROOMS_API = `${CHAT_API}/coach/rooms`;
 export const MARK_AS_READ_API = (id: string) => `${CHAT_API}/room/${id}/read`;
 export const UPDATE_STATUS_API = (id: string) => `${CHAT_API}/room/${id}/status`;
 export const UNREAD_COUNT_API = `${CHAT_API}/unread-count`;
+export const MATCHING_UNREAD_COUNT_API = `${CHAT_API}/matching/unread-count`;
+export const UNREAD_PER_MATCH_API = `${CHAT_API}/matching/unread-per-match`;

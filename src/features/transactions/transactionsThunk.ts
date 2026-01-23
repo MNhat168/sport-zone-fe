@@ -154,6 +154,7 @@ export const verifyPayOSPayment = createAsyncThunk<
             success: normalized.success ?? responseData?.success ?? false,
             paymentStatus: normalized.paymentStatus,
             bookingId: normalized.bookingId ?? responseData?.bookingId ?? "",
+            matchId: normalized.matchId ?? responseData?.matchId, // ✅ FIX: Extract matchId
             message: normalized.message ?? responseData?.message ?? "",
             reason: normalized.reason ?? responseData?.reason,
             orderCode: normalized.orderCode ?? responseData?.orderCode,

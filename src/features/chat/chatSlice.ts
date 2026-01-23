@@ -9,6 +9,8 @@ import {
   getUnreadCount,
   getFieldOwnerChatRooms,
   getCoachChatRooms,
+  fetchMatchingUnreadCount,
+  fetchUnreadPerMatch,
 } from "./chatThunk";
 
 const initialState: ChatState = {
@@ -17,6 +19,8 @@ const initialState: ChatState = {
   loading: false,
   error: null,
   unreadCount: 0,
+  matchingUnreadCount: 0,
+  unreadPerMatch: {},
   connected: false,
   typingUsers: {},
   widgetOpen: false,
@@ -115,6 +119,8 @@ const chatSlice = createSlice({
       state.rooms = [];
       state.currentRoom = null;
       state.unreadCount = 0;
+      state.matchingUnreadCount = 0;
+      state.unreadPerMatch = {};
       state.typingUsers = {};
       state.connected = false;
       state.widgetOpen = false;
@@ -142,6 +148,12 @@ const chatSlice = createSlice({
       .addCase(getChatRoom.fulfilled, (state, action) => {
         state.loading = false;
         state.currentRoom = action.payload;
+        // Clear unread for this match if it exists
+        const matchId = action.payload.matchId;
+        if (matchId && state.unreadPerMatch[matchId]) {
+          delete state.unreadPerMatch[matchId];
+          state.matchingUnreadCount = Math.max(0, state.matchingUnreadCount - 1);
+        }
       })
       .addCase(getChatRoom.rejected, (state, action) => {
         state.loading = false;
@@ -219,6 +231,12 @@ const chatSlice = createSlice({
 
         // Update unread count
         state.unreadCount = Math.max(0, state.unreadCount - 1);
+      })
+      .addCase(fetchMatchingUnreadCount.fulfilled, (state, action) => {
+        state.matchingUnreadCount = action.payload;
+      })
+      .addCase(fetchUnreadPerMatch.fulfilled, (state, action) => {
+        state.unreadPerMatch = action.payload;
       });
   },
 });

@@ -174,7 +174,7 @@ export const NavbarComponent = () => {
                             Đặt Sân + HLV
                         </Link>
                         <Link to="/matching/find-partner" className={linkClass}>
-                            Tìm đối tác
+                            Tìm Bạn Chơi
                         </Link>
                         {/* <Link to="/reviews" className={linkClass}>
                         Đánh giá

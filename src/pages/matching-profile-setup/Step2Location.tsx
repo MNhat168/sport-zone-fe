@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { MapPin, Navigation, Loader2 } from 'lucide-react';
+import logger from '@/utils/logger';
 
 const GENDER_PREFERENCES = [
     { value: 'male', label: 'Nam' },
@@ -25,14 +29,15 @@ interface Step2LocationProps {
 }
 
 export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange }) => {
-    const handleAddressChange = (address: string) => {
-        onChange({
-            location: {
-                ...formData.location,
-                address,
-            },
-        });
-    };
+    const mapContainerId = 'matching-location-map';
+    const mapRef = useRef<any>(null);
+    const markerRef = useRef<any>(null);
+    const circleRef = useRef<any>(null);
+    const [mapReady, setMapReady] = useState(false);
+    const [locationName, setLocationName] = useState<string>('');
+    const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+    const { loading: geolocationLoading, getCoordinates } = useGeolocation();
 
     const handleRadiusChange = (value: number[]) => {
         onChange({
@@ -43,6 +48,181 @@ export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange
         });
     };
 
+    // Reverse geocoding to get location name from coordinates
+    const reverseGeocode = async (lat: number, lng: number) => {
+        setIsLoadingLocation(true);
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            );
+            const data = await response.json();
+
+            if (data && data.display_name) {
+                setLocationName(data.display_name);
+                // Update the address in formData
+                onChange({
+                    location: {
+                        ...formData.location,
+                        address: data.display_name,
+                    },
+                });
+            }
+        } catch (error) {
+            logger.error('Error getting location name', error);
+            setLocationName('Vị trí đã chọn');
+        } finally {
+            setIsLoadingLocation(false);
+        }
+    };
+
+    const handleCoordinatesChange = (lat: number, lng: number) => {
+        onChange({
+            location: {
+                ...formData.location,
+                coordinates: [lng, lat], // [longitude, latitude]
+            },
+        });
+        // Get location name from coordinates
+        reverseGeocode(lat, lng);
+    };
+
+    const handleGetLocation = async () => {
+        try {
+            const coords = await getCoordinates();
+            if (coords?.lat && coords?.lng) {
+                handleCoordinatesChange(coords.lat, coords.lng);
+                if (mapRef.current) {
+                    mapRef.current.setView([coords.lat, coords.lng], 14, { animate: true });
+                }
+            }
+        } catch (error) {
+            logger.error('Error getting location', error);
+        }
+    };
+
+    // Initialize Leaflet map
+    useEffect(() => {
+        (async () => {
+            try {
+                const hasLeaflet = typeof (window as any).L !== 'undefined';
+                if (!hasLeaflet) {
+                    await new Promise<void>((resolve) => {
+                        if (!document.getElementById('leaflet-css')) {
+                            const link = document.createElement('link');
+                            link.id = 'leaflet-css';
+                            link.rel = 'stylesheet';
+                            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                            link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                            link.crossOrigin = '';
+                            document.head.appendChild(link);
+                        }
+                        const scriptId = 'leaflet-js';
+                        if (document.getElementById(scriptId)) {
+                            resolve();
+                            return;
+                        }
+                        const script = document.createElement('script');
+                        script.id = scriptId;
+                        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                        script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+                        script.crossOrigin = '';
+                        script.onload = () => resolve();
+                        document.body.appendChild(script);
+                    });
+                }
+
+                const L: any = (window as any).L;
+                if (!mapRef.current) {
+                    const container = document.getElementById(mapContainerId);
+                    if (!container) return;
+
+                    // Default to Ho Chi Minh City if no coordinates
+                    const initialLat = formData.location?.coordinates?.[1] || 10.8231;
+                    const initialLng = formData.location?.coordinates?.[0] || 106.6297;
+
+                    mapRef.current = L.map(mapContainerId).setView([initialLat, initialLng], 12);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors',
+                    }).addTo(mapRef.current);
+
+                    // Fix default marker icon
+                    const defaultIcon = L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41],
+                    });
+                    L.Marker.prototype.options.icon = defaultIcon;
+
+                    // Add click handler to map
+                    mapRef.current.on('click', (e: any) => {
+                        const { lat, lng } = e.latlng;
+                        handleCoordinatesChange(lat, lng);
+                    });
+
+                    setMapReady(true);
+                }
+            } catch (error) {
+                logger.error('Failed to initialize map', error);
+            }
+        })();
+    }, []);
+
+    // Load location name from existing address on mount
+    useEffect(() => {
+        if (formData.location?.address && !locationName) {
+            setLocationName(formData.location.address);
+        }
+    }, [formData.location?.address, locationName]);
+
+    // Update marker and circle when coordinates or radius change
+    useEffect(() => {
+        if (!mapReady || !mapRef.current) return;
+
+        const L: any = (window as any).L;
+        if (!L) return;
+
+        const lat = formData.location?.coordinates?.[1];
+        const lng = formData.location?.coordinates?.[0];
+
+        // Remove old marker and circle
+        if (markerRef.current) {
+            markerRef.current.remove();
+            markerRef.current = null;
+        }
+        if (circleRef.current) {
+            circleRef.current.remove();
+            circleRef.current = null;
+        }
+
+        // Add new marker if coordinates exist
+        if (lat && lng && (lat !== 0 || lng !== 0)) {
+            markerRef.current = L.marker([lat, lng], { draggable: true })
+                .addTo(mapRef.current)
+                .bindPopup('Vị trí của bạn');
+
+            // Add circle for search radius
+            const radiusInMeters = (formData.location?.searchRadius || 10) * 1000;
+            circleRef.current = L.circle([lat, lng], {
+                radius: radiusInMeters,
+                color: '#3b82f6',
+                fillColor: '#3b82f6',
+                fillOpacity: 0.1,
+                weight: 2,
+            }).addTo(mapRef.current);
+
+            // Update coordinates when marker is dragged
+            markerRef.current.on('dragend', (e: any) => {
+                const { lat, lng } = e.target.getLatLng();
+                handleCoordinatesChange(lat, lng);
+            });
+        }
+    }, [mapReady, formData.location?.coordinates, formData.location?.searchRadius]);
+
     return (
         <div className="space-y-8">
             <div>
@@ -50,68 +230,57 @@ export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange
                 <p className="text-slate-600">Thiết lập khu vực và đối tượng tìm kiếm của bạn</p>
             </div>
 
-            {/* Address */}
+            {/* Location Name Display */}
+            {locationName && (
+                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-900">Vị trí đã chọn:</p>
+                        <p className="text-sm text-blue-700">{locationName}</p>
+                    </div>
+                    {isLoadingLocation && (
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                    )}
+                </div>
+            )}
+
+            {/* Map */}
             <div className="space-y-3">
-                <Label htmlFor="address" className="text-base font-semibold">
-                    Địa chỉ của bạn <span className="text-red-500">*</span>
+                <Label className="text-base font-semibold">
+                    Chọn vị trí trên bản đồ <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                    id="address"
-                    type="text"
-                    placeholder="Nhập địa chỉ (VD: Quận 1, TP.HCM)"
-                    value={formData.location?.address || ''}
-                    onChange={e => handleAddressChange(e.target.value)}
-                />
-                <p className="text-sm text-slate-500">
-                    Chúng tôi sẽ tìm đối tác chơi thể thao gần khu vực này
+                <div className="relative">
+                    <div
+                        id={mapContainerId}
+                        className="w-full h-[400px] rounded-lg border-2 border-slate-200"
+                        style={{ zIndex: 1 }}
+                    />
+                    <Button
+                        type="button"
+                        onClick={handleGetLocation}
+                        disabled={geolocationLoading}
+                        className="absolute top-3 right-3 z-[1000] bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 shadow-md"
+                        size="sm"
+                    >
+                        {geolocationLoading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Đang lấy...
+                            </>
+                        ) : (
+                            <>
+                                <Navigation className="w-4 h-4 mr-2" />
+                                Vị trí của tôi
+                            </>
+                        )}
+                    </Button>
+                </div>
+                <p className="text-sm text-slate-500 flex items-start gap-2">
+                    <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>Nhấp vào bản đồ để chọn vị trí hoặc kéo thả điểm đánh dấu để điều chỉnh</span>
                 </p>
             </div>
 
-            {/* Coordinates (simplified - in real app would use map picker) */}
-            <div className="space-y-3">
-                <Label className="text-base font-semibold">Tọa độ (tùy chọn)</Label>
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <Label htmlFor="longitude" className="text-sm">Kinh độ</Label>
-                        <Input
-                            id="longitude"
-                            type="number"
-                            step="0.000001"
-                            placeholder="106.xxx"
-                            value={formData.location?.coordinates?.[0] || ''}
-                            onChange={e =>
-                                onChange({
-                                    location: {
-                                        ...formData.location,
-                                        coordinates: [parseFloat(e.target.value) || 0, formData.location?.coordinates?.[1] || 0],
-                                    },
-                                })
-                            }
-                        />
-                    </div>
-                    <div>
-                        <Label htmlFor="latitude" className="text-sm">Vĩ độ</Label>
-                        <Input
-                            id="latitude"
-                            type="number"
-                            step="0.000001"
-                            placeholder="10.xxx"
-                            value={formData.location?.coordinates?.[1] || ''}
-                            onChange={e =>
-                                onChange({
-                                    location: {
-                                        ...formData.location,
-                                        coordinates: [formData.location?.coordinates?.[0] || 0, parseFloat(e.target.value) || 0],
-                                    },
-                                })
-                            }
-                        />
-                    </div>
-                </div>
-                <p className="text-sm text-slate-500">
-                    Để trống nếu bạn không biết. Chúng tôi sẽ tự động xác định dựa trên địa chỉ.
-                </p>
-            </div>
 
             {/* Search Radius */}
             <div className="space-y-3">
@@ -130,6 +299,9 @@ export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange
                     <span>1 km</span>
                     <span>50 km</span>
                 </div>
+                <p className="text-sm text-slate-500">
+                    Vòng tròn màu xanh trên bản đồ hiển thị khu vực tìm kiếm của bạn
+                </p>
             </div>
 
             {/* Preferred Gender */}
@@ -137,11 +309,12 @@ export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange
                 <Label className="text-base font-semibold">
                     Giới tính ưu tiên <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-sm text-slate-500">Bạn muốn tìm đối tác chơi là nam, nữ hay không quan trọng?</p>
+                <p className="text-sm text-slate-500">Bạn muốn tìm bạn chơi là nam, nữ hay không quan trọng?</p>
                 <div className="flex gap-3">
                     {GENDER_PREFERENCES.map(pref => (
                         <button
                             key={pref.value}
+                            type="button"
                             onClick={() => onChange({ preferredGender: pref.value })}
                             className={cn(
                                 'flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all',
@@ -158,35 +331,24 @@ export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange
 
             {/* Age Range Preference */}
             <div className="space-y-3">
-                <Label className="text-base font-semibold">Độ tuổi ưu tiên (tùy chọn)</Label>
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <Label htmlFor="minAge" className="text-sm">Tuổi tối thiểu</Label>
-                        <Input
-                            id="minAge"
-                            type="number"
-                            min={18}
-                            max={100}
-                            placeholder="18"
-                            value={formData.minAge || ''}
-                            onChange={e => onChange({ minAge: e.target.value ? parseInt(e.target.value) : undefined })}
-                        />
-                    </div>
-                    <div>
-                        <Label htmlFor="maxAge" className="text-sm">Tuổi tối đa</Label>
-                        <Input
-                            id="maxAge"
-                            type="number"
-                            min={18}
-                            max={100}
-                            placeholder="100"
-                            value={formData.maxAge || ''}
-                            onChange={e => onChange({ maxAge: e.target.value ? parseInt(e.target.value) : undefined })}
-                        />
-                    </div>
+                <Label className="text-base font-semibold">
+                    Độ tuổi ưu tiên: {formData.minAge || 18} - {formData.maxAge || 100} tuổi
+                </Label>
+                <Slider
+                    value={[formData.minAge || 18, formData.maxAge || 100]}
+                    onValueChange={(values) => onChange({ minAge: values[0], maxAge: values[1] })}
+                    min={18}
+                    max={100}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={1}
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                    <span>18 tuổi</span>
+                    <span>100 tuổi</span>
                 </div>
                 <p className="text-sm text-slate-500">
-                    Để trống nếu bạn không có yêu cầu về độ tuổi
+                    Kéo thanh trượt để chọn khoảng độ tuổi mong muốn
                 </p>
             </div>
         </div>
