@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination, DataTableColumnFilterInput } from "@/components/data-table";
 import { createBookingColumns, type BookingRow } from "./booking-columns";
+import { BookingMobileCard } from "./booking-mobile-card";
 
 interface BookingTableProps {
   bookings: BookingRow[];
@@ -115,7 +116,34 @@ export function BookingTable({
 
   return (
     <div className="space-y-4">
-      <div className="w-full bg-white">
+      {/* Mobile Card View - visible on mobile only */}
+      <div className="md:hidden">
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500">Đang tải...</div>
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500">Không có dữ liệu</div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {bookings.map((booking) => (
+              <BookingMobileCard
+                key={booking.id}
+                booking={booking}
+                onViewDetails={onViewDetails}
+                onAccept={onAccept}
+                onDeny={onDeny}
+                onCancel={onCancel}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View - visible on tablet+ */}
+      <div className="hidden md:block w-full bg-white">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

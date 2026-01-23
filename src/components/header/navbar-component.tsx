@@ -84,8 +84,8 @@ export const NavbarComponent = () => {
         ? "text-gray-900 bg-white"
         : "text-white bg-white/10 border-white/30";
 
-    // Mobile menu link style
-    const mobileLinkClass = "text-base font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 px-4 py-3 rounded-lg transition-all duration-200 flex items-center";
+    // Mobile menu link style - increased touch target
+    const mobileLinkClass = "text-base font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 active:bg-green-100 px-4 py-4 rounded-lg transition-all duration-200 flex items-center min-h-[44px]";
 
     const NavLinks = ({ mobile = false }) => (
         <>
@@ -150,11 +150,11 @@ export const NavbarComponent = () => {
                     : "bg-transparent"
                     }`}
             >
-                <div className="container mx-auto max-w-screen-2xl flex h-20 items-center justify-between px-4">
+                <div className="container mx-auto max-w-screen-2xl flex h-16 md:h-20 items-center justify-between px-4">
                     {/* Logo */}
                     <Link
                         to="/"
-                        className="text-2xl font-bold text-white bg-green-700 px-3 py-1 rounded-md shrink-0"
+                        className="text-xl md:text-2xl font-bold text-white bg-green-700 px-2 md:px-3 py-1 rounded-md shrink-0"
                     >
                         SportZone
                     </Link>
@@ -293,8 +293,8 @@ export const NavbarComponent = () => {
                                         </SheetHeader>
 
                                         {/* Navigation Links Section */}
-                                        <div className="flex-1 px-6 py-6">
-                                            <nav className="flex flex-col gap-1">
+                                        <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6">
+                                            <nav className="flex flex-col gap-2">
                                                 <NavLinks mobile={true} />
                                             </nav>
                                         </div>

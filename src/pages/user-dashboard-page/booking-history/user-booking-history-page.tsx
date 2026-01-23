@@ -296,15 +296,15 @@ export default function UserBookingsPage() {
 
         {/* Navigation Tabs */}
         <UserDashboardTabs />
-        <div className="container mx-auto px-12 py-8">
-          <div className="space-y-8">
+        <div className="container mx-auto px-4 md:px-6 lg:px-12 py-4 md:py-6 lg:py-8">
+          <div className="space-y-4 md:space-y-8">
             {/* Status Tabs and Filters */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 space-y-4 lg:space-y-0">
-              <div className="flex space-x-1">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 md:mb-8 space-y-4 lg:space-y-0">
+              <div className="flex flex-wrap gap-1 md:gap-1">
                 <Button
                   variant={activeTab === "confirmed" ? "default" : "outline"}
                   onClick={() => setActiveTab("confirmed")}
-                  className={`${activeTab === "confirmed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                  className={`text-xs md:text-sm px-3 md:px-4 py-2 ${activeTab === "confirmed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                     } transition-all duration-200`}
                 >
                   Đã đặt
@@ -312,7 +312,7 @@ export default function UserBookingsPage() {
                 <Button
                   variant={activeTab === "pending" ? "default" : "outline"}
                   onClick={() => setActiveTab("pending")}
-                  className={`${activeTab === "pending" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                  className={`text-xs md:text-sm px-3 md:px-4 py-2 ${activeTab === "pending" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                     } transition-all duration-200`}
                 >
                   Đang chờ
@@ -320,16 +320,16 @@ export default function UserBookingsPage() {
                 <Button
                   variant={activeTab === "cancelled" ? "default" : "outline"}
                   onClick={() => setActiveTab("cancelled")}
-                  className={`${activeTab === "cancelled" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                  className={`text-xs md:text-sm px-3 md:px-4 py-2 ${activeTab === "cancelled" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                     } transition-all duration-200`}
                 >
                   Đã hủy
                 </Button>
               </div>
 
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-full sm:w-32 h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -340,7 +340,7 @@ export default function UserBookingsPage() {
                   </SelectContent>
                 </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48 h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -354,34 +354,34 @@ export default function UserBookingsPage() {
             </div>
 
             {/* My Bookings Section */}
-            <Card className="bg-white border rounded-xl p-6 shadow-sm border-gray-200">
-              <CardHeader>
-                <div className="flex items-center justify-between">
+            <Card className="bg-white border rounded-xl p-4 md:p-6 shadow-sm border-gray-200">
+              <CardHeader className="p-0 pb-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <CardTitle className="text-2xl font-bold">Đặt sân của tôi</CardTitle>
-                    <p className="text-gray-600">
+                    <CardTitle className="text-xl md:text-2xl font-bold">Đặt sân của tôi</CardTitle>
+                    <p className="text-gray-600 text-sm md:text-base">
                       Quản lý và theo dõi tất cả các đặt sân sắp tới của bạn.
                       {pagination && (
-                        <span className="ml-2 text-sm text-gray-500">
+                        <span className="ml-2 text-xs md:text-sm text-gray-500">
                           ({pagination.total} booking{pagination.total !== 1 ? 's' : ''})
                         </span>
                       )}
                     </p>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <div className="relative">
+                    <div className="relative w-full md:w-64">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <Input
                         placeholder="Tìm kiếm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64 hover:border-[#00775C] focus:border-[#00775C] transition-colors"
+                        className="pl-10 w-full md:w-64 h-10 hover:border-[#00775C] focus:border-[#00775C] transition-colors"
                       />
                     </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {/* Bookings Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full">

@@ -153,11 +153,11 @@ export const NavbarDarkComponent = () => {
             <header
                 className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-md border-b border-gray-200 transition-all duration-300"
             >
-                <div className="container mx-auto max-w-screen-2xl flex h-20 items-center justify-between px-4">
+                <div className="container mx-auto max-w-screen-2xl flex h-16 md:h-20 items-center justify-between px-4">
                     {/* Logo */}
                     <Link
                         to="/"
-                        className="text-2xl font-bold text-white bg-green-700 px-3 py-1 rounded-md shrink-0"
+                        className="text-xl md:text-2xl font-bold text-white bg-green-700 px-2 md:px-3 py-1 rounded-md shrink-0"
                     >
                         SportZone
                     </Link>
@@ -278,7 +278,7 @@ export const NavbarDarkComponent = () => {
                         <div className="lg:hidden ml-2">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                                 <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-gray-900">
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-gray-900">
                                         <Menu className="h-6 w-6" />
                                     </Button>
                                 </SheetTrigger>
@@ -299,8 +299,8 @@ export const NavbarDarkComponent = () => {
                                         </SheetHeader>
 
                                         {/* Navigation Links Section */}
-                                        <div className="flex-1 px-6 py-6">
-                                            <nav className="flex flex-col gap-1">
+                                        <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6">
+                                            <nav className="flex flex-col gap-2">
                                                 <NavLinks mobile={true} />
                                             </nav>
                                         </div>

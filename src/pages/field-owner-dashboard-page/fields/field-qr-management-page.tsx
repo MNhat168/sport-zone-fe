@@ -13,9 +13,11 @@ import axiosPrivate from '@/utils/axios/axiosPrivate'
 import { BASE_URL } from '@/utils/constant-value/constant'
 
 interface Field {
-    _id: string
+    _id?: string
+    id?: string
     name: string
-    address: string
+    address?: string
+    location?: string | { address?: string }
 }
 
 export default function FieldQRManagementPage() {
@@ -35,15 +37,22 @@ export default function FieldQRManagementPage() {
     const fetchFields = async () => {
         try {
             setLoadingFields(true)
-            const response = await axiosPrivate.get(`${BASE_URL}/field-owner/fields/my-fields`)
-            setFields(response.data || [])
+            const response = await axiosPrivate.get(`${BASE_URL}/field-owner/fields`)
+            
+            // Handle API response format: { success: true, data: { fields: [...], pagination: {...} } }
+            const raw = response.data
+            const fieldsList = raw?.data?.fields || (Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [])
+            setFields(fieldsList || [])
 
             // Fetch QR codes for all fields
-            for (const field of response.data || []) {
+            for (const field of fieldsList || []) {
                 try {
-                    const qrData = await fieldQrAPI.getFieldQR(field._id)
+                    const fieldId = field._id || field.id
+                    if (!fieldId) continue
+                    
+                    const qrData = await fieldQrAPI.getFieldQR(fieldId)
                     if (qrData) {
-                        setFieldQRs(prev => new Map(prev).set(field._id, qrData))
+                        setFieldQRs(prev => new Map(prev).set(fieldId, qrData))
                     }
                 } catch (error) {
                     // Field doesn't have QR yet, ignore
@@ -222,17 +231,19 @@ export default function FieldQRManagementPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {fields.map((field) => {
-                            const qrData = fieldQRs.get(field._id)
+                            const fieldId = field._id || field.id || ''
+                            const qrData = fieldQRs.get(fieldId)
                             const hasQR = !!qrData
+                            const address = typeof field.location === 'object' ? field.location?.address : (field.address || field.location || '')
 
                             return (
-                                <Card key={field._id} className="hover:shadow-lg transition-shadow">
+                                <Card key={fieldId} className="hover:shadow-lg transition-shadow">
                                     <CardHeader>
                                         <CardTitle className="text-lg line-clamp-1">
                                             {field.name}
                                         </CardTitle>
                                         <p className="text-sm text-gray-600 line-clamp-1">
-                                            {field.address}
+                                            {address}
                                         </p>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
@@ -253,7 +264,7 @@ export default function FieldQRManagementPage() {
                                                 {/* Actions */}
                                                 <div className="flex flex-col gap-2">
                                                     <Button
-                                                        onClick={() => handleViewQR(field._id)}
+                                                        onClick={() => handleViewQR(fieldId)}
                                                         className="w-full bg-blue-600 hover:bg-blue-700"
                                                     >
                                                         <QrCodeIcon className="w-4 h-4 mr-2" />
@@ -261,7 +272,7 @@ export default function FieldQRManagementPage() {
                                                     </Button>
                                                     <Button
                                                         onClick={() => {
-                                                            setRegeneratingField(field._id)
+                                                            setRegeneratingField(fieldId)
                                                             setShowRegenerateDialog(true)
                                                         }}
                                                         variant="outline"
@@ -284,11 +295,11 @@ export default function FieldQRManagementPage() {
 
                                                 {/* Generate Button */}
                                                 <Button
-                                                    onClick={() => handleGenerateQR(field._id)}
-                                                    disabled={generatingQR === field._id}
+                                                    onClick={() => handleGenerateQR(fieldId)}
+                                                    disabled={generatingQR === fieldId}
                                                     className="w-full bg-green-600 hover:bg-green-700"
                                                 >
-                                                    {generatingQR === field._id ? (
+                                                    {generatingQR === fieldId ? (
                                                         <>
                                                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                                             Đang tạo...

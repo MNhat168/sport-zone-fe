@@ -33,11 +33,12 @@ export function DataTablePagination<TData>({
   return (
     <div
       className={cn(
-        "flex flex-col sm:flex-row items-center justify-between gap-4 px-2",
+        "flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4 px-2",
         className
       )}
     >
-      <div className="flex items-center gap-2">
+      {/* Page size selector - hidden on mobile */}
+      <div className="hidden md:flex items-center gap-2">
         <p className="text-sm font-medium text-gray-700">Số hàng mỗi trang</p>
         <Select
           value={`${table.getState().pagination.pageSize}`}
@@ -58,11 +59,15 @@ export function DataTablePagination<TData>({
         </Select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="text-sm font-medium text-gray-700">
-          Trang {currentPage} / {totalPages || 1}
+      {/* Pagination controls */}
+      <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+        {/* Page info - simplified on mobile */}
+        <div className="text-xs sm:text-sm font-medium text-gray-700">
+          <span className="md:hidden">Trang {currentPage}/{totalPages || 1}</span>
+          <span className="hidden md:inline">Trang {currentPage} / {totalPages || 1}</span>
         </div>
         <div className="flex items-center space-x-1">
+          {/* First page button - hidden on mobile */}
           <Button
             variant="outline"
             className="hidden sm:flex h-8 w-8 p-0"
@@ -72,9 +77,10 @@ export function DataTablePagination<TData>({
             <span className="sr-only">Trang đầu</span>
             <ChevronsLeft className="h-4 w-4" />
           </Button>
+          {/* Previous page button */}
           <Button
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-9 w-9 sm:h-8 sm:w-8 p-0"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -82,7 +88,7 @@ export function DataTablePagination<TData>({
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          {/* Page number buttons */}
+          {/* Page number buttons - hidden on mobile */}
           <div className="hidden sm:flex items-center space-x-1">
             {pageNumbers.map((pageNumber, index) => (
               <div key={`${pageNumber}-${index}`} className="flex items-center">
@@ -102,15 +108,17 @@ export function DataTablePagination<TData>({
             ))}
           </div>
 
+          {/* Next page button */}
           <Button
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-9 w-9 sm:h-8 sm:w-8 p-0"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             <span className="sr-only">Trang sau</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
+          {/* Last page button - hidden on mobile */}
           <Button
             variant="outline"
             className="hidden sm:flex h-8 w-8 p-0"
