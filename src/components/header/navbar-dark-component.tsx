@@ -32,6 +32,7 @@ import CoachDropdownMenuItems from "./coach-dropdown-menu";
 import UserDropdownMenuItems from "./user-dropdown-menu";
 import { NotificationBell } from "./notification-bell";
 import { Loading } from "@/components/ui/loading";
+import { RoleSelectionDialog } from "./role-selection-dialog";
 
 export const NavbarDarkComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -49,6 +50,7 @@ export const NavbarDarkComponent = () => {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [openRoleDialog, setOpenRoleDialog] = useState(false);
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -233,7 +235,17 @@ export const NavbarDarkComponent = () => {
                                 </Button>
                             </div>
                         )}
-
+                        
+                        {auth.user?.role === "user" && (
+                            <Button
+                                variant="ghost"
+                                className={linkClass}
+                                onClick={() => setOpenRoleDialog(true)}
+                            >
+                                Trở thành đối tác
+                            </Button>
+                        )}
+                        
                         {/* Mobile Menu Toggle */}
                         <div className="lg:hidden ml-2">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -342,6 +354,7 @@ export const NavbarDarkComponent = () => {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                <RoleSelectionDialog open={openRoleDialog} onOpenChange={setOpenRoleDialog} />
             </header>
         </>
     );

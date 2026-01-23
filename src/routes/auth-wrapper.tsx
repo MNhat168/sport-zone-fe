@@ -28,13 +28,30 @@ export const AuthWrapper = ({ children }: AuthWrapperProps) => {
 
     // KHÔNG redirect nếu đang ở public routes
     // Sử dụng utility function từ routes-config.tsx để tránh duplicate code
+    // KHÔNG redirect nếu đang ở public routes
     if (isPublicRoute(location.pathname)) {
-
       return; // Không redirect
     }
 
+    // CHECK POLICY STATUS
+    if (user && (user.role === 'coach' || user.role === 'field_owner')) {
+      // Need to read policy but haven't
+      if (user.hasReadPolicy === false) {
+        if (location.pathname !== '/auth/policy-confirmation') {
+          navigate('/auth/policy-confirmation');
+        }
+        return;
+      }
+
+      // If already read policy but trying to access confirmation page
+      if (user.hasReadPolicy === true && location.pathname === '/auth/policy-confirmation') {
+        // Redirect back to dashboard
+        navigate(user.role === 'coach' ? '/coach/dashboard' : '/field-owner/dashboard');
+        return;
+      }
+    }
+
     // Private routes are handled by ProtectedRoute component
-    // No need for additional permission checking here
   }, [isAuthenticated, user, location.pathname, navigate]);
 
   return <>{children}</>;

@@ -127,6 +127,12 @@ export default function AuthenticationPage() {
       return;
     }
 
+    // Check if user needs to read policy (for field_owner and coach roles)
+    if ((user.role === 'field_owner' || user.role === 'coach') && user.hasReadPolicy === false) {
+      window.location.href = '/auth/policy-confirmation';
+      return;
+    }
+
     // Otherwise, use default redirect logic - use window.location.href for 1 clean refresh
     if (user.role === "field_owner") {
       window.location.href = "/field-owner-dashboard";

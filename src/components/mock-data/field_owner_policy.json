@@ -1,0 +1,77 @@
+{
+    "role": "FIELD_OWNER",
+    "description": "Quy định dành cho cá nhân hoặc tổ chức sở hữu và vận hành sân",
+    "policies": [
+        {
+            "id": "COMMON_01",
+            "topic": "Giới thiệu chung",
+            "rules": [
+                "Chào mừng bạn gia nhập cộng đồng SportZone. Chúng tôi cam kết tạo ra một môi trường thể thao lành mạnh, minh bạch và chuyên nghiệp."
+            ]
+        },
+        {
+            "id": "COMMON_02",
+            "topic": "Trách nhiệm của đối tác",
+            "rules": [
+                "Cung cấp thông tin chính xác, trung thực về hồ sơ, sân bãi và dịch vụ.",
+                "Duy trì thái độ chuyên nghiệp, tôn trọng khách hàng và cộng đồng.",
+                "Đảm bảo chất lượng dịch vụ đúng như cam kết.",
+                "Tuân thủ các quy định về an toàn và pháp luật hiện hành."
+            ]
+        },
+        {
+            "id": "COMMON_03",
+            "topic": "Chính sách thanh toán & Phí dịch vụ",
+            "rules": [
+                "SportZone áp dụng mức phí dịch vụ cho mỗi giao dịch thành công. Chi tiết về biểu phí và chu kỳ thanh toán được quy định rõ trong phần Quản lý tài chính."
+            ]
+        },
+        {
+            "id": "COMMON_04",
+            "topic": "Quyền riêng tư & Bảo mật dữ liệu",
+            "rules": [
+                "Chúng tôi coi trọng quyền riêng tư của bạn. Mọi thông tin cá nhân và dữ liệu kinh doanh sẽ được bảo vệ theo tiêu chuẩn bảo mật cao nhất."
+            ]
+        },
+        {
+            "id": "COMMON_05",
+            "topic": "Chấm dứt hợp tác",
+            "rules": [
+                "SportZone có quyền tạm ngưng hoặc chấm dứt tài khoản đối tác nếu phát hiện vi phạm nghiêm trọng các điều khoản này hoặc có hành vi gian lận."
+            ]
+        },
+        {
+            "id": "FO_01",
+            "topic": "Quản lý Slot và Đặt sân",
+            "rules": [
+                "Chủ sân phải cập nhật trạng thái sân thời gian thực. Mọi sự cố trùng lịch do lỗi cập nhật chậm sẽ do chủ sân chịu trách nhiệm.",
+                "Được phép tạo 'Slot tự khóa' để phục vụ khách ngoài hoặc bảo trì.",
+                "Cơ chế phí Slot tự khóa: Giá đặt sân = 0, nhưng phải trả phí hệ thống (System Fee) dựa trên giá niêm yết của khung giờ đó theo chính sách SportZone."
+            ]
+        },
+        {
+            "id": "FO_02",
+            "topic": "Cơ sở vật chất và Dịch vụ",
+            "rules": [
+                "Đảm bảo chất lượng mặt sân, hệ thống chiếu sáng và thoát nước đúng như mô tả trong hồ sơ sân.",
+                "Mọi thay đổi về giá hoặc dịch vụ đi kèm phải thông báo trước ít nhất 24h và không áp dụng hồi tố cho các đơn đã đặt thành công."
+            ]
+        },
+        {
+            "id": "FO_03",
+            "topic": "Hủy sân và Phạt vi phạm",
+            "rules": [
+                "Nếu chủ sân hủy lịch của khách vì lý do chủ quan: Phải hoàn 100% tiền và chịu phí phạt vi phạm theo quy định vào ví hệ thống.",
+                "Nếu hủy do thiên tai/bất khả kháng: Hoàn tiền 100%, không tính phí phạt."
+            ]
+        },
+        {
+            "id": "FO_04",
+            "topic": "Thanh toán và Đối soát",
+            "rules": [
+                "Doanh thu từ khách đặt sân sẽ được giữ bởi SportZone và đối soát định kỳ theo chu kỳ thanh toán.",
+                "Chủ sân có quyền rút tiền khi số dư ví đạt ngưỡng tối thiểu theo quy định của nền tảng."
+            ]
+        }
+    ]
+}
