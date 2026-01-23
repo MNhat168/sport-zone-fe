@@ -83,6 +83,7 @@ export interface PayOSVerificationResult {
     success: boolean;
     paymentStatus: 'succeeded' | 'failed' | 'pending' | 'cancelled';
     bookingId: string;
+    matchId?: string; // ✅ FIX: Added for redirection to chat room
     message: string;
     orderCode?: number;
     reference?: string;

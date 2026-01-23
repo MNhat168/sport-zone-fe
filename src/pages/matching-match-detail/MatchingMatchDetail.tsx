@@ -73,14 +73,14 @@ const MatchingMatchDetail: React.FC = () => {
                 <MessageCircle className="mb-4 h-16 w-16 text-slate-300" />
                 <h2 className="text-xl font-bold">Không tìm thấy thông tin bắt cặp</h2>
                 <Button onClick={() => navigate('/matching/find-partner')} className="mt-4">
-                    Quay lại tìm đối tác
+                    Quay lại Tìm Bạn Chơi
                 </Button>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden h-full min-h-[700px]">
+        <div className="flex flex-col bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden h-[calc(100vh-160px)] min-h-[500px]">
             {/* Header */}
             <div className="flex h-16 items-center justify-between border-b px-6 bg-white/80 backdrop-blur-md z-10">
                 <div className="flex items-center gap-4">
@@ -126,7 +126,7 @@ const MatchingMatchDetail: React.FC = () => {
             </div>
 
             {/* Main Chat Content */}
-            <div className="flex-1 relative bg-slate-50/30">
+            <div className="flex-1 relative bg-slate-50/30 min-h-0 overflow-hidden">
                 <ActiveChatView onClose={() => navigate('/matching/swipe')} />
             </div>
 

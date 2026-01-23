@@ -62,6 +62,18 @@ const MatchBookingModal: React.FC<MatchBookingModalProps> = ({
 
     const { fields, loading: fieldsLoading, availability, availabilityLoading } = useAppSelector((state) => state.field);
 
+    // Reset state when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setStep('select-field');
+            setSelectedField(null);
+            setSelectedCourtId('');
+            setSelectedSlots([]);
+            setSearchQuery('');
+            setIsSubmitting(false);
+        }
+    }, [isOpen]);
+
     // Initial load of fields
     useEffect(() => {
         if (isOpen && step === 'select-field') {
@@ -77,7 +89,7 @@ const MatchBookingModal: React.FC<MatchBookingModalProps> = ({
         if (selectedField && step === 'select-date-time') {
             const dateStr = format(selectedDate, 'yyyy-MM-dd');
             dispatch(checkFieldAvailability({
-                id: selectedField.id,
+                id: selectedField.id || '',
                 startDate: dateStr,
                 endDate: dateStr,
                 courtId: selectedCourtId || undefined
@@ -90,12 +102,12 @@ const MatchBookingModal: React.FC<MatchBookingModalProps> = ({
         setStep('select-date-time');
 
         try {
-            const result = await dispatch(getFieldById(field.id)).unwrap();
+            const result = await dispatch(getFieldById(field.id || '')).unwrap();
             const fullField = result.data;
             setSelectedField(fullField);
 
             if (fullField.courts && fullField.courts.length > 0) {
-                setSelectedCourtId(fullField.courts[0].id);
+                setSelectedCourtId(fullField.courts[0].id || '');
             } else {
                 setSelectedCourtId('');
             }
@@ -301,7 +313,7 @@ const MatchBookingModal: React.FC<MatchBookingModalProps> = ({
                                                                 size="sm"
                                                                 className="rounded-full text-[10px] font-black uppercase h-8"
                                                                 onClick={() => {
-                                                                    setSelectedCourtId(court.id);
+                                                                    setSelectedCourtId(court.id || '');
                                                                     setSelectedSlots([]);
                                                                 }}
                                                             >

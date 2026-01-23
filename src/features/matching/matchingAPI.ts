@@ -8,7 +8,7 @@ export const SWIPE_API = `${BASE_URL}/matching/swipe`;
 // Matches
 export const MY_MATCHES_API = `${BASE_URL}/matching/matches`;
 export const MATCH_DETAILS_API = (id: string) => `${BASE_URL}/matching/matches/${id}`;
-export const UNMATCH_API = (id: string) => `${BASE_URL}/matching/matches/${id}/unmatch`;
+export const UNMATCH_API = (id: string) => `${BASE_URL}/matching/matches/${id}`;
 export const SCHEDULE_MATCH_API = (id: string) => `${BASE_URL}/matching/matches/${id}/schedule`;
 export const CANCEL_MATCH_API = (id: string) => `${BASE_URL}/matching/matches/${id}/cancel`;
 export const SWIPE_HISTORY_API = `${BASE_URL}/matching/swipe-history`;

@@ -13,6 +13,7 @@ import { TermsAndConditionsModal } from '@/components/matching/TermsAndCondition
 import { useMatchingSocket } from '@/hooks/useMatchingSocket';
 import { MatchNotificationToast } from '@/components/matching/MatchNotificationToast';
 import { cn } from '@/lib/utils';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
 
 const SwipeCard: React.FC<{
     candidate: any;
@@ -178,6 +179,22 @@ const MatchingSwipePage: React.FC = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [activeSport, setActiveSport] = useState<string | null>(null);
+    const [api, setApi] = useState<CarouselApi>();
+
+    // Scroll to active sport
+    useEffect(() => {
+        if (!api || !profile) return;
+
+        let index = 0;
+        if (activeSport && activeSport !== 'all') {
+            const sportIndex = profile.sportPreferences.findIndex((s: string) => s === activeSport);
+            if (sportIndex !== -1) {
+                index = sportIndex + 1; // +1 because 'all' is at index 0
+            }
+        }
+
+        api.scrollTo(index);
+    }, [api, activeSport, profile]);
 
     // WebSocket for real-time match notifications
     const { onMatchCreated } = useMatchingSocket();
@@ -310,45 +327,61 @@ const MatchingSwipePage: React.FC = () => {
 
             {/* Sport Selector */}
             {profile && (
-                <div className="w-full max-w-lg mb-10 flex items-center justify-center gap-4 overflow-x-auto pb-4 px-2 no-scrollbar">
-                    <button
-                        onClick={() => handleSportChange('all')}
-                        className={cn(
-                            "group flex flex-col items-center gap-2 min-w-[70px] transition-all",
-                            activeSport === 'all' || activeSport === null ? "opacity-100 scale-110" : "opacity-50 hover:opacity-80"
-                        )}
+                <div className="w-full max-w-xl mx-auto mb-10 px-12">
+                    <Carousel
+                        setApi={setApi}
+                        opts={{
+                            align: "center",
+                            dragFree: true,
+                        }}
+                        className="w-full"
                     >
-                        <div className={cn(
-                            "w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm",
-                            activeSport === 'all' || activeSport === null ? "bg-primary text-white shadow-primary/30 ring-4 ring-primary/10" : "bg-white text-slate-400 border border-slate-200"
-                        )}>
-                            {SPORTS_INFO['all'].icon}
-                        </div>
-                        <span className={cn("text-[11px] font-bold uppercase tracking-wider", activeSport === 'all' || activeSport === null ? "text-primary" : "text-slate-500")}>
-                            {SPORTS_INFO['all'].label}
-                        </span>
-                    </button>
+                        <CarouselContent className="-ml-2">
+                            <CarouselItem className="pl-2 basis-1/4 sm:basis-1/5">
+                                <button
+                                    onClick={() => handleSportChange('all')}
+                                    className={cn(
+                                        "group flex flex-col items-center gap-2 w-full transition-all",
+                                        activeSport === 'all' || activeSport === null ? "opacity-100 scale-105" : "opacity-50 hover:opacity-80"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm",
+                                        activeSport === 'all' || activeSport === null ? "bg-primary text-white shadow-primary/30 ring-4 ring-primary/10" : "bg-white text-slate-400 border border-slate-200"
+                                    )}>
+                                        {SPORTS_INFO['all'].icon}
+                                    </div>
+                                    <span className={cn("text-[10px] font-bold uppercase tracking-wider", activeSport === 'all' || activeSport === null ? "text-primary" : "text-slate-500")}>
+                                        {SPORTS_INFO['all'].label}
+                                    </span>
+                                </button>
+                            </CarouselItem>
 
-                    {profile.sportPreferences?.map((sport: string) => (
-                        <button
-                            key={sport}
-                            onClick={() => handleSportChange(sport)}
-                            className={cn(
-                                "group flex flex-col items-center gap-2 min-w-[70px] transition-all",
-                                activeSport === sport ? "opacity-100 scale-110" : "opacity-50 hover:opacity-80"
-                            )}
-                        >
-                            <div className={cn(
-                                "w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all shadow-sm",
-                                activeSport === sport ? "bg-primary text-white shadow-primary/30 ring-4 ring-primary/10" : "bg-white border border-slate-200"
-                            )}>
-                                {SPORTS_INFO[sport]?.icon || '🎾'}
-                            </div>
-                            <span className={cn("text-[11px] font-bold uppercase tracking-wider text-center truncate w-full", activeSport === sport ? "text-primary" : "text-slate-500")}>
-                                {SPORTS_INFO[sport]?.label || sport}
-                            </span>
-                        </button>
-                    ))}
+                            {profile.sportPreferences?.map((sport: string) => (
+                                <CarouselItem key={sport} className="pl-2 basis-1/4 sm:basis-1/5">
+                                    <button
+                                        onClick={() => handleSportChange(sport)}
+                                        className={cn(
+                                            "group flex flex-col items-center gap-2 w-full transition-all",
+                                            activeSport === sport ? "opacity-100 scale-105" : "opacity-50 hover:opacity-80"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all shadow-sm",
+                                            activeSport === sport ? "bg-primary text-white shadow-primary/30 ring-4 ring-primary/10" : "bg-white border border-slate-200"
+                                        )}>
+                                            {SPORTS_INFO[sport]?.icon || '🎾'}
+                                        </div>
+                                        <span className={cn("text-[10px] font-bold uppercase tracking-wider text-center truncate w-full", activeSport === sport ? "text-primary" : "text-slate-500")}>
+                                            {SPORTS_INFO[sport]?.label || sport}
+                                        </span>
+                                    </button>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="-left-10 w-9 h-9 border-slate-200 hover:bg-white hover:text-primary" />
+                        <CarouselNext className="-right-10 w-9 h-9 border-slate-200 hover:bg-white hover:text-primary" />
+                    </Carousel>
                 </div>
             )}
 

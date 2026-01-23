@@ -18,6 +18,7 @@ interface UseMatchingSocketReturn {
     isConnected: boolean;
     onMatchCreated: (callback: (data: MatchNotificationData) => void) => void;
     onSuperLike: (callback: (data: SuperLikeData) => void) => void;
+    onMatchConfirmed: (callback: (data: any) => void) => void;
     disconnect: () => void;
 }
 
@@ -27,6 +28,7 @@ export const useMatchingSocket = (): UseMatchingSocketReturn => {
     const { token } = useAppSelector(state => state.auth);
     const matchCreatedCallbackRef = useRef<((data: MatchNotificationData) => void) | null>(null);
     const superLikeCallbackRef = useRef<((data: SuperLikeData) => void) | null>(null);
+    const matchConfirmedCallbackRef = useRef<((data: any) => void) | null>(null);
 
     useEffect(() => {
         if (!token) return;
@@ -76,6 +78,13 @@ export const useMatchingSocket = (): UseMatchingSocketReturn => {
             }
         });
 
+        newSocket.on('match:confirmed', (data: any) => {
+            console.log('✅ Match confirmed:', data);
+            if (matchConfirmedCallbackRef.current) {
+                matchConfirmedCallbackRef.current(data);
+            }
+        });
+
         setSocket(newSocket);
 
         // Cleanup on unmount
@@ -93,6 +102,10 @@ export const useMatchingSocket = (): UseMatchingSocketReturn => {
         superLikeCallbackRef.current = callback;
     }, []);
 
+    const onMatchConfirmed = useCallback((callback: (data: any) => void) => {
+        matchConfirmedCallbackRef.current = callback;
+    }, []);
+
     const disconnect = useCallback(() => {
         if (socket) {
             socket.disconnect();
@@ -106,6 +119,7 @@ export const useMatchingSocket = (): UseMatchingSocketReturn => {
         isConnected,
         onMatchCreated,
         onSuperLike,
+        onMatchConfirmed,
         disconnect,
     };
 };

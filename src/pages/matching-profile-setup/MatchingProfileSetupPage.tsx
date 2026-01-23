@@ -361,7 +361,7 @@ const MatchingProfileSetupPage: React.FC = () => {
                                     <Step4BioAvailability formData={formData} onChange={updateFormData} />
                                 </section>
 
-                                <div className="sticky bottom-0 bg-white/80 backdrop-blur-sm py-4 border-t flex justify-end gap-3">
+                                <div className="pt-6 border-t flex justify-end gap-3">
                                     <Button variant="outline" onClick={() => navigate('/matching/swipe')} disabled={submitting}>
                                         Hủy
                                     </Button>

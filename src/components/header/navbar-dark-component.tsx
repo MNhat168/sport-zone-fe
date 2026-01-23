@@ -177,7 +177,7 @@ export const NavbarDarkComponent = () => {
                             Đặt Sân + HLV
                         </Link>
                         <Link to="/matching/find-partner" className={linkClass}>
-                            Tìm đối tác
+                            Tìm Bạn Chơi
                         </Link>
                         <Link to="/about" className={linkClass}>
                             Về chúng tôi

@@ -158,7 +158,7 @@ export const unmatchById = createAsyncThunk(
     'matching/unmatch',
     async (id: string, { dispatch, rejectWithValue }) => {
         try {
-            await axiosPrivate.post(UNMATCH_API(id));
+            await axiosPrivate.delete(UNMATCH_API(id));
             dispatch(fetchMyMatches(undefined));
             return id;
         } catch (error: any) {

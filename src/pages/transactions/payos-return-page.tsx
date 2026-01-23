@@ -93,14 +93,25 @@ export default function PayOSReturnPage() {
           setBookingId(result.bookingId || null);
           setStatus('success');
 
-          // Redirect to user booking history page after 2 seconds
+          // Redirect to appropriate page after 2 seconds
           setTimeout(() => {
-            navigate('/user-booking-history', {
-              state: {
-                message: 'Thanh toán thành công!',
-                bookingId: result.bookingId
-              }
-            });
+            if (result.matchId) {
+              logger.debug(`[PayOS Return] 🚀 Redirecting to match chat: /matching/matches/${result.matchId}`);
+              navigate(`/matching/matches/${result.matchId}`, {
+                state: {
+                  message: 'Thanh toán thành công!',
+                  bookingId: result.bookingId
+                }
+              });
+            } else {
+              logger.debug('[PayOS Return] 🚀 Redirecting to booking history');
+              navigate('/user-booking-history', {
+                state: {
+                  message: 'Thanh toán thành công!',
+                  bookingId: result.bookingId
+                }
+              });
+            }
           }, 2000);
         } else {
           logger.debug('[PayOS Return] ❌ PayOS payment failed');

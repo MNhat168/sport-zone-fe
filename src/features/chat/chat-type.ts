@@ -74,6 +74,8 @@ export interface ChatState {
   loading: boolean;
   error: string | null;
   unreadCount: number;
+  matchingUnreadCount: number;
+  unreadPerMatch: Record<string, number>;
   connected: boolean;
   typingUsers: Record<string, boolean>;
   // Widget state

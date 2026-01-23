@@ -175,7 +175,7 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
     );
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0 overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b bg-gradient-to-r from-primary/5 to-secondary/5">
                 <div className="flex items-center justify-between mb-2">
@@ -248,7 +248,7 @@ const ActiveChatView: React.FC<ActiveChatViewProps> = ({ onClose }) => {
             </div>
 
             {/* Messages Area */}
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea className="flex-1 p-4 min-h-0">
                 {currentRoom.messages.length === 0 ? (
                     <div className="text-center text-muted-foreground mt-10">
                         <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />

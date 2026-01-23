@@ -128,6 +128,22 @@ export interface Booking {
     };
     recurringGroupId?: string; // ID of the recurring group if part of one
     recurringType?: 'CONSECUTIVE' | 'WEEKLY'; // Type of recurring booking: CONSECUTIVE (batch) or WEEKLY (fixed weekly)
+    metadata?: {
+        matchId?: string;
+        isProposal?: boolean;
+        proposalStatus?: string;
+        splitPayment?: boolean;
+        proposerId?: string;
+        receiverId?: string;
+        shareAmount?: number;
+        payments?: Record<string, {
+            status: 'unpaid' | 'paid' | 'refunded';
+            amount: number;
+            transactionId?: string;
+            paidAt?: string;
+        }>;
+        [key: string]: any;
+    };
     cancellationReason?: string;
     metadata?: {
         isOwnerReserved?: boolean; // Đánh dấu booking do chủ sân tự đặt

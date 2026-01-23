@@ -3,13 +3,14 @@ import { useAppDispatch, useAppSelector } from '@/store/hook';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, DollarSign, CheckCircle, XCircle, AlertCircle, Loader2, Flag } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { fetchBookingById, createPayOSPayment } from '@/features/booking/bookingThunk';
 import { acceptMatchProposal, rejectMatchProposal } from '@/features/matching/matchingThunk';
 import { toast } from 'sonner';
 import { webSocketService } from '@/features/chat/websocket.service';
+import axiosPrivate from '@/utils/axios/axiosPrivate';
 
 interface MatchProposalMessageProps {
     content: string; // JSON string
@@ -30,12 +31,38 @@ const MatchProposalMessage: React.FC<MatchProposalMessageProps> = ({ content, is
         return <div className="text-red-500 text-xs">Invalid proposal format</div>;
     }
 
-    const { bookingId, shareAmount, totalAmount } = proposalData;
+    const { bookingId, shareAmount, totalAmount, fieldName, courtName, date, startTime, endTime, proposerId } = proposalData;
     const currentUserId = user?._id || (user as any)?.id;
+    const amIInitiator = proposerId === currentUserId;
+    const isActuallySender = isSender || amIInitiator;
 
     useEffect(() => {
         if (bookingId) {
             fetchBookingStatus();
+
+            // ✅ FIX: Check if we just returned from a successful payment
+            const params = new URLSearchParams(window.location.search);
+            const statusParam = params.get('status');
+            const bookingIdParam = params.get('bookingId');
+
+            if (bookingIdParam === bookingId && (statusParam === 'PAID' || statusParam === 'SUCCESS')) {
+                toast.success('Thanh toán thành công! Đang cập nhật trạng thái...');
+                // Retry a few times if the webhook is slow
+                let attempts = 0;
+                const interval = setInterval(async () => {
+                    attempts++;
+                    const result = await dispatch(fetchBookingById(bookingId)).unwrap();
+                    const metadata = result.metadata || {};
+                    const myStatus = metadata.payments?.[currentUserId]?.status;
+
+                    if (myStatus === 'paid' || attempts > 5) {
+                        setBooking(result);
+                        clearInterval(interval);
+                    }
+                }, 2000);
+
+                return () => clearInterval(interval);
+            }
         }
 
         // Listen for real-time updates
@@ -55,7 +82,7 @@ const MatchProposalMessage: React.FC<MatchProposalMessageProps> = ({ content, is
                 webSocketService.off('proposal_updated', handleUpdate);
             }
         };
-    }, [bookingId]);
+    }, [bookingId, currentUserId]);
 
     const fetchBookingStatus = async () => {
         setLoading(true);
@@ -111,36 +138,77 @@ const MatchProposalMessage: React.FC<MatchProposalMessageProps> = ({ content, is
         }
     };
 
+    const handleReport = async () => {
+        const reason = window.prompt('Lý do báo cáo người dùng này (ví dụ: Không thanh toán đặt sân):');
+        if (!reason) return;
+
+        setIsActionLoading(true);
+        try {
+            // Get reported user ID (the other participant)
+            const metadata = booking?.metadata || {};
+            const payments = metadata.payments || {};
+            const reportedUserId = Object.keys(payments).find(uid => uid !== currentUserId);
+
+            if (!reportedUserId) {
+                toast.error('Không tìm thấy người dùng để báo cáo');
+                return;
+            }
+
+            await axiosPrivate.post('/reports', {
+                category: 'payment_issue',
+                subject: `Báo cáo người dùng không thanh toán - Booking ${bookingId}`,
+                description: `Lý do: ${reason}\n\nChi tiết:\n- Booking ID: ${bookingId}\n- Người bị báo cáo: ${reportedUserId}\n- Trạng thái thanh toán của họ: ${payments[reportedUserId]?.status || 'unknown'}`,
+            });
+
+            toast.success('Đã gửi báo cáo người dùng. Chúng tôi sẽ xem xét và xử lý.');
+        } catch (error: any) {
+            console.error('Report error:', error);
+            toast.error('Gửi báo cáo thất bại');
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
     if (!booking && loading) {
         return <div className="p-4 bg-white rounded-lg shadow-sm border"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>;
     }
 
-    if (!booking) {
-        // Fallback to static data if booking load fails or strict mode prevents seeing it
-        return (
-            <Card className="w-[300px] bg-white shadow-sm border-slate-200">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-bold text-primary flex items-center gap-2">
-                        <DollarSign className="w-4 h-4" /> Đề xuất chia tiền sân
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="text-xs space-y-2 pb-2">
-                    <p>Đang tải thông tin chi tiết...</p>
-                </CardContent>
-            </Card>
-        );
-    }
+    // If booking is not loaded yet, we can still show the card if we have the fallback data
+    const displayBooking = booking || {
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+        status: 'pending',
+        field: { name: fieldName },
+        court: { name: courtName },
+        metadata: {
+            proposalStatus: 'pending',
+            payments: {
+                [proposerId]: { status: 'unpaid' },
+                [currentUserId]: { status: 'unpaid' }
+            }
+        }
+    };
 
-    const metadata = booking.metadata || {};
+    const metadata = displayBooking.metadata || {};
     const myPaymentStatus = metadata.payments?.[currentUserId]?.status;
-    const proposalStatus = metadata.proposalStatus; // pending, accepted, rejected
-    const isCancelled = booking.status === 'cancelled' || proposalStatus === 'rejected';
-    const isConfirmed = booking.status === 'confirmed';
-    const isFullyPaid = booking.paymentStatus === 'paid';
+    const opponentId = Object.keys(metadata.payments || {}).find(uid => uid !== currentUserId);
+    const opponentPaymentStatus = opponentId ? metadata.payments[opponentId]?.status : null;
 
-    const bookingCreatorId = typeof booking.user === 'string' ? booking.user : (booking.user?._id || (booking.user as any)?.id);
-    const amIInitiator = bookingCreatorId === currentUserId;
-    const isActuallySender = isSender || amIInitiator;
+    const proposalStatus = metadata.proposalStatus; // pending, accepted, rejected
+    const isCancelled = displayBooking.status === 'cancelled' || proposalStatus === 'rejected';
+
+    // ✅ CRITICAL FIX: Use metadata for true "fully paid" status in split payments
+    const isFullyPaid = metadata.splitPayment
+        ? Object.values(metadata.payments || {}).every((p: any) => p.status === 'paid')
+        : displayBooking.paymentStatus === 'paid';
+
+    const isOpponentUnpaid = isCancelled && myPaymentStatus === 'paid' && opponentPaymentStatus !== 'paid';
+
+    // For fallback when booking is not yet loaded
+    const bookingCreatorId = displayBooking.user
+        ? (typeof displayBooking.user === 'string' ? displayBooking.user : (displayBooking.user?._id || (displayBooking.user as any)?.id))
+        : proposerId;
 
     // Status Badge Logic
     let statusBadge = <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">Chờ xác nhận</Badge>;
@@ -178,8 +246,17 @@ const MatchProposalMessage: React.FC<MatchProposalMessageProps> = ({ content, is
         }
     } else if (proposalStatus === 'rejected') {
         statusBadge = <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Đã từ chối</Badge>;
-    } else if (booking.status === 'cancelled') {
-        statusBadge = <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">Đã hết hạn</Badge>;
+    } else if (isOpponentUnpaid) {
+        statusBadge = <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Bị hủy (Đối phương không trả)</Badge>;
+        statusText = (
+            <div className="bg-red-50/50 p-2 rounded-lg border border-red-100 mb-2">
+                <p className="text-[11px] text-red-700 font-medium text-center leading-tight">
+                    Đặt sân đã bị hệ thống hủy do đối phương không hoàn tất thanh toán. Bạn sẽ được hoàn tiền.
+                </p>
+            </div>
+        );
+    } else if (displayBooking.status === 'cancelled') {
+        statusBadge = <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">Đã hết hạn / Hủy</Badge>;
     }
 
     return (
@@ -195,19 +272,19 @@ const MatchProposalMessage: React.FC<MatchProposalMessageProps> = ({ content, is
                 {statusText}
                 <div className="flex items-center gap-3 text-sm">
                     <Calendar className="w-4 h-4 text-slate-400" />
-                    <span>{format(new Date(booking.date), 'dd/MM/yyyy')}</span>
+                    <span>{displayBooking.date ? format(new Date(displayBooking.date), 'dd/MM/yyyy') : 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                     <Clock className="w-4 h-4 text-slate-400" />
-                    <span>{booking.startTime} - {booking.endTime}</span>
+                    <span>{displayBooking.startTime} - {displayBooking.endTime}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                     <MapPin className="w-4 h-4 text-slate-400" />
                     <div className="flex flex-col min-w-0">
-                        <span className="truncate font-bold text-slate-700">{booking.field?.name || 'Sân bóng'}</span>
-                        {booking.court && (
+                        <span className="truncate font-bold text-slate-700">{displayBooking.field?.name || 'Sân bóng'}</span>
+                        {displayBooking.court && (
                             <span className="text-[10px] text-slate-500 font-medium italic">
-                                Sân: {booking.court.name || `Sân số ${booking.court.courtNumber}`}
+                                Sân: {displayBooking.court.name || `Sân số ${displayBooking.court.courtNumber}`}
                             </span>
                         )}
                     </div>
@@ -264,9 +341,25 @@ const MatchProposalMessage: React.FC<MatchProposalMessageProps> = ({ content, is
                         )}
 
                         {/* CASE 5: REJECTED or CANCELLED */}
-                        {(isCancelled || booking.status === 'cancelled') && (
+                        {isCancelled && !isOpponentUnpaid && (
                             <div className="w-full text-center text-xs font-medium text-slate-400 flex items-center justify-center gap-1">
                                 <XCircle className="w-3 h-3" /> {proposalStatus === 'rejected' ? 'Đã từ chối' : 'Đã đóng / Hết hạn'}
+                            </div>
+                        )}
+
+                        {/* CASE 6: OPPONENT UNPAID (REPORT ABILITY) */}
+                        {isOpponentUnpaid && (
+                            <div className="w-full space-y-2">
+                                <div className="text-center text-xs font-medium text-red-400 flex items-center justify-center gap-1 mb-1">
+                                    <AlertCircle className="w-3 h-3" /> Đối phương không thanh toán
+                                </div>
+                                <Button
+                                    onClick={handleReport}
+                                    variant="outline"
+                                    className="w-full h-8 text-[10px] text-red-600 border-red-200 hover:bg-red-50"
+                                >
+                                    <Flag className="w-3 h-3 mr-1" /> Báo cáo người dùng này
+                                </Button>
                             </div>
                         )}
                     </>
