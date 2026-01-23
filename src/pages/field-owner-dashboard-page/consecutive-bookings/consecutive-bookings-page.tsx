@@ -21,13 +21,9 @@ import {
 import { AlertCircle } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
-import { useAppDispatch, useAppSelector } from "@/store/hook";
-import {
-    ownerAcceptBooking,
-    ownerRejectBooking,
-    ownerGetBookingDetail,
-    getMyFieldsBookings,
-} from "@/features/field/fieldThunk";
+import { useFieldOwnerBookings } from "@/hooks/queries/useFieldOwnerBookings";
+import { useAcceptBooking, useRejectBooking } from "@/hooks/mutations/useBookingMutations";
+import { fieldOwnerBookingAPI } from "@/features/field/fieldOwnerBookingAPI";
 import type { FieldOwnerBooking } from "@/types/field-type";
 import logger from "@/utils/logger";
 import { formatCurrency } from "@/utils/format-currency";
@@ -157,15 +153,7 @@ const getNumberParam = (params: URLSearchParams, key: string, defaultValue: numb
 };
 
 export default function ConsecutiveBookingsPage() {
-    const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
-
-    const {
-        fieldOwnerBookings,
-        fieldOwnerBookingsLoading,
-        fieldOwnerBookingsError,
-        fieldOwnerBookingsPagination,
-    } = useAppSelector((state) => state.field);
 
     // Read pagination from URL (with defaults)
     const currentPage = getNumberParam(searchParams, 'page', 1);
@@ -180,6 +168,7 @@ export default function ConsecutiveBookingsPage() {
         return sortBy ? [{ id: sortBy, desc: sortOrder === 'desc' }] : [];
     }, [sortBy, sortOrder]);
 
+    // UI state
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<any>();
     const [confirmState, setConfirmState] = useState<{
@@ -191,7 +180,30 @@ export default function ConsecutiveBookingsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
     const [hiddenIds, setHiddenIds] = useState<string[]>([]);
-    const [hasInitialData, setHasInitialData] = useState(false);
+
+    // Calculate date range from time filter
+    const { startDate, endDate } = useMemo(() => getDateRangeFromTimeFilter(timeFilter), [timeFilter]);
+
+    // Use TanStack Query for data fetching
+    const { data: response, isLoading, error } = useFieldOwnerBookings({
+        fieldName: searchQuery || undefined,
+        status: activeTab,
+        startDate,
+        endDate,
+        page: currentPage,
+        limit: itemsPerPage,
+        type: 'field',
+        recurringType: 'CONSECUTIVE',
+        sortBy,
+        sortOrder,
+    });
+
+    const bookings = response?.data?.bookings || [];
+    const pagination = response?.data?.pagination;
+
+    // Mutation hooks
+    const acceptMutation = useAcceptBooking();
+    const rejectMutation = useRejectBooking();
 
     // Update URL params helper
     const updateSearchParams = useCallback(
@@ -250,72 +262,24 @@ export default function ConsecutiveBookingsPage() {
         };
     }, [updateSearchParams]);
 
-    // Fetch bookings
-    const fetchBookings = useCallback((isInitial = false) => {
-        const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
 
-        dispatch(
-            getMyFieldsBookings({
-                fieldName: searchQuery || undefined,
-                status: activeTab, // Use booking status, not transaction status
-                startDate,
-                endDate,
-                page: currentPage,
-                limit: itemsPerPage,
-                type: 'field', // Hard-coded for field-only bookings
-                recurringType: 'CONSECUTIVE', // Filter for consecutive bookings (multi-day)
-                sortBy,
-                sortOrder,
-            })
-        ).then(() => {
-            if (isInitial) setHasInitialData(true);
-        });
-    }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage, sortBy, sortOrder]);
 
-    // Fetch on mount and filter changes
-    useEffect(() => {
-        fetchBookings(true);
-    }, [fetchBookings]);
-
-    // Polling every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchBookings(false);
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [fetchBookings]);
 
     const handleViewDetails = async (bookingId: string) => {
-        const booking = fieldOwnerBookings?.find(b => b.bookingId === bookingId);
+        const booking = bookings?.find(b => b.bookingId === bookingId);
         if (!booking) return;
-
-        let note: string | undefined;
-        let paymentProofImageUrl: string | undefined;
-        let courtName: string | undefined;
-        try {
-            const res: any = await dispatch(ownerGetBookingDetail(bookingId)).unwrap();
-            note = res?.note;
-            if (res?.transaction?.paymentProofImageUrl) {
-                paymentProofImageUrl = res.transaction.paymentProofImageUrl;
-            }
-            if (res?.court) {
-                const court = typeof res.court === 'string' ? null : res.court;
-                courtName = court?.name || (court?.courtNumber ? `Sân ${court.courtNumber}` : undefined);
-            }
-        } catch {
-            // ignore detail fetch error
-        }
 
         const startTime12h = formatTime(booking.startTime);
         const endTime12h = formatTime(booking.endTime);
         const bookingDate = formatDate(booking.date);
 
-        const displayCourt = courtName || booking.courtName || (booking.courtNumber ? `Sân ${booking.courtNumber}` : booking.fieldName);
+        // Initial request display
+        const initialDisplayCourt = booking.courtName || (booking.courtNumber ? `Sân ${booking.courtNumber}` : booking.fieldName);
 
+        // 1. Open popup immediately
         setSelectedBooking({
             academy: booking.fieldName,
-            court: displayCourt,
+            court: initialDisplayCourt,
             bookedOn: bookingDate,
             bookingDate: bookingDate,
             bookingTime: `${startTime12h} - ${endTime12h}`,
@@ -324,10 +288,40 @@ export default function ConsecutiveBookingsPage() {
             amenities: booking.selectedAmenities,
             amenitiesFee: booking.amenitiesFee ? formatCurrency(booking.amenitiesFee, "VND") : "0 đ",
             originalBooking: booking,
-            note,
-            paymentProofImageUrl,
+            note: undefined,
+            fieldAddress: undefined,
+            bookingAmount: booking.bookingAmount ? formatCurrency(booking.bookingAmount, "VND") : undefined,
+            platformFee: booking.metadata?.systemFeeAmount ? formatCurrency(booking.metadata.systemFeeAmount, "VND") : undefined,
         });
         setIsDetailsOpen(true);
+
+        // 2. Fetch details in background
+        try {
+            const res: any = await fieldOwnerBookingAPI.ownerGetBookingDetail(bookingId);
+
+            let updatedCourtName = initialDisplayCourt;
+            if (res?.court) {
+                const court = typeof res.court === 'string' ? null : res.court;
+                const fetchedName = court?.name || (court?.courtNumber ? `Sân ${court.courtNumber}` : undefined);
+                if (fetchedName) updatedCourtName = fetchedName;
+            }
+
+            let fieldAddress: string | undefined;
+            if (res?.field?.location) {
+                const location = res.field.location;
+                fieldAddress = typeof location === 'string' ? location : location.address;
+            }
+
+            // 3. Update state
+            setSelectedBooking((prev: any) => ({
+                ...prev,
+                note: res?.note,
+                court: updatedCourtName,
+                fieldAddress: fieldAddress
+            }));
+        } catch {
+            // ignore detail fetch error
+        }
     };
 
     const handleAccept = (bookingId: string) => {
@@ -344,13 +338,12 @@ export default function ConsecutiveBookingsPage() {
 
         try {
             if (action === 'accept') {
-                await dispatch(ownerAcceptBooking(bookingId)).unwrap();
+                await acceptMutation.mutateAsync(bookingId);
             } else {
-                await dispatch(ownerRejectBooking({ bookingId })).unwrap();
+                await rejectMutation.mutateAsync({ bookingId });
             }
 
             setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
-            fetchBookings(false);
         } catch (e) {
             logger.error(`${action} booking failed`, e);
         } finally {
@@ -410,12 +403,12 @@ export default function ConsecutiveBookingsPage() {
     };
 
     const mappedBookings = useMemo(() => {
-        const rows: FieldOwnerBooking[] = fieldOwnerBookings || [];
+        const rows: FieldOwnerBooking[] = bookings || [];
         const mapped = rows.map(mapBookingToUI);
         return mapped.filter((b) => !hiddenIds.includes(b.id));
-    }, [fieldOwnerBookings, hiddenIds]);
+    }, [bookings, hiddenIds]);
 
-    const totalPages = fieldOwnerBookingsPagination?.totalPages || 1;
+    const totalPages = pagination?.totalPages || 1;
 
     return (
         <FieldOwnerDashboardLayout>
@@ -439,17 +432,17 @@ export default function ConsecutiveBookingsPage() {
                     </CardHeader>
                     <CardContent>
                         {/* Error State */}
-                        {fieldOwnerBookingsError && (
+                        {error && (
                             <Alert variant="destructive" className="mb-4">
                                 <AlertCircle className="h-4 w-4" />
                                 <AlertDescription>
-                                    {fieldOwnerBookingsError?.message || "Có lỗi xảy ra khi tải dữ liệu đặt chỗ"}
+                                    {error?.message || "Có lỗi xảy ra khi tải dữ liệu đặt chỗ"}
                                 </AlertDescription>
                             </Alert>
                         )}
 
                         {/* Loading State */}
-                        {fieldOwnerBookingsLoading && !hasInitialData ? (
+                        {isLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loading size={32} />
                             </div>
@@ -482,7 +475,7 @@ export default function ConsecutiveBookingsPage() {
                                         sorting={sorting}
                                         onSortingChange={handleSortingChange}
                                         // Loading state
-                                        isLoading={fieldOwnerBookingsLoading}
+                                        isLoading={isLoading}
                                     />
                                 )}
                             </>

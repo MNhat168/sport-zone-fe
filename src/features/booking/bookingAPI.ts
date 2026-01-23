@@ -25,4 +25,3 @@ export const CANCEL_RECURRING_GROUP_API = (groupId: string) => `${BASE_URL}/book
 
 // Owner-Reserved Booking
 export const CREATE_OWNER_RESERVED_BOOKING_API = `${BASE_URL}/bookings/owner-reserved`;
-

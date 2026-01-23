@@ -26,10 +26,17 @@ export interface User {
     status: string
     isActive: boolean
     googleId?: string
+    hasReadPolicy?: boolean
     bookmarkFields?: string[]
     bookmarkCoaches?: string[]
     createdAt: string
     updatedAt: string
+    coachProfile?: {
+        hasReadPolicy: boolean
+    }
+    fieldOwnerProfile?: {
+        hasReadPolicy: boolean
+    }
 }
 
 // Payload types for API calls

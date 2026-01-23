@@ -59,11 +59,6 @@ const menuItems: MenuItem[] = [
         icon: CheckSquare,
     },
     {
-        title: "Xác minh thanh toán",
-        url: "/coach/verify-payments",
-        icon: CheckSquare,
-    },
-    {
         title: "Ví tiền",
         url: "/coach-wallet",
         icon: Wallet,

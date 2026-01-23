@@ -1,9 +1,7 @@
-// src/layouts/root-layout.tsx
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import { AuthWrapper } from '../../routes/auth-wrapper';
 import { BannerNotificationContainer } from '@/components/notification/banner-notification-container';
-
 export const RootLayout = () => {
   const { pathname } = useLocation();
 

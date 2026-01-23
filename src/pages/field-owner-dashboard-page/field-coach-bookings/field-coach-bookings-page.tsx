@@ -21,13 +21,13 @@ import {
 import { AlertCircle } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
-import { useAppDispatch, useAppSelector } from "@/store/hook";
+import { useAppDispatch } from "@/store/hook";
 import {
     ownerAcceptBooking,
     ownerRejectBooking,
     ownerGetBookingDetail,
-    getMyFieldsBookings,
 } from "@/features/field/fieldThunk";
+import { useFieldOwnerBookings } from "@/hooks/queries/useFieldOwnerBookings";
 import type { FieldOwnerBooking } from "@/types/field-type";
 import logger from "@/utils/logger";
 import { formatCurrency } from "@/utils/format-currency";
@@ -159,13 +159,6 @@ export default function FieldCoachBookingsPage() {
     const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const {
-        fieldOwnerBookings,
-        fieldOwnerBookingsLoading,
-        fieldOwnerBookingsError,
-        fieldOwnerBookingsPagination,
-    } = useAppSelector((state) => state.field);
-
     // Read pagination from URL (with defaults)
     const currentPage = getNumberParam(searchParams, 'page', 1);
     const itemsPerPage = getNumberParam(searchParams, 'limit', 10);
@@ -192,7 +185,6 @@ export default function FieldCoachBookingsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
     const [hiddenIds, setHiddenIds] = useState<string[]>([]);
-    const [hasInitialData, setHasInitialData] = useState(false);
 
     // Update URL params helper
     const updateSearchParams = useCallback(
@@ -251,47 +243,35 @@ export default function FieldCoachBookingsPage() {
         };
     }, [updateSearchParams]);
 
-    // Helper to fetch bookings
-    const fetchBookings = useCallback((isInitial = false) => {
-        const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
+    // Calculate date range from time filter
+    const { startDate, endDate } = useMemo(
+        () => getDateRangeFromTimeFilter(timeFilter),
+        [timeFilter]
+    );
 
-        // Map tab to API status
-        let statusFilter: string = 'pending';
-        if (activeTab === 'succeeded') statusFilter = 'confirmed';
-        else if (activeTab === 'cancelled') statusFilter = 'cancelled';
-        else if (activeTab === 'refunded') statusFilter = 'cancelled'; // Map refunded to cancelled for now
-        else statusFilter = activeTab;
+    // Map sidebar tab to booking status used by API
+    const statusFilter: 'pending' | 'confirmed' | 'cancelled' | 'completed' = useMemo(() => {
+        if (activeTab === 'succeeded') return 'confirmed';
+        if (activeTab === 'cancelled' || activeTab === 'refunded') return 'cancelled';
+        return 'pending';
+    }, [activeTab]);
 
-        dispatch(
-            getMyFieldsBookings({
-                fieldName: searchQuery || undefined,
-                status: statusFilter as any,
-                startDate,
-                endDate,
-                page: currentPage,
-                limit: itemsPerPage,
-                type: 'field_coach', // Filter for field + coach bookings
-                sortBy,
-                sortOrder,
-            })
-        ).then(() => {
-            if (isInitial) setHasInitialData(true);
+    // Use TanStack Query for data fetching (field + coach bookings)
+    const { data: response, isLoading: fieldOwnerBookingsLoading, error: fieldOwnerBookingsError } =
+        useFieldOwnerBookings({
+            fieldName: searchQuery || undefined,
+            status: statusFilter,
+            startDate,
+            endDate,
+            page: currentPage,
+            limit: itemsPerPage,
+            type: 'field_coach',
+            sortBy,
+            sortOrder,
         });
-    }, [dispatch, activeTab, searchQuery, timeFilter, currentPage, itemsPerPage, sortBy, sortOrder]);
 
-    // Fetch bookings on mount and whenever filters/pagination change
-    useEffect(() => {
-        fetchBookings(true);
-    }, [fetchBookings]);
-
-    // Polling for updates every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchBookings(false);
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [fetchBookings]);
+    const fieldOwnerBookings = response?.data?.bookings || [];
+    const fieldOwnerBookingsPagination = response?.data?.pagination;
 
     const handleViewDetails = async (bookingId: string) => {
         const booking = fieldOwnerBookings?.find(b => b.bookingId === bookingId);
@@ -356,7 +336,6 @@ export default function FieldCoachBookingsPage() {
             }
 
             setHiddenIds((prev) => Array.from(new Set([...prev, bookingId])));
-            fetchBookings(false);
         } catch (e) {
             logger.error(`${action} booking failed`, e);
         } finally {
@@ -458,7 +437,7 @@ export default function FieldCoachBookingsPage() {
                             </Alert>
                         )}
 
-                        {fieldOwnerBookingsLoading && !hasInitialData ? (
+                        {fieldOwnerBookingsLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loading size={32} />
                             </div>

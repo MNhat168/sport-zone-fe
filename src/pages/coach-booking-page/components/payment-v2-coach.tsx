@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle, AlertCircle, ImageIcon, X, Clock, Copy, Upload } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Clock, Copy, Wallet } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useAppSelector } from "@/store/hook";
+import { useAppDispatch, useAppSelector } from "@/store/hook";
 import { useNavigate } from "react-router-dom";
 import { CustomSuccessToast, CustomFailedToast } from "@/components/toast/notificiation-toast";
 import logger from "@/utils/logger";
+import { createPayOSPayment } from "@/features/booking/bookingThunk";
+import { clearError } from "@/features/booking/bookingSlice";
+import { useSocket } from "@/hooks/useSocket";
 
 interface BookingFormData {
     date: string;
@@ -36,7 +39,7 @@ const formatVND = (value: number): string => {
 };
 
 /**
- * PaymentV2Coach component - Bank transfer with proof image upload for coach booking
+ * PaymentV2Coach component - PayOS payment integration for coach booking
  */
 export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
     coachId,
@@ -44,15 +47,11 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
     onBack,
 }) => {
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
     const { currentCoach } = useAppSelector((state) => state.coach);
+    const { loadingPayment } = useAppSelector((state) => state.booking);
 
-    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [paymentError, setPaymentError] = useState<string | null>(null);
-    const [verificationResult, setVerificationResult] = useState<{
-        status: string;
-        reason?: string;
-        isAiVerified: boolean;
-    } | null>(null);
 
     // Held booking state (restored from localStorage if page is refreshed)
     const [heldBookingId, setHeldBookingId] = useState<string | null>(null);
@@ -60,15 +59,9 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
     const [holdError, setHoldError] = useState<string | null>(null);
     const [bankAccount, setBankAccount] = useState<any>(null);
     const [loadingBankAccount, setLoadingBankAccount] = useState<boolean>(false);
-    const [proofImage, setProofImage] = useState<File | null>(null);
-    const [proofPreview, setProofPreview] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    // Fetch bank account info when component mounts
-    useEffect(() => {
-        if (coachId) {
-            fetchBankAccount(coachId);
-        }
-    }, [coachId]);
+
+    // WebSocket connection for real-time notifications
+    const socket = useSocket('notifications');
 
     // Restore held booking from localStorage on mount (created in PersonalInfo step)
     useEffect(() => {
@@ -194,28 +187,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const fetchBankAccount = async (coachId: string) => {
-        setLoadingBankAccount(true);
-        try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-            const response = await fetch(`${apiUrl}/coaches/${coachId}/bank-account`);
-            if (response.ok) {
-                const result = await response.json();
-                const bankAccountData = result?.data || result;
-                setBankAccount(bankAccountData);
-            } else {
-                logger.error('Failed to fetch bank account:', response.status, response.statusText);
-                setBankAccount(null);
-            }
-        } catch (error) {
-            logger.error('Error fetching bank account:', error);
-            setBankAccount(null);
-        } finally {
-            setLoadingBankAccount(false);
-        }
-    };
 
-    // Calculate pricing
     const calculateHours = useCallback((): number => {
         if (!bookingData.startTime || !bookingData.endTime) return 0;
         const start = new Date(`1970-01-01T${bookingData.startTime}:00`);
@@ -253,170 +225,196 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
         );
     }, [coachId, bookingData, calculateHours, calculateTotal]);
 
-    // Handle file selection
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            setPaymentError('Chỉ chấp nhận file ảnh (JPG, PNG, WEBP)');
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
-            setPaymentError('File không được vượt quá 5MB');
-            return;
-        }
-
-        setProofImage(file);
-        setPaymentError(null);
-
-        // Create preview
-        const preview = URL.createObjectURL(file);
-        setProofPreview(preview);
-    };
-
-    const handleRemoveImage = () => {
-        if (proofPreview) {
-            URL.revokeObjectURL(proofPreview);
-        }
-        setProofImage(null);
-        setProofPreview(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
+    // Clear persisted booking-related local storage
+    const clearBookingLocal = () => {
+        try {
+            const itemsToRemove = [
+                'heldBookingId',
+                'heldBookingCountdown',
+                'heldBookingTime'
+            ];
+            itemsToRemove.forEach(item => localStorage.removeItem(item));
+            logger.debug('[PAYMENT V2 COACH] Booking local data cleared selectorively');
+        } catch (error) {
+            logger.error('Error clearing booking local storage:', error);
         }
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text).then(() => {
-            CustomSuccessToast('Đã sao chép vào clipboard');
-        }).catch(() => {
-            CustomFailedToast('Không thể sao chép');
-        });
-    };
+    // WebSocket listener for real-time payment success notifications
+    useEffect(() => {
+        if (!socket || !heldBookingId || paymentSuccess) return;
 
-    // Handle payment submission (submit proof for held booking)
-    const handlePayment = async () => {
-        if (!proofImage) {
-            setPaymentError('Vui lòng upload ảnh chứng minh thanh toán');
-            return;
-        }
+        const handleNotification = (notification: any) => {
+            logger.debug('[PAYMENT V2 COACH] Received WebSocket notification:', notification);
 
-        // Booking should already be held from PersonalInfo step
+            // Access bookingId from metadata (standard structure for backend notifications)
+            const notificationBookingId = notification.metadata?.bookingId || notification.bookingId;
+            const notificationType = notification.type;
+
+            // Check if this is a payment success or booking confirmation notification for our booking
+            const isMatch = (notificationType === 'PAYMENT_SUCCESS' || notificationType === 'BOOKING_CONFIRMED')
+                && notificationBookingId === heldBookingId;
+
+            if (isMatch) {
+                logger.log('[PAYMENT V2 COACH] Success notification received via WebSocket!');
+
+                // Close PayOS window
+                if (payosWindow && !payosWindow.closed) {
+                    payosWindow.close();
+                }
+
+                // Update state
+                setPayosWindow(null);
+                setPaymentSuccess(true);
+                setPollAttempts(0);
+
+                // Clear local storage
+                clearBookingLocal();
+
+                logger.debug('[PAYMENT V2 COACH] Session cleared, showing success message');
+            }
+        };
+
+        socket.on('notification', handleNotification);
+
+        return () => {
+            socket.off('notification', handleNotification);
+        };
+    }, [socket, heldBookingId, payosWindow, paymentSuccess]);
+
+    // Poll payment status when PayOS window is open
+    useEffect(() => {
+        if (!payosWindow || !heldBookingId) return;
+
+        const MAX_POLL_ATTEMPTS = 150; // 150 attempts * 2 seconds = 5 minutes max
+        let pollInterval: NodeJS.Timeout;
+
+        pollInterval = setInterval(async () => {
+            // Check if window is still open
+            if (payosWindow.closed) {
+                clearInterval(pollInterval);
+                setPayosWindow(null);
+                setPollAttempts(0);
+
+                if (!paymentSuccess) {
+                    logger.debug('[PAYMENT V2 COACH] PayOS window closed without payment');
+                }
+                return;
+            }
+
+            // Check if max polling attempts reached
+            if (pollAttempts >= MAX_POLL_ATTEMPTS) {
+                logger.warn('[PAYMENT V2 COACH] Max polling attempts reached (5 minutes)');
+                clearInterval(pollInterval);
+                setPayosWindow(null);
+                setPollAttempts(0);
+                setPaymentError('Timeout chờ thanh toán. Vui lòng kiểm tra lịch sử booking của bạn.');
+                return;
+            }
+
+            setPollAttempts(prev => prev + 1);
+
+            try {
+                // Poll payment status
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}`,
+                    {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                    }
+                );
+
+                if (response.ok || response.status === 304) {
+                    const rawData = await response.json();
+                    const data = rawData.data || rawData;
+
+                    logger.debug('[PAYMENT V2 COACH] Polling booking status:', {
+                        bookingId: heldBookingId,
+                        status: data.status,
+                        paymentStatus: data.paymentStatus,
+                        attempt: pollAttempts + 1
+                    });
+
+                    // Check if payment is successful
+                    const isPaymentComplete =
+                        data.status === 'confirmed' ||
+                        data.paymentStatus === 'paid' ||
+                        (data.paymentMethod === 'payos' && data.status === 'confirmed');
+
+                    if (isPaymentComplete) {
+                        clearInterval(pollInterval);
+
+                        logger.log('[PAYMENT V2 COACH] Payment successful! Closing PayOS window...');
+
+                        // Close PayOS window
+                        if (!payosWindow.closed) {
+                            payosWindow.close();
+                        }
+
+                        setPayosWindow(null);
+                        setPaymentSuccess(true);
+                        setPollAttempts(0);
+
+                        // Clear local storage
+                        clearBookingLocal();
+
+                        logger.debug('[PAYMENT V2 COACH] Session cleared, showing success message');
+                    }
+                } else if (response.status === 404) {
+                    logger.warn('[PAYMENT V2 COACH] Booking not found (404), stopping poll');
+                    clearInterval(pollInterval);
+                    setPayosWindow(null);
+                    setPollAttempts(0);
+                    setPaymentError('Booking không tồn tại. Vui lòng thử lại.');
+                }
+            } catch (error) {
+                logger.error('[PAYMENT V2 COACH] Error polling payment status:', error);
+                // Continue polling on error (don't stop)
+            }
+        }, 2000); // Poll every 2 seconds
+
+        return () => {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        };
+    }, [payosWindow, heldBookingId, paymentSuccess, pollAttempts]);
+
+    // Handle PayOS payment initiation
+    const handlePayWithPayOS = async () => {
         if (!heldBookingId) {
             setPaymentError('Chưa có booking được giữ chỗ. Vui lòng quay lại bước trước.');
             return;
         }
 
-        // Additional validation: ensure heldBookingId is a valid string
-        if (typeof heldBookingId !== 'string' || heldBookingId.trim() === '' || heldBookingId === 'undefined') {
-            logger.error('[PaymentV2Coach] Invalid heldBookingId:', heldBookingId);
-            setPaymentError('ID booking không hợp lệ. Vui lòng quay lại bước trước.');
-            return;
-        }
-
-        // Countdown chỉ là thông báo, không block submit
-        // User có thể submit payment proof ngay khi có heldBookingId
-        if (countdown <= 0) {
-            // Chỉ warning, không block - vẫn cho phép submit
-            logger.warn('Countdown đã hết, nhưng vẫn cho phép submit payment proof');
-        }
-
-        setPaymentStatus('processing');
-        setPaymentError(null);
+        dispatch(clearError());
 
         try {
-            logger.debug('[PaymentV2Coach] Submitting payment proof for booking:', heldBookingId);
+            // Dispatch Redux action to create PayOS payment link
+            const result = await dispatch(createPayOSPayment(heldBookingId)).unwrap();
 
-            // Create FormData with payment proof
-            const formDataToSend = new FormData();
-            formDataToSend.append('paymentProof', proofImage);
+            // Open PayOS checkout URL in new window
+            if (result.checkoutUrl) {
+                const paymentWindow = window.open(
+                    result.checkoutUrl,
+                    'PayOS Payment',
+                    'width=800,height=900,left=200,top=100'
+                );
 
-            // Optional auth token
-            const token = localStorage.getItem('token');
-            const headers: HeadersInit = {};
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-
-            // Submit payment proof for existing booking
-            const url = `${import.meta.env.VITE_API_URL}/bookings/${heldBookingId}/submit-payment-proof`;
-            logger.debug('[PaymentV2Coach] Submitting to URL:', url);
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers,
-                body: formDataToSend,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Có lỗi xảy ra' }));
-                logger.error('[PaymentV2Coach] Server error:', errorData);
-                throw new Error(errorData.message || 'Không thể gửi ảnh chứng minh. Vui lòng thử lại.');
-            }
-
-            const responseData = await response.json();
-            const booking = responseData.data || responseData;
-            logger.debug('[PaymentV2Coach] Payment proof submitted successfully:', booking);
-
-            // Check for AI verification result
-            const isConfirmed = booking.status === 'confirmed';
-            const transaction = booking.transaction;
-            const isRejected = transaction?.paymentProofStatus === 'rejected';
-
-            if (isConfirmed) {
-                setVerificationResult({
-                    status: 'confirmed',
-                    isAiVerified: true
-                });
-                CustomSuccessToast('Thanh toán thành công! AI đã xác nhận biên lai của bạn.');
-            } else if (isRejected) {
-                setVerificationResult({
-                    status: 'rejected',
-                    reason: transaction?.paymentProofRejectionReason,
-                    isAiVerified: true
-                });
-                CustomFailedToast('AI từ chối biên lai: ' + transaction?.paymentProofRejectionReason);
+                if (paymentWindow) {
+                    setPayosWindow(paymentWindow);
+                } else {
+                    throw new Error('Không thể mở cửa sổ thanh toán. Vui lòng kiểm tra popup blocker.');
+                }
             } else {
-                setVerificationResult({
-                    status: 'pending',
-                    isAiVerified: false
-                });
-                CustomSuccessToast('Đã gửi yêu cầu đặt coach! Đang chờ coach xác nhận thanh toán.');
-            }
-
-            setPaymentStatus('success');
-
-            // Clear localStorage
-            localStorage.removeItem('heldBookingId');
-            localStorage.removeItem('heldBookingCountdown');
-            localStorage.removeItem('heldBookingTime');
-
-            // Clean up preview URL
-            if (proofPreview) {
-                URL.revokeObjectURL(proofPreview);
-            }
-
-            // Only navigate if NOT rejected
-            if (!isRejected) {
-                setTimeout(() => {
-                    navigate(`/bookings/${booking._id || booking.id}`);
-                }, 2000);
-            } else {
-                logger.debug('[PaymentV2Coach] AI verification rejected. Staying on page for retry.');
+                throw new Error('Link thanh toán không tồn tại');
             }
         } catch (error: any) {
-            logger.error('[PaymentV2Coach] Error submitting payment proof:', error);
-            const errorMessage = error?.message || 'Không thể gửi ảnh chứng minh. Vui lòng thử lại.';
-            setPaymentError(errorMessage);
-            setPaymentStatus('error');
-            CustomFailedToast(errorMessage);
+            logger.error('PayOS Error:', error);
+            setPaymentError(error.message || 'Lỗi khi khởi tạo thanh toán PayOS');
         }
     };
+
 
     const formatDate = (dateString: string): string => {
         if (!dateString) return '';
@@ -454,6 +452,69 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
     const total = calculateTotal();
     const hours = calculateHours();
 
+    // Show success screen if payment completed
+    if (paymentSuccess) {
+        return (
+            <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
+                <Card className="border border-gray-200">
+                    <CardContent className="p-8 text-center">
+                        <div className="mb-6">
+                            <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg
+                                    className="w-12 h-12 text-green-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                            Thanh toán thành công!
+                        </h2>
+                        <p className="text-lg text-gray-600 mb-6">
+                            Đặt coach của bạn đã được xác nhận. Chúng tôi đã gửi email xác nhận đến bạn.
+                        </p>
+                        <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left max-w-md mx-auto">
+                            <h3 className="font-semibold text-gray-900 mb-4">Thông tin đặt coach</h3>
+                            <div className="space-y-3 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Coach:</span>
+                                    <span className="font-medium">{currentCoach?.name || 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Ngày:</span>
+                                    <span className="font-medium">{formatDate(bookingData.date)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Giờ:</span>
+                                    <span className="font-medium">
+                                        {formatTime(bookingData.startTime)} - {formatTime(bookingData.endTime)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between pt-3 border-t">
+                                    <span className="font-semibold text-gray-900">Tổng:</span>
+                                    <span className="font-semibold text-green-600">
+                                        {formatVND(total)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                            Bạn có thể đóng trang này hoặc kiểm tra lịch sử đặt lịch trong tài khoản của bạn.
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full max-w-[1320px] mx-auto px-3 py-10">
             <Card className="border border-gray-200">
@@ -462,7 +523,7 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                         <Button variant="ghost" size="icon" onClick={onBack}>
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
-                        <CardTitle className="text-2xl">Bước 2: Thanh toán chuyển khoản</CardTitle>
+                        <CardTitle className="text-2xl">Xác nhận & Thanh toán</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -520,156 +581,30 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                         </div>
                     </div>
 
-                    {/* Bank Account Info */}
-                    {loadingBankAccount ? (
-                        <div className="text-center py-8">
-                            <Loading size={32} className="mx-auto mb-2 text-green-600" />
-                            <p className="text-muted-foreground">Đang tải thông tin tài khoản...</p>
-                        </div>
-                    ) : bankAccount ? (
-                        <div className="p-6 bg-green-50 rounded-lg border-2 border-green-200 space-y-4">
-                            <div className="text-center">
-                                <h3 className="text-xl font-bold text-green-900 mb-2">Thông tin chuyển khoản</h3>
-                                <p className="text-sm text-green-700">Vui lòng chuyển khoản đúng số tiền và upload biên lai</p>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                {/* Bank Account Details */}
-                                <div className="space-y-4">
-                                    <div className="p-4 bg-white rounded-lg border border-green-300">
-                                        <Label className="text-sm font-semibold text-green-900 mb-2 block">Số tài khoản</Label>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                value={bankAccount.accountNumber}
-                                                readOnly
-                                                className="font-mono text-lg font-bold"
-                                            />
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() => copyToClipboard(bankAccount.accountNumber)}
-                                            >
-                                                <Copy className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 bg-white rounded-lg border border-green-300">
-                                        <Label className="text-sm font-semibold text-green-900 mb-2 block">Tên chủ tài khoản</Label>
-                                        <p className="font-semibold text-lg">{bankAccount.accountName}</p>
-                                    </div>
-
-                                    <div className="p-4 bg-white rounded-lg border border-green-300">
-                                        <Label className="text-sm font-semibold text-green-900 mb-2 block">Ngân hàng</Label>
-                                        <p className="font-semibold">{bankAccount.bankName}</p>
-                                        {bankAccount.branch && (
-                                            <p className="text-sm text-muted-foreground">Chi nhánh: {bankAccount.branch}</p>
-                                        )}
-                                    </div>
-
-                                    <div className="p-4 bg-white rounded-lg border-2 border-green-500">
-                                        <Label className="text-sm font-semibold text-green-900 mb-2 block">Số tiền cần chuyển</Label>
-                                        <p className="text-3xl font-bold text-green-600">{formatVND(total)}</p>
-                                        <div className="mt-2 text-xs text-muted-foreground space-y-1">
-                                            <p>Giá coach: {formatVND(bookingAmount)} ({hours}h × {formatVND(currentCoach?.price || 0)}/h)</p>
-                                            <p>Phí nền tảng (5%): {formatVND(platformFee)}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* QR Code */}
-                                {bankAccount.qrCodeUrl && (
-                                    <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg border border-green-300">
-                                        <Label className="text-sm font-semibold text-green-900 mb-2">Quét QR để chuyển khoản</Label>
-                                        <div className="p-4 bg-white rounded-lg border-2 border-green-500">
-                                            <img
-                                                src={bankAccount.qrCodeUrl}
-                                                alt="QR Code"
-                                                className="w-48 h-48 object-contain"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-muted-foreground mt-2 text-center">
-                                            Quét mã QR bằng ứng dụng ngân hàng để chuyển khoản nhanh
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="p-6 bg-red-50 rounded-lg border border-red-200">
-                            <div className="flex items-center gap-2 text-red-800">
-                                <AlertCircle className="h-5 w-5" />
-                                <p className="font-semibold">Không thể tải thông tin tài khoản</p>
-                            </div>
-                            <p className="text-sm text-red-700 mt-2">
-                                Vui lòng liên hệ với coach hoặc thử lại sau.
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Upload Payment Proof */}
+                    {/* PayOS Payment Section */}
                     <div className="space-y-4">
-                        <div>
-                            <Label className="text-base font-semibold mb-2 block">
-                                Upload ảnh chứng minh thanh toán
-                            </Label>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Vui lòng chụp ảnh biên lai chuyển khoản và upload tại đây
-                            </p>
+                        <h3 className="text-lg font-semibold">Thanh toán qua PayOS</h3>
+                        <p className="text-sm text-gray-600">
+                            Quét mã QR hoặc thanh toán qua cổng PayOS để hoàn tất đặt lịch
+                        </p>
 
-                            {!proofImage ? (
-                                <div
-                                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                                    <p className="text-sm font-medium text-gray-700 mb-1">
-                                        Click để chọn ảnh hoặc kéo thả vào đây
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                        JPG, PNG, WEBP (tối đa 5MB)
-                                    </p>
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                                        onChange={handleFileSelect}
-                                        className="hidden"
-                                    />
-                                </div>
+                        <Button
+                            onClick={handlePayWithPayOS}
+                            disabled={!heldBookingId || countdown <= 0 || loadingPayment}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                            {loadingPayment ? (
+                                <>
+                                    <Loading size={16} className="mr-2" />
+                                    Đang tạo link thanh toán...
+                                </>
                             ) : (
-                                <div className="relative border-2 border-green-500 rounded-lg p-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
-                                            {proofPreview ? (
-                                                <img
-                                                    src={proofPreview}
-                                                    alt="Payment proof preview"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <ImageIcon className="h-8 w-8 text-gray-400" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="font-medium text-sm mb-1">{proofImage.name}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {(proofImage.size / 1024 / 1024).toFixed(2)} MB
-                                            </p>
-                                        </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={handleRemoveImage}
-                                        >
-                                            <X className="h-5 w-5" />
-                                        </Button>
-                                    </div>
-                                </div>
+                                <>
+                                    <Wallet className="w-5 h-5 mr-2" />
+                                    Thanh toán qua PayOS
+                                </>
                             )}
-                        </div>
+                        </Button>
                     </div>
 
                     {/* Error Message */}
@@ -682,91 +617,15 @@ export const PaymentV2Coach: React.FC<PaymentV2CoachProps> = ({
                         </div>
                     )}
 
-                    {/* Success Message */}
-                    {paymentStatus === 'success' && (
-                        <div className={`p-6 rounded-lg border space-y-4 ${verificationResult?.status === 'confirmed'
-                            ? 'bg-green-50 border-green-200 text-green-800'
-                            : verificationResult?.status === 'rejected'
-                                ? 'bg-red-50 border-red-200 text-red-800'
-                                : 'bg-amber-50 border-amber-200 text-amber-800'
-                            }`}>
-                            <div className="flex items-center gap-3">
-                                {verificationResult?.status === 'confirmed' ? (
-                                    <CheckCircle className="h-8 w-8 text-green-600" />
-                                ) : verificationResult?.status === 'rejected' ? (
-                                    <AlertCircle className="h-8 w-8 text-red-600" />
-                                ) : (
-                                    <Clock className="h-8 w-8 text-amber-600" />
-                                )}
-                                <div>
-                                    <h3 className="text-xl font-bold">
-                                        {verificationResult?.status === 'confirmed'
-                                            ? 'Thanh toán thành công!'
-                                            : verificationResult?.status === 'rejected'
-                                                ? 'Biên lai bị từ chối'
-                                                : 'Đã gửi yêu cầu'}
-                                    </h3>
-                                    <p className="text-sm">
-                                        {verificationResult?.status === 'confirmed'
-                                            ? 'AI đã xác nhận thanh toán. Lịch hẹn của bạn đã được xác nhận.'
-                                            : verificationResult?.status === 'rejected'
-                                                ? `AI không thể xác nhận: ${verificationResult.reason}`
-                                                : 'Đơn đặt đang chờ coach xác minh thanh toán thủ công.'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {verificationResult?.status !== 'confirmed' && (
-                                <div className="space-y-2">
-                                    {verificationResult?.status === 'pending' && (
-                                        <p className="text-xs text-amber-700 italic">
-                                            Lưu ý: Bạn có thể thay đổi ảnh minh chứng nếu phát hiện sai sót.
-                                        </p>
-                                    )}
-                                    <Button
-                                        variant="outline"
-                                        className={`w-full ${verificationResult?.status === 'rejected'
-                                            ? 'border-red-300 text-red-800 hover:bg-red-100'
-                                            : 'border-amber-300 text-amber-800 hover:bg-amber-100'
-                                            }`}
-                                        onClick={() => setPaymentStatus('idle')}
-                                    >
-                                        {verificationResult?.status === 'rejected' ? 'Thử lại với ảnh khác' : 'Thay thế ảnh minh chứng'}
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     {/* Action Buttons */}
                     <div className="flex gap-4 pt-4">
                         <Button
                             variant="outline"
                             onClick={onBack}
                             className="flex-1"
-                            disabled={paymentStatus === 'processing'}
+                            disabled={loadingPayment}
                         >
                             Quay lại
-                        </Button>
-                        <Button
-                            onClick={handlePayment}
-                            disabled={
-                                !proofImage ||
-                                paymentStatus === 'processing'
-                            }
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                        >
-                            {paymentStatus === 'processing' ? (
-                                <>
-                                    <Loading size={16} className="mr-2" />
-                                    Đang xử lý...
-                                </>
-                            ) : (
-                                <>
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Hoàn tất đặt lịch
-                                </>
-                            )}
                         </Button>
                     </div>
                 </CardContent>

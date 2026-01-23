@@ -57,8 +57,8 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
 
             // Validate date
             let dateObj: Date;
-            if (booking.date instanceof Date) {
-                dateObj = booking.date;
+            if (typeof booking.date === 'object' && booking.date !== null && 'getTime' in booking.date) {
+                dateObj = booking.date as Date;
             } else if (typeof booking.date === 'string') {
                 dateObj = new Date(booking.date);
             } else {
@@ -255,8 +255,9 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
                                         {fieldData?.sportType ? getSportDisplayNameVN(fieldData.sportType) : 'Không xác định'}
                                     </p>
                                     {fieldData?.location && (
-                                        <p className="text-xs text-gray-500 mt-1 truncate">
-                                            {getLocationText(fieldData.location)}
+                                        <p className="text-xs text-gray-500 mt-1 flex items-start gap-1">
+                                            <span>📍</span>
+                                            <span className="line-clamp-2">{getLocationText(fieldData.location)}</span>
                                         </p>
                                     )}
                                 </div>
