@@ -24,7 +24,14 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, Clock, User, FileText, AlertCircle, CalendarIcon, Search, MessageCircle } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar, Clock, User, FileText, AlertCircle, CalendarIcon, Search, Eye } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import { TransactionStatus } from "@/components/enums/ENUMS";
 import { formatCurrency } from "@/utils/format-currency";
@@ -259,6 +266,9 @@ export default function CoachBookingsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [timeFilter, setTimeFilter] = useState("all");
     const [bookingTypeTab, setBookingTypeTab] = useState<'coach' | 'field_coach'>('coach');
+    const [selectedBooking, setSelectedBooking] = useState<MappedBooking | null>(null);
+    const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+    const [hasInitialData, setHasInitialData] = useState(false);
 
 
 
@@ -278,7 +288,7 @@ export default function CoachBookingsPage() {
     }, []);
 
     useEffect(() => {
-        const fetchBookings = async () => {
+        const fetchBookings = async (isInitial = false) => {
             setLoading(true);
             try {
                 const type = bookingTypeTab === 'field_coach' ? 'field_coach' : 'coach';
@@ -293,11 +303,12 @@ export default function CoachBookingsPage() {
                 setError(errorMessage);
             } finally {
                 setLoading(false);
+                if (isInitial) setHasInitialData(true);
             }
         };
 
         if (authUser) {
-            fetchBookings();
+            fetchBookings(true); // Initial load with hasInitialData flag
         }
     }, [authUser, bookingTypeTab]);
 
@@ -386,8 +397,9 @@ export default function CoachBookingsPage() {
         }
     };
 
-    const handleChat = (bookingId: string) => {
-        logger.debug("Open chat for booking:", bookingId);
+    const handleViewDetail = (booking: MappedBooking) => {
+        setSelectedBooking(booking);
+        setDetailDialogOpen(true);
     };
 
     const handleSearch = (value: string) => {
@@ -414,7 +426,19 @@ export default function CoachBookingsPage() {
         const { startDate, endDate } = getDateRangeFromTimeFilter(timeFilter);
 
         return bookings
-            .map((b) => mapBookingToUI(b, bookingTypeTab))
+            .map((b) => {
+                const mapped = mapBookingToUI(b, bookingTypeTab);
+                // Debug logging - TODO: Remove after verification
+                console.log('🔍 Booking Mapped:', {
+                    id: mapped.id,
+                    customerName: mapped.customerName,
+                    coachStatus: mapped.coachStatus,
+                    transactionStatus: mapped.transactionStatus,
+                    status: mapped.status,
+                    statusText: mapped.statusText,
+                });
+                return mapped;
+            })
             .filter((b) => {
                 // Filter by search query
                 if (searchQuery) {
@@ -434,7 +458,8 @@ export default function CoachBookingsPage() {
                 const txStatus = b.transactionStatus || b.originalBooking.status;
                 switch (activeTab) {
                     case TransactionStatus.PENDING:
-                        return txStatus === 'pending' || b.coachStatus === 'pending';
+                        // Prioritize coachStatus for coach bookings
+                        return b.coachStatus === 'pending' || (txStatus === 'pending' && !b.coachStatus);
                     case TransactionStatus.PROCESSING:
                         return txStatus === 'processing';
                     case TransactionStatus.SUCCEEDED:
@@ -580,7 +605,7 @@ export default function CoachBookingsPage() {
                         )}
 
                         {/* Loading State */}
-                        {loading ? (
+                        {!hasInitialData && loading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loading size={32} />
                             </div>
@@ -621,7 +646,7 @@ export default function CoachBookingsPage() {
                                                                 Trạng Thái
                                                             </TableHead>
                                                             <TableHead className="w-24 font-semibold text-gray-900 text-left py-4">
-                                                                Chat
+                                                                Chi Tiết
                                                             </TableHead>
                                                             <TableHead className="w-48 py-4">Hành Động</TableHead>
                                                             <TableHead className="w-32 font-semibold text-gray-900 text-left py-4">
@@ -677,15 +702,15 @@ export default function CoachBookingsPage() {
                                                                         type="button"
                                                                         variant="ghost"
                                                                         className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal gap-2"
-                                                                        onClick={() => handleChat(booking.id)}
+                                                                        onClick={() => handleViewDetail(booking)}
                                                                     >
-                                                                        <MessageCircle className="h-3.5 w-3.5" />
-                                                                        Chat
+                                                                        <Eye className="h-3.5 w-3.5" />
+                                                                        Chi Tiết
                                                                     </Button>
                                                                 </TableCell>
                                                                 <TableCell className="py-5 text-left">
                                                                     {/* Show Accept/Reject for pending coach requests */}
-                                                                    {(booking.coachStatus === 'pending' || booking.transactionStatus === 'pending') ? (
+                                                                    {booking.coachStatus === 'pending' ? (
                                                                         <div className="flex items-center gap-2">
                                                                             <Button
                                                                                 type="button"
@@ -706,7 +731,7 @@ export default function CoachBookingsPage() {
                                                                                 Từ Chối
                                                                             </Button>
                                                                         </div>
-                                                                    ) : booking.transactionStatus === 'succeeded' || booking.originalBooking.status === 'confirmed' ? (
+                                                                    ) : (booking.coachStatus === 'accepted' || booking.transactionStatus === 'succeeded' || booking.originalBooking.status === 'confirmed') ? (
                                                                         <div className="flex items-center gap-2">
                                                                             <Button
                                                                                 type="button"
@@ -728,7 +753,7 @@ export default function CoachBookingsPage() {
                                                                             </Button>
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="text-sm text-gray-500">Không có hành động</div>
+                                                                        <div className="text-sm text-gray-500">-</div>
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell className="py-3.5 text-left">

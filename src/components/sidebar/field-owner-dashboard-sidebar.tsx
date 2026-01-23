@@ -33,6 +33,7 @@ import {
     Calendar,
     Users,
     QrCode,
+    Lock,
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -76,6 +77,11 @@ const menuItems: MenuItem[] = [
         icon: CalendarDays,
     },
     {
+        title: "Khóa sân nhanh",
+        url: "/field-owner/owner-reserved-booking",
+        icon: Lock,
+    },
+    {
         title: "Đặt sân nhiều ngày liên tiếp",
         url: "/field-owner/consecutive-bookings",
         icon: Calendar,
@@ -91,8 +97,8 @@ const menuItems: MenuItem[] = [
         icon: Users,
     },
     {
-        title: "Quét QR Check-in",
-        url: "/field-owner/check-in",
+        title: "Quản lý QR sân",
+        url: "/field-owner/qr-management",
         icon: QrCode,
     },
     {
@@ -149,6 +155,7 @@ export function FieldOwnerSidebar() {
     const isFieldBookingPage = location.pathname === "/field-owner/field-bookings"
     const isFieldsPage = location.pathname.startsWith("/field-owner/fields")
     const isSingleBookingsPage = location.pathname.startsWith("/field-owner/single-bookings")
+    const isOwnerReservedBookingPage = location.pathname.startsWith("/field-owner/owner-reserved-booking")
     const isConsecutiveBookingsPage = location.pathname.startsWith("/field-owner/consecutive-bookings")
     const isRecurringBookingsPage = location.pathname.startsWith("/field-owner/recurring-bookings")
     const isFieldCoachBookingsPage = location.pathname.startsWith("/field-owner/field-coach-bookings")
@@ -327,6 +334,11 @@ export function FieldOwnerSidebar() {
         }
     }
 
+    const handleOwnerReservedBookingClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        navigate("/field-owner/owner-reserved-booking")
+    }
+
     const handleConsecutiveBookingsClick = (e: React.MouseEvent) => {
         e.preventDefault()
         if (isConsecutiveBookingsPage) {
@@ -430,6 +442,7 @@ export function FieldOwnerSidebar() {
                                     const isFieldCoachBooking = item.url === "/field-owner/field-coach-bookings"
                                     const isFields = item.url === "/field-owner/fields"
                                     const isSingleBookings = item.url === "/field-owner/single-bookings"
+                                    const isOwnerReservedBooking = item.url === "/field-owner/owner-reserved-booking"
                                     const isConsecutiveBookings = item.url === "/field-owner/consecutive-bookings"
                                     const isRecurringBookings = item.url === "/field-owner/recurring-bookings"
                                     return (
@@ -499,6 +512,21 @@ export function FieldOwnerSidebar() {
                                                     isActive={isActive(item.url)}
                                                     tooltip={item.title}
                                                     onClick={handleSingleBookingsClick}
+                                                    className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
+                                                >
+                                                    <Icon />
+                                                    <span>{item.title}</span>
+                                                    {item.badge && (
+                                                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </SidebarMenuButton>
+                                            ) : isOwnerReservedBooking ? (
+                                                <SidebarMenuButton
+                                                    isActive={isActive(item.url)}
+                                                    tooltip={item.title}
+                                                    onClick={handleOwnerReservedBookingClick}
                                                     className={isActive(item.url) ? "bg-primary text-white hover:bg-primary/90 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white" : ""}
                                                 >
                                                     <Icon />

@@ -89,14 +89,6 @@ export function CoachDashboardTabs() {
                             <Wallet className="w-5 h-5" />
                             <span className="text-xs font-medium">Wallet</span>
                         </Button>
-                        <Button
-                            variant="ghost"
-                            className={baseTabClasses(isActive("/coach/verify-payments"))}
-                            onClick={() => handleNavigation("/coach/verify-payments")}
-                        >
-                            <CheckCircle className="w-5 h-5" />
-                            <span className="text-xs font-medium">Xác minh thanh toán</span>
-                        </Button>
                     </div>
                 </div>
             </div>

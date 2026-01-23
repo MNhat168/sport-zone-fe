@@ -12,6 +12,7 @@ import ResetPasswordPage from "../pages/auth/reset-password-page";
 import LandingPage from "../pages/landing/landing-page";
 import AboutPage from "../pages/about/about-page";
 import MatchingLayout from "../components/layouts/matching-layout";
+import PolicyConfirmationPage from "../pages/auth/policy-confirmation-page";
 
 // ===== LAZY-LOADED PAGES =====
 // User Pages
@@ -32,7 +33,6 @@ const UserRefundPage = lazy(() => import("../pages/user-dashboard-page/refund/us
 const CoachDashboardPage = lazy(() => import("../pages/coach-dashboard-page/dashboard/coach-dashboard-page.tsx"));
 const CoachSchedulePage = lazy(() => import("../pages/coach-dashboard-page/schedule/coach-schedule-page.tsx"));
 const CoachWalletPage = lazy(() => import("../pages/coach-dashboard-page/wallet/coach-wallet-page.tsx"));
-const CoachVerifyPaymentsPage = lazy(() => import("../pages/coach-dashboard-page/verify-payments/verify-payments-page.tsx"));
 const CoachBookingsPage = lazy(() => import("../pages/coach-dashboard-page/bookings/coach-bookings-page.tsx"));
 const CoachSelfDetailPage = lazy(() => import("../pages/coach-dashboard-page/coach-self-detail-page/coach-profile-page"));
 const CoachProfileSettingsPage = lazy(() => import("../pages/coach-dashboard-page/profile/coach-profile-page"));
@@ -70,6 +70,7 @@ const FieldViewPage = lazy(() => import("../pages/field-owner-dashboard-page/fie
 
 const FieldOwnerChatDashboard = lazy(() => import("@/pages/field-owner-dashboard-page/chat/FieldOwnerChatPage.tsx"));
 const SingleBookingsPage = lazy(() => import("../pages/field-owner-dashboard-page/single-bookings/single-bookings-page"));
+const OwnerReservedBookingPage = lazy(() => import("../pages/field-owner-dashboard-page/owner-reserved-booking/owner-reserved-booking-page"));
 const FieldCoachBookingsPage = lazy(() => import("../pages/field-owner-dashboard-page/field-coach-bookings/field-coach-bookings-page"));
 
 // Field Owner Registration Pages
@@ -139,6 +140,7 @@ export const publicRoutes: RouteObject[] = [
   { path: "/coach", element: <BookingPage /> },
   { path: "/coach-detail/:id", element: <CoachDetailPage /> },
   { path: "/auth", element: <AuthenticationPage /> },
+  { path: "/auth/policy-confirmation", element: <PolicyConfirmationPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
   // PayOS Payment Pages
@@ -470,14 +472,6 @@ export const coachRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  {
-    path: "/coach/verify-payments",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.coach]}>
-        <CoachVerifyPaymentsPage />
-      </ProtectedRoute>
-    ),
-  },
 
   // Coach Students & Performance
   {
@@ -648,7 +642,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner/dashboard",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <Placeholder title="Field Owner Dashboard" />
+        <FieldOwnerDashboardPage />
       </ProtectedRoute>
     ),
   },
@@ -737,6 +731,14 @@ export const fieldOwnerRoutes: RouteObject[] = [
     ),
   },
   {
+    path: "/field-owner/owner-reserved-booking",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <OwnerReservedBookingPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/field-owner/consecutive-bookings",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
@@ -763,14 +765,10 @@ export const fieldOwnerRoutes: RouteObject[] = [
     ),
   },
 
-  // Customer Management
+  // Redirect old check-in route to QR management
   {
     path: "/field-owner/check-in",
-    element: (
-      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <FieldOwnerCheckInPage />
-      </ProtectedRoute>
-    ),
+    element: <Navigate to="/field-owner/qr-management" replace />
   },
   {
     path: "/field-owner/qr-management",
@@ -830,7 +828,7 @@ export const fieldOwnerRoutes: RouteObject[] = [
     path: "/field-owner",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
-        <Placeholder title="Field Owner Dashboard" />
+        <Navigate to="/field-owner/dashboard" replace />
       </ProtectedRoute>
     ),
   },

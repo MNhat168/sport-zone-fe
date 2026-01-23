@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { NotificationBell } from "./notification-bell";
 import logger from "@/utils/logger";
+import { RoleSelectionDialog } from "./role-selection-dialog";
 export const NavbarComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
@@ -51,6 +52,7 @@ export const NavbarComponent = () => {
     const [openLogoutDialog, setOpenLogoutDialog] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [openRoleDialog, setOpenRoleDialog] = useState(false);
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -192,6 +194,7 @@ export const NavbarComponent = () => {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 md:gap-4">
+                        
                         {/* Notification */}
                         {auth.user && (
                             <NotificationBell
@@ -255,6 +258,16 @@ export const NavbarComponent = () => {
                             </div>
                         )}
 
+                        {auth.user?.role === "user" && (
+                            <Button
+                                variant="ghost"
+                                className={linkClass}
+                                onClick={() => setOpenRoleDialog(true)}
+                            >
+                                Trở thành đối tác
+                            </Button>
+                        )}
+                        
                         {/* Mobile Menu Toggle */}
                         <div className="lg:hidden ml-2">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -361,6 +374,7 @@ export const NavbarComponent = () => {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                <RoleSelectionDialog open={openRoleDialog} onOpenChange={setOpenRoleDialog} />
             </header>
         </>
     );

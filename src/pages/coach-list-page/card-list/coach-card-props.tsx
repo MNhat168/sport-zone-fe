@@ -115,7 +115,7 @@ const CoachCard: React.FC<CoachCardProps> = ({
                                                         key={index}
                                                         className={`${badgeColor} text-white text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap`}
                                                     >
-                                                        Dạy môn: {getSportDisplayNameVN(trimmedSport)}
+                                                        {getSportDisplayNameVN(trimmedSport)}
                                                     </span>
                                                 );
                                             })}
@@ -133,11 +133,6 @@ const CoachCard: React.FC<CoachCardProps> = ({
                         <div className="flex items-center w-full sm:w-auto">
                             <span className="text-yellow-500 text-lg">★ {rating}</span>
                             <span className="text-gray-600 text-sm ml-1">({reviews} reviews)</span>
-                            <div className="flex items-center text-gray-600 text-sm ml-4">
-                                <span className="mr-1">📅</span>
-                                <span className="hidden sm:inline">Next: </span>
-                                <span className="text-green-600 ml-1">{nextAvailability}</span>
-                            </div>
                         </div>
                         <Button className="w-full sm:w-auto bg-black text-white hover:bg-gray-800">Thuê HLV</Button>
                     </div>

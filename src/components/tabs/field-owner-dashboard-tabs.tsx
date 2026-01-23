@@ -87,11 +87,11 @@ export function FieldOwnerDashboardTabs() {
 
                     <Button
                         variant="ghost"
-                        className={baseTabClasses(isActive("/field-owner/check-in"))}
-                        onClick={() => handleNavigation("/field-owner/check-in")}
+                        className={baseTabClasses(isActive("/field-owner/qr-management"))}
+                        onClick={() => handleNavigation("/field-owner/qr-management")}
                     >
                         <QrCode className="w-5 h-5" />
-                        <div className="text-center text-sm font-medium">QR Check-in</div>
+                        <div className="text-center text-sm font-medium">Quản lý QR</div>
                     </Button>
 
                     <Button
