@@ -61,16 +61,16 @@ export function UserDashboardHeader() {
             <div className="absolute inset-0 bg-black/60" />
 
             {/* Content */}
-            <div className="relative max-w-[1320px] mx-auto px-12 py-12">
-                <h1 className="text-4xl font-bold text-start mb-4 drop-shadow-md">
+            <div className="relative max-w-[1320px] mx-auto px-4 md:px-8 lg:px-12 py-6 md:py-8 lg:py-12">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-start mb-3 md:mb-4 drop-shadow-md">
                     {headerInfo.title}
                 </h1>
-                <div className="flex items-center gap-2 text-sm opacity-90 drop-shadow">
+                <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm opacity-90 drop-shadow flex-wrap">
                     {headerInfo.breadcrumb.map((item, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                            <span>{item}</span>
+                        <div key={index} className="flex items-center gap-1 md:gap-2">
+                            <span className="truncate max-w-[120px] md:max-w-none">{item}</span>
                             {index < headerInfo.breadcrumb.length - 1 && (
-                                <ChevronRight className="w-4 h-4" />
+                                <ChevronRight className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
                             )}
                         </div>
                     ))}

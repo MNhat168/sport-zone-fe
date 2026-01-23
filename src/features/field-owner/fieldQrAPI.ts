@@ -10,7 +10,8 @@ export const fieldQrAPI = {
         const response = await axiosPrivate.get(
             `${BASE_URL}/field-owner/fields/${fieldId}/qr-code`
         )
-        return response.data
+        // Handle API response format: { success: true, data: { fieldId, fieldName, ... } }
+        return response.data?.data || response.data
     },
 
     /**
@@ -21,7 +22,8 @@ export const fieldQrAPI = {
         const response = await axiosPrivate.post(
             `${BASE_URL}/field-owner/fields/${fieldId}/qr-code/generate`
         )
-        return response.data
+        // Handle API response format: { success: true, data: { fieldId, fieldName, ... } }
+        return response.data?.data || response.data
     },
 
     /**
@@ -32,7 +34,8 @@ export const fieldQrAPI = {
         const response = await axiosPrivate.post(
             `${BASE_URL}/field-owner/fields/${fieldId}/qr-code/regenerate`
         )
-        return response.data
+        // Handle API response format: { success: true, data: { fieldId, fieldName, ... } }
+        return response.data?.data || response.data
     },
 }
 
