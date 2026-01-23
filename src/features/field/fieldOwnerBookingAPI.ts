@@ -72,6 +72,7 @@ export const fieldOwnerBookingAPI = {
     },
 
     /**
+    /**
      * Get cancellation info for owner
      */
     async getOwnerCancellationInfo(bookingId: string) {

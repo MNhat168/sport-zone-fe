@@ -67,6 +67,11 @@ const MatchingProfileSetupPage: React.FC = () => {
             try {
                 const result = await dispatch(fetchMatchProfile()).unwrap();
                 if (result) {
+                    // Check if coordinates are valid (not [0, 0])
+                    const loadedCoords = result.location?.coordinates?.coordinates;
+                    const hasValidCoords = loadedCoords && 
+                        (loadedCoords[0] !== 0 || loadedCoords[1] !== 0);
+                    
                     setFormData({
                         sportPreferences: result.sportPreferences || [],
                         skillLevel: result.skillLevel || '',
@@ -74,7 +79,7 @@ const MatchingProfileSetupPage: React.FC = () => {
                         age: result.age,
                         location: {
                             address: result.location?.address || '',
-                            coordinates: result.location?.coordinates?.coordinates || [0, 0],
+                            coordinates: hasValidCoords ? loadedCoords : [106.6297, 10.8231], // Default to HCM if invalid
                             searchRadius: result.location?.searchRadius || 10,
                         },
                         preferredGender: result.preferredGender || 'any',
@@ -138,12 +143,14 @@ const MatchingProfileSetupPage: React.FC = () => {
                     toast.error('Vui lòng chọn giới tính ưu tiên');
                     return false;
                 }
-                // Validate coordinates if provided
+                // Validate coordinates - only reset if coordinates are [0, 0] AND no address
+                // If user has clicked on map, address will be set from reverseGeocode, so don't reset
                 const hasCoords = formData.location.coordinates &&
                     (formData.location.coordinates[0] !== 0 || formData.location.coordinates[1] !== 0);
+                const hasAddress = formData.location?.address && formData.location.address.trim() !== '';
 
-                if (!hasCoords) {
-                    // Set default coordinates (can be updated later with geocoding)
+                // Only reset to HCM default if coordinates are invalid AND no address (user hasn't selected location)
+                if (!hasCoords && !hasAddress) {
                     updateFormData({
                         location: {
                             ...formData.location,
@@ -214,10 +221,17 @@ const MatchingProfileSetupPage: React.FC = () => {
         setSubmitting(true);
         try {
             // Ensure coordinates are valid
-            const coordinates = formData.location.coordinates &&
-                (formData.location.coordinates[0] !== 0 || formData.location.coordinates[1] !== 0)
+            // Only fallback to HCM if coordinates are [0, 0] AND no address
+            // If user has selected location (has address from reverseGeocode), use current coordinates
+            const hasValidCoords = formData.location.coordinates &&
+                (formData.location.coordinates[0] !== 0 || formData.location.coordinates[1] !== 0);
+            const hasAddress = formData.location?.address && formData.location.address.trim() !== '';
+            
+            const coordinates = hasValidCoords 
                 ? formData.location.coordinates
-                : [106.6297, 10.8231]; // Default to Ho Chi Minh City
+                : (hasAddress 
+                    ? formData.location.coordinates // Keep current even if [0, 0] if address exists (will be geocoded on backend)
+                    : [106.6297, 10.8231]); // Default to Ho Chi Minh City only if no coords AND no address
 
             const payload = {
                 sportPreferences: formData.sportPreferences,

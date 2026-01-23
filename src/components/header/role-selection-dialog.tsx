@@ -167,6 +167,6 @@ export const RoleSelectionDialog = ({
                     </div>
                 </div>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 };

@@ -82,7 +82,7 @@ export const OwnerFieldListSidebar: React.FC<OwnerFieldListSidebarProps> = ({
                     return (
                         <div
                             key={field.id}
-                            onClick={() => onSelectField(field._id)}
+                            onClick={() => onSelectField(field._id || field.id)}
                             className={cn(
                                 "group relative flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden",
                                 isSelected
@@ -147,4 +147,3 @@ export const OwnerFieldListSidebar: React.FC<OwnerFieldListSidebarProps> = ({
         </div>
     );
 };
-

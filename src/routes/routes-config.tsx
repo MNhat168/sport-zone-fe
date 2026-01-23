@@ -765,6 +765,21 @@ export const fieldOwnerRoutes: RouteObject[] = [
   },
 
   {
+    path: "/field-owner/schedule",
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>
+        <Placeholder title="Lịch đặt sân" />
+      </ProtectedRoute>
+    ),
+  },
+
+  // Redirect old check-in route to QR management
+  {
+    path: "/field-owner/check-in",
+    element: <Navigate to="/field-owner/qr-management" replace />
+  },
+
+  {
     path: "/field-owner/qr-management",
     element: (
       <ProtectedRoute allowedRoles={[UserRole.FIELD_OWNER]}>

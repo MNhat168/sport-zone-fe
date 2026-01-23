@@ -161,7 +161,6 @@ const getNumberParam = (params: URLSearchParams, key: string, defaultValue: numb
 };
 
 export default function SingleBookingsPage() {
-    const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Read pagination from URL (with defaults)

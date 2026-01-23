@@ -234,19 +234,19 @@ const getStatusBadgeStyles = (status: MappedBooking["status"]) => {
 const mapBookingToDetailData = (booking: MappedBooking): any => {
     const originalBooking = booking.originalBooking || {};
     const user = originalBooking.user || {};
-    
+
     // Extract payment info
     const totalPrice = originalBooking.totalPrice || 0;
     const bookingAmount = originalBooking.bookingAmount || 0;
     const platformFee = originalBooking.platformFee || 0;
     const amenitiesFee = originalBooking.amenitiesFee || 0;
-    
+
     // Format date for bookingDate (already formatted in booking.date)
     const bookingDate = booking.date;
-    
+
     // Format time (already formatted in booking.time)
     const bookingTime = booking.time;
-    
+
     return {
         academy: booking.fieldName || '—',
         court: booking.fieldName || '—', // For coach bookings, court is same as field

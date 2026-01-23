@@ -192,7 +192,7 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                             </button>
                                         )}
                                     </div>
-                                </div>
+                                </div >
 
                                 <div>
                                     <label className="text-xs text-gray-500 block mb-1">Ngày đặt</label>
@@ -231,22 +231,22 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                                         <span className="text-xl font-bold text-green-600">{totalAmountPaid}</span>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            </div >
+                        </div >
+                    </div >
+                </div >
 
                 {/* Footer */}
-                <div className="px-8 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                < div className="px-8 py-4 border-t border-gray-200 bg-gray-50 flex justify-end" >
                     <Button
                         onClick={onClose}
                         className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
                     >
                         Đóng
                     </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
+                </div >
+            </DialogContent >
+        </Dialog >
     );
 };
 

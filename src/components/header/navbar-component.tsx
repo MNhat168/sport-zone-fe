@@ -277,27 +277,28 @@ export const NavbarComponent = () => {
                         )}
 
                         {/* Hide on mobile - available in mobile menu */}
-                        {auth.user?.role === "user" && (
-                            hasPendingRegistration ? (
-                                <Button
-                                    variant="ghost"
-                                    className={`hidden lg:flex items-center ${linkClass}`}
-                                    onClick={() => navigate(isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status")}
-                                >
-                                    <FileText className="mr-2 h-5 w-5 flex-shrink-0" />
-                                    <span className="whitespace-nowrap">Trạng thái đăng ký</span>
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="ghost"
-                                    className={`hidden lg:flex items-center ${linkClass}`}
-                                    onClick={() => setOpenRoleDialog(true)}
-                                >
-                                    Trở thành đối tác
-                                </Button>
+                        {
+                            auth.user?.role === "user" && (
+                                hasPendingRegistration ? (
+                                    <Button
+                                        variant="ghost"
+                                        className={`hidden lg:flex items-center ${linkClass}`}
+                                        onClick={() => navigate(isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status")}
+                                    >
+                                        <FileText className="mr-2 h-5 w-5 flex-shrink-0" />
+                                        <span className="whitespace-nowrap">Trạng thái đăng ký</span>
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="ghost"
+                                        className={`hidden lg:flex items-center ${linkClass}`}
+                                        onClick={() => setOpenRoleDialog(true)}
+                                    >
+                                        Trở thành đối tác
+                                    </Button>
+                                )
                             )
-                        )}
-
+                        }
                         {/* Mobile Menu Toggle */}
                         <div className="lg:hidden ml-1 flex-shrink-0">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -409,8 +410,8 @@ export const NavbarComponent = () => {
                                 </SheetContent>
                             </Sheet>
                         </div>
-                    </div>
-                </div>
+                    </div >
+                </div >
 
                 <Dialog open={openLogoutDialog} onOpenChange={setOpenLogoutDialog}>
                     <DialogContent className="bg-white max-w-sm">
@@ -429,7 +430,7 @@ export const NavbarComponent = () => {
                     </DialogContent>
                 </Dialog>
                 <RoleSelectionDialog open={openRoleDialog} onOpenChange={setOpenRoleDialog} />
-            </header>
+            </header >
         </>
     );
 };

@@ -173,7 +173,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
         }
     }, [selectedDate, selectedCourtId, fieldId, fetchAvailabilityData]);
 
-    // Handle slot click (Selection Logic)
+    // Handle slot click ( Selection Logic)
     const handleSlotBlockClick = (slotTime: string) => {
         // Prevent clicking disabled or past slots
         if (disabled || isSlotInPast(slotTime, selectedDate)) {
@@ -368,7 +368,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
                             {/* Slot Row */}
                             <div className="flex border-b-2 border-gray-300 bg-white">
                                 <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-medium text-center bg-gray-50">
-                                    
+
                                 </div>
                                 <div className="flex flex-1">
                                     {slots.map((slotTime) => {

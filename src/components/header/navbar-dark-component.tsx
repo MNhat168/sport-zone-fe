@@ -33,7 +33,6 @@ import UserDropdownMenuItems from "./user-dropdown-menu";
 import { NotificationBell } from "./notification-bell";
 import { Loading } from "@/components/ui/loading";
 import { RoleSelectionDialog } from "./role-selection-dialog";
-
 import { getMyCoachRegistration } from "../../features/coach-registration";
 import { getMyRegistrationStatus } from "../../features/field-owner-registration";
 
@@ -68,7 +67,6 @@ export const NavbarDarkComponent = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [openRoleDialog, setOpenRoleDialog] = useState(false);
     // ... existing code ...
-
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -257,29 +255,29 @@ export const NavbarDarkComponent = () => {
                                 </Button>
                             </div>
                         )}
-
                         {/* Hide these buttons on mobile - they're in mobile menu */}
-                        {auth.user?.role === "user" && (
-                            hasPendingRegistration ? (
-                                <Button
-                                    variant="ghost"
-                                    className={`hidden lg:flex items-center ${linkClass}`}
-                                    onClick={() => navigate(isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status")}
-                                >
-                                    <FileText className="mr-2 h-5 w-5 flex-shrink-0" /> 
-                                    <span className="whitespace-nowrap">Trạng thái đăng ký</span>
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="ghost"
-                                    className={`hidden lg:flex items-center ${linkClass}`}
-                                    onClick={() => setOpenRoleDialog(true)}
-                                >
-                                    Trở thành đối tác
-                                </Button>
+                        {
+                            auth.user?.role === "user" && (
+                                hasPendingRegistration ? (
+                                    <Button
+                                        variant="ghost"
+                                        className={`hidden lg:flex items-center ${linkClass}`}
+                                        onClick={() => navigate(isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status")}
+                                    >
+                                        <FileText className="mr-2 h-5 w-5 flex-shrink-0" />
+                                        <span className="whitespace-nowrap">Trạng thái đăng ký</span>
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="ghost"
+                                        className={`hidden lg:flex items-center ${linkClass}`}
+                                        onClick={() => setOpenRoleDialog(true)}
+                                    >
+                                        Trở thành đối tác
+                                    </Button>
+                                )
                             )
-                        )}
-
+                        }
                         {/* Mobile Menu Toggle */}
                         <div className="lg:hidden ml-1 flex-shrink-0">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -308,7 +306,7 @@ export const NavbarDarkComponent = () => {
                                         <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6">
                                             <nav className="flex flex-col gap-2">
                                                 <NavLinks mobile={true} />
-                                                
+
                                                 {/* Additional buttons for mobile menu */}
                                                 {auth.user?.role === "user" && (
                                                     <>
@@ -393,8 +391,8 @@ export const NavbarDarkComponent = () => {
                                 </SheetContent>
                             </Sheet>
                         </div>
-                    </div>
-                </div>
+                    </div >
+                </div >
 
                 <Dialog open={openLogoutDialog} onOpenChange={setOpenLogoutDialog}>
                     <DialogContent className="bg-white max-w-sm">
@@ -415,7 +413,7 @@ export const NavbarDarkComponent = () => {
                     </DialogContent>
                 </Dialog>
                 <RoleSelectionDialog open={openRoleDialog} onOpenChange={setOpenRoleDialog} />
-            </header>
+            </header >
         </>
     );
 };

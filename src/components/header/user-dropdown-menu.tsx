@@ -47,7 +47,7 @@ const UserDropdownMenuItems = () => {
                     <span className="text-base">Combo Sân + HLV</span>
                 </Link>
             </DropdownMenuItem>
-             <DropdownMenuSeparator className="bg-gray-200 m-1" />
+            <DropdownMenuSeparator className="bg-gray-200 m-1" />
         </>
     )
 }

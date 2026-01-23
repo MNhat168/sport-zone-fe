@@ -76,24 +76,39 @@ export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange
     };
 
     const handleCoordinatesChange = (lat: number, lng: number) => {
+        // Validate coordinates are valid numbers
+        if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
+            logger.error('Invalid coordinates:', { lat, lng });
+            return;
+        }
+
+        logger.debug('[Step2Location] Updating coordinates:', { lat, lng, formatted: [lng, lat] });
+        
         onChange({
             location: {
                 ...formData.location,
                 coordinates: [lng, lat], // [longitude, latitude]
             },
         });
+        
         // Get location name from coordinates
         reverseGeocode(lat, lng);
     };
 
     const handleGetLocation = async () => {
         try {
+            logger.debug('[Step2Location] Getting current location...');
             const coords = await getCoordinates();
+            logger.debug('[Step2Location] Received coordinates:', coords);
+            
             if (coords?.lat && coords?.lng) {
+                logger.debug('[Step2Location] Updating map and formData with coordinates:', coords);
                 handleCoordinatesChange(coords.lat, coords.lng);
                 if (mapRef.current) {
                     mapRef.current.setView([coords.lat, coords.lng], 14, { animate: true });
                 }
+            } else {
+                logger.warn('[Step2Location] No coordinates received from getCoordinates');
             }
         } catch (error) {
             logger.error('Error getting location', error);
@@ -136,9 +151,24 @@ export const Step2Location: React.FC<Step2LocationProps> = ({ formData, onChange
                     const container = document.getElementById(mapContainerId);
                     if (!container) return;
 
-                    // Default to Ho Chi Minh City if no coordinates
-                    const initialLat = formData.location?.coordinates?.[1] || 10.8231;
-                    const initialLng = formData.location?.coordinates?.[0] || 106.6297;
+                    // Check if coordinates are valid (not [0, 0])
+                    const currentCoords = formData.location?.coordinates;
+                    const hasValidCoords = currentCoords && 
+                        (currentCoords[0] !== 0 || currentCoords[1] !== 0);
+                    
+                    // Default to Ho Chi Minh City if no valid coordinates
+                    const initialLat = hasValidCoords ? currentCoords[1] : 10.8231;
+                    const initialLng = hasValidCoords ? currentCoords[0] : 106.6297;
+
+                    // If coordinates are invalid, update formData to HCM default
+                    if (!hasValidCoords) {
+                        onChange({
+                            location: {
+                                ...formData.location,
+                                coordinates: [106.6297, 10.8231],
+                            },
+                        });
+                    }
 
                     mapRef.current = L.map(mapContainerId).setView([initialLat, initialLng], 12);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
