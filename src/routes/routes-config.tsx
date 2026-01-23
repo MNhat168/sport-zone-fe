@@ -100,7 +100,6 @@ const MatchingMatchDetail = lazy(() => import("../pages/matching-match-detail/Ma
 const NotificationTestPage = lazy(() => import("../pages/test/notification-test-page"));
 
 // Check-in Pages
-const FieldOwnerCheckInPage = lazy(() => import("../pages/field-owner-dashboard-page/check-in/field-owner-check-in-page"));
 const UserQRCheckinPage = lazy(() => import("../pages/user-dashboard-page/check-in/user-qr-checkin-page"));
 const FieldQRManagementPage = lazy(() => import("../pages/field-owner-dashboard-page/fields/field-qr-management-page"));
 
@@ -765,11 +764,6 @@ export const fieldOwnerRoutes: RouteObject[] = [
     ),
   },
 
-  // Redirect old check-in route to QR management
-  {
-    path: "/field-owner/check-in",
-    element: <Navigate to="/field-owner/qr-management" replace />
-  },
   {
     path: "/field-owner/qr-management",
     element: (

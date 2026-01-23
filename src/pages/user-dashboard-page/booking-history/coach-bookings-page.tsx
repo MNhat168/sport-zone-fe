@@ -312,27 +312,27 @@ export default function CoachBookingsPage() {
             <PageWrapper className="min-h-screen">
                 <UserDashboardHeader />
                 <UserDashboardTabs />
-                <div className="container mx-auto px-12 py-8">
-                    <div className="space-y-6">
+                <div className="container mx-auto px-4 md:px-6 lg:px-12 py-4 md:py-6 lg:py-8">
+                    <div className="space-y-4 md:space-y-6">
                         <Card className="bg-white shadow-md rounded-none border-0 gap-0">
-                            <CardHeader className="border-b">
-                                <CardTitle className="text-xl font-semibold text-start flex items-center gap-2">
-                                    <User className="w-5 h-5 text-emerald-600" />
-                                    Đặt HLV
+                            <CardHeader className="border-b p-4 md:p-6">
+                                <CardTitle className="text-lg md:text-xl font-semibold text-start flex items-center gap-2">
+                                    <User className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 flex-shrink-0" />
+                                    <span className="break-words">Đặt HLV</span>
                                 </CardTitle>
-                                <p className="text-gray-600 text-base mt-1.5 text-start">
+                                <p className="text-gray-600 text-sm md:text-base mt-1.5 text-start">
                                     Quản lý và theo dõi tất cả các đặt huấn luyện viên của bạn.
                                 </p>
 
                                 {/* Status Tabs */}
-                                <div className="flex space-x-1 mt-4">
+                                <div className="flex flex-wrap gap-1 md:gap-1 mt-4">
                                     <Button
                                         variant={activeTab === "confirmed" ? "default" : "outline"}
                                         onClick={() => {
                                             setActiveTab("confirmed");
                                             updateSearchParams({ page: undefined });
                                         }}
-                                        className={`${activeTab === "confirmed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                                        className={`text-xs md:text-sm px-2 sm:px-3 md:px-4 py-2 ${activeTab === "confirmed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                                             } transition-all duration-200`}
                                     >
                                         Đã xác nhận
@@ -343,7 +343,7 @@ export default function CoachBookingsPage() {
                                             setActiveTab("cancelled");
                                             updateSearchParams({ page: undefined });
                                         }}
-                                        className={`${activeTab === "cancelled" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                                        className={`text-xs md:text-sm px-2 sm:px-3 md:px-4 py-2 ${activeTab === "cancelled" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                                             } transition-all duration-200`}
                                     >
                                         Đã hủy
@@ -354,7 +354,7 @@ export default function CoachBookingsPage() {
                                             setActiveTab("completed");
                                             updateSearchParams({ page: undefined });
                                         }}
-                                        className={`${activeTab === "completed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
+                                        className={`text-xs md:text-sm px-2 sm:px-3 md:px-4 py-2 ${activeTab === "completed" ? "bg-black text-white hover:bg-gray-800" : "hover:bg-gray-100"
                                             } transition-all duration-200`}
                                     >
                                         Hoàn thành
@@ -369,7 +369,7 @@ export default function CoachBookingsPage() {
                                     />
                                 </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-4 md:p-6">
                                 {error && (
                                     <Alert variant="destructive" className="mb-4">
                                         <AlertCircle className="h-4 w-4" />

@@ -104,11 +104,11 @@ const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
         dispatch(setWidgetOpen(false));
     };
 
-    // Position classes
+    // Position classes - responsive for mobile
     const positionClasses =
         position === 'bottom-right'
-            ? 'bottom-6 right-6'
-            : 'bottom-6 left-6';
+            ? 'bottom-4 right-4 sm:bottom-6 sm:right-6'
+            : 'bottom-4 left-4 sm:bottom-6 sm:left-6';
 
     // Don't show if not logged in
     const userData = sessionStorage.getItem('user') || localStorage.getItem('user');
@@ -120,12 +120,12 @@ const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
             {!widgetOpen && (
                 <button
                     onClick={handleToggle}
-                    className="flex items-center justify-center w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
+                    className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 z-40"
                     aria-label="Open chat"
                 >
-                    <MessageCircle className="w-6 h-6" />
+                    <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     {unreadCount > 0 && (
-                        <Badge className="absolute -top-2 -right-2 min-w-6 h-6 flex items-center justify-center text-xs bg-red-500 text-white px-1.5 border-2 border-background animate-pulse">
+                        <Badge className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 min-w-5 h-5 sm:min-w-6 sm:h-6 flex items-center justify-center text-xs bg-red-500 text-white px-1 sm:px-1.5 border-2 border-background animate-pulse">
                             {unreadCount > 99 ? '99+' : unreadCount}
                         </Badge>
                     )}
@@ -135,9 +135,8 @@ const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
             {/* Chat Widget Panel */}
             {widgetOpen && (
                 <div
-                    className="bg-background rounded-lg shadow-2xl border border-border overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300"
+                    className="bg-background rounded-lg shadow-2xl border border-border overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300 z-40 w-[calc(100vw-2rem)] sm:w-[384px]"
                     style={{
-                        width: '384px',
                         height: '600px',
                         maxHeight: 'calc(100vh - 100px)',
                     }}

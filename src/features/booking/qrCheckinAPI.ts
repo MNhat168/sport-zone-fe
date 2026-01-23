@@ -23,7 +23,7 @@ export const qrCheckinAPI = {
             `${BASE_URL}/bookings/check-in/options`,
             { params: { fieldId } }
         )
-        return response.data
+        return response.data?.data || []
     },
 
     /**

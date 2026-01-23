@@ -488,11 +488,12 @@ export default function UserBookingsPage() {
 
                 {/* Pagination */}
                 {pagination && (
-                  <div className="flex items-center justify-between mt-6">
-                    <div className="flex items-center space-x-2">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 md:mt-6">
+                    {/* Page size selector - hidden on mobile */}
+                    <div className="hidden md:flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Hiển thị</span>
                       <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
-                        <SelectTrigger className="w-16">
+                        <SelectTrigger className="w-16 h-8">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -504,23 +505,33 @@ export default function UserBookingsPage() {
                       <span className="text-sm text-gray-600">mỗi trang</span>
                     </div>
 
+                    {/* Page info - simplified on mobile */}
+                    <div className="text-xs sm:text-sm text-gray-600 md:hidden">
+                      Trang {pagination.page}/{pagination.totalPages || 1}
+                    </div>
+
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
+                        className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
                         disabled={!pagination.hasPrevPage}
                         onClick={() => setCurrentPage(currentPage - 1)}
                       >
                         &lt;
                       </Button>
-                      <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                      <div className="hidden sm:flex items-center space-x-1">
+                        <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8 min-w-8 px-2">
+                          {pagination.page}
+                        </Button>
+                      </div>
+                      <div className="sm:hidden text-sm font-medium text-gray-700 px-2">
                         {pagination.page}
-                      </Button>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
+                        className="h-9 w-9 sm:h-8 sm:w-8 hover:bg-[#00775C] hover:text-white transition-colors bg-transparent"
                         disabled={!pagination.hasNextPage}
                         onClick={() => setCurrentPage(currentPage + 1)}
                       >

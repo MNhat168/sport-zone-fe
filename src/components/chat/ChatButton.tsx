@@ -61,16 +61,16 @@ const ChatButton = forwardRef<ChatButtonRef>((_props, ref) => {
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-300 hover:scale-110"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
         aria-label="Open chat"
       >
         {isOpen ? (
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5 sm:w-6 sm:h-6" />
         ) : (
           <>
-            <MessageCircle className="w-6 h-6" />
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             {unreadCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 min-w-5 h-5 flex items-center justify-center text-xs bg-red-500 text-white">
+              <Badge className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 min-w-5 h-5 sm:min-w-6 sm:h-6 flex items-center justify-center text-xs bg-red-500 text-white px-1 sm:px-1.5">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </Badge>
             )}

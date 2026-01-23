@@ -153,11 +153,11 @@ export const NavbarDarkComponent = () => {
             <header
                 className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-md border-b border-gray-200 transition-all duration-300"
             >
-                <div className="container mx-auto max-w-screen-2xl flex h-16 md:h-20 items-center justify-between px-4">
+                <div className="container mx-auto max-w-screen-2xl flex h-16 md:h-20 items-center justify-between px-2 sm:px-4 overflow-hidden">
                     {/* Logo */}
                     <Link
                         to="/"
-                        className="text-xl md:text-2xl font-bold text-white bg-green-700 px-2 md:px-3 py-1 rounded-md shrink-0"
+                        className="text-lg sm:text-xl md:text-2xl font-bold text-white bg-green-700 px-2 md:px-3 py-1 rounded-md shrink-0 flex-shrink-0"
                     >
                         SportZone
                     </Link>
@@ -190,52 +190,56 @@ export const NavbarDarkComponent = () => {
                     </nav>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 md:gap-4">
+                    <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-shrink">
                         {/* Notification */}
                         {auth.user && (
-                            <NotificationBell
-                                userId={auth.user._id}
-                                iconClassName={iconClass}
-                            />
+                            <div className="flex-shrink-0">
+                                <NotificationBell
+                                    userId={auth.user._id}
+                                    iconClassName={iconClass}
+                                />
+                            </div>
                         )}
 
                         {auth.user ? (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="flex items-center gap-2 bg-white text-gray-900 shadow-md border-gray-300 px-2 md:px-4"
+                            <div className="flex-shrink-0">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="flex items-center gap-1 sm:gap-2 bg-white text-gray-900 shadow-md border-gray-300 px-1.5 sm:px-2 md:px-4 h-9 sm:h-10"
+                                        >
+                                            <Avatar className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0">
+                                                <AvatarImage
+                                                    src={auth.user?.avatarUrl}
+                                                    alt="User avatar"
+                                                />
+                                                <AvatarFallback className="text-xs">CN</AvatarFallback>
+                                            </Avatar>
+                                            <span className="hidden lg:inline truncate max-w-[100px]">{auth.user.fullName || "Tài khoản"}</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        align="end"
+                                        className="w-56 bg-white shadow-md border border-gray-200 rounded-md"
                                     >
-                                        <Avatar className="h-7 w-7">
-                                            <AvatarImage
-                                                src={auth.user?.avatarUrl}
-                                                alt="User avatar"
-                                            />
-                                            <AvatarFallback>CN</AvatarFallback>
-                                        </Avatar>
-                                        <span className="hidden md:inline">{auth.user.fullName || "Tài khoản"}</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="w-56 bg-white shadow-md border border-gray-200 rounded-md"
-                                >
-                                    {auth.user?.role === "user" && (
-                                        <UserDropdownMenuItems />
-                                    )}
-                                    {auth.user?.role === "coach" && auth.user._id && (
-                                        <CoachDropdownMenuItems />
-                                    )}
-                                    <Button
-                                        variant="ghost"
-                                        className="w-full justify-start bg-white text-green-600 hover:bg-white-50 hover:text-green-700"
-                                        onClick={() => setOpenLogoutDialog(true)}
-                                    >
-                                        <LogOut className="mr-2 h-5 w-5" />
-                                        <span className="text-base">Đăng xuất</span>
-                                    </Button>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                        {auth.user?.role === "user" && (
+                                            <UserDropdownMenuItems />
+                                        )}
+                                        {auth.user?.role === "coach" && auth.user._id && (
+                                            <CoachDropdownMenuItems />
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start bg-white text-green-600 hover:bg-white-50 hover:text-green-700"
+                                            onClick={() => setOpenLogoutDialog(true)}
+                                        >
+                                            <LogOut className="mr-2 h-5 w-5" />
+                                            <span className="text-base">Đăng xuất</span>
+                                        </Button>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         ) : (
                             <div className="hidden md:flex items-center gap-2">
                                 <Button
@@ -254,19 +258,21 @@ export const NavbarDarkComponent = () => {
                             </div>
                         )}
 
+                        {/* Hide these buttons on mobile - they're in mobile menu */}
                         {auth.user?.role === "user" && (
                             hasPendingRegistration ? (
                                 <Button
                                     variant="ghost"
-                                    className={linkClass}
+                                    className={`hidden lg:flex items-center ${linkClass}`}
                                     onClick={() => navigate(isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status")}
                                 >
-                                    <FileText className="mr-2 h-5 w-5" /> Trạng thái đăng ký
+                                    <FileText className="mr-2 h-5 w-5 flex-shrink-0" /> 
+                                    <span className="whitespace-nowrap">Trạng thái đăng ký</span>
                                 </Button>
                             ) : (
                                 <Button
                                     variant="ghost"
-                                    className={linkClass}
+                                    className={`hidden lg:flex items-center ${linkClass}`}
                                     onClick={() => setOpenRoleDialog(true)}
                                 >
                                     Trở thành đối tác
@@ -275,11 +281,11 @@ export const NavbarDarkComponent = () => {
                         )}
 
                         {/* Mobile Menu Toggle */}
-                        <div className="lg:hidden ml-2">
+                        <div className="lg:hidden ml-1 flex-shrink-0">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                                 <SheetTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-gray-900">
-                                        <Menu className="h-6 w-6" />
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 text-gray-900 flex-shrink-0">
+                                        <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="right" className="w-[320px] sm:w-[380px] p-0 overflow-y-auto">
@@ -302,6 +308,32 @@ export const NavbarDarkComponent = () => {
                                         <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6">
                                             <nav className="flex flex-col gap-2">
                                                 <NavLinks mobile={true} />
+                                                
+                                                {/* Additional buttons for mobile menu */}
+                                                {auth.user?.role === "user" && (
+                                                    <>
+                                                        {hasPendingRegistration ? (
+                                                            <Link
+                                                                to={isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status"}
+                                                                className={mobileLinkClass}
+                                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                            >
+                                                                <FileText className="mr-3 h-5 w-5 flex-shrink-0" />
+                                                                Trạng thái đăng ký
+                                                            </Link>
+                                                        ) : (
+                                                            <button
+                                                                className={mobileLinkClass}
+                                                                onClick={() => {
+                                                                    setOpenRoleDialog(true);
+                                                                    setIsMobileMenuOpen(false);
+                                                                }}
+                                                            >
+                                                                Trở thành đối tác
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                )}
                                             </nav>
                                         </div>
 

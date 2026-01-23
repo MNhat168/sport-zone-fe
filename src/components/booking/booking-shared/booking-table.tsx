@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import React from "react";
 import {
   type SortingState,
   type ColumnFiltersState,
@@ -148,9 +149,9 @@ export function BookingTable({
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <>
+                <React.Fragment key={headerGroup.id}>
                   {/* Header Row */}
-                  <TableRow key={headerGroup.id} className="bg-gray-50 border-b">
+                  <TableRow className="bg-gray-50 border-b">
                     {headerGroup.headers.map((header) => (
                       <TableHead
                         key={header.id}
@@ -187,7 +188,7 @@ export function BookingTable({
                       </TableHead>
                     ))}
                   </TableRow>
-                </>
+                </React.Fragment>
               ))}
             </TableHeader>
             <TableBody>
