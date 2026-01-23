@@ -20,7 +20,7 @@ export function FieldOwnerRequests() {
     page: search.page || 1,
     limit: search.pageSize || 10,
   })
-  const requests = data?.data?.data ?? []
+  const requests = (data?.data?.data ?? []).filter((req: any) => req.status !== 'approved')
 
   return (
     <FieldOwnersProvider>
