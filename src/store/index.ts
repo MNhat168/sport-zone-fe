@@ -15,6 +15,7 @@ import { authApi } from './services/authApi'
 import { dashboardApi } from './services/dashboardApi'
 import { fieldOwnersApi } from './services/fieldOwnersApi'
 import { coachesApi } from './services/coachesApi'
+import { withdrawalsApi } from './services/withdrawalsApi'
 import { usersApi } from './services/usersApi'
 import { transactionsApi } from './services/transactionsApi'
 import { reportsApi } from './services/reportsApi'
@@ -42,6 +43,7 @@ const rootReducer = combineReducers({
   [reportsApi.reducerPath]: reportsApi.reducer,
   [bookingsApi.reducerPath]: bookingsApi.reducer,
   [fieldsApi.reducerPath]: fieldsApi.reducer,
+  [withdrawalsApi.reducerPath]: withdrawalsApi.reducer,
 })
 
 // Persisted reducer
@@ -65,6 +67,7 @@ export const store = configureStore({
       reportsApi.middleware,
       bookingsApi.middleware,
       fieldsApi.middleware,
+      withdrawalsApi.middleware,
     ),
 })
 

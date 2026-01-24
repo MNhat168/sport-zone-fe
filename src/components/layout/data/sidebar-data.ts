@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   Dumbbell,
   MapPin,
+  Wallet,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -70,6 +71,11 @@ export const sidebarData: SidebarData = {
           title: 'Quản lý hoàn tiền',
           url: '/refund-management',
           icon: FileSpreadsheet,
+        },
+        {
+          title: 'Yêu cầu rút tiền',
+          url: '/withdrawals',
+          icon: Wallet,
         },
         {
           title: 'Chủ sân',

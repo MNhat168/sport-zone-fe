@@ -25,6 +25,7 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
 import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedWithdrawalsIndexRouteImport } from './routes/_authenticated/withdrawals/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTransactionsIndexRouteImport } from './routes/_authenticated/transactions/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
@@ -128,6 +129,12 @@ const AuthenticatedSettingsRouteRoute =
   AuthenticatedSettingsRouteRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWithdrawalsIndexRoute =
+  AuthenticatedWithdrawalsIndexRouteImport.update({
+    id: '/withdrawals/',
+    path: '/withdrawals/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
@@ -321,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/withdrawals': typeof AuthenticatedWithdrawalsIndexRoute
   '/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
   '/admin/statistics': typeof AuthenticatedAdminStatisticsIndexRoute
 }
@@ -361,6 +369,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/withdrawals': typeof AuthenticatedWithdrawalsIndexRoute
   '/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
   '/admin/statistics': typeof AuthenticatedAdminStatisticsIndexRoute
 }
@@ -406,6 +415,7 @@ export interface FileRoutesById {
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/withdrawals/': typeof AuthenticatedWithdrawalsIndexRoute
   '/_authenticated/coaches/requests/$id': typeof AuthenticatedCoachesRequestsIdRoute
   '/_authenticated/admin/statistics/': typeof AuthenticatedAdminStatisticsIndexRoute
 }
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/transactions'
     | '/users'
+    | '/withdrawals'
     | '/coaches/requests/$id'
     | '/admin/statistics'
   fileRoutesByTo: FileRoutesByTo
@@ -490,6 +501,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/transactions'
     | '/users'
+    | '/withdrawals'
     | '/coaches/requests/$id'
     | '/admin/statistics'
   id:
@@ -534,6 +546,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tasks/'
     | '/_authenticated/transactions/'
     | '/_authenticated/users/'
+    | '/_authenticated/withdrawals/'
     | '/_authenticated/coaches/requests/$id'
     | '/_authenticated/admin/statistics/'
   fileRoutesById: FileRoutesById
@@ -665,6 +678,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/withdrawals/': {
+      id: '/_authenticated/withdrawals/'
+      path: '/withdrawals'
+      fullPath: '/withdrawals'
+      preLoaderRoute: typeof AuthenticatedWithdrawalsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/users/': {
@@ -908,6 +928,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedTransactionsIndexRoute: typeof AuthenticatedTransactionsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedWithdrawalsIndexRoute: typeof AuthenticatedWithdrawalsIndexRoute
   AuthenticatedAdminStatisticsIndexRoute: typeof AuthenticatedAdminStatisticsIndexRoute
 }
 
@@ -932,6 +953,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedTransactionsIndexRoute: AuthenticatedTransactionsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedWithdrawalsIndexRoute: AuthenticatedWithdrawalsIndexRoute,
   AuthenticatedAdminStatisticsIndexRoute:
     AuthenticatedAdminStatisticsIndexRoute,
 }
