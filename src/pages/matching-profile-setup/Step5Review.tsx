@@ -10,7 +10,6 @@ const SPORTS_LABELS: Record<string, string> = {
     badminton: 'Cầu lông',
     tennis: 'Quần vợt',
     volleyball: 'Bóng chuyền',
-    table_tennis: 'Bóng bàn',
     pickleball: 'Pickleball',
 };
 

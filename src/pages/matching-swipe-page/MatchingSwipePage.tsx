@@ -168,7 +168,6 @@ const SPORTS_INFO: Record<string, { label: string; icon: string | React.ReactNod
     badminton: { label: 'Cầu lông', icon: '🏸' },
     tennis: { label: 'Quần vợt', icon: '🎾' },
     volleyball: { label: 'Bóng chuyền', icon: '🏐' },
-    table_tennis: { label: 'Bóng bàn', icon: '🏓' },
     pickleball: { label: 'Pickleball', icon: '🥒' },
 };
 

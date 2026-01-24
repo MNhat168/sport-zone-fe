@@ -10,7 +10,6 @@ const SPORTS = [
     { value: 'badminton', label: 'Cầu lông', icon: '🏸' },
     { value: 'tennis', label: 'Quần vợt', icon: '🎾' },
     { value: 'volleyball', label: 'Bóng chuyền', icon: '🏐' },
-    { value: 'table_tennis', label: 'Bóng bàn', icon: '🏓' },
     { value: 'pickleball', label: 'Pickleball', icon: '🥒' },
 ];
 
