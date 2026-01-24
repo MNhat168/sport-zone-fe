@@ -6,6 +6,7 @@ import {
   GET_ADMIN_WALLET_API,
   WITHDRAW_REFUND_API,
   WITHDRAW_FIELD_OWNER_API,
+  GET_USER_WITHDRAWAL_REQUESTS_API,
 } from "./walletAPI";
 import type {
   UserWalletResponse,
@@ -104,22 +105,49 @@ export const withdrawRefund = createAsyncThunk<
 });
 
 /**
- * Withdraw available balance to bank (for field owners)
+ * Create withdrawal request (for field owners/coaches)
+ * Creates a pending request that requires admin approval
  */
 export const withdrawFieldOwnerBalance = createAsyncThunk<
-  { success: boolean; message: string },
-  { amount: number },
+  { success: boolean; message: string; data?: any },
+  { amount: number; bankAccount?: string; bankName?: string },
   { rejectValue: string }
 >("wallet/withdrawFieldOwnerBalance", async (payload, thunkAPI) => {
   try {
     const response = await axiosPrivate.post(WITHDRAW_FIELD_OWNER_API, payload);
-    return response.data?.data ?? response.data ?? { success: true, message: "Rut tien thanh cong" };
+    const data = response.data?.data ?? response.data;
+    return {
+      success: true,
+      message: "Yêu cầu rút tiền đã được gửi, đang chờ admin duyệt",
+      data: data
+    };
   } catch (error: any) {
     const message =
       error?.response?.data?.message ||
       error?.response?.data?.error ||
       error?.message ||
-      "Khong the xu ly yeu cau rut tien";
+      "Khong the tao yeu cau rut tien";
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
+/**
+ * Get user's withdrawal requests
+ */
+export const getUserWithdrawalRequests = createAsyncThunk<
+  any[],
+  void,
+  { rejectValue: string }
+>("wallet/getUserWithdrawalRequests", async (_, thunkAPI) => {
+  try {
+    const response = await axiosPrivate.get(GET_USER_WITHDRAWAL_REQUESTS_API);
+    return response.data?.data ?? response.data ?? [];
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Khong the tai danh sach yeu cau rut tien";
     return thunkAPI.rejectWithValue(message);
   }
 });

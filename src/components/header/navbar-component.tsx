@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Menu } from "lucide-react";
+import { User, LogOut, Menu, FileText } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../store/hook";
 import { logout } from "../../features/authentication/authThunk";
 import { clearUserAuth } from "../../lib/cookies";
@@ -33,11 +33,15 @@ import {
 import { NotificationBell } from "./notification-bell";
 import logger from "@/utils/logger";
 import { RoleSelectionDialog } from "./role-selection-dialog";
+import { getMyCoachRegistration } from "../../features/coach-registration";
+import { getMyRegistrationStatus } from "../../features/field-owner-registration";
 export const NavbarComponent = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const auth = useAppSelector((state: RootState) => state.auth);
+    const { currentRequest: coachRequest } = useAppSelector((state: RootState) => state.coachRegistration);
+    const { currentRequest: fieldRequest } = useAppSelector((state: RootState) => state.registration);
 
     // Debug log to verify user data
     logger.debug("Navbar - User:", auth.user?.fullName, "Role:", auth.user?.role);
@@ -48,6 +52,17 @@ export const NavbarComponent = () => {
         window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    useEffect(() => {
+        if (auth.user) {
+            if (!coachRequest) dispatch(getMyCoachRegistration());
+            if (!fieldRequest) dispatch(getMyRegistrationStatus());
+        }
+    }, [dispatch, auth.user, coachRequest, fieldRequest]);
+
+    const isCoachPending = coachRequest?.status === 'pending';
+    const isFieldOwnerPending = fieldRequest?.status === 'pending';
+    const hasPendingRegistration = isCoachPending || isFieldOwnerPending;
 
     const [openLogoutDialog, setOpenLogoutDialog] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -263,15 +278,26 @@ export const NavbarComponent = () => {
 
                         {/* Hide on mobile - available in mobile menu */}
                         {auth.user?.role === "user" && (
-                            <Button
-                                variant="ghost"
-                                className={`hidden lg:flex items-center ${linkClass}`}
-                                onClick={() => setOpenRoleDialog(true)}
-                            >
-                                Trở thành đối tác
-                            </Button>
+                            hasPendingRegistration ? (
+                                <Button
+                                    variant="ghost"
+                                    className={`hidden lg:flex items-center ${linkClass}`}
+                                    onClick={() => navigate(isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status")}
+                                >
+                                    <FileText className="mr-2 h-5 w-5 flex-shrink-0" />
+                                    <span className="whitespace-nowrap">Trạng thái đăng ký</span>
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="ghost"
+                                    className={`hidden lg:flex items-center ${linkClass}`}
+                                    onClick={() => setOpenRoleDialog(true)}
+                                >
+                                    Trở thành đối tác
+                                </Button>
+                            )
                         )}
-                        
+
                         {/* Mobile Menu Toggle */}
                         <div className="lg:hidden ml-1 flex-shrink-0">
                             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -300,18 +326,29 @@ export const NavbarComponent = () => {
                                         <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6">
                                             <nav className="flex flex-col gap-2">
                                                 <NavLinks mobile={true} />
-                                                
+
                                                 {/* Additional buttons for mobile menu */}
                                                 {auth.user?.role === "user" && (
-                                                    <button
-                                                        className={mobileLinkClass}
-                                                        onClick={() => {
-                                                            setOpenRoleDialog(true);
-                                                            setIsMobileMenuOpen(false);
-                                                        }}
-                                                    >
-                                                        Trở thành đối tác
-                                                    </button>
+                                                    hasPendingRegistration ? (
+                                                        <Link
+                                                            to={isFieldOwnerPending ? "/field-owner-registration-status" : "/coach-registration-status"}
+                                                            className={mobileLinkClass}
+                                                            onClick={() => setIsMobileMenuOpen(false)}
+                                                        >
+                                                            <FileText className="mr-3 h-5 w-5 flex-shrink-0" />
+                                                            Trạng thái đăng ký
+                                                        </Link>
+                                                    ) : (
+                                                        <button
+                                                            className={mobileLinkClass}
+                                                            onClick={() => {
+                                                                setOpenRoleDialog(true);
+                                                                setIsMobileMenuOpen(false);
+                                                            }}
+                                                        >
+                                                            Trở thành đối tác
+                                                        </button>
+                                                    )
                                                 )}
                                             </nav>
                                         </div>

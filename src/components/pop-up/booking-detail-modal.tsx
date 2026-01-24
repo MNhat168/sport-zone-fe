@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { X, Calendar, Clock, MapPin, CreditCard, FileText } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, CreditCard, FileText, Copy, Check } from 'lucide-react';
 import type { Booking } from '@/types/booking-type';
 import type { Field } from '@/types/field-type';
 import { PaymentMethod } from '@/types/payment-type';
@@ -25,6 +25,14 @@ interface BookingDetailModalProps {
 
 const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose, booking }) => {
     const navigate = useNavigate();
+    const [isCopied, setIsCopied] = React.useState(false);
+
+    const handleCopyId = (id: string) => {
+        navigator.clipboard.writeText(id);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
+
     if (!booking) return null;
 
     // Extract field data
@@ -317,9 +325,18 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ isOpen, onClose
 
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-gray-700">Mã đặt sân</p>
-                                <p className="text-sm text-gray-600 font-mono" title={booking._id}>
-                                    {truncateBookingId(booking._id)}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm text-gray-600 font-mono" title={booking._id}>
+                                        {truncateBookingId(booking._id)}
+                                    </p>
+                                    <button
+                                        onClick={() => handleCopyId(booking._id)}
+                                        className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                        title="Sao chép mã"
+                                    >
+                                        <Copy className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

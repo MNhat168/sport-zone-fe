@@ -1,4 +1,4 @@
-import { User, Building2, CheckCircle } from "lucide-react"
+import { User, Building2, CheckCircle, Image as ImageIcon } from "lucide-react"
 import type { CreateRegistrationRequestPayload } from "@/features/field-owner-registration"
 import { SportType } from "@/components/enums/ENUMS"
 
@@ -18,6 +18,10 @@ const SPORT_LABELS: Record<string, string> = {
 }
 
 export function ConfirmationStep({ formData }: ConfirmationStepProps) {
+  const documents = formData.documents as any
+  const fieldImages: (File | string)[] = documents?.fieldImagesFiles || []
+  const businessLicense = documents?.businessLicense_file || documents?.businessLicense
+
   return (
     <div className="space-y-6">
       <div className="text-center py-4">
@@ -92,6 +96,51 @@ export function ConfirmationStep({ formData }: ConfirmationStepProps) {
               <div className="flex">
                 <span className="font-medium w-32">Website:</span>
                 <span className="text-gray-700">{formData.website}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-5 bg-purple-50 rounded-xl border border-purple-200">
+          <div className="flex items-center gap-2 mb-3">
+            <ImageIcon className="w-5 h-5 text-purple-600" />
+            <h3 className="font-semibold text-purple-900">Hình ảnh & Tài liệu</h3>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Ảnh sân ({fieldImages.length} ảnh):</p>
+              {fieldImages.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {/* We will render images directly if they are Files using URL.createObjectURL temporarily or checking if they are strings (if edit mode) */}
+                  {fieldImages.map((img, idx) => (
+                    <div key={idx} className="aspect-video relative rounded-lg overflow-hidden border border-gray-200">
+                      {/* Safe check for File object vs URL string if we support draft editing later */}
+                      <img
+                        src={img instanceof File ? URL.createObjectURL(img) : (typeof img === 'string' ? img : '')}
+                        alt={`Field ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        onLoad={(e) => {
+                          // Revoke object URL after load to free memory if it was created here inline? 
+                          // Actually better to handle this via state/effect, but inline is "okay" for quick check, though not recommended.
+                          // Given we are inside a map, let's just leave it simple.
+                          // Better: use a helper component or just let browser handle it until unmount.
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic">Chưa có ảnh nào upload</p>
+              )}
+            </div>
+
+            {businessLicense && (
+              <div className="pt-3 border-t border-purple-100">
+                <p className="text-sm font-medium text-gray-700 mb-1">Giấy ĐKKD:</p>
+                <p className="text-sm text-blue-600 underline truncate">
+                  {businessLicense instanceof File ? businessLicense.name : 'Tài liệu đã upload'}
+                </p>
               </div>
             )}
           </div>

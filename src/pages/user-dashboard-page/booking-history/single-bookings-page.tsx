@@ -437,11 +437,13 @@ export default function SingleBookingsPage() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xác nhận hủy đặt sân</AlertDialogTitle>
-                        <AlertDialogDescription className="space-y-2">
-                            <p>Bạn có chắc chắn muốn hủy đặt sân này không? Hành động này không thể hoàn tác.</p>
-                            <p className="text-sm text-yellow-600 font-medium bg-yellow-50 p-3 rounded-md border border-yellow-200">
-                                Lưu ý: Bạn chỉ được hoàn tiền từ chủ sân khi hủy đặt trước 12h tính từ thời điểm bắt đầu slot bạn đặt.
-                            </p>
+                        <AlertDialogDescription className="space-y-2" asChild>
+                            <div>
+                                <p>Bạn có chắc chắn muốn hủy đặt sân này không? Hành động này không thể hoàn tác.</p>
+                                <p className="text-sm text-yellow-600 font-medium bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                                    Lưu ý: Bạn chỉ được hoàn tiền từ chủ sân khi hủy đặt trước 12h tính từ thời điểm bắt đầu slot bạn đặt.
+                                </p>
+                            </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

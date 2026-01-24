@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Clock, Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
@@ -39,7 +39,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     const [selectedStartTime, setSelectedStartTime] = useState<string | null>(selectedStart || null);
     const [selectedEndTime, setSelectedEndTime] = useState<string | null>(selectedEnd || null);
 
-    // Sync with parent
+    // Sync with parent props
     useEffect(() => {
         setSelectedStartTime(selectedStart || null);
         setSelectedEndTime(selectedEnd || null);
@@ -64,7 +64,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
         return dayNames[date.getDay()];
     };
 
-    // Get operating hours for date
+    // Get operating hours for day
     const getOperatingHoursForDay = (dayName: string) => {
         return operatingHours.find(hour => hour.day === dayName);
     };
@@ -98,12 +98,11 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
         return slots;
     };
 
-    // Check if slot is available
+    // Check if slot is available (from API data)
     const isSlotAvailable = (timeString: string): boolean => {
         if (!availabilityData || !availabilityData.slots) {
             return true;
         }
-
         const slot = availabilityData.slots.find(s => s.startTime === timeString);
         return slot ? slot.available : true;
     };
@@ -114,7 +113,6 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
 
         const today = new Date();
         const selected = new Date(selectedDate + 'T00:00:00');
-
         const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const selectedDateOnly = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
 
@@ -139,15 +137,8 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     // Fetch availability data
     const fetchAvailabilityData = useCallback(async () => {
         if (!fieldId || !selectedDate || !selectedCourtId) {
-            console.log('[TIME SLOT DEBUG] Missing params:', { fieldId, selectedDate, selectedCourtId });
             return;
         }
-
-        console.log('[TIME SLOT DEBUG] Fetching availability with params:', {
-            fieldId,
-            selectedDate,
-            selectedCourtId,
-        });
 
         setIsLoadingAvailability(true);
         setAvailabilityError(null);
@@ -160,8 +151,6 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
                 courtId: selectedCourtId,
             })).unwrap();
 
-            console.log('[TIME SLOT DEBUG] Availability result:', result);
-
             if (result.success && result.data && result.data.length > 0) {
                 const dayData = result.data.find(item => item.date === selectedDate);
                 setAvailabilityData(dayData || null);
@@ -169,13 +158,6 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
                 setAvailabilityData(null);
             }
         } catch (error: any) {
-            console.error('[TIME SLOT DEBUG] Error fetching availability:', error);
-            console.error('[TIME SLOT DEBUG] Error details:', {
-                message: error.message,
-                response: error.response,
-                fieldId,
-                selectedCourtId,
-            });
             logger.error('[TIME SLOT] Error fetching availability:', error);
             setAvailabilityError(error.message || 'Không thể tải thông tin khả dụng');
             setAvailabilityData(null);
@@ -184,30 +166,30 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
         }
     }, [fieldId, selectedDate, selectedCourtId, dispatch]);
 
-    // Fetch availability when dependencies change
+    // Fetch when dependencies change
     useEffect(() => {
         if (selectedDate && selectedCourtId && fieldId) {
             fetchAvailabilityData();
         }
     }, [selectedDate, selectedCourtId, fieldId, fetchAvailabilityData]);
 
-    // Handle slot click
+    // Handle slot click (Selection Logic)
     const handleSlotBlockClick = (slotTime: string) => {
+        // Prevent clicking disabled or past slots
         if (disabled || isSlotInPast(slotTime, selectedDate)) {
+            return;
+        }
+        if (!isSlotAvailable(slotTime)) {
             return;
         }
 
         const slotEndTime = getSlotEndTime(slotTime);
 
-        // Check if clicking on a slot that's already in the selected range - deselect if yes
+        // Case 1: Deselect if clicking inside current range
         if (selectedStartTime !== null && selectedEndTime !== null) {
-            const [startHour, startMin] = selectedStartTime.split(':').map(Number);
-            const [endHour, endMin] = selectedEndTime.split(':').map(Number);
-            const [clickedHour, clickedMin] = slotTime.split(':').map(Number);
-
-            const startTotal = startHour * 60 + startMin;
-            const endTotal = endHour * 60 + endMin;
-            const clickedTotal = clickedHour * 60 + clickedMin;
+            const startTotal = toMinutes(selectedStartTime);
+            const endTotal = toMinutes(selectedEndTime);
+            const clickedTotal = toMinutes(slotTime);
 
             if (clickedTotal >= startTotal && clickedTotal < endTotal) {
                 setSelectedStartTime(null);
@@ -217,36 +199,36 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
             }
         }
 
+        // Case 2: New selection or Extend selection
         if (selectedStartTime === null) {
-            // First selection
+            // First selection: set precise block
             setSelectedStartTime(slotTime);
             setSelectedEndTime(slotEndTime);
             onTimeRangeChange(slotTime, slotEndTime);
         } else {
             // Extend range
-            const [currentStartHour, currentStartMin] = selectedStartTime.split(':').map(Number);
-            const [currentEndHour, currentEndMin] = (selectedEndTime || getSlotEndTime(selectedStartTime)).split(':').map(Number);
-            const [clickedHour, clickedMin] = slotTime.split(':').map(Number);
-
-            const currentStartTotal = currentStartHour * 60 + currentStartMin;
-            const currentEndTotal = currentEndHour * 60 + currentEndMin;
-            const clickedTotal = clickedHour * 60 + clickedMin;
+            const currentStartTotal = toMinutes(selectedStartTime);
+            const currentEndTotal = toMinutes(selectedEndTime || getSlotEndTime(selectedStartTime));
+            const clickedTotal = toMinutes(slotTime);
 
             let newStartTime: string;
             let newEndTime: string;
 
             if (clickedTotal < currentStartTotal) {
+                // Extend backwards
                 newStartTime = slotTime;
                 newEndTime = selectedEndTime || getSlotEndTime(selectedStartTime);
             } else if (clickedTotal >= currentEndTotal) {
+                // Extend forwards
                 newStartTime = selectedStartTime;
                 newEndTime = slotEndTime;
             } else {
+                // Should be covered by Case 1, but fallback to single block
                 newStartTime = slotTime;
                 newEndTime = slotEndTime;
             }
 
-            // Validate range: check if all slots in range are available
+            // Validation: Check if all slots in the new range are available
             const newStartTotal = toMinutes(newStartTime);
             const newEndTotal = toMinutes(newEndTime);
             let hasBookedSlotInRange = false;
@@ -260,6 +242,9 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
             }
 
             if (hasBookedSlotInRange) {
+                // Alternatively, reset to just the clicked block if users try to bridge a booked slot
+                // For now, we just ignore the extension attempt
+                // alert('Khoảng thời gian bạn chọn có chứa slot đã được đặt.');
                 return;
             }
 
@@ -272,11 +257,9 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     // Check if slot is in selected range
     const isSlotInRange = (slotTime: string): boolean => {
         if (!selectedStartTime || !selectedEndTime) return false;
-
         const slotTotal = toMinutes(slotTime);
         const startTotal = toMinutes(selectedStartTime);
         const endTotal = toMinutes(selectedEndTime);
-
         return slotTotal >= startTotal && slotTotal < endTotal;
     };
 
@@ -284,78 +267,195 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
 
     if (!selectedDate) {
         return (
-            <div className="space-y-2">
-                <Label className="text-base font-semibold">Chọn khung giờ *</Label>
-                <p className="text-sm text-gray-500">Vui lòng chọn ngày trước</p>
+            <div className="space-y-4">
+                <Label className="text-base font-semibold text-gray-900">Chọn khung giờ *</Label>
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center text-gray-500 text-sm">
+                    Vui lòng chọn ngày để xem lịch trống
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-3">
-            <Label className="text-base font-semibold flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Chọn khung giờ *
-            </Label>
+        <div className="space-y-4">
+            <Label className="text-base font-semibold text-gray-900">Chọn khung giờ *</Label>
 
             {availabilityError && (
                 <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
                     <AlertDescription>{availabilityError}</AlertDescription>
                 </Alert>
             )}
 
             {isLoadingAvailability ? (
-                <div className="flex items-center justify-center p-8 border rounded-lg">
-                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                    <span className="ml-2 text-sm text-gray-600">Đang tải khung giờ...</span>
+                <div className="flex flex-col items-center justify-center p-12 border border-gray-100 rounded-xl bg-gray-50/50">
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-3" />
+                    <span className="text-sm font-medium text-gray-600">Đang tải lịch trống...</span>
                 </div>
             ) : slots.length === 0 ? (
-                <Alert>
-                    <AlertDescription>
-                        Không có khung giờ khả dụng cho ngày này
+                <Alert className="bg-amber-50 border-amber-200">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                        Không có khung giờ nào khả dụng cho ngày này.
                     </AlertDescription>
                 </Alert>
             ) : (
-                <>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 max-h-96 overflow-y-auto p-2 border rounded-lg">
-                        {slots.map((slot) => {
-                            const slotAvailable = isSlotAvailable(slot);
-                            const slotPast = isSlotInPast(slot, selectedDate);
-                            const slotInRange = isSlotInRange(slot);
-                            const slotDisabled = !slotAvailable || slotPast || disabled;
-
-                            return (
-                                <button
-                                    key={slot}
-                                    onClick={() => !slotDisabled && handleSlotBlockClick(slot)}
-                                    disabled={slotDisabled}
-                                    className={cn(
-                                        "px-3 py-2 text-sm font-medium rounded-md transition-all duration-200",
-                                        "focus:outline-none focus:ring-2 focus:ring-emerald-500",
-                                        slotInRange
-                                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                                            : slotDisabled
-                                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                                : "bg-white border-2 border-gray-200 text-gray-700 hover:border-emerald-500 hover:bg-emerald-50"
-                                    )}
-                                >
-                                    {slot}
-                                </button>
-                            );
-                        })}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                    {/* Legend */}
+                    <div className="mb-4 flex items-center gap-4 flex-wrap text-sm">
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
+                            <span>Trống</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-red-500 rounded"></div>
+                            <span>Đã đặt</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-gray-400 rounded opacity-60"></div>
+                            <span>Khóa</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-emerald-600 rounded"></div>
+                            <span>Đã chọn</span>
+                        </div>
                     </div>
 
-                    {selectedStartTime && selectedEndTime && (
-                        <div className="mt-4 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg">
-                            <p className="text-sm font-medium text-emerald-900">
-                                Đã chọn: {selectedStartTime} - {selectedEndTime}
-                            </p>
-                            <p className="text-xs text-emerald-700 mt-1">
-                                Thời lượng: {(toMinutes(selectedEndTime) - toMinutes(selectedStartTime)) / 60} giờ
-                            </p>
+                    {/* Timeline Grid */}
+                    <div className="overflow-x-auto">
+                        <div className="inline-block min-w-full">
+                            {/* Time Header Row - Time labels on vertical lines */}
+                            <div className="flex border-b-2 border-gray-300 bg-blue-50 relative pt-6">
+                                <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-semibold text-center">
+                                    Giờ
+                                </div>
+                                <div className="flex flex-1 relative">
+                                    {/* First vertical line with time label (start of first slot) */}
+                                    {slots.length > 0 && (
+                                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
+                                            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                {(() => {
+                                                    const [displayHour, displayMin] = slots[0].split(':');
+                                                    return displayMin === '00' ? `${displayHour}:00` : slots[0];
+                                                })()}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Slot cells with time labels on right border */}
+                                    {slots.map((slotTime) => {
+                                        const slotEndTime = getSlotEndTime(slotTime);
+                                        const [displayHour, displayMin] = slotEndTime.split(':');
+                                        const displayText = displayMin === '00' ? `${displayHour}:00` : slotEndTime;
+
+                                        return (
+                                            <div
+                                                key={`header-${slotTime}`}
+                                                className="flex-1 min-w-[60px] relative"
+                                            >
+                                                {/* Vertical line on the right with time label */}
+                                                <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-gray-400 z-10">
+                                                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 whitespace-nowrap bg-blue-50 px-1">
+                                                        {displayText}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Slot Row */}
+                            <div className="flex border-b-2 border-gray-300 bg-white">
+                                <div className="w-24 shrink-0 border-r-2 border-gray-300 p-2 text-xs font-medium text-center bg-gray-50">
+                                    
+                                </div>
+                                <div className="flex flex-1">
+                                    {slots.map((slotTime) => {
+                                        const slotEndTime = getSlotEndTime(slotTime);
+
+                                        // Check if this slot is the start of selected range
+                                        const isStartSlot = selectedStartTime === slotTime;
+                                        // Check if this slot's end matches the selected end time
+                                        const isEndSlot = selectedEndTime === slotEndTime;
+
+                                        // Check if slot is within selected range
+                                        const isInRange = selectedStartTime !== null && selectedEndTime !== null
+                                            && (() => {
+                                                const startTotal = toMinutes(selectedStartTime);
+                                                const endTotal = toMinutes(selectedEndTime);
+                                                const slotTotal = toMinutes(slotTime);
+                                                const slotEndTotal = slotTotal + slotDuration;
+                                                // Slot is in range if it overlaps with selected range
+                                                return slotTotal < endTotal && slotEndTotal > startTotal;
+                                            })();
+
+                                        const isSlotBooked = !isSlotAvailable(slotTime);
+                                        const isSlotPast = isSlotInPast(slotTime, selectedDate);
+                                        const isSlotDisabled = isSlotBooked || isSlotPast || disabled;
+
+                                        // Determine cell style
+                                        let cellStyle = "bg-white border-r border-gray-200 cursor-pointer hover:bg-emerald-50 transition-colors";
+                                        if (isSlotDisabled) {
+                                            if (isSlotPast) {
+                                                cellStyle = "bg-gray-400 border-r border-gray-200 cursor-not-allowed opacity-60";
+                                            } else {
+                                                cellStyle = "bg-red-500 border-r border-gray-200 cursor-not-allowed opacity-80";
+                                            }
+                                        } else if (isInRange) {
+                                            if (isStartSlot) {
+                                                cellStyle = "bg-emerald-600 border-r border-gray-200 cursor-pointer text-white font-semibold";
+                                            } else if (isEndSlot) {
+                                                cellStyle = "bg-emerald-600 border-r border-gray-200 cursor-pointer text-white font-semibold";
+                                            } else {
+                                                cellStyle = "bg-emerald-400 border-r border-gray-200 cursor-pointer text-white";
+                                            }
+                                        }
+
+                                        return (
+                                            <div
+                                                key={`slot-${slotTime}`}
+                                                className={`flex-1 min-w-[60px] h-12 flex items-center justify-center text-xs relative ${cellStyle}`}
+                                                onClick={() => {
+                                                    if (isSlotDisabled) return;
+                                                    handleSlotBlockClick(slotTime);
+                                                }}
+                                                title={isSlotPast ? "Đã qua" : isSlotBooked ? "Đã đặt" : `${slotTime} - ${slotEndTime}`}
+                                            >
+                                                {isStartSlot && selectedStartTime && "Bắt đầu"}
+                                                {isEndSlot && selectedEndTime && !isStartSlot && "Kết thúc"}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
-                    )}
-                </>
+                    </div>
+
+                    {/* Instruction Text */}
+                    <div className="mt-3 space-y-1">
+                        {selectedStartTime !== null && (
+                            <p className="text-sm text-emerald-600">
+                                Giờ bắt đầu: {selectedStartTime}
+                            </p>
+                        )}
+                        {selectedEndTime !== null && (
+                            <p className="text-sm text-emerald-600">
+                                Giờ kết thúc: {selectedEndTime}
+                            </p>
+                        )}
+                        {selectedStartTime === null && (
+                            <p className="text-sm text-gray-500 text-center">
+                                Nhấn vào ô để chọn giờ bắt đầu
+                            </p>
+                        )}
+                        {selectedStartTime !== null && selectedEndTime === null && (
+                            <p className="text-sm text-gray-500 text-center">
+                                Nhấn vào ô sau giờ bắt đầu để chọn giờ kết thúc
+                            </p>
+                        )}
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -118,6 +118,13 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
   const [isSearching, setIsSearching] = useState(false)
 
   // Map refs
+  // Keep ref to latest formData to avoid stale closures in map handlers
+  const formDataRef = useRef(formData)
+  useEffect(() => {
+    formDataRef.current = formData
+  }, [formData])
+
+  // Map refs
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.Marker | null>(null)
@@ -162,8 +169,9 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
     marker.on("dragend", async () => {
       const pos = marker.getLatLng()
       const address = await reverseGeocode(pos.lat, pos.lng)
+      const currentData = formDataRef.current // Use ref to get latest data
       onFormDataChange({
-        ...formData,
+        ...currentData,
         facilityLocation: address || "",
         facilityLocationCoordinates: { lat: pos.lat, lng: pos.lng },
       })
@@ -174,8 +182,9 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
       const { lat, lng } = e.latlng
       marker.setLatLng([lat, lng])
       const address = await reverseGeocode(lat, lng)
+      const currentData = formDataRef.current // Use ref to get latest data
       onFormDataChange({
-        ...formData,
+        ...currentData,
         facilityLocation: address || "",
         facilityLocationCoordinates: { lat, lng },
       })
@@ -198,8 +207,15 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
     if (!mapRef.current || !markerRef.current || !formData.facilityLocationCoordinates) return
 
     const { lat, lng } = formData.facilityLocationCoordinates
-    markerRef.current.setLatLng([lat, lng])
-    mapRef.current.setView([lat, lng], mapRef.current.getZoom())
+    // Only update if map center is significantly different to avoid fighting with drag
+    // But here we trust the prop update.
+    // Check if map is already close to this pos (e.g. from drag) to avoid jitter?
+    // For now, standard update.
+    const currentLatLng = markerRef.current.getLatLng();
+    if (Math.abs(currentLatLng.lat - lat) > 0.0001 || Math.abs(currentLatLng.lng - lng) > 0.0001) {
+      markerRef.current.setLatLng([lat, lng])
+      mapRef.current.setView([lat, lng], mapRef.current.getZoom())
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.facilityLocationCoordinates?.lat, formData.facilityLocationCoordinates?.lng])
 
@@ -214,8 +230,9 @@ export function FacilityInfoStep({ formData, onFormDataChange }: FacilityInfoSte
         easeLinearity: MAP_CONFIG.flyToEaseLinearity,
       })
 
+      const currentData = formDataRef.current
       onFormDataChange({
-        ...formData,
+        ...currentData,
         facilityLocation: address,
         facilityLocationCoordinates: { lat, lng },
       })

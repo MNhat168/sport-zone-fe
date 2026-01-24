@@ -36,7 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useAppSelector, useAppDispatch } from "@/store/hook"
-import { getFieldOwnerWallet, withdrawFieldOwnerBalance } from "@/features/wallet"
+import { getFieldOwnerWallet, withdrawFieldOwnerBalance, getUserWithdrawalRequests } from "@/features/wallet"
 import { getMyFieldsBookings } from "@/features/field/fieldThunk"
 import { BankAccountManagement } from "./bank-account-management"
 
@@ -183,6 +183,9 @@ export default function FieldOwnerWalletPage() {
     fieldOwnerWalletError,
     withdrawLoading,
     withdrawError,
+    withdrawalRequests,
+    withdrawalRequestsLoading,
+    withdrawalRequestsError,
   } = useAppSelector((state) => state.wallet)
 
   // Bookings state for transaction history
@@ -204,8 +207,18 @@ export default function FieldOwnerWalletPage() {
   useEffect(() => {
     if (userId) {
       dispatch(getFieldOwnerWallet(userId))
+      dispatch(getUserWithdrawalRequests())
     }
   }, [userId, dispatch])
+
+  // Debugging
+  useEffect(() => {
+    console.log("DEBUG: withdrawalRequests", withdrawalRequests);
+    if (withdrawalRequests && withdrawalRequests.length > 0) {
+      const pending = withdrawalRequests.find((req: any) => req.status === 'pending');
+      console.log("DEBUG: found pending request?", pending);
+    }
+  }, [withdrawalRequests]);
 
   // Fetch bookings with pagination
   useEffect(() => {
@@ -304,15 +317,79 @@ export default function FieldOwnerWalletPage() {
     }
 
     try {
-      await dispatch(withdrawFieldOwnerBalance({ amount })).unwrap()
-      toast.success('Yeu cau rut tien da duoc gui thanh cong')
+      const result = await dispatch(withdrawFieldOwnerBalance({ amount })).unwrap()
+      toast.success(result.message || 'Yêu cầu rút tiền đã được gửi, đang chờ admin duyệt')
       setShowWithdrawModal(false)
       setWithdrawAmount('')
       if (userId) {
         dispatch(getFieldOwnerWallet(userId))
+        dispatch(getUserWithdrawalRequests())
       }
     } catch (err) {
       // Error handled by reducer
+    }
+  }
+
+  // Calculate today's requests count
+  const todayRequestsCount = useMemo(() => {
+    if (!withdrawalRequests || withdrawalRequests.length === 0) return 0
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    return withdrawalRequests.filter((req: any) => {
+      const reqDate = new Date(req.createdAt).toDateString()
+      const todayStr = new Date().toDateString()
+      return reqDate === todayStr &&
+        (req.status === 'pending' || req.status === 'approved')
+    }).length
+  }, [withdrawalRequests])
+
+  // Check if there is any pending request
+  const hasPendingRequest = useMemo(() => {
+    return withdrawalRequests?.some((req: any) => req.status === 'pending')
+  }, [withdrawalRequests])
+
+  // Format date for display
+  const formatRequestDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      const hours = date.getHours().toString().padStart(2, '0')
+      const minutes = date.getMinutes().toString().padStart(2, '0')
+      return `${day}/${month}/${year} ${hours}:${minutes}`
+    } catch {
+      return dateString
+    }
+  }
+
+  // Get status badge color
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700'
+      case 'approved':
+        return 'bg-green-100 text-green-700'
+      case 'rejected':
+        return 'bg-red-100 text-red-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Đang chờ duyệt'
+      case 'approved':
+        return 'Đã duyệt'
+      case 'rejected':
+        return 'Đã từ chối'
+      default:
+        return status
     }
   }
 
@@ -344,7 +421,7 @@ export default function FieldOwnerWalletPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <DollarSign className="h-8 w-8 text-green-600" />
-              Trung Tâm Tài Chính 
+              Trung Tâm Tài Chính
             </h1>
             <p className="text-gray-600 mt-1">
               Quản lý số dư, doanh thu và tài khoản ngân hàng
@@ -382,12 +459,17 @@ export default function FieldOwnerWalletPage() {
                   </p>
                   <Button
                     className="mt-4 bg-emerald-600 hover:bg-emerald-700"
-                    disabled={availableBalance < 10000 || withdrawLoading}
+                    disabled={availableBalance < 10000 || withdrawLoading || hasPendingRequest}
                     onClick={() => setShowWithdrawModal(true)}
                   >
                     <ArrowDownToLine className="w-4 h-4 mr-2" />
                     Rút tiền
                   </Button>
+                  {hasPendingRequest && (
+                    <p className="text-xs text-amber-600 mt-2">
+                      Bạn đang có yêu cầu chờ duyệt
+                    </p>
+                  )}
                 </>
               )}
             </CardContent>
@@ -488,6 +570,7 @@ export default function FieldOwnerWalletPage() {
                   <span className="text-muted-foreground">Tiền có thể rút (Available)</span>
                   <span className="font-semibold text-emerald-600">{formatVND(availableBalance)}</span>
                 </div>
+
                 <div className="flex justify-between items-center py-3">
                   <span className="text-muted-foreground">Tổng cộng</span>
                   <span className="font-bold text-lg">{formatVND(pendingBalance + availableBalance)}</span>
@@ -756,7 +839,7 @@ export default function FieldOwnerWalletPage() {
             </Button>
             <Button
               onClick={handleWithdraw}
-              disabled={withdrawLoading || !withdrawAmount || parseInt(withdrawAmount, 10) < 10000}
+              disabled={withdrawLoading || !withdrawAmount || parseInt(withdrawAmount, 10) < 10000 || todayRequestsCount >= 3}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
               {withdrawLoading ? (

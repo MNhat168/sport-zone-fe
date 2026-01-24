@@ -465,14 +465,37 @@ export default function UserBookingsPage() {
 
                               <td className="py-4 px-2">
                                 {['pending', 'confirmed'].includes(booking.status.toLowerCase()) && booking.status.toLowerCase() !== 'completed' && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="hover:bg-red-50 hover:text-red-600 transition-colors text-red-500"
-                                    onClick={() => handleCancelBooking(booking._id)}
-                                  >
-                                    Hủy
-                                  </Button>
+                                  (() => {
+                                    // Check cancellation validity (12h rule)
+                                    let cancellable = true;
+                                    try {
+                                      let dateStr = booking.date;
+                                      if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                                        dateStr = dateStr.split('T')[0];
+                                      }
+                                      const startDateTimeStr = `${dateStr}T${booking.startTime}`;
+                                      const startDateTime = new Date(startDateTimeStr);
+                                      const now = new Date();
+
+                                      const diffInHours = (startDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+                                      cancellable = diffInHours >= 12;
+                                    } catch (e) {
+                                      console.error("Error checking cancellable", e);
+                                    }
+
+                                    return (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="hover:bg-red-50 hover:text-red-600 transition-colors text-red-500"
+                                        onClick={() => handleCancelBooking(booking._id)}
+                                        disabled={!cancellable}
+                                        title={!cancellable ? "Đã quá hạn hủy (trước 12h)" : "Hủy đặt"}
+                                      >
+                                        Hủy
+                                      </Button>
+                                    );
+                                  })()
                                 )}
                                 {booking.status.toLowerCase() === 'completed' && (
                                   <span className="text-xs text-gray-400">Không thể hủy</span>

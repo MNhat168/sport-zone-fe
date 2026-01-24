@@ -5,7 +5,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Copy, Check } from 'lucide-react';
 
 interface BookingData {
     academy?: string;
@@ -59,8 +59,19 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
         customer,
         fieldAddress,
         bookingAmount,
-        platformFee
+        platformFee,
+        originalBooking
     } = bookingData || {};
+
+    const [isCopied, setIsCopied] = React.useState(false);
+
+    const handleCopyId = (id: string) => {
+        navigator.clipboard.writeText(id);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
+
+    const bookingId = originalBooking?._id || originalBooking?.id;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -165,6 +176,24 @@ const CourtBookingDetails: React.FC<CourtBookingDetailsProps> = ({ isOpen, onClo
                         <div>
                             <h4 className="text-sm font-medium text-gray-900 mb-4">Thông tin đặt sân</h4>
                             <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">Mã đặt sân</label>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-medium text-gray-900 font-mono">
+                                            {bookingId || '—'}
+                                        </p>
+                                        {bookingId && (
+                                            <button
+                                                onClick={() => handleCopyId(bookingId)}
+                                                className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                                title="Sao chép mã"
+                                            >
+                                                <Copy className="h-3.5 w-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="text-xs text-gray-500 block mb-1">Ngày đặt</label>
                                     <p className="text-sm font-medium text-gray-900">{bookingDate}</p>

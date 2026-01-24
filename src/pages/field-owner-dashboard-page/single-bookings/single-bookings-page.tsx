@@ -161,6 +161,7 @@ const getNumberParam = (params: URLSearchParams, key: string, defaultValue: numb
 };
 
 export default function SingleBookingsPage() {
+    const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Read pagination from URL (with defaults)
@@ -530,47 +531,49 @@ export default function SingleBookingsPage() {
                         <AlertDialogTitle>
                             {confirmState.action === 'accept' ? 'Xác nhận chấp nhận' : 'Xác nhận hủy booking'}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="space-y-3">
-                            {confirmState.action === 'accept' ? (
-                                <p>Bạn có chắc chắn muốn chấp nhận yêu cầu đặt chỗ này không?</p>
-                            ) : (
-                                <>
-                                    {confirmState.cancellationInfo && !confirmState.cancellationInfo.eligibility?.allowed ? (
-                                        <Alert variant="destructive">
-                                            <AlertCircle className="h-4 w-4" />
-                                            <AlertDescription>
-                                                {confirmState.cancellationInfo.eligibility?.errorMessage || 'Booking này không thể được hủy.'}
-                                            </AlertDescription>
-                                        </Alert>
-                                    ) : (
-                                        <>
-                                            <p>Bạn có chắc chắn muốn hủy booking này không? Khách hàng sẽ nhận 100% refund.</p>
-                                            {confirmState.cancellationInfo && (
-                                                <div className="space-y-2">
-                                                    {confirmState.cancellationInfo.warningMessage && (
-                                                        <Alert variant={confirmState.cancellationInfo.penaltyPercentage === 100 ? "destructive" : "default"}>
-                                                            <AlertCircle className="h-4 w-4" />
-                                                            <AlertDescription>
-                                                                {confirmState.cancellationInfo.warningMessage}
-                                                            </AlertDescription>
-                                                        </Alert>
-                                                    )}
-                                                    {confirmState.cancellationInfo.penaltyAmount !== undefined && confirmState.cancellationInfo.penaltyAmount > 0 && (
-                                                        <div className="text-sm bg-red-50 p-3 rounded-md border border-red-200">
-                                                            <p className="font-medium text-red-900">
-                                                                Phí phạt: {confirmState.cancellationInfo.penaltyAmount.toLocaleString('vi-VN')} đ
-                                                                {confirmState.cancellationInfo.penaltyPercentage !== undefined && (
-                                                                    <span> ({confirmState.cancellationInfo.penaltyPercentage}%)</span>
-                                                                )}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </>
-                            )}
+                        <AlertDialogDescription className="space-y-3" asChild>
+                            <div>
+                                {confirmState.action === 'accept' ? (
+                                    <p>Bạn có chắc chắn muốn chấp nhận yêu cầu đặt chỗ này không?</p>
+                                ) : (
+                                    <>
+                                        {confirmState.cancellationInfo && !confirmState.cancellationInfo.eligibility?.allowed ? (
+                                            <Alert variant="destructive">
+                                                <AlertCircle className="h-4 w-4" />
+                                                <AlertDescription>
+                                                    {confirmState.cancellationInfo.eligibility?.errorMessage || 'Booking này không thể được hủy.'}
+                                                </AlertDescription>
+                                            </Alert>
+                                        ) : (
+                                            <>
+                                                <p>Bạn có chắc chắn muốn hủy booking này không? Khách hàng sẽ nhận 100% refund.</p>
+                                                {confirmState.cancellationInfo && (
+                                                    <div className="space-y-2">
+                                                        {confirmState.cancellationInfo.warningMessage && (
+                                                            <Alert variant={confirmState.cancellationInfo.penaltyPercentage === 100 ? "destructive" : "default"}>
+                                                                <AlertCircle className="h-4 w-4" />
+                                                                <AlertDescription>
+                                                                    {confirmState.cancellationInfo.warningMessage}
+                                                                </AlertDescription>
+                                                            </Alert>
+                                                        )}
+                                                        {confirmState.cancellationInfo.penaltyAmount !== undefined && confirmState.cancellationInfo.penaltyAmount > 0 && (
+                                                            <div className="text-sm bg-red-50 p-3 rounded-md border border-red-200">
+                                                                <p className="font-medium text-red-900">
+                                                                    Phí phạt: {confirmState.cancellationInfo.penaltyAmount.toLocaleString('vi-VN')} đ
+                                                                    {confirmState.cancellationInfo.penaltyPercentage !== undefined && (
+                                                                        <span> ({confirmState.cancellationInfo.penaltyPercentage}%)</span>
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

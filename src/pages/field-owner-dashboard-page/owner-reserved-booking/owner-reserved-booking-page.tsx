@@ -123,10 +123,35 @@ export default function OwnerReservedBookingPage() {
     const fetchPendingBalance = async () => {
         try {
             const response = await axiosPrivate.get("/wallets/field-owner");
+            console.log('[DEBUG] Wallet response:', response.data);
+            
+            // Backend ResponseInterceptor wraps response in { success: true, data: ... }
+            // So response.data = { success: true, data: { pendingBalance, ... } }
             const wallet = response.data?.data || response.data;
-            setPendingBalance(wallet?.pendingBalance || 0);
+            console.log('[DEBUG] Wallet object:', wallet);
+            console.log('[DEBUG] Pending balance:', wallet?.pendingBalance);
+            
+            const pendingBalance = wallet?.pendingBalance ?? 0;
+            setPendingBalance(pendingBalance);
+            
+            console.log('[DEBUG] Set pending balance to:', pendingBalance);
         } catch (error: any) {
-            logger.error("Error fetching pending balance:", error);
+            // Log detailed error information
+            console.error('[DEBUG] Error fetching pending balance - Full error:', error);
+            console.error('[DEBUG] Error response status:', error.response?.status);
+            console.error('[DEBUG] Error response data:', error.response?.data);
+            console.error('[DEBUG] Error message:', error.message);
+            console.error('[DEBUG] Error config:', error.config);
+            
+            logger.error("Error fetching pending balance:", {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data,
+                url: error.config?.url
+            });
+            
+            // Set to 0 on error to prevent UI issues
+            setPendingBalance(0);
         }
     };
 
@@ -292,7 +317,7 @@ export default function OwnerReservedBookingPage() {
 
     return (
         <FieldOwnerDashboardLayout>
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className="w-full px-4">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center gap-3 mb-2">

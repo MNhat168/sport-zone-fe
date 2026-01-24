@@ -20,10 +20,41 @@ export default function UserQRCheckinPage() {
     const [isCheckingIn, setIsCheckingIn] = useState(false)
     const [checkinSuccess, setCheckinSuccess] = useState(false)
 
+    // Extract token from URL if QR code contains a URL, otherwise use the text directly
+    const extractTokenFromQR = (decodedText: string): string => {
+        // Check if decoded text is a URL
+        if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
+            try {
+                const url = new URL(decodedText)
+                const tokenParam = url.searchParams.get('token')
+                if (tokenParam) {
+                    logger.log('Extracted token from URL:', { url: decodedText.substring(0, 50) + '...', hasToken: !!tokenParam })
+                    return tokenParam
+                }
+                logger.warn('URL found but no token parameter:', decodedText.substring(0, 50))
+            } catch (error) {
+                logger.error('Failed to parse URL:', error)
+            }
+        }
+        // If not a URL or no token param, assume it's the token itself
+        return decodedText
+    }
+
     // Decode field QR token to extract fieldId
-    const decodeFieldToken = (token: string): { fieldId: string; type: string } | null => {
+    const decodeFieldToken = (decodedText: string): { fieldId: string; type: string; token: string } | null => {
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]))
+            // Extract token from URL if needed
+            const token = extractTokenFromQR(decodedText)
+            
+            // Validate JWT format (should have 3 parts)
+            const tokenParts = token.split('.')
+            if (tokenParts.length !== 3) {
+                logger.error('Invalid JWT format:', { parts: tokenParts.length, preview: token.substring(0, 20) })
+                toast.error('Mã QR không hợp lệ: Định dạng không đúng')
+                return null
+            }
+
+            const payload = JSON.parse(atob(tokenParts[1]))
 
             if (payload.type !== 'field') {
                 toast.error('Mã QR không phải của sân')
@@ -32,7 +63,8 @@ export default function UserQRCheckinPage() {
 
             return {
                 fieldId: payload.fieldId,
-                type: payload.type
+                type: payload.type,
+                token: token // Return the actual token, not the URL
             }
         } catch (error) {
             logger.error('Failed to decode token:', error)
@@ -44,15 +76,22 @@ export default function UserQRCheckinPage() {
     const handleScanSuccess = async (decodedText: string) => {
         try {
             setIsScanning(false)
+            logger.log('QR scan successful, decoded text length:', decodedText.length)
 
             // Decode token to get fieldId
             const tokenData = decodeFieldToken(decodedText)
-            if (!tokenData) return
+            if (!tokenData) {
+                logger.error('Failed to decode token')
+                return
+            }
 
-            setScannedToken(decodedText)
+            logger.log('Token decoded successfully:', { fieldId: tokenData.fieldId, type: tokenData.type })
+            // Store the actual token, not the URL
+            setScannedToken(tokenData.token)
 
             // Fetch user's bookings for this field today
             const userBookings = await qrCheckinAPI.getCheckInOptions(tokenData.fieldId)
+            logger.log('Fetched bookings:', { count: userBookings.length, bookings: userBookings })
 
             if (userBookings.length === 0) {
                 toast.error('Bạn không có booking nào tại sân này hôm nay')
@@ -67,11 +106,16 @@ export default function UserQRCheckinPage() {
             // Auto-select if only one booking
             if (userBookings.length === 1) {
                 setSelectedBooking(userBookings[0]._id)
+                logger.log('Auto-selected booking:', userBookings[0]._id)
             }
 
             toast.success(`Tìm thấy ${userBookings.length} booking tại ${userBookings[0]?.field?.name}`)
         } catch (error: any) {
-            logger.error('Failed to fetch bookings:', error)
+            logger.error('Failed to fetch bookings:', {
+                error,
+                message: error.response?.data?.message,
+                status: error.response?.status
+            })
             toast.error(error.response?.data?.message || 'Không thể lấy thông tin booking')
             setBookings([])
         }
@@ -85,19 +129,28 @@ export default function UserQRCheckinPage() {
 
         try {
             setIsCheckingIn(true)
+            logger.log('Attempting check-in:', { bookingId: selectedBooking, hasToken: !!scannedToken })
 
             await qrCheckinAPI.confirmCheckInWithFieldQR(scannedToken, selectedBooking)
 
             setCheckinSuccess(true)
             toast.success('Check-in thành công! 🎉')
+            logger.log('Check-in successful for booking:', selectedBooking)
 
             // Reset after success
             setTimeout(() => {
                 resetState()
             }, 3000)
         } catch (error: any) {
-            logger.error('Check-in failed:', error)
-            toast.error(error.response?.data?.message || 'Check-in thất bại')
+            logger.error('Check-in failed:', {
+                error,
+                message: error.response?.data?.message,
+                status: error.response?.status,
+                bookingId: selectedBooking
+            })
+            
+            const errorMessage = error.response?.data?.message || error.message || 'Check-in thất bại'
+            toast.error(errorMessage)
         } finally {
             setIsCheckingIn(false)
         }
@@ -114,6 +167,19 @@ export default function UserQRCheckinPage() {
 
     const formatTime = (time: string) => {
         return time?.substring(0, 5) || time
+    }
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return ''
+        try {
+            const date = new Date(dateString)
+            const day = date.getDate().toString().padStart(2, '0')
+            const month = (date.getMonth() + 1).toString().padStart(2, '0')
+            const year = date.getFullYear()
+            return `${day}/${month}/${year}`
+        } catch (error) {
+            return dateString
+        }
     }
 
     return (
@@ -180,9 +246,14 @@ export default function UserQRCheckinPage() {
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <Clock className="w-4 h-4 text-gray-500" />
                                                         <span className="font-semibold text-gray-900">
-                                                            {formatTime(booking.fieldStartTime)} - {formatTime(booking.fieldEndTime)}
+                                                            {formatTime(booking.fieldStartTime || '')} - {formatTime(booking.fieldEndTime || '')}
                                                         </span>
                                                     </div>
+                                                    {booking.date && (
+                                                        <p className="text-sm text-gray-600 mb-1">
+                                                            Ngày: {formatDate(booking.date)}
+                                                        </p>
+                                                    )}
                                                     {booking.court && (
                                                         <p className="text-sm text-gray-600">
                                                             {booking.court.name}

@@ -10,6 +10,7 @@ import {
   getAdminWallet,
   withdrawRefund,
   withdrawFieldOwnerBalance,
+  getUserWithdrawalRequests,
 } from "./walletThunk";
 
 interface WalletState {
@@ -31,6 +32,11 @@ interface WalletState {
   // Withdraw
   withdrawLoading: boolean;
   withdrawError: string | null;
+
+  // Withdrawal requests
+  withdrawalRequests: any[];
+  withdrawalRequestsLoading: boolean;
+  withdrawalRequestsError: string | null;
 }
 
 const initialState: WalletState = {
@@ -160,6 +166,23 @@ const walletSlice = createSlice({
       .addCase(withdrawFieldOwnerBalance.rejected, (state, action) => {
         state.withdrawLoading = false;
         state.withdrawError = action.payload || "Loi khong xac dinh";
+      });
+
+    // Get user withdrawal requests
+    builder
+      .addCase(getUserWithdrawalRequests.pending, (state) => {
+        state.withdrawalRequestsLoading = true;
+        state.withdrawalRequestsError = null;
+      })
+      .addCase(getUserWithdrawalRequests.fulfilled, (state, action) => {
+        state.withdrawalRequestsLoading = false;
+        state.withdrawalRequests = action.payload;
+        state.withdrawalRequestsError = null;
+      })
+      .addCase(getUserWithdrawalRequests.rejected, (state, action) => {
+        state.withdrawalRequestsLoading = false;
+        state.withdrawalRequestsError = action.payload || "Loi khong xac dinh";
+        state.withdrawalRequests = [];
       });
   },
 });

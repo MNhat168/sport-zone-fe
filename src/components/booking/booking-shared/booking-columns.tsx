@@ -244,6 +244,42 @@ export function createBookingColumns(
       cell: ({ row }) => {
         const booking = row.original;
 
+        // Check if booking is cancellable (must be at least 12 hours before start time)
+        const isCancellable = (booking: BookingRow): boolean => {
+          if (!booking.originalBooking) return true;
+
+          try {
+            const rawBooking = booking.originalBooking as any;
+
+            // Check if we have valid date and time strings
+            if (!rawBooking.date || !rawBooking.startTime) return true;
+
+            // Parse booking start time
+            // rawBooking.date might be ISO string (YYYY-MM-DDT...) or YYYY-MM-DD
+            let dateStr = rawBooking.date;
+            if (typeof dateStr === 'string' && dateStr.includes('T')) {
+              dateStr = dateStr.split('T')[0];
+            }
+
+            const startDateTimeStr = `${dateStr}T${rawBooking.startTime}`;
+            const startDateTime = new Date(startDateTimeStr);
+            const now = new Date();
+
+            // Check if parsing worked
+            if (isNaN(startDateTime.getTime())) return true;
+
+            // Calculate difference in hours
+            const diffInMilliseconds = startDateTime.getTime() - now.getTime();
+            const diffInHours = diffInMilliseconds / (1000 * 60 * 60);
+
+            // Must be at least 12 hours before start time
+            return diffInHours >= 12;
+          } catch (error) {
+            console.error("Error checking cancellation validity:", error);
+            return true; // Default to allow if check fails
+          }
+        };
+
         if (booking.status === "awaiting") {
           // Only show Accept/Deny if handlers are provided
           if (actions.onAccept || actions.onDeny) {
@@ -272,14 +308,17 @@ export function createBookingColumns(
               </div>
             );
           }
-          // If no Accept/Deny handlers, show Cancel button if available
+          // If no Accept/Deny handlers, show Cancel button if available (User view)
           if (actions.onCancel) {
+            const cancellable = isCancellable(booking);
             return (
               <Button
                 type="button"
                 variant="destructive"
                 className="h-8 bg-red-600 hover:bg-red-700 text-white"
                 onClick={() => actions.onCancel?.(booking.id)}
+                disabled={!cancellable}
+                title={!cancellable ? "Đã quá hạn hủy (trước 12h)" : "Hủy đặt"}
               >
                 Hủy Đặt
               </Button>
@@ -288,12 +327,15 @@ export function createBookingColumns(
         }
 
         if (booking.status === "accepted") {
+          const cancellable = isCancellable(booking);
           return (
             <Button
               type="button"
               variant="destructive"
               className="h-8 bg-red-600 hover:bg-red-700 text-white"
               onClick={() => actions.onCancel?.(booking.id)}
+              disabled={!cancellable}
+              title={!cancellable ? "Đã quá hạn hủy (trước 12h)" : "Hủy đặt"}
             >
               Hủy Đặt
             </Button>
