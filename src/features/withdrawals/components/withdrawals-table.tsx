@@ -99,7 +99,26 @@ export function WithdrawalsTable({
     >
       <DataTableToolbar
         table={table}
-        filterColumns={['userName', 'status', 'userRole']}
+        searchKey="userName"
+        filters={[
+          {
+            columnId: 'status',
+            title: 'Trạng thái',
+            options: [
+              { label: 'Đang chờ', value: 'pending' },
+              { label: 'Đã duyệt', value: 'approved' },
+              { label: 'Đã từ chối', value: 'rejected' },
+            ],
+          },
+          {
+            columnId: 'userRole',
+            title: 'Vai trò',
+            options: [
+              { label: 'Chủ sân', value: 'field_owner' },
+              { label: 'Huấn luyện viên', value: 'coach' },
+            ],
+          },
+        ]}
       />
       <div className='rounded-md border'>
         <Table>
