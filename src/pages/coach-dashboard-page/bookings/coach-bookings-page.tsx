@@ -40,6 +40,7 @@ import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import axiosPrivate from "@/utils/axios/axiosPrivate";
 import logger from "@/utils/logger";
+import CourtBookingDetails from "@/components/pop-up/court-booking-detail";
 
 // Helper function to format date from YYYY-MM-DD to Vietnamese format
 const formatDate = (dateStr: string): string => {
@@ -229,6 +230,45 @@ const getStatusBadgeStyles = (status: MappedBooking["status"]) => {
     }
 };
 
+// Helper function to map MappedBooking to BookingData format for CourtBookingDetails
+const mapBookingToDetailData = (booking: MappedBooking): any => {
+    const originalBooking = booking.originalBooking || {};
+    const user = originalBooking.user || {};
+    
+    // Extract payment info
+    const totalPrice = originalBooking.totalPrice || 0;
+    const bookingAmount = originalBooking.bookingAmount || 0;
+    const platformFee = originalBooking.platformFee || 0;
+    const amenitiesFee = originalBooking.amenitiesFee || 0;
+    
+    // Format date for bookingDate (already formatted in booking.date)
+    const bookingDate = booking.date;
+    
+    // Format time (already formatted in booking.time)
+    const bookingTime = booking.time;
+    
+    return {
+        academy: booking.fieldName || '—',
+        court: booking.fieldName || '—', // For coach bookings, court is same as field
+        bookedOn: bookingDate,
+        bookingDate: bookingDate,
+        bookingTime: bookingTime,
+        totalAmountPaid: booking.payment || formatCurrency(totalPrice, "VND"),
+        customer: {
+            fullName: booking.customerName || user.fullName || 'N/A',
+            phone: booking.customerPhone || user.phoneNumber || user.phone || '—',
+            email: user.email || '—',
+        },
+        note: booking.note || originalBooking.note || '',
+        originalBooking: originalBooking,
+        fieldAddress: booking.fieldAddress || originalBooking.field?.location?.address || '—',
+        bookingAmount: bookingAmount > 0 ? formatCurrency(bookingAmount, "VND") : undefined,
+        platformFee: platformFee > 0 ? formatCurrency(platformFee, "VND") : undefined,
+        amenitiesFee: amenitiesFee > 0 ? formatCurrency(amenitiesFee, "VND") : undefined,
+        amenities: originalBooking.selectedAmenities?.map((a: any) => a.name || a) || [],
+    };
+};
+
 const convertTo24Hour = (time12h: string): string => {
     const parts = time12h.split(" - ");
     if (parts.length !== 2) return time12h;
@@ -269,6 +309,7 @@ export default function CoachBookingsPage() {
     const [bookingTypeTab, setBookingTypeTab] = useState<'coach' | 'field_coach'>('coach');
     const [selectedBooking, setSelectedBooking] = useState<MappedBooking | null>(null);
     const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+    const [bookingDetailData, setBookingDetailData] = useState<any>(null);
     const [hasInitialData, setHasInitialData] = useState(false);
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
     const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
@@ -424,6 +465,8 @@ export default function CoachBookingsPage() {
 
     const handleViewDetail = (booking: MappedBooking) => {
         setSelectedBooking(booking);
+        const detailData = mapBookingToDetailData(booking);
+        setBookingDetailData(detailData);
         setDetailDialogOpen(true);
     };
 
@@ -840,6 +883,17 @@ export default function CoachBookingsPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Booking Detail Dialog */}
+            <CourtBookingDetails
+                isOpen={detailDialogOpen}
+                onClose={() => {
+                    setDetailDialogOpen(false);
+                    setSelectedBooking(null);
+                    setBookingDetailData(null);
+                }}
+                bookingData={bookingDetailData}
+            />
 
             {/* Cancel Confirmation Dialog */}
             <Dialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
